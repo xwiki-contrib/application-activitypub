@@ -1,0 +1,7 @@
+{
+  "@context": "https://www.w3.org/ns/activitystreams",
+  "type": "Note",
+  "to": ["https://chatty.example/ben/"],
+  "attributedTo": "https://social.example/alyssa/",
+  "content": "Say, did you finish reading that book I lent you?"
+}
