@@ -17,11 +17,38 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitystream.entities;
+package org.xwiki.contrib.activitypub.internal;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.xwiki.resource.AbstractResourceReference;
+import org.xwiki.resource.ResourceType;
 
-@JsonDeserialize(as = Note.class)
-public class Note extends Object
+/**
+ * A resource reference to be able to identify and retrieve any activity pub entity.
+ */
+public class ActivityPubResourceReference extends AbstractResourceReference
 {
+    /**
+     * Represents an ActivityPub Resource Type.
+     */
+    public static final ResourceType TYPE = new ResourceType("activitypub");
+
+    private String entityType;
+    private String uuid;
+
+    public ActivityPubResourceReference(String entityType, String uuid)
+    {
+        setType(TYPE);
+        this.entityType = entityType;
+        this.uuid = uuid;
+    }
+
+    public String getEntityType()
+    {
+        return entityType;
+    }
+
+    public String getUuid()
+    {
+        return uuid;
+    }
 }

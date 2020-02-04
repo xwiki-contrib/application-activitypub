@@ -17,7 +17,11 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.internal;
+package org.xwiki.contrib.activitypub.internal.json;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -26,20 +30,24 @@ import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.phase.Initializable;
 import org.xwiki.component.phase.InitializationException;
-import org.xwiki.contrib.activitypub.parser.ActivityPubParser;
-import org.xwiki.contrib.activitystream.entities.Object;
-import org.xwiki.contrib.activitystream.tools.ObjectDeserializer;
+import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
+import org.xwiki.contrib.activitypub.entities.Object;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY;
 
 @Component
 @Singleton
-public class DefaultActivityPubParser implements ActivityPubParser, Initializable
+public class DefaultActivityPubJsonParser implements ActivityPubJsonParser, Initializable
 {
     private ObjectMapper objectMapper;
+    private OkHttpClient okHttpClient;
 
     @Inject
     private Logger logger;
@@ -66,5 +74,48 @@ public class DefaultActivityPubParser implements ActivityPubParser, Initializabl
             this.logger.error("Error while parsing request with type [{}].", type, e);
             return null;
         }
+    }
+
+    private boolean isAcceptedContentType(String contentType)
+    {
+        return "application/activity+json".equals(contentType);
+    }
+
+    private boolean isResponseOK(Response response)
+    {
+        if (!response.isSuccessful()) {
+            return false;
+        } else {
+            String contentType = response.header("content-type");
+            if (!isAcceptedContentType(contentType)) {
+                return false;
+            }
+            if (response.body() == null) {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    @Override
+    public <T extends Object> T resolveObject(URI uri)
+    {
+        try {
+            Request request = new Request.Builder()
+                .url(uri.toURL())
+                .build();
+            try (Response response = this.okHttpClient.newCall(request).execute()) {
+                if (isResponseOK(response)) {
+                    return this.parseRequest(response.body().string());
+                }
+            }
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }

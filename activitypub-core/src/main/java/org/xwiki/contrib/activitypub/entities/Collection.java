@@ -17,8 +17,9 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitystream.entities;
+package org.xwiki.contrib.activitypub.entities;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -28,13 +29,32 @@ public class Collection extends AbstractCollection
 {
     private Set<ObjectReference<?>> items;
 
+    public Collection()
+    {
+        this.items = new HashSet<>();
+    }
+
     public Set<ObjectReference<?>> getItems()
     {
         return items;
     }
 
-    public void setItems(Set<ObjectReference<?>> items)
+    public Collection setItems(Set<ObjectReference<?>> items)
     {
         this.items = items;
+        return this;
+    }
+
+    @Override
+    public int getTotalItems()
+    {
+        return this.items.size();
+    }
+
+    @Override
+    public Collection addItem(Object item)
+    {
+        this.items.add(new ObjectReference<>().setObject(item));
+        return this;
     }
 }

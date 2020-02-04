@@ -19,12 +19,14 @@
  */
 package org.xwiki.contrib.activitypub;
 
+import java.io.IOException;
+
 import org.xwiki.component.annotation.Role;
-import org.xwiki.contrib.activitystream.entities.Activity;
+import org.xwiki.contrib.activitypub.entities.activities.Activity;
 
 @Role
 public interface ActivityHandler<T extends Activity>
 {
-    void handleInboxRequest(ActivityRequest<T> activityRequest);
-    void handleOutboxRequest(ActivityRequest<T> activityRequest);
+    void handleInboxRequest(ActivityRequest<T> activityRequest) throws IOException;
+    void handleOutboxRequest(ActivityRequest<T> activityRequest) throws IOException;
 }

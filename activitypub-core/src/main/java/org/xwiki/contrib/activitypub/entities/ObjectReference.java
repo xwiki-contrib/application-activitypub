@@ -17,16 +17,17 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitystream.entities;
+package org.xwiki.contrib.activitypub.entities;
 
 import java.net.URI;
 import java.util.Objects;
 
-import org.xwiki.contrib.activitystream.tools.ObjectReferenceDeserializer;
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
+import org.xwiki.contrib.activitypub.internal.json.ObjectReferenceDeserializer;
+import org.xwiki.text.XWikiToStringBuilder;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 @JsonDeserialize(using = ObjectReferenceDeserializer.class)
 public class ObjectReference<T extends Object>
@@ -40,9 +41,10 @@ public class ObjectReference<T extends Object>
         return isLink;
     }
 
-    public void setLink(boolean link)
+    public ObjectReference<T> setLink(boolean link)
     {
         isLink = link;
+        return this;
     }
 
     public T getObject()
@@ -50,9 +52,18 @@ public class ObjectReference<T extends Object>
         return object;
     }
 
-    public void setObject(T object)
+    public T getObject(ActivityPubJsonParser parser)
+    {
+        if (this.object == null && this.isLink()) {
+            this.object = parser.resolveObject(this.getLink());
+        }
+        return this.object;
+    }
+
+    public ObjectReference<T> setObject(T object)
     {
         this.object = object;
+        return this;
     }
 
     public URI getLink()
@@ -60,14 +71,10 @@ public class ObjectReference<T extends Object>
         return link;
     }
 
-    public void setLink(URI link)
+    public ObjectReference<T> setLink(URI link)
     {
         this.link = link;
-    }
-
-    public void resolveObject()
-    {
-        throw new NotImplementedException();
+        return this;
     }
 
     @Override
@@ -89,5 +96,11 @@ public class ObjectReference<T extends Object>
     public int hashCode()
     {
         return Objects.hash(isLink, link, object);
+    }
+
+    @Override
+    public String toString()
+    {
+        return new XWikiToStringBuilder(this).append("isLink", isLink()).append("link", getLink()).build();
     }
 }

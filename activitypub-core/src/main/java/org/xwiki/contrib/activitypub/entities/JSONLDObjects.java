@@ -17,19 +17,24 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitystream.entities;
+package org.xwiki.contrib.activitypub.entities;
 
-public class AbstractCollection extends Object
+import java.net.URI;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class JSONLDObjects
 {
-    private int totalItems;
+    @JsonProperty("@context")
+    private URI context;
 
-    public int getTotalItems()
+    public URI getContext()
     {
-        return totalItems;
+        return context;
     }
 
-    public void setTotalItems(int totalItems)
+    public void setContext(URI context)
     {
-        this.totalItems = totalItems;
+        this.context = context;
     }
 }

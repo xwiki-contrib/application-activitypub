@@ -17,8 +17,11 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitystream.entities;
+package org.xwiki.contrib.activitypub.entities;
 
-public abstract class Actor extends Object
+public abstract class AbstractCollection extends Object
 {
+    public abstract int getTotalItems();
+
+    public abstract <T extends AbstractCollection> T addItem(Object item);
 }

@@ -19,28 +19,49 @@
  */
 package org.xwiki.contrib.activitypub.internal.activities;
 
+import java.io.IOException;
+
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import javax.servlet.http.HttpServletResponse;
 
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityRequest;
-import org.xwiki.contrib.activitystream.entities.Follow;
+import org.xwiki.contrib.activitypub.entities.Actor;
+import org.xwiki.contrib.activitypub.entities.activities.Follow;
+import org.xwiki.contrib.activitypub.entities.Inbox;
+import org.xwiki.contrib.activitypub.internal.ActorHandler;
 
 @Component
 @Named("Follow")
 @Singleton
-public class FollowActivityHandler implements ActivityHandler<Follow>
+public class FollowActivityHandler extends AbstractActivityHandler implements ActivityHandler<Follow>
 {
-    @Override
-    public void handleInboxRequest(ActivityRequest<Follow> activityRequest)
-    {
+    @Inject
+    private ActorHandler actorHandler;
 
+    @Override
+    public void handleInboxRequest(ActivityRequest<Follow> activityRequest) throws IOException
+    {
+        this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_NOT_IMPLEMENTED,
+            "Only client to server is currently implemented.");
     }
 
+    /**
+     * Answer a 202 answer "Request accepted"
+     * @param activityRequest
+     */
     @Override
-    public void handleOutboxRequest(ActivityRequest<Follow> activityRequest)
+    public void handleOutboxRequest(ActivityRequest<Follow> activityRequest) throws IOException
     {
+        Follow follow = activityRequest.getActivity();
+        Actor actor = follow.getActor().getObject(this.activityPubJsonParser);
+        Inbox actorInbox = this.actorHandler.getActorInbox(actor);
+        actorInbox.addPendingFollow(follow);
+        actorInbox.addActivity(follow);
 
+        this.answer(activityRequest.getResponse(), HttpServletResponse.SC_ACCEPTED, follow);
     }
 }

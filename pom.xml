@@ -33,13 +33,11 @@
   <packaging>pom</packaging>
   <modules>
     <module>activitypub-core</module>
-    <module>activitystream-core</module>
     <module>activitypub-server</module>
   </modules>
   <properties>
     <activitypub.version>1.0-SNAPSHOT</activitypub.version>
     <jackson.version>2.10.2</jackson.version>
-    <xwiki.version>11.10.2</xwiki.version>
   </properties>
   <dependencies>
     <dependency>
@@ -60,7 +58,7 @@
     <dependency>
       <groupId>org.xwiki.commons</groupId>
       <artifactId>xwiki-commons-tool-test-simple</artifactId>
-      <version>${xwiki.version}</version>
+      <version>${commons.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>

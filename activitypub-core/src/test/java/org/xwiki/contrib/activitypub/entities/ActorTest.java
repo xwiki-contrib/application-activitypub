@@ -27,14 +27,13 @@ import java.net.URISyntaxException;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
-import org.xwiki.contrib.activitypub.entities.Person;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class PersonTest
+public class ActorTest
 {
     @Test
     public void deserializePerson() throws FileNotFoundException, JsonProcessingException, URISyntaxException
@@ -43,18 +42,20 @@ public class PersonTest
         BufferedReader bufferedReader = new BufferedReader(new FileReader(objectJsonResource));
         String json = bufferedReader.lines().collect(Collectors.joining());
         ObjectMapper mapper = new ObjectMapper();
-        Person person = mapper.readValue(json, Person.class);
+        Actor actor = mapper.readValue(json, Actor.class);
 
-        assertEquals("Person", person.getType());
-        assertEquals(new URI("https://www.w3.org/ns/activitystreams"), person.getContext());
-        assertEquals(new URI("https://social.example/alyssa/"), person.getId());
-        assertEquals("Alyssa P. Hacker", person.getName());
-        assertEquals("alyssa", person.getPreferredUsername());
-        assertEquals("Lisp enthusiast hailing from MIT", person.getSummary());
-        assertEquals(new URI("https://social.example/alyssa/inbox/"), person.getInbox());
-        assertEquals(new URI("https://social.example/alyssa/outbox/"), person.getOutbox());
-        assertEquals(new URI("https://social.example/alyssa/followers/"), person.getFollowers());
-        assertEquals(new URI("https://social.example/alyssa/following/"), person.getFollowing());
-        assertEquals(new URI("https://social.example/alyssa/liked/"), person.getLiked());
+        assertEquals("Person", actor.getType());
+        assertEquals(new URI("https://www.w3.org/ns/activitystreams"), actor.getContext());
+        assertEquals(new URI("https://social.example/alyssa/"), actor.getId());
+        assertEquals("Alyssa P. Hacker", actor.getName());
+        assertEquals("alyssa", actor.getPreferredUsername());
+        assertEquals("Lisp enthusiast hailing from MIT", actor.getSummary());
+        assertEquals(new URI("https://social.example/alyssa/inbox/"), actor.getInbox());
+        assertEquals(new URI("https://social.example/alyssa/outbox/"), actor.getOutbox());
+        assertEquals(new ObjectReference<>().setLink(true).setLink(new URI("https://social.example/alyssa/followers/")),
+            actor.getFollowers());
+        assertEquals(new ObjectReference<>().setLink(true).setLink(new URI("https://social.example/alyssa/following/")),
+            actor.getFollowing());
+        assertEquals(new URI("https://social.example/alyssa/liked/"), actor.getLiked());
     }
 }

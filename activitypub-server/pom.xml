@@ -39,23 +39,18 @@
     </dependency>
     <dependency>
       <groupId>org.xwiki.platform</groupId>
-      <artifactId>xwiki-platform-resource-default</artifactId>
-      <version>${xwiki.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.xwiki.platform</groupId>
       <artifactId>xwiki-platform-container-api</artifactId>
-      <version>${xwiki.version}</version>
+      <version>${platform.version}</version>
     </dependency>
     <dependency>
       <groupId>org.xwiki.platform</groupId>
-      <artifactId>xwiki-platform-bridge</artifactId>
-      <version>${xwiki.version}</version>
+      <artifactId>xwiki-platform-oldcore</artifactId>
+      <version>${platform.version}</version>
     </dependency>
     <dependency>
       <groupId>org.xwiki.platform</groupId>
       <artifactId>xwiki-platform-container-servlet</artifactId>
-      <version>${xwiki.version}</version>
+      <version>${platform.version}</version>
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>

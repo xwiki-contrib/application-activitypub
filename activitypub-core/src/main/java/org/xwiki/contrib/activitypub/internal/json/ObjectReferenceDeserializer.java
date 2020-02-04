@@ -17,13 +17,13 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitystream.tools;
+package org.xwiki.contrib.activitypub.internal.json;
 
 import java.io.IOException;
 import java.net.URI;
 
-import org.xwiki.contrib.activitystream.entities.Object;
-import org.xwiki.contrib.activitystream.entities.ObjectReference;
+import org.xwiki.contrib.activitypub.entities.ObjectReference;
+import org.xwiki.contrib.activitypub.entities.Object;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -31,7 +31,6 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ObjectReferenceDeserializer extends JsonDeserializer<ObjectReference>
 {

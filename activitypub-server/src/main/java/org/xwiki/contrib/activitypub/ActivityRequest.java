@@ -22,31 +22,41 @@ package org.xwiki.contrib.activitypub;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.xwiki.contrib.activitystream.entities.Activity;
-import org.xwiki.model.reference.EntityReference;
+import org.xwiki.contrib.activitypub.entities.activities.Activity;
+import org.xwiki.contrib.activitypub.entities.Actor;
 
 public class ActivityRequest<T extends Activity>
 {
-    private EntityReference userReference;
+    private Actor actor;
     private T activity;
     private HttpServletRequest request;
     private HttpServletResponse response;
 
-    public ActivityRequest(EntityReference userReference, T activity, HttpServletRequest request, HttpServletResponse response)
+    public ActivityRequest(Actor actor, T activity, HttpServletRequest request, HttpServletResponse response)
     {
-        this.userReference = userReference;
+        this.actor = actor;
         this.activity = activity;
         this.request = request;
         this.response = response;
     }
 
-    public EntityReference getUserReference()
+    public Actor getActor()
     {
-        return userReference;
+        return actor;
     }
 
     public T getActivity()
     {
         return activity;
+    }
+
+    public HttpServletRequest getRequest()
+    {
+        return request;
+    }
+
+    public HttpServletResponse getResponse()
+    {
+        return response;
     }
 }

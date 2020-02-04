@@ -17,7 +17,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitystream.entities;
+package org.xwiki.contrib.activitypub.entities;
 
 import java.net.URI;
 import java.util.Date;
@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
-import org.xwiki.contrib.activitystream.tools.ObjectDeserializer;
+import org.xwiki.contrib.activitypub.internal.json.ObjectDeserializer;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
@@ -37,9 +37,9 @@ public class Object extends JSONLDObjects
     private String name;
     private Date published;
     private String summary;
-    private List<ObjectReference<Person>> to;
+    private List<ObjectReference<Actor>> to;
     private String content;
-    private List<ObjectReference<Person>> attributedTo;
+    private List<ObjectReference<Actor>> attributedTo;
 
     public String getType()
     {
@@ -94,16 +94,6 @@ public class Object extends JSONLDObjects
         this.summary = summary;
     }
 
-    public List<ObjectReference<Person>> getTo()
-    {
-        return to;
-    }
-
-    public void setTo(List<ObjectReference<Person>> to)
-    {
-        this.to = to;
-    }
-
     public String getContent()
     {
         return content;
@@ -114,13 +104,24 @@ public class Object extends JSONLDObjects
         this.content = content;
     }
 
-    public List<ObjectReference<Person>> getAttributedTo()
+    public List<ObjectReference<Actor>> getTo()
+    {
+        return to;
+    }
+
+    public void setTo(
+        List<ObjectReference<Actor>> to)
+    {
+        this.to = to;
+    }
+
+    public List<ObjectReference<Actor>> getAttributedTo()
     {
         return attributedTo;
     }
 
     public void setAttributedTo(
-        List<ObjectReference<Person>> attributedTo)
+        List<ObjectReference<Actor>> attributedTo)
     {
         this.attributedTo = attributedTo;
     }

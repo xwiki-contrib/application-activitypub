@@ -21,10 +21,9 @@ package org.xwiki.contrib.activitypub.entities;
 
 import java.net.URI;
 
-import org.xwiki.contrib.activitystream.entities.ObjectReference;
-import org.xwiki.contrib.activitystream.entities.OrderedCollection;
+import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 
-public class Person extends org.xwiki.contrib.activitystream.entities.Person
+public abstract class Actor extends Object
 {
     // TODO: Check IRI <-> URI conversion (https://tools.ietf.org/html/rfc3987#section-3.1)
     // We might have some weird cases with XWiki special username (containing non UTF-8 characters for example)
@@ -70,8 +69,12 @@ public class Person extends org.xwiki.contrib.activitystream.entities.Person
         return followers;
     }
 
-    public void setFollowers(
-        ObjectReference<OrderedCollection> followers)
+    public void addFollower(Actor follower, ActivityPubJsonParser parser)
+    {
+        this.followers.getObject(parser).addItem(follower);
+    }
+
+    public void setFollowers(ObjectReference<OrderedCollection> followers)
     {
         this.followers = followers;
     }
@@ -81,10 +84,14 @@ public class Person extends org.xwiki.contrib.activitystream.entities.Person
         return following;
     }
 
-    public void setFollowing(
-        ObjectReference<OrderedCollection> following)
+    public void setFollowing(ObjectReference<OrderedCollection> following)
     {
         this.following = following;
+    }
+
+    public void addFollowing(Actor followingActor, ActivityPubJsonParser parser)
+    {
+        this.following.getObject(parser).addItem(followingActor);
     }
 
     public URI getLiked()

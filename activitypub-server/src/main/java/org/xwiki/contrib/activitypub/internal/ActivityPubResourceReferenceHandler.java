@@ -20,6 +20,7 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,7 +32,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
-import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.manager.ComponentManager;
@@ -39,25 +39,27 @@ import org.xwiki.container.Container;
 import org.xwiki.container.servlet.ServletRequest;
 import org.xwiki.container.servlet.ServletResponse;
 import org.xwiki.contrib.activitypub.ActivityHandler;
+import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
+import org.xwiki.contrib.activitypub.ActivityPubStore;
 import org.xwiki.contrib.activitypub.ActivityRequest;
-import org.xwiki.contrib.activitypub.parser.ActivityPubParser;
-import org.xwiki.contrib.activitystream.entities.Activity;
-import org.xwiki.contrib.activitystream.entities.Object;
-import org.xwiki.model.reference.EntityReference;
+import org.xwiki.contrib.activitypub.entities.Actor;
+import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
+import org.xwiki.contrib.activitypub.entities.activities.Activity;
+import org.xwiki.contrib.activitypub.entities.Object;
 import org.xwiki.resource.AbstractResourceReferenceHandler;
 import org.xwiki.resource.ResourceReference;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
 import org.xwiki.resource.ResourceReferenceHandlerException;
-import org.xwiki.resource.entity.EntityResourceAction;
+import org.xwiki.resource.ResourceType;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 @Component
 @Named("activitypub")
 @Singleton
-public class ActivityPubResourceReferenceHandler extends AbstractResourceReferenceHandler<EntityResourceAction>
+public class ActivityPubResourceReferenceHandler extends AbstractResourceReferenceHandler<ResourceType>
 {
-    private static final EntityResourceAction TYPE = new EntityResourceAction("activitypub");
+    private static final ResourceType TYPE = new ResourceType("activitypub");
 
     @Inject
     private Logger logger;
@@ -66,18 +68,28 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
     private ComponentManager componentManager;
 
     @Inject
-    private ActivityPubParser activityPubParser;
+    private ActivityPubJsonParser activityPubJsonParser;
+
+    @Inject
+    private ActivityPubJsonSerializer activityPubJsonSerializer;
 
     @Inject
     private Container container;
 
     @Inject
-    private DocumentAccessBridge documentAccessBridge;
+    private ActorHandler actorHandler;
+
+    @Inject
+    private ActivityPubStore activityPubStorage;
 
     @Override
-    public List<EntityResourceAction> getSupportedResourceReferences()
+    public List<ResourceType> getSupportedResourceReferences()
     {
         return Arrays.asList(TYPE);
+    }
+
+    private enum BOX_TYPE {
+        INBOX, OUTBOX;
     }
 
     @Override
@@ -85,16 +97,33 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         throws ResourceReferenceHandlerException
     {
         ActivityPubResourceReference resourceReference = (ActivityPubResourceReference) reference;
-        EntityReference entityReference = resourceReference.getEntityReference();
-        ActivityRequest<Activity> activityRequest = this.parseRequest(resourceReference);
+        HttpServletRequest request = ((ServletRequest) this.container.getRequest()).getHttpServletRequest();
+        HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
+        Object entity = this.activityPubStorage.retrieveEntity(resourceReference.getUuid());
 
-        if (isUserPage(entityReference) && activityRequest != null) {
-            ActivityHandler<Activity> handler = this.getHandler(activityRequest);
-            if (handler != null && resourceReference.targetInbox()) {
-                handler.handleInboxRequest(activityRequest);
-            } else if (handler != null && resourceReference.targetOutbox()) {
-                handler.handleOutboxRequest(activityRequest);
+        try {
+            if ("POST".equalsIgnoreCase(request.getMethod())) {
+                if ("inbox".equalsIgnoreCase(resourceReference.getEntityType())) {
+                    this.handleBox(entity, BOX_TYPE.INBOX);
+                } else if ("outbox".equalsIgnoreCase(resourceReference.getEntityType())) {
+                    this.handleBox(entity, BOX_TYPE.OUTBOX);
+                } else {
+                    response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+                    response.setContentType("text/plain");
+                    response.getOutputStream()
+                        .write("You cannot post anything outside an inbox our an outbox."
+                            .getBytes(StandardCharsets.UTF_8));
+                }
+            } else {
+                response.setStatus(HttpServletResponse.SC_OK);
+                response.setContentType("application/activity+json");
+
+                // FIXME: This should be more complicated, we'd need to check authorization etc.
+                // We probably need an entity handler component to manage the various kind of entities to retrieve.
+                this.activityPubJsonSerializer.serialize(response.getOutputStream(), entity);
             }
+        } catch (IOException e) {
+            this.logger.error("Error while handling [{}]", resourceReference, e);
         }
 
         // Be a good citizen, continue the chain, in case some lower-priority Handler has something to do for this
@@ -102,16 +131,42 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         chain.handleNext(reference);
     }
 
-    private <T extends Activity> ActivityRequest<T> parseRequest(ActivityPubResourceReference resourceReference)
+    private void handleBox(Object entity, BOX_TYPE boxType) throws IOException
+    {
+        ActivityRequest<Activity> activityRequest = this.parseRequest(entity);
+        if (activityRequest != null && activityRequest.getActor() != null) {
+            ActivityHandler<Activity> handler = this.getHandler(activityRequest);
+            if (handler != null) {
+                if (boxType == BOX_TYPE.INBOX) {
+                    handler.handleInboxRequest(activityRequest);
+                } else {
+                    handler.handleOutboxRequest(activityRequest);
+                }
+            } else {
+                logger.error("Error while looking for an handler for activity [{}]",
+                    activityRequest.getActivity().getType());
+            }
+        } else {
+            logger.error("Error while parsing the request: the activity or its actor cannot be retrieved.");
+        }
+    }
+
+    private <T extends Activity> ActivityRequest<T> parseRequest(Object entity)
     {
         HttpServletRequest request = ((ServletRequest) this.container.getRequest()).getHttpServletRequest();
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
         try {
             String requestBody = IOUtils.toString(request.getReader());
-            Object object = this.activityPubParser.parseRequest(requestBody);
+            Object object = this.activityPubJsonParser.parseRequest(requestBody);
             if (object != null) {
                 T activity = getActivity(object);
-                return new ActivityRequest<T>(resourceReference.getEntityReference(), activity, request, response);
+                // We consider that every inbox has an attributedTo field fill to retrieve the actor it's linked to...
+                // Not sure if that's good, but looks better than having distinct resource references for actions and
+                // entities such as POST on /bin/activitypub/XWiki/Foobar/inbox and GET on /activitypub/note/4242
+                // Right now we can POST and GET on /activitypub/inbox/Foobar which represents both action and entity.
+                // This really needs to be discussed.
+                Actor actor = entity.getAttributedTo().get(0).getObject(this.activityPubJsonParser);
+                return new ActivityRequest<T>(actor, activity, request, response);
             } else {
                 this.logger.warn("Parsing of ActivityPub request body returned a null object.");
             }
@@ -140,11 +195,5 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
                 activityRequest.getActivity().getType(), e);
         }
         return null;
-    }
-
-    private boolean isUserPage(EntityReference entityReference)
-    {
-        // TODO: Check if the entity reference document contains a XWiki.XWikiUser object
-        return true;
     }
 }

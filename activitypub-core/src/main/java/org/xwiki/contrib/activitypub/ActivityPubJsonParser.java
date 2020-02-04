@@ -17,8 +17,19 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitystream.entities;
+package org.xwiki.contrib.activitypub;
 
-public class Person extends Actor
+import java.net.URI;
+
+import org.xwiki.component.annotation.Role;
+import org.xwiki.contrib.activitypub.entities.Object;
+
+@Role
+public interface ActivityPubJsonParser
 {
+    <T extends Object> T parseRequest(String requestBody);
+
+    <T extends Object> T parseRequest(String requestBody, Class<T> type);
+
+    <T extends Object> T resolveObject(URI uri);
 }

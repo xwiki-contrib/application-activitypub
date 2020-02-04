@@ -17,24 +17,11 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitystream.entities;
-
-import java.util.List;
+package org.xwiki.contrib.activitypub.entities;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-@JsonDeserialize(as = OrderedCollection.class)
-public class OrderedCollection extends AbstractCollection
+@JsonDeserialize(as = Note.class)
+public class Note extends Object
 {
-    private List<ObjectReference<?>> orderedItems;
-
-    public List<ObjectReference<?>> getOrderedItems()
-    {
-        return orderedItems;
-    }
-
-    public void setOrderedItems(List<ObjectReference<?>> orderedItems)
-    {
-        this.orderedItems = orderedItems;
-    }
 }

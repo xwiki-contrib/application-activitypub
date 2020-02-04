@@ -17,13 +17,13 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitystream.tools;
+package org.xwiki.contrib.activitypub.internal.json;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-import org.xwiki.contrib.activitystream.entities.Object;
+import org.xwiki.contrib.activitypub.entities.Object;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -35,12 +35,16 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ObjectDeserializer extends JsonDeserializer<Object>
 {
-    private static final List<String> packageExtensions = new ArrayList<>();
-    private static final String PACKAGE_FALLBACK = "org.xwiki.contrib.activitystream.entities";
+    private static final List<String> packageExtensions = Arrays.asList(
+        "org.xwiki.contrib.activitypub.entities",
+        "org.xwiki.contrib.activitypub.entities.activities"
+    );
+
+
 
     public static void registerPackageExtension(String packageExtension)
     {
-        packageExtensions.add(packageExtension);
+        packageExtensions.add(0, packageExtension);
     }
 
     @Override
@@ -69,11 +73,7 @@ public class ObjectDeserializer extends JsonDeserializer<Object>
                 return classInPackage;
             }
         }
-        classInPackage = findClassInPackage(PACKAGE_FALLBACK, type);
-        if (classInPackage == null) {
-            classInPackage = Object.class;
-        }
-        return classInPackage;
+        return Object.class;
     }
 
     private Class<? extends Object> findClassInPackage(String packageName, String type)
