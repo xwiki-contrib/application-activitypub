@@ -47,16 +47,19 @@ public class AcceptActivityHandler extends AbstractActivityHandler implements Ac
     @Override
     public void handleOutboxRequest(ActivityRequest<Accept> activityRequest) throws IOException
     {
-        Accept activity = activityRequest.getActivity();
-        Actor activityActor = activity.getActor().getObject(this.activityPubJsonParser);
-        Object object = activity.getObject().getObject(this.activityPubJsonParser);
+        Accept accept = activityRequest.getActivity();
+        if (accept.getId() == null) {
+            this.activityPubStorage.storeEntity(accept);
+        }
+        Actor acceptingActor = accept.getActor().getObject(this.activityPubJsonParser);
+        Object object = accept.getObject().getObject(this.activityPubJsonParser);
 
         if (object instanceof Follow) {
             Follow follow = (Follow) object;
-            Actor followActor = follow.getActor().getObject(this.activityPubJsonParser);
-            followActor.addFollowing(activityActor, this.activityPubJsonParser);
-            activityActor.addFollower(followActor, this.activityPubJsonParser);
-            this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, activity);
+            Actor followingActor = follow.getActor().getObject(this.activityPubJsonParser);
+            followingActor.addFollowing(acceptingActor, this.activityPubJsonParser);
+            acceptingActor.addFollower(followingActor, this.activityPubJsonParser);
+            this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, accept);
         } else {
             this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_NOT_IMPLEMENTED,
                 "Only follow activities can be accepted in the current implementation.");

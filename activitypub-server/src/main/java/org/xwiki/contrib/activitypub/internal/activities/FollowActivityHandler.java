@@ -59,11 +59,18 @@ public class FollowActivityHandler extends AbstractActivityHandler implements Ac
         if (follow.getId() == null) {
             this.activityPubStorage.storeEntity(follow);
         }
-        Actor actor = follow.getActor().getObject(this.activityPubJsonParser);
-        Inbox actorInbox = this.actorHandler.getActorInbox(actor);
-        actorInbox.addPendingFollow(follow);
-        actorInbox.addActivity(follow);
+        Object followedObject = follow.getObject().getObject(this.activityPubJsonParser);
+        if (followedObject instanceof Actor) {
+            Actor followedActor = (Actor) followedObject;
+            Inbox actorInbox = this.actorHandler.getActorInbox(followedActor);
+            actorInbox.addPendingFollow(follow);
+            actorInbox.addActivity(follow);
 
-        this.answer(activityRequest.getResponse(), HttpServletResponse.SC_ACCEPTED, follow);
+            this.answer(activityRequest.getResponse(), HttpServletResponse.SC_ACCEPTED, follow);
+        } else {
+            this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_NOT_IMPLEMENTED,
+                "Only following actors is implemented.");
+        }
+
     }
 }
