@@ -29,6 +29,7 @@ import org.xwiki.contrib.activitypub.entities.activities.Follow;
 
 public class Inbox extends OrderedCollection
 {
+    private transient Actor owner;
     private Map<String, Activity> items;
     private List<Follow> pendingFollows;
 
@@ -36,6 +37,17 @@ public class Inbox extends OrderedCollection
     {
         this.items = new HashMap<>();
         this.pendingFollows = new ArrayList<>();
+    }
+
+    public Actor getOwner()
+    {
+        return owner;
+    }
+
+    public Inbox setOwner(Actor owner)
+    {
+        this.owner = owner;
+        return this;
     }
 
     public void addActivity(Activity activity)

@@ -57,7 +57,7 @@ public class ObjectReferenceSerializer extends JsonSerializer<ObjectReference>
 
             // the ID wasn't null, but for some reason it wasn't a link, we kept it as an object in the serialization.
             if (object.getId() != null) {
-                jsonGenerator.writeObject(object);
+                jsonGenerator.writeString(object.getId().toString());
             // it doesn't have an ID: we need to store it and we serialize it as a link to avoid big JSON answers.
             } else {
                 String uuid = this.activityPubStore.storeEntity(object);

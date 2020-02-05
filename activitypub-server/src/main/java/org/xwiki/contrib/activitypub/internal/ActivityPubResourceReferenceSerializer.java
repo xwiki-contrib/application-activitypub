@@ -69,6 +69,9 @@ public class ActivityPubResourceReferenceSerializer implements
         ExtendedURL extendedURL = new ExtendedURL(segments, resource.getParameters());
 
         extendedURL = this.extendedURLNormalizer.normalize(extendedURL);
+
+        // The following is a nasty hack, we should rely on URLURLNormarlizer once
+        // https://jira.xwiki.org/browse/XWIKI-17023https://jira.xwiki.org/browse/XWIKI-17023 is fixed.
         XWikiContext context = contextProvider.get();
         try {
             URIBuilder uriBuilder = new URIBuilder(context.getURLFactory().getServerURL(context).toURI());

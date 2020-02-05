@@ -50,12 +50,13 @@ public class ActorTest
         assertEquals("Alyssa P. Hacker", actor.getName());
         assertEquals("alyssa", actor.getPreferredUsername());
         assertEquals("Lisp enthusiast hailing from MIT", actor.getSummary());
-        assertEquals(new URI("https://social.example/alyssa/inbox/"), actor.getInbox());
-        assertEquals(new URI("https://social.example/alyssa/outbox/"), actor.getOutbox());
+        assertEquals(new ObjectReference<>().setLink(true).setLink(new URI("https://social.example/alyssa/inbox/")),
+            actor.getInbox());
+        assertEquals(new ObjectReference<>().setLink(true).setLink(new URI("https://social.example/alyssa/outbox/")),
+            actor.getOutbox());
         assertEquals(new ObjectReference<>().setLink(true).setLink(new URI("https://social.example/alyssa/followers/")),
             actor.getFollowers());
         assertEquals(new ObjectReference<>().setLink(true).setLink(new URI("https://social.example/alyssa/following/")),
             actor.getFollowing());
-        assertEquals(new URI("https://social.example/alyssa/liked/"), actor.getLiked());
     }
 }

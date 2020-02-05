@@ -118,23 +118,11 @@ public class ActorHandler
 
     public Inbox getActorInbox(Actor actor)
     {
-        Inbox inbox = this.activityPubStorage.retrieveActorInbox(actor);
-        if (inbox == null) {
-            inbox = new Inbox();
-            inbox.getAttributedTo().add(new ObjectReference<Actor>().setObject(actor));
-            this.activityPubStorage.storeEntity(inbox);
-        }
-        return inbox;
+        return this.activityPubStorage.retrieveActorInbox(actor);
     }
 
     public Outbox getActorOutbox(Actor actor)
     {
-        Outbox outbox = this.activityPubStorage.retrieveActorOutbox(actor);
-        if (outbox == null) {
-            outbox = new Outbox();
-            outbox.getAttributedTo().add(new ObjectReference<Actor>().setObject(actor));
-            this.activityPubStorage.storeEntity(outbox);
-        }
-        return outbox;
+        return this.activityPubStorage.retrieveActorOutbox(actor);
     }
 }

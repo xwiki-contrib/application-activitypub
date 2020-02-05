@@ -36,9 +36,8 @@ import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.entities.Object;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import static com.fasterxml.jackson.databind.DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY;
 
 @Component
 @Singleton
@@ -53,7 +52,9 @@ public class DefaultActivityPubJsonParser implements ActivityPubJsonParser, Init
     @Override
     public void initialize() throws InitializationException
     {
-        objectMapper = new ObjectMapper().configure(ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+        objectMapper = new ObjectMapper()
+            .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         this.httpClient = new HttpClient();
     }
 

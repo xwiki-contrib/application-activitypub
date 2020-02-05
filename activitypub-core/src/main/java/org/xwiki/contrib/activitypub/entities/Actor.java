@@ -28,11 +28,18 @@ public abstract class Actor extends Object
     // TODO: Check IRI <-> URI conversion (https://tools.ietf.org/html/rfc3987#section-3.1)
     // We might have some weird cases with XWiki special username (containing non UTF-8 characters for example)
     private String preferredUsername;
-    private URI inbox;
-    private URI outbox;
+    private ObjectReference<Inbox> inbox;
+    private ObjectReference<Outbox> outbox;
     private ObjectReference<OrderedCollection> followers;
     private ObjectReference<OrderedCollection> following;
-    private URI liked;
+
+    public Actor()
+    {
+        this.inbox = new ObjectReference<Inbox>().setObject(new Inbox().setOwner(this));
+        this.outbox = new ObjectReference<Outbox>().setObject(new Outbox().setOwner(this));
+        this.followers = new ObjectReference<OrderedCollection>().setObject(new OrderedCollection());
+        this.following = new ObjectReference<OrderedCollection>().setObject(new OrderedCollection());
+    }
 
     public String getPreferredUsername()
     {
@@ -42,26 +49,6 @@ public abstract class Actor extends Object
     public void setPreferredUsername(String preferredUsername)
     {
         this.preferredUsername = preferredUsername;
-    }
-
-    public URI getInbox()
-    {
-        return inbox;
-    }
-
-    public void setInbox(URI inbox)
-    {
-        this.inbox = inbox;
-    }
-
-    public URI getOutbox()
-    {
-        return outbox;
-    }
-
-    public void setOutbox(URI outbox)
-    {
-        this.outbox = outbox;
     }
 
     public ObjectReference<OrderedCollection> getFollowers()
@@ -94,13 +81,23 @@ public abstract class Actor extends Object
         this.following.getObject(parser).addItem(followingActor);
     }
 
-    public URI getLiked()
+    public ObjectReference<Inbox> getInbox()
     {
-        return liked;
+        return inbox;
     }
 
-    public void setLiked(URI liked)
+    public void setInbox(ObjectReference<Inbox> inbox)
     {
-        this.liked = liked;
+        this.inbox = inbox;
+    }
+
+    public ObjectReference<Outbox> getOutbox()
+    {
+        return outbox;
+    }
+
+    public void setOutbox(ObjectReference<Outbox> outbox)
+    {
+        this.outbox = outbox;
     }
 }

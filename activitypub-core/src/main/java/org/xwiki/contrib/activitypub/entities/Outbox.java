@@ -25,7 +25,19 @@ import org.xwiki.contrib.activitypub.entities.activities.Activity;
 
 public class Outbox extends OrderedCollection
 {
+    private transient Actor owner;
     private Map<String, Activity> items;
+
+    public Actor getOwner()
+    {
+        return owner;
+    }
+
+    public Outbox setOwner(Actor owner)
+    {
+        this.owner = owner;
+        return this;
+    }
 
     public void addActivity(Activity activity)
     {

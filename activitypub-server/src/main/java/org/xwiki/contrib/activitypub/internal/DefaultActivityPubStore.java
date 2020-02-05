@@ -66,10 +66,18 @@ public class DefaultActivityPubStore implements ActivityPubStore
         }
 
         String uuid;
-        if ("inbox".equalsIgnoreCase(entity.getType())) {
-            uuid = getActorEntityUID(entity.getAttributedTo().get(0).getObject(), INBOX_SUFFIX_ID);
-        } else if ("outbox".equalsIgnoreCase(entity.getType())) {
-            uuid = getActorEntityUID(entity.getAttributedTo().get(0).getObject(), OUTBOX_SUFFIX_ID);
+        if (entity instanceof Inbox) {
+            Inbox inbox = (Inbox) entity;
+            if (inbox.getOwner() == null) {
+                throw new IllegalArgumentException("Cannot store an inbox without owner.");
+            }
+            uuid = getActorEntityUID(inbox.getOwner(), INBOX_SUFFIX_ID);
+        } else if (entity instanceof Outbox) {
+            Outbox outbox = (Outbox) entity;
+            if (outbox.getOwner() == null) {
+                throw new IllegalArgumentException("Cannot store an outbox without owner.");
+            }
+            uuid = getActorEntityUID(outbox.getOwner(), OUTBOX_SUFFIX_ID);
         } else {
             // FIXME: we cannot rely on hashCode because of possible collisions and size limitation, but we shouldn't
             // rely on total randomness because of dedup.
@@ -102,13 +110,27 @@ public class DefaultActivityPubStore implements ActivityPubStore
     @Override
     public Inbox retrieveActorInbox(Actor actor)
     {
-        return this.retrieveEntity("inbox", actor.getName());
+        Inbox inbox = this.retrieveEntity(INBOX_SUFFIX_ID, actor.getName());
+        if (inbox == null) {
+            inbox = actor.getInbox().getObject();
+            this.storeEntity(inbox);
+        } else {
+            actor.getInbox().setObject(inbox);
+        }
+        return inbox;
     }
 
     @Override
     public Outbox retrieveActorOutbox(Actor actor)
     {
-        return this.retrieveEntity("outbox", actor.getName());
+        Outbox outbox = this.retrieveEntity(OUTBOX_SUFFIX_ID, actor.getName());
+        if (outbox == null) {
+            outbox = actor.getOutbox().getObject();
+            this.storeEntity(outbox);
+        } else {
+            actor.getOutbox().setObject(outbox);
+        }
+        return outbox;
     }
 
     private String getActorEntityUID(Actor actor, String entitySuffix)
