@@ -20,6 +20,7 @@
 package org.xwiki.contrib.activitypub.internal.json;
 
 import java.io.IOException;
+import java.net.URI;
 
 import javax.inject.Inject;
 
@@ -27,11 +28,10 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubStore;
 import org.xwiki.contrib.activitypub.entities.Object;
 import org.xwiki.contrib.activitypub.entities.ObjectReference;
-import org.xwiki.contrib.activitypub.internal.ActivityPubResourceReference;
+import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.resource.ResourceReferenceSerializer;
 import org.xwiki.resource.SerializeResourceReferenceException;
 import org.xwiki.resource.UnsupportedResourceReferenceException;
-import org.xwiki.url.ExtendedURL;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -44,8 +44,7 @@ public class ObjectReferenceSerializer extends JsonSerializer<ObjectReference>
     private ActivityPubStore activityPubStore;
 
     @Inject
-    private ResourceReferenceSerializer<ActivityPubResourceReference, ExtendedURL>
-        activityPubResourceReferenceSerializer;
+    private ResourceReferenceSerializer<ActivityPubResourceReference, URI> activityPubResourceReferenceSerializer;
 
     @Override
     public void serialize(ObjectReference objectReference, JsonGenerator jsonGenerator,
@@ -65,8 +64,8 @@ public class ObjectReferenceSerializer extends JsonSerializer<ObjectReference>
                 ActivityPubResourceReference resourceReference =
                     new ActivityPubResourceReference(object.getType(), uuid);
                 try {
-                    ExtendedURL url = this.activityPubResourceReferenceSerializer.serialize(resourceReference);
-                    jsonGenerator.writeString(url.serialize());
+                    URI uri = this.activityPubResourceReferenceSerializer.serialize(resourceReference);
+                    jsonGenerator.writeString(uri.toString());
                 } catch (SerializeResourceReferenceException|UnsupportedResourceReferenceException e) {
                     e.printStackTrace();
                 }

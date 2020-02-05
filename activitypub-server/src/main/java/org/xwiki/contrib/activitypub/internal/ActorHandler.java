@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.slf4j.Logger;
@@ -36,9 +38,11 @@ import org.xwiki.contrib.activitypub.entities.ObjectReference;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.LocalDocumentReference;
 
+import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.user.api.XWikiUser;
@@ -61,6 +65,13 @@ public class ActorHandler
 
     @Inject
     private ActivityPubStore activityPubStorage;
+
+    @Inject
+    private Provider<XWikiContext> contextProvider;
+
+    @Inject
+    @Named("current")
+    private DocumentReferenceResolver<String> stringDocumentReferenceResolver;
 
     private URI getID(XWikiUser user)
     {
@@ -85,6 +96,24 @@ public class ActorHandler
             logger.error("Error while loading user document with reference [{}]", entityReference, e);
         }
         return null;
+    }
+
+    private DocumentReference resolveUser(String username)
+    {
+        DocumentReference userDocReference =
+            this.stringDocumentReferenceResolver.resolve(String.format("XWiki.%s", username));
+        return userDocReference;
+    }
+
+    public boolean isExistingUser(String serializedUserReference)
+    {
+        XWikiUser xWikiUser = new XWikiUser(resolveUser(serializedUserReference));
+        return xWikiUser.exists(this.contextProvider.get());
+    }
+
+    public Actor getActor(String serializedUserReference)
+    {
+        return this.getActor(resolveUser(serializedUserReference));
     }
 
     public Inbox getActorInbox(Actor actor)

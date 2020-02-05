@@ -26,8 +26,8 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.resource.CreateResourceReferenceException;
-import org.xwiki.resource.ResourceReference;
 import org.xwiki.resource.ResourceType;
 import org.xwiki.resource.UnsupportedResourceReferenceException;
 import org.xwiki.url.ExtendedURL;

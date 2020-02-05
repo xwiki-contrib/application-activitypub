@@ -43,7 +43,7 @@ public interface ActivityPubStore
      * @param <T>
      * @return the stored entity or null if it has not been found.
      */
-    <T extends Object> T retrieveEntity(String uuid);
+    <T extends Object> T retrieveEntity(String entityType, String uuid);
 
     Inbox retrieveActorInbox(Actor actor);
 

@@ -19,31 +19,43 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.apache.http.client.utils.URIBuilder;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.resource.ResourceReferenceSerializer;
 import org.xwiki.resource.SerializeResourceReferenceException;
 import org.xwiki.resource.UnsupportedResourceReferenceException;
 import org.xwiki.url.ExtendedURL;
 import org.xwiki.url.URLNormalizer;
 
+import com.xpn.xwiki.XWikiContext;
+
 @Component
 @Singleton
 public class ActivityPubResourceReferenceSerializer implements
-    ResourceReferenceSerializer<ActivityPubResourceReference, ExtendedURL>
+    ResourceReferenceSerializer<ActivityPubResourceReference, URI>
 {
+    @Inject
+    private Provider<XWikiContext> contextProvider;
+
     @Inject
     @Named("contextpath")
     private URLNormalizer<ExtendedURL> extendedURLNormalizer;
 
     @Override
-    public ExtendedURL serialize(ActivityPubResourceReference resource)
+    public URI serialize(ActivityPubResourceReference resource)
         throws SerializeResourceReferenceException, UnsupportedResourceReferenceException
     {
         List<String> segments = new ArrayList<>();
@@ -56,7 +68,25 @@ public class ActivityPubResourceReferenceSerializer implements
         // Add all optional parameters
         ExtendedURL extendedURL = new ExtendedURL(segments, resource.getParameters());
 
-        // Normalize the URL to add the Context Path since we want a full relative URL to be returned.
-        return this.extendedURLNormalizer.normalize(extendedURL);
+        extendedURL = this.extendedURLNormalizer.normalize(extendedURL);
+        XWikiContext context = contextProvider.get();
+        try {
+            URIBuilder uriBuilder = new URIBuilder(context.getURLFactory().getServerURL(context).toURI());
+            uriBuilder.setPathSegments(extendedURL.getSegments());
+            for (Map.Entry<String, List<String>> parameter : extendedURL.getParameters().entrySet()) {
+                String paramKey = parameter.getKey();
+                if (parameter.getValue().isEmpty()) {
+                    uriBuilder.addParameter(paramKey, null);
+                } else {
+                    for (String paramValue : parameter.getValue()) {
+                        uriBuilder.addParameter(paramKey, paramValue);
+                    }
+                }
+            }
+            return uriBuilder.build();
+        } catch (MalformedURLException | URISyntaxException e) {
+            throw new SerializeResourceReferenceException(
+                String.format("Error while serializing [%s] to URI.", resource), e);
+        }
     }
 }

@@ -20,6 +20,7 @@
 package org.xwiki.contrib.activitypub.entities;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -40,6 +41,12 @@ public class Object extends JSONLDObjects
     private List<ObjectReference<Actor>> to;
     private String content;
     private List<ObjectReference<Actor>> attributedTo;
+
+    public Object()
+    {
+        this.to = new ArrayList<>();
+        this.attributedTo = new ArrayList<>();
+    }
 
     public String getType()
     {

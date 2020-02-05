@@ -40,8 +40,6 @@ public class ObjectDeserializer extends JsonDeserializer<Object>
         "org.xwiki.contrib.activitypub.entities.activities"
     );
 
-
-
     public static void registerPackageExtension(String packageExtension)
     {
         packageExtensions.add(0, packageExtension);

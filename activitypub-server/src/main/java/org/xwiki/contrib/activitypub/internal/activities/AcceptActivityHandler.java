@@ -34,7 +34,6 @@ import org.xwiki.contrib.activitypub.entities.activities.Accept;
 import org.xwiki.contrib.activitypub.entities.activities.Follow;
 
 @Component
-@Named("Accept")
 @Singleton
 public class AcceptActivityHandler extends AbstractActivityHandler implements ActivityHandler<Accept>
 {
@@ -49,8 +48,8 @@ public class AcceptActivityHandler extends AbstractActivityHandler implements Ac
     public void handleOutboxRequest(ActivityRequest<Accept> activityRequest) throws IOException
     {
         Accept activity = activityRequest.getActivity();
-        Actor activityActor = activity.getActor().getObject();
-        Object object = activity.getObject().getObject();
+        Actor activityActor = activity.getActor().getObject(this.activityPubJsonParser);
+        Object object = activity.getObject().getObject(this.activityPubJsonParser);
 
         if (object instanceof Follow) {
             Follow follow = (Follow) object;

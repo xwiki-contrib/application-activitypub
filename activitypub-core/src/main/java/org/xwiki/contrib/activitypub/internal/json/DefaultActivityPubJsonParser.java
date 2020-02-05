@@ -26,6 +26,8 @@ import java.net.URI;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.phase.Initializable;
@@ -36,10 +38,6 @@ import org.xwiki.contrib.activitypub.entities.Object;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-
 import static com.fasterxml.jackson.databind.DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY;
 
 @Component
@@ -47,7 +45,7 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.ACCEPT_SINGL
 public class DefaultActivityPubJsonParser implements ActivityPubJsonParser, Initializable
 {
     private ObjectMapper objectMapper;
-    private OkHttpClient okHttpClient;
+    private HttpClient httpClient;
 
     @Inject
     private Logger logger;
@@ -55,8 +53,8 @@ public class DefaultActivityPubJsonParser implements ActivityPubJsonParser, Init
     @Override
     public void initialize() throws InitializationException
     {
-        ObjectDeserializer.registerPackageExtension("org.xwiki.contrib.activitypub.entities");
         objectMapper = new ObjectMapper().configure(ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+        this.httpClient = new HttpClient();
     }
 
     @Override
@@ -81,16 +79,16 @@ public class DefaultActivityPubJsonParser implements ActivityPubJsonParser, Init
         return "application/activity+json".equals(contentType);
     }
 
-    private boolean isResponseOK(Response response)
+    private boolean isResponseOK(GetMethod method)
     {
-        if (!response.isSuccessful()) {
+        if (method.getStatusCode() != 200) {
             return false;
         } else {
-            String contentType = response.header("content-type");
+            String contentType = method.getResponseHeader("content-type").getValue();
             if (!isAcceptedContentType(contentType)) {
                 return false;
             }
-            if (response.body() == null) {
+            if (method.getResponseContentLength() == 0) {
                 return false;
             }
             return true;
@@ -101,17 +99,11 @@ public class DefaultActivityPubJsonParser implements ActivityPubJsonParser, Init
     public <T extends Object> T resolveObject(URI uri)
     {
         try {
-            Request request = new Request.Builder()
-                .url(uri.toURL())
-                .build();
-            try (Response response = this.okHttpClient.newCall(request).execute()) {
-                if (isResponseOK(response)) {
-                    return this.parseRequest(response.body().string());
-                }
+            GetMethod getMethod = new GetMethod(uri.toString());
+            this.httpClient.executeMethod(getMethod);
+            if (isResponseOK(getMethod)) {
+                return this.parseRequest(getMethod.getResponseBodyAsString());
             }
-
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }

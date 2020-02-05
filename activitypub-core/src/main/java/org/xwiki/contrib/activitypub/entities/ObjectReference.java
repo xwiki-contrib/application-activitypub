@@ -22,7 +22,6 @@ package org.xwiki.contrib.activitypub.entities;
 import java.net.URI;
 import java.util.Objects;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.internal.json.ObjectReferenceDeserializer;
 import org.xwiki.text.XWikiToStringBuilder;

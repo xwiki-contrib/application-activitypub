@@ -1,2 +1,4 @@
 org.xwiki.contrib.activitypub.internal.ActivityPubResourceReferenceHandler
 org.xwiki.contrib.activitypub.internal.ActorHandler
+org.xwiki.contrib.activitypub.internal.activities.AcceptActivityHandler
+org.xwiki.contrib.activitypub.internal.activities.FollowActivityHandler

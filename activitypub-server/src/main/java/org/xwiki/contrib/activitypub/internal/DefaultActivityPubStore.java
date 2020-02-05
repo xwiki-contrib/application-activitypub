@@ -19,18 +19,25 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStore;
 import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.Object;
 import org.xwiki.contrib.activitypub.entities.Outbox;
+import org.xwiki.resource.ResourceReferenceSerializer;
+import org.xwiki.resource.SerializeResourceReferenceException;
+import org.xwiki.resource.UnsupportedResourceReferenceException;
 
 @Component
 @Singleton
@@ -39,6 +46,12 @@ public class DefaultActivityPubStore implements ActivityPubStore
     private static final String INBOX_SUFFIX_ID = "inbox";
     private static final String OUTBOX_SUFFIX_ID = "outbox";
     private final Map<String, Object> storage;
+
+    @Inject
+    private ResourceReferenceSerializer<ActivityPubResourceReference, URI> serializer;
+
+    @Inject
+    private Logger logger;
 
     public DefaultActivityPubStore()
     {
@@ -62,30 +75,44 @@ public class DefaultActivityPubStore implements ActivityPubStore
             // rely on total randomness because of dedup.
             uuid = UUID.randomUUID().toString();
         }
-        this.storage.put(uuid, entity);
-        return uuid;
+        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference(entity.getType(), uuid);
+        try {
+            entity.setId(this.serializer.serialize(resourceReference));
+            this.storage.put(uuid, entity);
+            return uuid;
+        } catch (SerializeResourceReferenceException | UnsupportedResourceReferenceException e) {
+            this.logger.error("Error while serializing [{}].", resourceReference, e);
+        }
+
+        return null;
     }
 
     @Override
-    public <T extends Object> T retrieveEntity(String uuid)
+    public <T extends Object> T retrieveEntity(String entityType, String uuid)
     {
-        return (T) this.storage.get(uuid);
+        String key = uuid;
+        if ("inbox".equalsIgnoreCase(entityType)) {
+            key = String.format("%s-%s", uuid, INBOX_SUFFIX_ID);
+        } else if ("outbox".equalsIgnoreCase(entityType)) {
+            key = String.format("%s-%s", uuid, OUTBOX_SUFFIX_ID);
+        }
+        return (T) this.storage.get(key);
     }
 
     @Override
     public Inbox retrieveActorInbox(Actor actor)
     {
-        return this.retrieveEntity(getActorEntityUID(actor, INBOX_SUFFIX_ID));
+        return this.retrieveEntity("inbox", actor.getName());
     }
 
     @Override
     public Outbox retrieveActorOutbox(Actor actor)
     {
-        return this.retrieveEntity(getActorEntityUID(actor, OUTBOX_SUFFIX_ID));
+        return this.retrieveEntity("outbox", actor.getName());
     }
 
     private String getActorEntityUID(Actor actor, String entitySuffix)
     {
-        return String.format("%s-%s", actor.getId(), entitySuffix);
+        return String.format("%s-%s", actor.getName(), entitySuffix);
     }
 }

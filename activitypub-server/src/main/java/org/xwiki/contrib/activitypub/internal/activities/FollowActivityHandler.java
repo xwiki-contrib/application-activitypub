@@ -35,7 +35,6 @@ import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.internal.ActorHandler;
 
 @Component
-@Named("Follow")
 @Singleton
 public class FollowActivityHandler extends AbstractActivityHandler implements ActivityHandler<Follow>
 {
@@ -57,6 +56,9 @@ public class FollowActivityHandler extends AbstractActivityHandler implements Ac
     public void handleOutboxRequest(ActivityRequest<Follow> activityRequest) throws IOException
     {
         Follow follow = activityRequest.getActivity();
+        if (follow.getId() == null) {
+            this.activityPubStorage.storeEntity(follow);
+        }
         Actor actor = follow.getActor().getObject(this.activityPubJsonParser);
         Inbox actorInbox = this.actorHandler.getActorInbox(actor);
         actorInbox.addPendingFollow(follow);

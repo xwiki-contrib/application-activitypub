@@ -20,6 +20,7 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
@@ -35,11 +36,13 @@ import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.manager.ComponentManager;
+import org.xwiki.component.util.DefaultParameterizedType;
 import org.xwiki.container.Container;
 import org.xwiki.container.servlet.ServletRequest;
 import org.xwiki.container.servlet.ServletResponse;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
+import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStore;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.entities.Actor;
@@ -65,6 +68,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
     private Logger logger;
 
     @Inject
+    @Named("context")
     private ComponentManager componentManager;
 
     @Inject
@@ -99,20 +103,24 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         ActivityPubResourceReference resourceReference = (ActivityPubResourceReference) reference;
         HttpServletRequest request = ((ServletRequest) this.container.getRequest()).getHttpServletRequest();
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
-        Object entity = this.activityPubStorage.retrieveEntity(resourceReference.getUuid());
+        Object entity = this.activityPubStorage
+            .retrieveEntity(resourceReference.getEntityType(), resourceReference.getUuid());
 
         try {
             if ("POST".equalsIgnoreCase(request.getMethod())) {
-                if ("inbox".equalsIgnoreCase(resourceReference.getEntityType())) {
-                    this.handleBox(entity, BOX_TYPE.INBOX);
-                } else if ("outbox".equalsIgnoreCase(resourceReference.getEntityType())) {
-                    this.handleBox(entity, BOX_TYPE.OUTBOX);
-                } else {
-                    response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-                    response.setContentType("text/plain");
-                    response.getOutputStream()
-                        .write("You cannot post anything outside an inbox our an outbox."
-                            .getBytes(StandardCharsets.UTF_8));
+                Actor actor = getActor(resourceReference, response);
+                if (actor != null) {
+                    if ("inbox".equalsIgnoreCase(resourceReference.getEntityType())) {
+                        this.handleBox(actor, BOX_TYPE.INBOX);
+                    } else if ("outbox".equalsIgnoreCase(resourceReference.getEntityType())) {
+                        this.handleBox(actor, BOX_TYPE.OUTBOX);
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+                        response.setContentType("text/plain");
+                        response.getOutputStream()
+                            .write("You cannot post anything outside an inbox our an outbox."
+                                .getBytes(StandardCharsets.UTF_8));
+                    }
                 }
             } else {
                 response.setStatus(HttpServletResponse.SC_OK);
@@ -131,9 +139,24 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         chain.handleNext(reference);
     }
 
-    private void handleBox(Object entity, BOX_TYPE boxType) throws IOException
+    private Actor getActor(ActivityPubResourceReference resourceReference, HttpServletResponse response)
+        throws IOException
     {
-        ActivityRequest<Activity> activityRequest = this.parseRequest(entity);
+        if (this.actorHandler.isExistingUser(resourceReference.getUuid())) {
+            return this.actorHandler.getActor(resourceReference.getUuid());
+        } else {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            response.setContentType("text/plain");
+            response.getOutputStream()
+                .write(String.format("User [%s] cannot be found.", resourceReference.getUuid())
+                    .getBytes(StandardCharsets.UTF_8));
+        }
+        return null;
+    }
+
+    private void handleBox(Actor actor, BOX_TYPE boxType) throws IOException
+    {
+        ActivityRequest<Activity> activityRequest = this.parseRequest(actor);
         if (activityRequest != null && activityRequest.getActor() != null) {
             ActivityHandler<Activity> handler = this.getHandler(activityRequest);
             if (handler != null) {
@@ -151,7 +174,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         }
     }
 
-    private <T extends Activity> ActivityRequest<T> parseRequest(Object entity)
+    private <T extends Activity> ActivityRequest<T> parseRequest(Actor actor)
     {
         HttpServletRequest request = ((ServletRequest) this.container.getRequest()).getHttpServletRequest();
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
@@ -160,12 +183,6 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
             Object object = this.activityPubJsonParser.parseRequest(requestBody);
             if (object != null) {
                 T activity = getActivity(object);
-                // We consider that every inbox has an attributedTo field fill to retrieve the actor it's linked to...
-                // Not sure if that's good, but looks better than having distinct resource references for actions and
-                // entities such as POST on /bin/activitypub/XWiki/Foobar/inbox and GET on /activitypub/note/4242
-                // Right now we can POST and GET on /activitypub/inbox/Foobar which represents both action and entity.
-                // This really needs to be discussed.
-                Actor actor = entity.getAttributedTo().get(0).getObject(this.activityPubJsonParser);
                 return new ActivityRequest<T>(actor, activity, request, response);
             } else {
                 this.logger.warn("Parsing of ActivityPub request body returned a null object.");
@@ -186,10 +203,17 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         }
     }
 
+    private <T extends Activity> Class<T> getActivityClass(T object)
+    {
+        return (Class<T>) object.getClass();
+    }
+
     private <T extends Activity> ActivityHandler<T> getHandler(ActivityRequest<T> activityRequest)
     {
         try {
-            return this.componentManager.getInstance(ActivityHandler.class, activityRequest.getActivity().getType());
+            Type activityHandlerType = new DefaultParameterizedType(null, ActivityHandler.class,
+                getActivityClass(activityRequest.getActivity()));
+            return this.componentManager.getInstance(activityHandlerType);
         } catch (ComponentLookupException e) {
             this.logger.error("Error while getting the ActivityHandler for activity [{}]",
                 activityRequest.getActivity().getType(), e);

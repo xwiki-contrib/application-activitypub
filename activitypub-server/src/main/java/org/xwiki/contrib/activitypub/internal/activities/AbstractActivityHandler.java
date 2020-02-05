@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
+import org.xwiki.contrib.activitypub.ActivityPubStore;
 import org.xwiki.contrib.activitypub.entities.activities.Activity;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
 
@@ -36,6 +37,9 @@ public abstract class AbstractActivityHandler
 
     @Inject
     protected ActivityPubJsonParser activityPubJsonParser;
+
+    @Inject
+    protected ActivityPubStore activityPubStorage;
 
     protected void answer(HttpServletResponse response, int statusCode, Activity activity) throws IOException
     {
