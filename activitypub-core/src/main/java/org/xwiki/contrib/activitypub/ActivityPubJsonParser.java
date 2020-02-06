@@ -19,17 +19,25 @@
  */
 package org.xwiki.contrib.activitypub;
 
+import java.io.InputStream;
+import java.io.Reader;
 import java.net.URI;
 
 import org.xwiki.component.annotation.Role;
-import org.xwiki.contrib.activitypub.entities.Object;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 
 @Role
 public interface ActivityPubJsonParser
 {
-    <T extends Object> T parseRequest(String requestBody);
+    <T extends ActivityPubObject> T parseRequest(String requestBody);
 
-    <T extends Object> T parseRequest(String requestBody, Class<T> type);
+    <T extends ActivityPubObject> T parseRequest(String requestBody, Class<T> type);
 
-    <T extends Object> T resolveObject(URI uri);
+    <T extends ActivityPubObject> T parseRequest(Reader requestBodyReader);
+
+    <T extends ActivityPubObject> T parseRequest(Reader requestBodyReader, Class<T> type);
+
+    <T extends ActivityPubObject> T parseRequest(InputStream requestBodyInputStream);
+
+    <T extends ActivityPubObject> T parseRequest(InputStream requestBodyInputStream, Class<T> type);
 }

@@ -22,14 +22,21 @@ package org.xwiki.contrib.activitypub.entities;
 import java.net.URI;
 import java.util.Objects;
 
-import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
-import org.xwiki.contrib.activitypub.internal.json.ObjectReferenceDeserializer;
+import org.xwiki.contrib.activitypub.internal.json.ActivityPubObjectReferenceDeserializer;
 import org.xwiki.text.XWikiToStringBuilder;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-@JsonDeserialize(using = ObjectReferenceDeserializer.class)
-public class ObjectReference<T extends Object>
+/**
+ * Defines a reference towards an {@link ActivityPubObject}.
+ * The idea is to be able to deserialize some properties either as link or as object since most of the properties
+ * are serialized in one or another type.
+ * Note that it is then possible that in case of link the object is null: a specific resolver should be used to retrieve
+ * (and potentially set) the proper object.
+ * @param <T>
+ */
+@JsonDeserialize(using = ActivityPubObjectReferenceDeserializer.class)
+public class ActivityPubObjectReference<T extends ActivityPubObject>
 {
     private boolean isLink;
     private URI link;
@@ -40,7 +47,7 @@ public class ObjectReference<T extends Object>
         return isLink;
     }
 
-    public ObjectReference<T> setLink(boolean link)
+    public ActivityPubObjectReference<T> setLink(boolean link)
     {
         isLink = link;
         return this;
@@ -51,15 +58,7 @@ public class ObjectReference<T extends Object>
         return object;
     }
 
-    public T getObject(ActivityPubJsonParser parser)
-    {
-        if (this.object == null && this.isLink()) {
-            this.object = parser.resolveObject(this.getLink());
-        }
-        return this.object;
-    }
-
-    public ObjectReference<T> setObject(T object)
+    public ActivityPubObjectReference<T> setObject(T object)
     {
         this.object = object;
         return this;
@@ -70,7 +69,7 @@ public class ObjectReference<T extends Object>
         return link;
     }
 
-    public ObjectReference<T> setLink(URI link)
+    public ActivityPubObjectReference<T> setLink(URI link)
     {
         this.link = link;
         return this;
@@ -85,7 +84,7 @@ public class ObjectReference<T extends Object>
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        ObjectReference<?> that = (ObjectReference<?>) o;
+        ActivityPubObjectReference<?> that = (ActivityPubObjectReference<?>) o;
         return isLink == that.isLink &&
             Objects.equals(link, that.link) &&
             Objects.equals(object, that.object);

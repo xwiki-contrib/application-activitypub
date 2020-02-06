@@ -48,7 +48,7 @@ public class Sandbox
         BufferedReader bufferedReader = new BufferedReader(new FileReader(objectJsonResource));
         String json = bufferedReader.lines().collect(Collectors.joining());
         ObjectMapper mapper = new ObjectMapper();
-        Object object = mapper.readValue(json, Object.class);
+        ActivityPubObject object = mapper.readValue(json, ActivityPubObject.class);
 
         assertEquals("Object", object.getType());
         assertEquals(new URI("http://www.test.example/object/1"), object.getId());
@@ -77,16 +77,16 @@ public class Sandbox
         BufferedReader bufferedReader = new BufferedReader(new FileReader(objectJsonResource));
         String json = bufferedReader.lines().collect(Collectors.joining());
         ObjectMapper mapper = new ObjectMapper().configure(ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-        Note note = (Note) mapper.readValue(json, Object.class);
+        Note note = (Note) mapper.readValue(json, ActivityPubObject.class);
 
         assertEquals("Note", note.getType());
         assertEquals(new URI("https://www.w3.org/ns/activitystreams"), note.getContext());
 
-        ObjectReference<Person> benReference = new ObjectReference<>();
+        ActivityPubObjectReference<Person> benReference = new ActivityPubObjectReference<>();
         benReference.setLink(true);
         benReference.setLink(new URI("https://chatty.example/ben/"));
 
-        ObjectReference<Person> alyssaReference = new ObjectReference<>();
+        ActivityPubObjectReference<Person> alyssaReference = new ActivityPubObjectReference<>();
         alyssaReference.setLink(true);
         alyssaReference.setLink(new URI("https://social.example/alyssa/"));
 
@@ -102,13 +102,13 @@ public class Sandbox
         BufferedReader bufferedReader = new BufferedReader(new FileReader(objectJsonResource));
         String json = bufferedReader.lines().collect(Collectors.joining());
         ObjectMapper mapper = new ObjectMapper().configure(ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-        Create create = (Create) mapper.readValue(json, Object.class);
+        Create create = (Create) mapper.readValue(json, ActivityPubObject.class);
 
-        ObjectReference<Actor> benReference = new ObjectReference<>();
+        ActivityPubObjectReference<Actor> benReference = new ActivityPubObjectReference<>();
         benReference.setLink(true);
         benReference.setLink(new URI("https://chatty.example/ben/"));
 
-        ObjectReference<Actor> alyssaReference = new ObjectReference<>();
+        ActivityPubObjectReference<Actor> alyssaReference = new ActivityPubObjectReference<>();
         alyssaReference.setLink(true);
         alyssaReference.setLink(new URI("https://social.example/alyssa/"));
 
@@ -124,7 +124,7 @@ public class Sandbox
         note.setAttributedTo(Collections.singletonList(alyssaReference));
         note.setTo(Collections.singletonList(benReference));
         note.setContent("Say, did you finish reading that book I lent you?");
-        ObjectReference<Note> noteReference = new ObjectReference<>();
+        ActivityPubObjectReference<Note> noteReference = new ActivityPubObjectReference<>();
         noteReference.setLink(false);
         noteReference.setObject(note);
         assertEquals(noteReference, create.getObject());

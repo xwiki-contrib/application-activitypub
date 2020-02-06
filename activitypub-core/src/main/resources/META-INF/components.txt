@@ -1,3 +1,5 @@
 org.xwiki.contrib.activitypub.internal.json.DefaultActivityPubJsonParser
 org.xwiki.contrib.activitypub.internal.json.DefaultActivityPubJsonSerializer
-org.xwiki.contrib.activitypub.internal.json.ObjectReferenceSerializer
+org.xwiki.contrib.activitypub.internal.json.ActivityPubObjectReferenceSerializer
+org.xwiki.contrib.activitypub.internal.json.ObjectMapperConfiguration
+org.xwiki.contrib.activitypub.internal.DefaultActivityPubObjectReferenceResolver

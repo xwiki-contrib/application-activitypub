@@ -22,6 +22,6 @@ package org.xwiki.contrib.activitypub.entities;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 @JsonDeserialize(as = Note.class)
-public class Note extends Object
+public class Note extends ActivityPubObject
 {
 }

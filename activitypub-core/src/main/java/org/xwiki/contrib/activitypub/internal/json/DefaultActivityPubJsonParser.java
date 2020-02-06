@@ -20,95 +20,77 @@
 package org.xwiki.contrib.activitypub.internal.json;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
+import java.io.InputStream;
+import java.io.Reader;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.GetMethod;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.component.phase.Initializable;
-import org.xwiki.component.phase.InitializationException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
-import org.xwiki.contrib.activitypub.entities.Object;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
 @Singleton
-public class DefaultActivityPubJsonParser implements ActivityPubJsonParser, Initializable
+public class DefaultActivityPubJsonParser implements ActivityPubJsonParser
 {
-    private ObjectMapper objectMapper;
-    private HttpClient httpClient;
-
+    @Inject
+    private ObjectMapperConfiguration objectMapperConfiguration;
+    
     @Inject
     private Logger logger;
 
     @Override
-    public void initialize() throws InitializationException
+    public <T extends ActivityPubObject> T parseRequest(String requestBody)
     {
-        objectMapper = new ObjectMapper()
-            .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        this.httpClient = new HttpClient();
+        return (T) parseRequest(requestBody, ActivityPubObject.class);
     }
 
     @Override
-    public <T extends Object> T parseRequest(String requestBody)
-    {
-        return (T) parseRequest(requestBody, Object.class);
-    }
-
-    @Override
-    public <T extends Object> T parseRequest(String requestBody, Class<T> type)
+    public <T extends ActivityPubObject> T parseRequest(String requestBody, Class<T> type)
     {
         try {
-            return objectMapper.readValue(requestBody, type);
+            return this.objectMapperConfiguration.getObjectMapper().readValue(requestBody, type);
         } catch (JsonProcessingException e) {
             this.logger.error("Error while parsing request with type [{}].", type, e);
             return null;
         }
     }
 
-    private boolean isAcceptedContentType(String contentType)
+    @Override
+    public <T extends ActivityPubObject> T parseRequest(Reader requestBodyReader)
     {
-        return "application/activity+json".equals(contentType);
+        return (T) parseRequest(requestBodyReader, ActivityPubObject.class);
     }
 
-    private boolean isResponseOK(GetMethod method)
+    @Override
+    public <T extends ActivityPubObject> T parseRequest(Reader requestBodyReader, Class<T> type)
     {
-        if (method.getStatusCode() != 200) {
-            return false;
-        } else {
-            String contentType = method.getResponseHeader("content-type").getValue();
-            if (!isAcceptedContentType(contentType)) {
-                return false;
-            }
-            if (method.getResponseContentLength() == 0) {
-                return false;
-            }
-            return true;
+        try {
+            return this.objectMapperConfiguration.getObjectMapper().readValue(requestBodyReader, type);
+        } catch (IOException e) {
+            this.logger.error("Error while parsing request with type [{}].", type, e);
+            return null;
         }
     }
 
     @Override
-    public <T extends Object> T resolveObject(URI uri)
+    public <T extends ActivityPubObject> T parseRequest(InputStream requestBodyInputStream)
+    {
+        return (T) parseRequest(requestBodyInputStream, ActivityPubObject.class);
+    }
+
+    @Override
+    public <T extends ActivityPubObject> T parseRequest(InputStream requestBodyInputStream, Class<T> type)
     {
         try {
-            GetMethod getMethod = new GetMethod(uri.toString());
-            this.httpClient.executeMethod(getMethod);
-            if (isResponseOK(getMethod)) {
-                return this.parseRequest(getMethod.getResponseBodyAsString());
-            }
+            return this.objectMapperConfiguration.getObjectMapper().readValue(requestBodyInputStream, type);
         } catch (IOException e) {
-            e.printStackTrace();
+            this.logger.error("Error while parsing request with type [{}].", type, e);
+            return null;
         }
-
-        return null;
     }
 }

@@ -26,8 +26,8 @@ import javax.inject.Inject;
 
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubStore;
-import org.xwiki.contrib.activitypub.entities.Object;
-import org.xwiki.contrib.activitypub.entities.ObjectReference;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.resource.ResourceReferenceSerializer;
 import org.xwiki.resource.SerializeResourceReferenceException;
@@ -37,8 +37,8 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
-@Component(roles = ObjectReferenceSerializer.class)
-public class ObjectReferenceSerializer extends JsonSerializer<ObjectReference>
+@Component(roles = ActivityPubObjectReferenceSerializer.class)
+public class ActivityPubObjectReferenceSerializer extends JsonSerializer<ActivityPubObjectReference>
 {
     @Inject
     private ActivityPubStore activityPubStore;
@@ -47,13 +47,13 @@ public class ObjectReferenceSerializer extends JsonSerializer<ObjectReference>
     private ResourceReferenceSerializer<ActivityPubResourceReference, URI> activityPubResourceReferenceSerializer;
 
     @Override
-    public void serialize(ObjectReference objectReference, JsonGenerator jsonGenerator,
+    public void serialize(ActivityPubObjectReference objectReference, JsonGenerator jsonGenerator,
         SerializerProvider serializerProvider) throws IOException
     {
         if (objectReference.isLink()) {
             jsonGenerator.writeString(objectReference.getLink().toASCIIString());
         } else {
-            Object object = objectReference.getObject();
+            ActivityPubObject object = objectReference.getObject();
 
             // the ID wasn't null, but for some reason it wasn't a link, we kept it as an object in the serialization.
             if (object.getId() != null) {

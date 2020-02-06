@@ -19,9 +19,9 @@
  */
 package org.xwiki.contrib.activitypub.entities;
 
-public abstract class AbstractCollection extends Object
+public abstract class AbstractCollection extends ActivityPubObject
 {
     public abstract int getTotalItems();
 
-    public abstract <T extends AbstractCollection> T addItem(Object item);
+    public abstract <T extends AbstractCollection> T addItem(ActivityPubObject item);
 }

@@ -20,36 +20,12 @@
 package org.xwiki.contrib.activitypub;
 
 import org.xwiki.component.annotation.Role;
-import org.xwiki.contrib.activitypub.entities.Actor;
-import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
-import org.xwiki.contrib.activitypub.entities.Outbox;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 
 @Role
-public interface ActivityPubStore
+public interface ActivityPubObjectReferenceResolver
 {
-    /**
-     * Store a given entity and return a UUID to retrieve it.
-     *
-     * @param entity the entity to persist.
-     * @return an UUID to retrieve this entity.
-     */
-    String storeEntity(ActivityPubObject entity);
-
-    /**
-     * Store an entity with a given UID.
-     * @param uid the ID to use to store the entity.
-     * @param entity the entity to store.
-     * @return {@code true} iff the entity has been overridden.
-     */
-    boolean storeEntity(String uid, ActivityPubObject entity);
-
-    /**
-     * Extract an entity from its UUID.
-     *
-     * @param uuid the unique identifier of the entity as given by {@link #storeEntity(ActivityPubObject)}.
-     * @param <T>
-     * @return the stored entity or null if it has not been found.
-     */
-    <T extends ActivityPubObject> T retrieveEntity(String entityType, String uuid);
+    <T extends ActivityPubObject> T resolveReference(ActivityPubObjectReference<T> reference)
+        throws ActivityPubException;
 }

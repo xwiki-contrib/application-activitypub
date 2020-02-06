@@ -19,27 +19,17 @@
  */
 package org.xwiki.contrib.activitypub.entities;
 
-import java.net.URI;
-
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 
-public abstract class Actor extends Object
+public abstract class Actor extends ActivityPubObject
 {
     // TODO: Check IRI <-> URI conversion (https://tools.ietf.org/html/rfc3987#section-3.1)
     // We might have some weird cases with XWiki special username (containing non UTF-8 characters for example)
     private String preferredUsername;
-    private ObjectReference<Inbox> inbox;
-    private ObjectReference<Outbox> outbox;
-    private ObjectReference<OrderedCollection> followers;
-    private ObjectReference<OrderedCollection> following;
-
-    public Actor()
-    {
-        this.inbox = new ObjectReference<Inbox>().setObject(new Inbox().setOwner(this));
-        this.outbox = new ObjectReference<Outbox>().setObject(new Outbox().setOwner(this));
-        this.followers = new ObjectReference<OrderedCollection>().setObject(new OrderedCollection());
-        this.following = new ObjectReference<OrderedCollection>().setObject(new OrderedCollection());
-    }
+    private ActivityPubObjectReference<Inbox> inbox;
+    private ActivityPubObjectReference<Outbox> outbox;
+    private ActivityPubObjectReference<OrderedCollection> followers;
+    private ActivityPubObjectReference<OrderedCollection> following;
 
     public String getPreferredUsername()
     {
@@ -51,52 +41,42 @@ public abstract class Actor extends Object
         this.preferredUsername = preferredUsername;
     }
 
-    public ObjectReference<OrderedCollection> getFollowers()
+    public ActivityPubObjectReference<OrderedCollection> getFollowers()
     {
         return followers;
     }
 
-    public void addFollower(Actor follower, ActivityPubJsonParser parser)
-    {
-        this.followers.getObject(parser).addItem(follower);
-    }
-
-    public void setFollowers(ObjectReference<OrderedCollection> followers)
+    public void setFollowers(ActivityPubObjectReference<OrderedCollection> followers)
     {
         this.followers = followers;
     }
 
-    public ObjectReference<OrderedCollection> getFollowing()
+    public ActivityPubObjectReference<OrderedCollection> getFollowing()
     {
         return following;
     }
 
-    public void setFollowing(ObjectReference<OrderedCollection> following)
+    public void setFollowing(ActivityPubObjectReference<OrderedCollection> following)
     {
         this.following = following;
     }
 
-    public void addFollowing(Actor followingActor, ActivityPubJsonParser parser)
-    {
-        this.following.getObject(parser).addItem(followingActor);
-    }
-
-    public ObjectReference<Inbox> getInbox()
+    public ActivityPubObjectReference<Inbox> getInbox()
     {
         return inbox;
     }
 
-    public void setInbox(ObjectReference<Inbox> inbox)
+    public void setInbox(ActivityPubObjectReference<Inbox> inbox)
     {
         this.inbox = inbox;
     }
 
-    public ObjectReference<Outbox> getOutbox()
+    public ActivityPubObjectReference<Outbox> getOutbox()
     {
         return outbox;
     }
 
-    public void setOutbox(ObjectReference<Outbox> outbox)
+    public void setOutbox(ActivityPubObjectReference<Outbox> outbox)
     {
         this.outbox = outbox;
     }

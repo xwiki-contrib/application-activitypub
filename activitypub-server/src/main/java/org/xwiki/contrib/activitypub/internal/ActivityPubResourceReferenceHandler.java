@@ -41,6 +41,7 @@ import org.xwiki.container.Container;
 import org.xwiki.container.servlet.ServletRequest;
 import org.xwiki.container.servlet.ServletResponse;
 import org.xwiki.contrib.activitypub.ActivityHandler;
+import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStore;
@@ -48,18 +49,20 @@ import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.entities.activities.Activity;
-import org.xwiki.contrib.activitypub.entities.Object;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.resource.AbstractResourceReferenceHandler;
 import org.xwiki.resource.ResourceReference;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
 import org.xwiki.resource.ResourceReferenceHandlerException;
 import org.xwiki.resource.ResourceType;
+import org.xwiki.resource.annotations.Authenticate;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 @Component
 @Named("activitypub")
 @Singleton
+@Authenticate
 public class ActivityPubResourceReferenceHandler extends AbstractResourceReferenceHandler<ResourceType>
 {
     private static final ResourceType TYPE = new ResourceType("activitypub");
@@ -103,24 +106,30 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         ActivityPubResourceReference resourceReference = (ActivityPubResourceReference) reference;
         HttpServletRequest request = ((ServletRequest) this.container.getRequest()).getHttpServletRequest();
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
-        Object entity = this.activityPubStorage
+        ActivityPubObject entity = this.activityPubStorage
             .retrieveEntity(resourceReference.getEntityType(), resourceReference.getUuid());
 
         try {
             if ("POST".equalsIgnoreCase(request.getMethod())) {
-                Actor actor = getActor(resourceReference, response);
-                if (actor != null) {
-                    if ("inbox".equalsIgnoreCase(resourceReference.getEntityType())) {
-                        this.handleBox(actor, BOX_TYPE.INBOX);
-                    } else if ("outbox".equalsIgnoreCase(resourceReference.getEntityType())) {
-                        this.handleBox(actor, BOX_TYPE.OUTBOX);
-                    } else {
-                        response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-                        response.setContentType("text/plain");
-                        response.getOutputStream()
-                            .write("You cannot post anything outside an inbox our an outbox."
-                                .getBytes(StandardCharsets.UTF_8));
+                try {
+                    Actor actor = getActor(resourceReference, response);
+                    if (actor != null) {
+                        if ("inbox".equalsIgnoreCase(resourceReference.getEntityType())) {
+                            this.handleBox(actor, BOX_TYPE.INBOX);
+                        } else if ("outbox".equalsIgnoreCase(resourceReference.getEntityType())) {
+                            this.handleBox(actor, BOX_TYPE.OUTBOX);
+                        } else {
+                            response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+                            response.setContentType("text/plain");
+                            response.getOutputStream()
+                                .write("You cannot post anything outside an inbox our an outbox."
+                                    .getBytes(StandardCharsets.UTF_8));
+                        }
                     }
+                } catch (ActivityPubException e) {
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    response.setContentType("text/plain");
+                    e.printStackTrace(response.getWriter());
                 }
             } else {
                 response.setStatus(HttpServletResponse.SC_OK);
@@ -131,7 +140,8 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
                 this.activityPubJsonSerializer.serialize(response.getOutputStream(), entity);
             }
         } catch (IOException e) {
-            this.logger.error("Error while handling [{}]", resourceReference, e);
+            throw
+                new ResourceReferenceHandlerException(String.format("Error while handling [%s]", resourceReference), e);
         }
 
         // Be a good citizen, continue the chain, in case some lower-priority Handler has something to do for this
@@ -140,7 +150,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
     }
 
     private Actor getActor(ActivityPubResourceReference resourceReference, HttpServletResponse response)
-        throws IOException
+        throws IOException, ActivityPubException
     {
         if (this.actorHandler.isExistingUser(resourceReference.getUuid())) {
             return this.actorHandler.getActor(resourceReference.getUuid());
@@ -154,7 +164,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         return null;
     }
 
-    private void handleBox(Actor actor, BOX_TYPE boxType) throws IOException
+    private void handleBox(Actor actor, BOX_TYPE boxType) throws IOException, ActivityPubException
     {
         ActivityRequest<Activity> activityRequest = this.parseRequest(actor);
         if (activityRequest != null && activityRequest.getActor() != null) {
@@ -180,7 +190,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
         try {
             String requestBody = IOUtils.toString(request.getReader());
-            Object object = this.activityPubJsonParser.parseRequest(requestBody);
+            ActivityPubObject object = this.activityPubJsonParser.parseRequest(requestBody);
             if (object != null) {
                 T activity = getActivity(object);
                 return new ActivityRequest<T>(actor, activity, request, response);
@@ -193,7 +203,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         return null;
     }
 
-    private <T extends Activity> T getActivity(Object object)
+    private <T extends Activity> T getActivity(ActivityPubObject object)
     {
         if (Activity.class.isAssignableFrom(object.getClass())) {
             return (T) object;

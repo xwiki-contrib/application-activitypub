@@ -19,11 +19,6 @@
  */
 package org.xwiki.contrib.activitypub.internal.json;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -31,30 +26,38 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.component.phase.Initializable;
 import org.xwiki.component.phase.InitializationException;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
-import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
-@Component
+@Component(roles = ObjectMapperConfiguration.class)
 @Singleton
-public class DefaultActivityPubJsonSerializer implements ActivityPubJsonSerializer
+public class ObjectMapperConfiguration implements Initializable
 {
     @Inject
-    private ObjectMapperConfiguration objectMapperConfiguration;
+    private ActivityPubObjectReferenceSerializer objectReferenceSerializer;
+
+    private ObjectMapper objectMapper;
 
     @Override
-    public <T extends ActivityPubObject> String serialize(T object) throws IOException
+    public void initialize() throws InitializationException
     {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        this.serialize(byteArrayOutputStream, object);
-        return new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8);
+        SimpleModule module = new SimpleModule();
+        module
+            .addSerializer(ActivityPubObjectReference.class, objectReferenceSerializer)
+            .addDeserializer(ActivityPubObject.class, new ActivityPubObjectDeserializer())
+            .addDeserializer(ActivityPubObjectReference.class, new ActivityPubObjectReferenceDeserializer());
+
+        objectMapper = new ObjectMapper()
+            .enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .registerModule(module);
     }
 
-    @Override
-    public <T extends ActivityPubObject> void serialize(OutputStream stream, T object) throws IOException
+    public ObjectMapper getObjectMapper()
     {
-        this.objectMapperConfiguration.getObjectMapper().writeValue(stream, object);
+        return this.objectMapper;
     }
 }

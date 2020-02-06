@@ -21,7 +21,6 @@ package org.xwiki.contrib.activitypub.internal.activities;
 
 import java.io.IOException;
 
-import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
 
@@ -29,7 +28,7 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.entities.Actor;
-import org.xwiki.contrib.activitypub.entities.Object;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.activities.Accept;
 import org.xwiki.contrib.activitypub.entities.activities.Follow;
 
@@ -52,7 +51,7 @@ public class AcceptActivityHandler extends AbstractActivityHandler implements Ac
             this.activityPubStorage.storeEntity(accept);
         }
         Actor acceptingActor = accept.getActor().getObject(this.activityPubJsonParser);
-        Object object = accept.getObject().getObject(this.activityPubJsonParser);
+        ActivityPubObject object = accept.getObject().getObject(this.activityPubJsonParser);
 
         if (object instanceof Follow) {
             Follow follow = (Follow) object;

@@ -17,44 +17,17 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.entities;
+package org.xwiki.contrib.activitypub;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
-@JsonDeserialize(as = Collection.class)
-public class Collection extends AbstractCollection
+public class ActivityPubException extends Exception
 {
-    private Set<ActivityPubObjectReference<?>> items;
-
-    public Collection()
+    public ActivityPubException(String message)
     {
-        this.items = new HashSet<>();
+        super(message);
     }
 
-    public Set<ActivityPubObjectReference<?>> getItems()
+    public ActivityPubException(String message, Throwable origin)
     {
-        return items;
-    }
-
-    public Collection setItems(Set<ActivityPubObjectReference<?>> items)
-    {
-        this.items = items;
-        return this;
-    }
-
-    @Override
-    public int getTotalItems()
-    {
-        return this.items.size();
-    }
-
-    @Override
-    public Collection addItem(ActivityPubObject item)
-    {
-        this.items.add(new ActivityPubObjectReference<>().setObject(item));
-        return this;
+        super(message, origin);
     }
 }

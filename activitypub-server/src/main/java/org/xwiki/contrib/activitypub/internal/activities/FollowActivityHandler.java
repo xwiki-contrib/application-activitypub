@@ -29,7 +29,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityHandler;
+import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.contrib.activitypub.entities.activities.Follow;
 import org.xwiki.contrib.activitypub.entities.Inbox;
@@ -54,16 +56,16 @@ public class FollowActivityHandler extends AbstractActivityHandler implements Ac
      * @param activityRequest
      */
     @Override
-    public void handleOutboxRequest(ActivityRequest<Follow> activityRequest) throws IOException
+    public void handleOutboxRequest(ActivityRequest<Follow> activityRequest) throws IOException, ActivityPubException
     {
         Follow follow = activityRequest.getActivity();
         if (follow.getId() == null) {
             this.activityPubStorage.storeEntity(follow);
         }
-        Object followedObject = follow.getObject().getObject(this.activityPubJsonParser);
+        ActivityPubObject followedObject = this.activityPubObjectReferenceResolver.resolveReference(follow.getObject());
         if (followedObject instanceof Actor) {
             Actor followedActor = (Actor) followedObject;
-            Inbox actorInbox = this.actorHandler.getActorInbox(followedActor);
+            Inbox actorInbox = this.activityPubObjectReferenceResolver.resolveReference(followedActor.getInbox());
             actorInbox.addPendingFollow(follow);
             actorInbox.addActivity(follow);
             this.notifier.notify(follow, Collections.singleton(this.actorHandler.getXWikiUserReference(followedActor)));

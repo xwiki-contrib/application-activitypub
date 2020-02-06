@@ -28,5 +28,5 @@ import org.xwiki.contrib.activitypub.entities.activities.Activity;
 public interface ActivityHandler<T extends Activity>
 {
     void handleInboxRequest(ActivityRequest<T> activityRequest) throws IOException;
-    void handleOutboxRequest(ActivityRequest<T> activityRequest) throws IOException;
+    void handleOutboxRequest(ActivityRequest<T> activityRequest) throws IOException, ActivityPubException;
 }

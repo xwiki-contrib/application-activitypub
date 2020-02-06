@@ -20,30 +20,30 @@
 package org.xwiki.contrib.activitypub.entities.activities;
 
 import org.xwiki.contrib.activitypub.entities.Actor;
-import org.xwiki.contrib.activitypub.entities.Object;
-import org.xwiki.contrib.activitypub.entities.ObjectReference;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 
-public class Activity extends Object
+public class Activity extends ActivityPubObject
 {
-    private ObjectReference<? extends Actor> actor;
-    private ObjectReference<? extends Object> object;
+    private ActivityPubObjectReference<? extends Actor> actor;
+    private ActivityPubObjectReference<? extends ActivityPubObject> object;
 
-    public ObjectReference<? extends Actor> getActor()
+    public ActivityPubObjectReference<? extends Actor> getActor()
     {
         return actor;
     }
 
-    public void setActor(ObjectReference<? extends Actor> actor)
+    public void setActor(ActivityPubObjectReference<? extends Actor> actor)
     {
         this.actor = actor;
     }
 
-    public ObjectReference<? extends Object> getObject()
+    public ActivityPubObjectReference<? extends ActivityPubObject> getObject()
     {
         return object;
     }
 
-    public void setObject(ObjectReference<? extends Object> object)
+    public void setObject(ActivityPubObjectReference<? extends ActivityPubObject> object)
     {
         this.object = object;
     }

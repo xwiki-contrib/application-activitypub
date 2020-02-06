@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.xwiki.contrib.activitypub.entities.Object;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -33,7 +33,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class ObjectDeserializer extends JsonDeserializer<Object>
+public class ActivityPubObjectDeserializer extends JsonDeserializer<ActivityPubObject>
 {
     private static final List<String> packageExtensions = Arrays.asList(
         "org.xwiki.contrib.activitypub.entities",
@@ -46,39 +46,39 @@ public class ObjectDeserializer extends JsonDeserializer<Object>
     }
 
     @Override
-    public Object deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
+    public ActivityPubObject deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
         throws IOException, JsonProcessingException
     {
         ObjectMapper mapper = (ObjectMapper) jsonParser.getCodec();
         ObjectNode root = (ObjectNode) mapper.readTree(jsonParser);
 
         JsonNode type = root.findValue("type");
-        Class<? extends Object> instanceClass;
+        Class<? extends ActivityPubObject> instanceClass;
         if (type != null) {
             instanceClass = findClass(type.asText());
         } else {
-            instanceClass = Object.class;
+            instanceClass = ActivityPubObject.class;
         }
         return mapper.treeToValue(root, instanceClass);
     }
 
-    private Class<? extends Object> findClass(String type)
+    private Class<? extends ActivityPubObject> findClass(String type)
     {
-        Class<? extends Object> classInPackage;
+        Class<? extends ActivityPubObject> classInPackage;
         for (String packageExtension : packageExtensions) {
             classInPackage = findClassInPackage(packageExtension, type);
             if (classInPackage != null) {
                 return classInPackage;
             }
         }
-        return Object.class;
+        return ActivityPubObject.class;
     }
 
-    private Class<? extends Object> findClassInPackage(String packageName, String type)
+    private Class<? extends ActivityPubObject> findClassInPackage(String packageName, String type)
     {
         String fqn = String.format("%s.%s", packageName, type);
         try {
-            return (Class<? extends Object>) getClass().getClassLoader().loadClass(fqn);
+            return (Class<? extends ActivityPubObject>) getClass().getClassLoader().loadClass(fqn);
         } catch (ClassNotFoundException e) {
             return null;
         }

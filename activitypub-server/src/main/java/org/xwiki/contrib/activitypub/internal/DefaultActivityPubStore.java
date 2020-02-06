@@ -33,7 +33,7 @@ import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStore;
 import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.contrib.activitypub.entities.Inbox;
-import org.xwiki.contrib.activitypub.entities.Object;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.resource.ResourceReferenceSerializer;
 import org.xwiki.resource.SerializeResourceReferenceException;
@@ -45,7 +45,7 @@ public class DefaultActivityPubStore implements ActivityPubStore
 {
     private static final String INBOX_SUFFIX_ID = "inbox";
     private static final String OUTBOX_SUFFIX_ID = "outbox";
-    private final Map<String, Object> storage;
+    private final Map<String, ActivityPubObject> storage;
 
     @Inject
     private ResourceReferenceSerializer<ActivityPubResourceReference, URI> serializer;
@@ -59,7 +59,7 @@ public class DefaultActivityPubStore implements ActivityPubStore
     }
 
     @Override
-    public String storeEntity(Object entity)
+    public String storeEntity(ActivityPubObject entity)
     {
         if (entity.getId() != null) {
             throw new IllegalArgumentException("Entity with existing ID Not yet implemented");
@@ -78,6 +78,8 @@ public class DefaultActivityPubStore implements ActivityPubStore
                 throw new IllegalArgumentException("Cannot store an outbox without owner.");
             }
             uuid = getActorEntityUID(outbox.getOwner(), OUTBOX_SUFFIX_ID);
+        } else if (entity instanceof Actor) {
+            uuid = entity.getName();
         } else {
             // FIXME: we cannot rely on hashCode because of possible collisions and size limitation, but we shouldn't
             // rely on total randomness because of dedup.
@@ -96,7 +98,15 @@ public class DefaultActivityPubStore implements ActivityPubStore
     }
 
     @Override
-    public <T extends Object> T retrieveEntity(String entityType, String uuid)
+    public boolean storeEntity(String uid, ActivityPubObject entity)
+    {
+        boolean result = !this.storage.containsKey(uid);
+        this.storage.put(uid, entity);
+        return result;
+    }
+
+    @Override
+    public <T extends ActivityPubObject> T retrieveEntity(String entityType, String uuid)
     {
         String key = uuid;
         if ("inbox".equalsIgnoreCase(entityType)) {
@@ -105,32 +115,6 @@ public class DefaultActivityPubStore implements ActivityPubStore
             key = String.format("%s-%s", uuid, OUTBOX_SUFFIX_ID);
         }
         return (T) this.storage.get(key);
-    }
-
-    @Override
-    public Inbox retrieveActorInbox(Actor actor)
-    {
-        Inbox inbox = this.retrieveEntity(INBOX_SUFFIX_ID, actor.getName());
-        if (inbox == null) {
-            inbox = actor.getInbox().getObject();
-            this.storeEntity(inbox);
-        } else {
-            actor.getInbox().setObject(inbox);
-        }
-        return inbox;
-    }
-
-    @Override
-    public Outbox retrieveActorOutbox(Actor actor)
-    {
-        Outbox outbox = this.retrieveEntity(OUTBOX_SUFFIX_ID, actor.getName());
-        if (outbox == null) {
-            outbox = actor.getOutbox().getObject();
-            this.storeEntity(outbox);
-        } else {
-            actor.getOutbox().setObject(outbox);
-        }
-        return outbox;
     }
 
     private String getActorEntityUID(Actor actor, String entitySuffix)

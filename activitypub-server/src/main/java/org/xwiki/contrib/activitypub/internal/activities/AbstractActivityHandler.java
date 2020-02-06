@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubNotifier;
+import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubStore;
 import org.xwiki.contrib.activitypub.entities.activities.Activity;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
@@ -44,6 +45,9 @@ public abstract class AbstractActivityHandler
 
     @Inject
     protected ActivityPubNotifier notifier;
+
+    @Inject
+    protected ActivityPubObjectReferenceResolver activityPubObjectReferenceResolver;
 
     protected void answer(HttpServletResponse response, int statusCode, Activity activity) throws IOException
     {

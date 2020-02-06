@@ -19,9 +19,10 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
+import java.net.MalformedURLException;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -31,10 +32,12 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubStore;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.contrib.activitypub.entities.Inbox;
-import org.xwiki.contrib.activitypub.entities.ObjectReference;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.model.reference.DocumentReference;
@@ -67,18 +70,16 @@ public class ActorHandler
     private ActivityPubStore activityPubStorage;
 
     @Inject
+    private ActivityPubObjectReferenceResolver activityPubObjectReferenceResolver;
+
+    @Inject
     private Provider<XWikiContext> contextProvider;
 
     @Inject
     @Named("current")
     private DocumentReferenceResolver<String> stringDocumentReferenceResolver;
 
-    private URI getID(XWikiUser user)
-    {
-        return null;
-    }
-
-    public Actor getActor(EntityReference entityReference)
+    public Actor getActor(EntityReference entityReference) throws ActivityPubException
     {
         // TODO: introduce cache mechanism
         try {
@@ -86,16 +87,39 @@ public class ActorHandler
             BaseObject userXObject = document.getXObject(USER_CLASS_REFERENCE);
             if (userXObject != null) {
                 XWikiUser xWikiUser = new XWikiUser(new DocumentReference(entityReference));
-                Actor actor = new Person();
-                actor.setName(xWikiUser.getFullName());
-                actor.setPreferredUsername(userXObject.get("first_name") + " " + userXObject.get("last_name"));
-                actor.setId(getID(xWikiUser));
+                String fullname = xWikiUser.getFullName();
+                Actor actor = this.activityPubStorage.retrieveEntity("actor", fullname);
+                if (actor == null) {
+                    String preferredName = String.format("%s %s",
+                        userXObject.get("first_name"), userXObject.get("last_name"));
+                    actor = createActor(fullname, preferredName);
+                }
                 return actor;
+            } else {
+                return null;
             }
         } catch (Exception e) {
-            logger.error("Error while loading user document with reference [{}]", entityReference, e);
+            throw new ActivityPubException(
+                String.format("Error while loading user document with reference [%s]", entityReference), e);
         }
-        return null;
+    }
+
+    private Actor createActor(String fullName, String preferredName)
+    {
+        Actor actor = new Person();
+        actor.setName(fullName);
+        actor.setPreferredUsername(preferredName);
+
+        Inbox inbox = new Inbox();
+        inbox.setOwner(actor);
+        this.activityPubStorage.storeEntity(inbox);
+
+        Outbox outbox = new Outbox();
+        outbox.setOwner(actor);
+        this.activityPubStorage.storeEntity(outbox);
+        this.activityPubStorage.storeEntity(actor);
+
+        return actor;
     }
 
     public EntityReference getXWikiUserReference(Actor actor)
@@ -125,18 +149,20 @@ public class ActorHandler
         return xWikiUser.exists(this.contextProvider.get());
     }
 
-    public Actor getActor(String serializedUserReference)
+    public Actor getActor(String serializedUserReference) throws ActivityPubException
     {
         return this.getActor(resolveUser(serializedUserReference));
     }
 
-    public Inbox getActorInbox(Actor actor)
+    private boolean isActorFromCurrentInstance(Actor actor)
     {
-        return this.activityPubStorage.retrieveActorInbox(actor);
-    }
-
-    public Outbox getActorOutbox(Actor actor)
-    {
-        return this.activityPubStorage.retrieveActorOutbox(actor);
+        XWikiContext context = this.contextProvider.get();
+        try {
+            URL serverURL = context.getURLFactory().getServerURL(context);
+            return (actor.getId().compareTo(serverURL.toURI()) > 0);
+        } catch (MalformedURLException | URISyntaxException e) {
+            logger.error("Error while comparing server URL and actor ID", e);
+        }
+        return false;
     }
 }

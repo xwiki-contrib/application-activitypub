@@ -20,33 +20,30 @@
 package org.xwiki.contrib.activitypub.entities;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
-import org.xwiki.contrib.activitypub.internal.json.ObjectDeserializer;
+import org.xwiki.contrib.activitypub.internal.json.ActivityPubObjectDeserializer;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-@JsonDeserialize(using = ObjectDeserializer.class)
-public class Object extends JSONLDObjects
+/**
+ * Represents an object as defined in ActivityStream vocabulary.
+ * ({@see https://www.w3.org/TR/activitystreams-vocabulary/#dfn-object}).
+ */
+@JsonDeserialize(using = ActivityPubObjectDeserializer.class)
+public class ActivityPubObject extends JSONLDObjects
 {
     private String type;
     private URI id;
     private String name;
     private Date published;
     private String summary;
-    private List<ObjectReference<Actor>> to;
+    private List<ActivityPubObjectReference<Actor>> to;
     private String content;
-    private List<ObjectReference<Actor>> attributedTo;
-
-    public Object()
-    {
-        this.to = new ArrayList<>();
-        this.attributedTo = new ArrayList<>();
-    }
+    private List<ActivityPubObjectReference<Actor>> attributedTo;
 
     public String getType()
     {
@@ -111,24 +108,24 @@ public class Object extends JSONLDObjects
         this.content = content;
     }
 
-    public List<ObjectReference<Actor>> getTo()
+    public List<ActivityPubObjectReference<Actor>> getTo()
     {
         return to;
     }
 
     public void setTo(
-        List<ObjectReference<Actor>> to)
+        List<ActivityPubObjectReference<Actor>> to)
     {
         this.to = to;
     }
 
-    public List<ObjectReference<Actor>> getAttributedTo()
+    public List<ActivityPubObjectReference<Actor>> getAttributedTo()
     {
         return attributedTo;
     }
 
     public void setAttributedTo(
-        List<ObjectReference<Actor>> attributedTo)
+        List<ActivityPubObjectReference<Actor>> attributedTo)
     {
         this.attributedTo = attributedTo;
     }
@@ -142,7 +139,7 @@ public class Object extends JSONLDObjects
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        Object object = (Object) o;
+        ActivityPubObject object = (ActivityPubObject) o;
         return Objects.equals(type, object.type) &&
             Objects.equals(id, object.id) &&
             Objects.equals(name, object.name) &&

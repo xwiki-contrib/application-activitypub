@@ -23,12 +23,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.xwiki.component.annotation.Role;
-import org.xwiki.contrib.activitypub.entities.Object;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 
 @Role
 public interface ActivityPubJsonSerializer
 {
-    <T extends Object> String serialize(T object) throws IOException;
+    <T extends ActivityPubObject> String serialize(T object) throws IOException;
 
-    <T extends Object> void serialize(OutputStream stream, T object) throws IOException;
+    <T extends ActivityPubObject> void serialize(OutputStream stream, T object) throws IOException;
 }

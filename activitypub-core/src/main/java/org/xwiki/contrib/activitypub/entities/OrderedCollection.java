@@ -27,28 +27,28 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 @JsonDeserialize(as = OrderedCollection.class)
 public class OrderedCollection extends AbstractCollection
 {
-    private List<ObjectReference<?>> orderedItems;
+    private List<ActivityPubObjectReference<?>> orderedItems;
 
     public OrderedCollection()
     {
         this.orderedItems = new ArrayList<>();
     }
 
-    public List<ObjectReference<?>> getOrderedItems()
+    public List<ActivityPubObjectReference<?>> getOrderedItems()
     {
         return orderedItems;
     }
 
-    public OrderedCollection setOrderedItems(List<ObjectReference<?>> orderedItems)
+    public OrderedCollection setOrderedItems(List<ActivityPubObjectReference<?>> orderedItems)
     {
         this.orderedItems = orderedItems;
         return this;
     }
 
     @Override
-    public OrderedCollection addItem(Object item)
+    public OrderedCollection addItem(ActivityPubObject item)
     {
-        this.orderedItems.add(new ObjectReference<>().setObject(item));
+        this.orderedItems.add(new ActivityPubObjectReference<>().setObject(item));
         return this;
     }
 
