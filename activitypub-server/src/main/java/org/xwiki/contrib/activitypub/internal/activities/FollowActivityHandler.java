@@ -20,6 +20,7 @@
 package org.xwiki.contrib.activitypub.internal.activities;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -65,7 +66,7 @@ public class FollowActivityHandler extends AbstractActivityHandler implements Ac
             Inbox actorInbox = this.actorHandler.getActorInbox(followedActor);
             actorInbox.addPendingFollow(follow);
             actorInbox.addActivity(follow);
-
+            this.notifier.notify(follow, Collections.singleton(this.actorHandler.getXWikiUserReference(followedActor)));
             this.answer(activityRequest.getResponse(), HttpServletResponse.SC_ACCEPTED, follow);
         } else {
             this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_NOT_IMPLEMENTED,

@@ -87,8 +87,8 @@ public class ActorHandler
             if (userXObject != null) {
                 XWikiUser xWikiUser = new XWikiUser(new DocumentReference(entityReference));
                 Actor actor = new Person();
-                actor.setPreferredUsername(xWikiUser.getFullName());
-                actor.setName(userXObject.get("first_name") + " " + userXObject.get("last_name"));
+                actor.setName(xWikiUser.getFullName());
+                actor.setPreferredUsername(userXObject.get("first_name") + " " + userXObject.get("last_name"));
                 actor.setId(getID(xWikiUser));
                 return actor;
             }
@@ -98,10 +98,24 @@ public class ActorHandler
         return null;
     }
 
+    public EntityReference getXWikiUserReference(Actor actor)
+    {
+        String userName = actor.getName();
+        if (isExistingUser(userName)) {
+            return resolveUser(userName);
+        } else {
+            return null;
+        }
+    }
+
     private DocumentReference resolveUser(String username)
     {
+        String serializedRef = username;
+        if (!username.contains(".")) {
+            serializedRef = String.format("XWiki.%s", username);
+        }
         DocumentReference userDocReference =
-            this.stringDocumentReferenceResolver.resolve(String.format("XWiki.%s", username));
+            this.stringDocumentReferenceResolver.resolve(serializedRef);
         return userDocReference;
     }
 
