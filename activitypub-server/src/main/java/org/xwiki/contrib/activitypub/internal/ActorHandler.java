@@ -35,7 +35,6 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubStore;
-import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.contrib.activitypub.entities.Inbox;
@@ -89,12 +88,12 @@ public class ActorHandler
             BaseObject userXObject = document.getXObject(USER_CLASS_REFERENCE);
             if (userXObject != null) {
                 XWikiUser xWikiUser = new XWikiUser(new DocumentReference(entityReference));
-                String fullname = xWikiUser.getFullName();
-                Actor actor = this.activityPubStorage.retrieveEntity("actor", fullname);
+                String login = xWikiUser.getFullName();
+                Actor actor = this.activityPubStorage.retrieveEntity("actor", login);
                 if (actor == null) {
-                    String preferredName = String.format("%s %s",
+                    String fullname = String.format("%s %s",
                         userXObject.getStringValue("first_name"), userXObject.getStringValue("last_name"));
-                    actor = createActor(fullname, preferredName);
+                    actor = createActor(fullname, login);
                 }
                 return actor;
             } else {
@@ -137,7 +136,7 @@ public class ActorHandler
 
     public EntityReference getXWikiUserReference(Actor actor)
     {
-        String userName = actor.getName();
+        String userName = actor.getPreferredUsername();
         if (isExistingUser(userName)) {
             return resolveUser(userName);
         } else {

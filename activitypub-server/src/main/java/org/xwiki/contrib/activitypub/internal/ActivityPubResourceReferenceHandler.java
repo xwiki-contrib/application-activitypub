@@ -27,6 +27,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -50,12 +51,16 @@ import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.entities.Activity;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
+import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.EntityReference;
 import org.xwiki.resource.AbstractResourceReferenceHandler;
 import org.xwiki.resource.ResourceReference;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
 import org.xwiki.resource.ResourceReferenceHandlerException;
 import org.xwiki.resource.ResourceType;
 import org.xwiki.resource.annotations.Authenticate;
+
+import com.xpn.xwiki.XWikiContext;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -89,6 +94,9 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
     @Inject
     private ActivityPubStore activityPubStorage;
 
+    @Inject
+    private Provider<XWikiContext> contextProvider;
+
     @Override
     public List<ResourceType> getSupportedResourceReferences()
     {
@@ -112,7 +120,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         try {
             if ("POST".equalsIgnoreCase(request.getMethod())) {
                 try {
-                    Actor actor = getActor(resourceReference, response);
+                    Actor actor = getActor(resourceReference);
                     if (actor != null) {
                         if ("inbox".equalsIgnoreCase(resourceReference.getEntityType())) {
                             this.handleBox(actor, BOX_TYPE.INBOX);
@@ -171,22 +179,28 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         chain.handleNext(reference);
     }
 
-    private Actor getActor(ActivityPubResourceReference resourceReference, HttpServletResponse response)
+    private Actor getActor(ActivityPubResourceReference resourceReference)
         throws IOException, ActivityPubException
     {
         if (this.actorHandler.isExistingUser(resourceReference.getUuid())) {
             return this.actorHandler.getActor(resourceReference.getUuid());
         } else {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            response.setContentType("text/plain");
-            response.getOutputStream()
-                .write(String.format("User [%s] cannot be found.", resourceReference.getUuid())
-                    .getBytes(StandardCharsets.UTF_8));
+            this.sendErrorResponse(HttpServletResponse.SC_NOT_FOUND,
+                String.format("User [%s] cannot be found.", resourceReference.getUuid()));
         }
         return null;
     }
 
-    private void handleBox(Actor actor, BOX_TYPE boxType) throws IOException, ActivityPubException
+    private void sendErrorResponse(int statusCode, String message) throws IOException
+    {
+        HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
+        response.setStatus(statusCode);
+        response.setContentType("text/plain");
+        response.getOutputStream().write(message.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private void handleBox(Actor actor, BOX_TYPE boxType)
+        throws IOException, ActivityPubException
     {
         ActivityRequest<Activity> activityRequest = this.parseRequest(actor);
         if (activityRequest != null && activityRequest.getActor() != null) {
@@ -195,14 +209,23 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
                 if (boxType == BOX_TYPE.INBOX) {
                     handler.handleInboxRequest(activityRequest);
                 } else {
-                    handler.handleOutboxRequest(activityRequest);
+                    DocumentReference sessionUserReference = this.contextProvider.get().getUserReference();
+                    EntityReference xWikiUserReference = this.actorHandler.getXWikiUserReference(actor);
+                    if (xWikiUserReference != null && xWikiUserReference.equals(sessionUserReference)) {
+                        handler.handleOutboxRequest(activityRequest);
+                    } else {
+                        this.sendErrorResponse(HttpServletResponse.SC_FORBIDDEN,
+                            String.format("The session user [%s] cannot post to [%s] outbox.",
+                                sessionUserReference, xWikiUserReference));
+                    }
                 }
             } else {
-                logger.error("Error while looking for an handler for activity [{}]",
-                    activityRequest.getActivity().getType());
+                throw new ActivityPubException(String.format("Error while looking for an handler for activity [%s]",
+                    activityRequest.getActivity().getType()));
             }
         } else {
-            logger.error("Error while parsing the request: the activity or its actor cannot be retrieved.");
+            throw new ActivityPubException("Error while parsing the request: the activity or its actor "
+                + "cannot be retrieved.");
         }
     }
 

@@ -92,7 +92,7 @@ public class DefaultActivityPubStore implements ActivityPubStore
             }
             uuid = getActorEntityUID(outbox.getOwner(), OUTBOX_SUFFIX_ID);
         } else if (entity instanceof Actor) {
-            uuid = entity.getName();
+            uuid = ((Actor) entity).getPreferredUsername();
         } else {
             // FIXME: we cannot rely on hashCode because of possible collisions and size limitation, but we shouldn't
             // rely on total randomness because of dedup.
@@ -142,6 +142,6 @@ public class DefaultActivityPubStore implements ActivityPubStore
 
     private String getActorEntityUID(Actor actor, String entitySuffix)
     {
-        return String.format("%s-%s", actor.getName(), entitySuffix);
+        return String.format("%s-%s", actor.getPreferredUsername(), entitySuffix);
     }
 }
