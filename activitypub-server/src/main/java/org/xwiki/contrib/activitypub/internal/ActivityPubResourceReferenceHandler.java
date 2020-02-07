@@ -48,7 +48,7 @@ import org.xwiki.contrib.activitypub.ActivityPubStore;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
-import org.xwiki.contrib.activitypub.entities.activities.Activity;
+import org.xwiki.contrib.activitypub.entities.Activity;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.resource.AbstractResourceReferenceHandler;
 import org.xwiki.resource.ResourceReference;

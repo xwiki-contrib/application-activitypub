@@ -28,7 +28,7 @@ import javax.inject.Singleton;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubNotifier;
 import org.xwiki.contrib.activitypub.ActivityPubTargetableEvent;
-import org.xwiki.contrib.activitypub.entities.activities.Activity;
+import org.xwiki.contrib.activitypub.entities.Activity;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.observation.ObservationManager;

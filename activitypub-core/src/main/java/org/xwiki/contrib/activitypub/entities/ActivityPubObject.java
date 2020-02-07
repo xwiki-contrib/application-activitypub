@@ -36,7 +36,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 @JsonDeserialize(using = ActivityPubObjectDeserializer.class)
 public class ActivityPubObject extends JSONLDObjects
 {
-    private String type;
     private URI id;
     private String name;
     private Date published;
@@ -50,12 +49,13 @@ public class ActivityPubObject extends JSONLDObjects
         return getClass().getSimpleName();
     }
 
-    public void setType(String type)
+    public <T extends ActivityPubObject> T setType(String type)
     {
         if (!StringUtils.isEmpty(type) && !getType().toLowerCase().equals(type.toLowerCase())) {
             throw new IllegalArgumentException(String.format("Error while parsing [%s]: illegal type [%s].",
                 getClass().toString(), type));
         }
+        return (T) this;
     }
 
     public URI getId()
@@ -63,9 +63,10 @@ public class ActivityPubObject extends JSONLDObjects
         return id;
     }
 
-    public void setId(URI id)
+    public <T extends ActivityPubObject> T setId(URI id)
     {
         this.id = id;
+        return (T) this;
     }
 
     public String getName()
@@ -73,9 +74,10 @@ public class ActivityPubObject extends JSONLDObjects
         return name;
     }
 
-    public void setName(String name)
+    public <T extends ActivityPubObject> T setName(String name)
     {
         this.name = name;
+        return (T) this;
     }
 
     public Date getPublished()
@@ -93,9 +95,10 @@ public class ActivityPubObject extends JSONLDObjects
         return summary;
     }
 
-    public void setSummary(String summary)
+    public <T extends ActivityPubObject> T setSummary(String summary)
     {
         this.summary = summary;
+        return (T) this;
     }
 
     public String getContent()
@@ -140,8 +143,7 @@ public class ActivityPubObject extends JSONLDObjects
             return false;
         }
         ActivityPubObject object = (ActivityPubObject) o;
-        return Objects.equals(type, object.type) &&
-            Objects.equals(id, object.id) &&
+        return Objects.equals(id, object.id) &&
             Objects.equals(name, object.name) &&
             Objects.equals(published, object.published) &&
             Objects.equals(summary, object.summary) &&
@@ -153,6 +155,6 @@ public class ActivityPubObject extends JSONLDObjects
     @Override
     public int hashCode()
     {
-        return Objects.hash(type, id, name, published, summary, to, content, attributedTo);
+        return Objects.hash(id, name, published, summary, to, content, attributedTo);
     }
 }

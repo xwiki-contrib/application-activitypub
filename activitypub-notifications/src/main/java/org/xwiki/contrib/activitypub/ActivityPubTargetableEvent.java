@@ -21,7 +21,7 @@ package org.xwiki.contrib.activitypub;
 
 import java.util.Set;
 
-import org.xwiki.contrib.activitypub.entities.activities.Activity;
+import org.xwiki.contrib.activitypub.entities.Activity;
 import org.xwiki.eventstream.RecordableEvent;
 import org.xwiki.eventstream.TargetableEvent;
 

@@ -22,7 +22,7 @@ package org.xwiki.contrib.activitypub;
 import java.io.IOException;
 
 import org.xwiki.component.annotation.Role;
-import org.xwiki.contrib.activitypub.entities.activities.Activity;
+import org.xwiki.contrib.activitypub.entities.Activity;
 
 @Role
 public interface ActivityHandler<T extends Activity>

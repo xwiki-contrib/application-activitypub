@@ -24,9 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.xwiki.contrib.activitypub.entities.activities.Activity;
-import org.xwiki.contrib.activitypub.entities.activities.Follow;
-
 public class Inbox extends OrderedCollection
 {
     private transient Actor owner;

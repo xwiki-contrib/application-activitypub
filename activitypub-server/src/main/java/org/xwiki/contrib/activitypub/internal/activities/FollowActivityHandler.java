@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.Collections;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
 
@@ -33,7 +32,7 @@ import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Actor;
-import org.xwiki.contrib.activitypub.entities.activities.Follow;
+import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.internal.ActorHandler;
 

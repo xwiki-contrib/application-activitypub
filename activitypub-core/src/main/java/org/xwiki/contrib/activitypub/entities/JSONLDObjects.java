@@ -20,16 +20,27 @@
 package org.xwiki.contrib.activitypub.entities;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class JSONLDObjects
 {
+    private final static String ACTIVITY_STREAM_CONTEXT = "https://www.w3.org/ns/activitystreams";
+
     @JsonProperty("@context")
     private URI context;
 
     public URI getContext()
     {
+        if (context == null) {
+            try {
+                this.context = new URI(ACTIVITY_STREAM_CONTEXT);
+            } catch (URISyntaxException e) {
+                // Should never happen
+                e.printStackTrace();
+            }
+        }
         return context;
     }
 

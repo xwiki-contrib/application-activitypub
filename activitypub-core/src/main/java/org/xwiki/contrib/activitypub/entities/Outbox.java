@@ -21,8 +21,6 @@ package org.xwiki.contrib.activitypub.entities;
 
 import java.util.Map;
 
-import org.xwiki.contrib.activitypub.entities.activities.Activity;
-
 public class Outbox extends OrderedCollection
 {
     private transient Actor owner;

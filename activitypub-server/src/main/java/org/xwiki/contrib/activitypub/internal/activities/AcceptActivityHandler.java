@@ -29,8 +29,8 @@ import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
-import org.xwiki.contrib.activitypub.entities.activities.Accept;
-import org.xwiki.contrib.activitypub.entities.activities.Follow;
+import org.xwiki.contrib.activitypub.entities.Accept;
+import org.xwiki.contrib.activitypub.entities.Follow;
 
 @Component
 @Singleton

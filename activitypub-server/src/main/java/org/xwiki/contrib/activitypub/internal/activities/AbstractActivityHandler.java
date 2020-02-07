@@ -29,7 +29,7 @@ import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubNotifier;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubStore;
-import org.xwiki.contrib.activitypub.entities.activities.Activity;
+import org.xwiki.contrib.activitypub.entities.Activity;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
 
 public abstract class AbstractActivityHandler

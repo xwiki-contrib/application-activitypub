@@ -19,8 +19,6 @@
  */
 package org.xwiki.contrib.activitypub.entities;
 
-import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
-
 public abstract class Actor extends ActivityPubObject
 {
     // TODO: Check IRI <-> URI conversion (https://tools.ietf.org/html/rfc3987#section-3.1)
@@ -36,9 +34,10 @@ public abstract class Actor extends ActivityPubObject
         return preferredUsername;
     }
 
-    public void setPreferredUsername(String preferredUsername)
+    public <T extends Actor> T setPreferredUsername(String preferredUsername)
     {
         this.preferredUsername = preferredUsername;
+        return (T) this;
     }
 
     public ActivityPubObjectReference<OrderedCollection> getFollowers()
@@ -46,9 +45,10 @@ public abstract class Actor extends ActivityPubObject
         return followers;
     }
 
-    public void setFollowers(ActivityPubObjectReference<OrderedCollection> followers)
+    public <T extends Actor> T setFollowers(ActivityPubObjectReference<OrderedCollection> followers)
     {
         this.followers = followers;
+        return (T) this;
     }
 
     public ActivityPubObjectReference<OrderedCollection> getFollowing()
@@ -56,9 +56,10 @@ public abstract class Actor extends ActivityPubObject
         return following;
     }
 
-    public void setFollowing(ActivityPubObjectReference<OrderedCollection> following)
+    public <T extends Actor> T setFollowing(ActivityPubObjectReference<OrderedCollection> following)
     {
         this.following = following;
+        return (T) this;
     }
 
     public ActivityPubObjectReference<Inbox> getInbox()
@@ -66,9 +67,10 @@ public abstract class Actor extends ActivityPubObject
         return inbox;
     }
 
-    public void setInbox(ActivityPubObjectReference<Inbox> inbox)
+    public <T extends Actor> T setInbox(ActivityPubObjectReference<Inbox> inbox)
     {
         this.inbox = inbox;
+        return (T) this;
     }
 
     public ActivityPubObjectReference<Outbox> getOutbox()
@@ -76,8 +78,9 @@ public abstract class Actor extends ActivityPubObject
         return outbox;
     }
 
-    public void setOutbox(ActivityPubObjectReference<Outbox> outbox)
+    public <T extends Actor> T setOutbox(ActivityPubObjectReference<Outbox> outbox)
     {
         this.outbox = outbox;
+        return (T) this;
     }
 }

@@ -22,7 +22,7 @@ package org.xwiki.contrib.activitypub;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.xwiki.contrib.activitypub.entities.activities.Activity;
+import org.xwiki.contrib.activitypub.entities.Activity;
 import org.xwiki.contrib.activitypub.entities.Actor;
 
 public class ActivityRequest<T extends Activity>
