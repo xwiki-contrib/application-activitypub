@@ -25,6 +25,7 @@ import java.net.URI;
 import javax.inject.Inject;
 
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubStore;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
@@ -60,14 +61,15 @@ public class ActivityPubObjectReferenceSerializer extends JsonSerializer<Activit
                 jsonGenerator.writeString(object.getId().toString());
             // it doesn't have an ID: we need to store it and we serialize it as a link to avoid big JSON answers.
             } else {
-                String uuid = this.activityPubStore.storeEntity(object);
-                ActivityPubResourceReference resourceReference =
-                    new ActivityPubResourceReference(object.getType(), uuid);
                 try {
+                    String uuid = this.activityPubStore.storeEntity(object);
+                    ActivityPubResourceReference resourceReference =
+                        new ActivityPubResourceReference(object.getType(), uuid);
                     URI uri = this.activityPubResourceReferenceSerializer.serialize(resourceReference);
                     jsonGenerator.writeString(uri.toString());
-                } catch (SerializeResourceReferenceException|UnsupportedResourceReferenceException e) {
-                    e.printStackTrace();
+                } catch (SerializeResourceReferenceException|
+                    UnsupportedResourceReferenceException|ActivityPubException e) {
+                    throw new IOException(String.format("Error when serializing [%s]", object.toString()), e);
                 }
             }
         }

@@ -24,10 +24,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+@JsonDeserialize(as = Inbox.class)
 public class Inbox extends OrderedCollection
 {
-    private transient Actor owner;
+    @JsonIgnore
+    private Actor owner;
+
+    @JsonIgnore
     private Map<String, Activity> items;
+
+    @JsonIgnore
     private List<Follow> pendingFollows;
 
     public Inbox()

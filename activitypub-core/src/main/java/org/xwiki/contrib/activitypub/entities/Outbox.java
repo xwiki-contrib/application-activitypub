@@ -21,6 +21,9 @@ package org.xwiki.contrib.activitypub.entities;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+@JsonDeserialize(as = Outbox.class)
 public class Outbox extends OrderedCollection
 {
     private transient Actor owner;

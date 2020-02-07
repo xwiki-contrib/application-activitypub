@@ -28,6 +28,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.xwiki.contrib.activitypub.internal.json.ActivityPubObjectDeserializer;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
  * Represents an object as defined in ActivityStream vocabulary.

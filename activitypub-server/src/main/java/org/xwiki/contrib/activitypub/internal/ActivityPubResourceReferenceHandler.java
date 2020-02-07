@@ -132,12 +132,34 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
                     e.printStackTrace(response.getWriter());
                 }
             } else {
-                response.setStatus(HttpServletResponse.SC_OK);
-                response.setContentType("application/activity+json");
+                if (entity == null && "person".equalsIgnoreCase(resourceReference.getEntityType())
+                    || "actor".equalsIgnoreCase(resourceReference.getEntityType())) {
+                    if (this.actorHandler.isExistingUser(resourceReference.getUuid())) {
+                        try {
+                            entity = this.actorHandler.getActor(resourceReference.getUuid());
+                        } catch (ActivityPubException e) {
+                            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                            response.setContentType("text/plain");
+                            e.printStackTrace(response.getWriter());
+                        }
+                    }
+                }
+                if (entity != null) {
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    response.setContentType("application/activity+json");
+                    response.setCharacterEncoding(StandardCharsets.UTF_8.toString());
 
-                // FIXME: This should be more complicated, we'd need to check authorization etc.
-                // We probably need an entity handler component to manage the various kind of entities to retrieve.
-                this.activityPubJsonSerializer.serialize(response.getOutputStream(), entity);
+                    // FIXME: This should be more complicated, we'd need to check authorization etc.
+                    // We probably need an entity handler component to manage the various kind of entities to retrieve.
+                    this.activityPubJsonSerializer.serialize(response.getOutputStream(), entity);
+                } else {
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    response.setContentType("text/plain");
+                    response.getOutputStream().write(
+                        String.format("The entity of type [%s] and uid [%s] cannot be found.",
+                            resourceReference.getEntityType(), resourceReference.getUuid())
+                            .getBytes(StandardCharsets.UTF_8));
+                }
             }
         } catch (IOException e) {
             throw

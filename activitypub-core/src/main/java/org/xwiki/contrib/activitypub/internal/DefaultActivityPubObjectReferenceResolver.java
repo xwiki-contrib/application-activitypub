@@ -52,7 +52,7 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
 
     private boolean isAcceptedContentType(String contentType)
     {
-        return "application/activity+json".equals(contentType);
+        return contentType != null && contentType.contains("application/activity+json");
     }
 
     private void checkResponse(GetMethod method) throws IOException
@@ -76,6 +76,9 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
         throws ActivityPubException
     {
         T result = reference.getObject();
+        if (!reference.isLink() && result == null) {
+            throw new ActivityPubException("The reference property is null and does not have any ID to follow.");
+        }
         if (result == null) {
             try {
                 GetMethod getMethod = new GetMethod(reference.getLink().toString());

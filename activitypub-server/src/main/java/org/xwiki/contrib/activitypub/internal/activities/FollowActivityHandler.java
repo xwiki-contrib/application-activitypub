@@ -40,9 +40,6 @@ import org.xwiki.contrib.activitypub.internal.ActorHandler;
 @Singleton
 public class FollowActivityHandler extends AbstractActivityHandler implements ActivityHandler<Follow>
 {
-    @Inject
-    private ActorHandler actorHandler;
-
     @Override
     public void handleInboxRequest(ActivityRequest<Follow> activityRequest) throws IOException
     {

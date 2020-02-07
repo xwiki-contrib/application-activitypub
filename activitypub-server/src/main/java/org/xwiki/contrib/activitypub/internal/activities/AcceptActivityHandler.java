@@ -26,11 +26,13 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityHandler;
+import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.contrib.activitypub.entities.Follow;
+import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 
 @Component
 @Singleton
@@ -44,20 +46,31 @@ public class AcceptActivityHandler extends AbstractActivityHandler implements Ac
     }
 
     @Override
-    public void handleOutboxRequest(ActivityRequest<Accept> activityRequest) throws IOException
+    public void handleOutboxRequest(ActivityRequest<Accept> activityRequest) throws IOException, ActivityPubException
     {
         Accept accept = activityRequest.getActivity();
         if (accept.getId() == null) {
             this.activityPubStorage.storeEntity(accept);
         }
-        Actor acceptingActor = accept.getActor().getObject(this.activityPubJsonParser);
-        ActivityPubObject object = accept.getObject().getObject(this.activityPubJsonParser);
+        Actor acceptingActor = this.activityPubObjectReferenceResolver.resolveReference(accept.getActor());
+        ActivityPubObject object = this.activityPubObjectReferenceResolver.resolveReference(accept.getObject());
 
         if (object instanceof Follow) {
             Follow follow = (Follow) object;
-            Actor followingActor = follow.getActor().getObject(this.activityPubJsonParser);
-            followingActor.addFollowing(acceptingActor, this.activityPubJsonParser);
-            acceptingActor.addFollower(followingActor, this.activityPubJsonParser);
+            Actor followingActor = this.activityPubObjectReferenceResolver.resolveReference(follow.getActor());
+            OrderedCollection acceptingActorFollowers =
+                this.activityPubObjectReferenceResolver.resolveReference(acceptingActor.getFollowers());
+            OrderedCollection followingActorFollowing =
+                this.activityPubObjectReferenceResolver.resolveReference(followingActor.getFollowing());
+            acceptingActorFollowers.addItem(followingActor);
+            followingActorFollowing.addItem(acceptingActor);
+
+            if (this.actorHandler.isActorFromCurrentInstance(acceptingActor)) {
+                this.activityPubStorage.storeEntity(acceptingActorFollowers);
+            }
+            if (this.actorHandler.isActorFromCurrentInstance(followingActor)) {
+                this.activityPubStorage.storeEntity(followingActorFollowing);
+            }
             this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, accept);
         } else {
             this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_NOT_IMPLEMENTED,

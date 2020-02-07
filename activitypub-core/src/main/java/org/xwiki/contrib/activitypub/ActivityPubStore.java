@@ -19,6 +19,8 @@
  */
 package org.xwiki.contrib.activitypub;
 
+import java.net.URI;
+
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.contrib.activitypub.entities.Inbox;
@@ -34,7 +36,7 @@ public interface ActivityPubStore
      * @param entity the entity to persist.
      * @return an UUID to retrieve this entity.
      */
-    String storeEntity(ActivityPubObject entity);
+    String storeEntity(ActivityPubObject entity) throws ActivityPubException;
 
     /**
      * Store an entity with a given UID.
@@ -42,7 +44,9 @@ public interface ActivityPubStore
      * @param entity the entity to store.
      * @return {@code true} iff the entity has been overridden.
      */
-    boolean storeEntity(String uid, ActivityPubObject entity);
+    boolean storeEntity(String uid, ActivityPubObject entity) throws ActivityPubException;
+
+    boolean storeEntity(URI uri, ActivityPubObject entity) throws ActivityPubException;
 
     /**
      * Extract an entity from its UUID.

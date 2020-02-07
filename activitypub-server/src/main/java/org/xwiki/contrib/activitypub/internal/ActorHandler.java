@@ -36,8 +36,10 @@ import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubStore;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.contrib.activitypub.entities.Inbox;
+import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.model.reference.DocumentReference;
@@ -91,7 +93,7 @@ public class ActorHandler
                 Actor actor = this.activityPubStorage.retrieveEntity("actor", fullname);
                 if (actor == null) {
                     String preferredName = String.format("%s %s",
-                        userXObject.get("first_name"), userXObject.get("last_name"));
+                        userXObject.getStringValue("first_name"), userXObject.getStringValue("last_name"));
                     actor = createActor(fullname, preferredName);
                 }
                 return actor;
@@ -104,7 +106,7 @@ public class ActorHandler
         }
     }
 
-    private Actor createActor(String fullName, String preferredName)
+    private Actor createActor(String fullName, String preferredName) throws ActivityPubException
     {
         Actor actor = new Person();
         actor.setName(fullName);
@@ -113,10 +115,21 @@ public class ActorHandler
         Inbox inbox = new Inbox();
         inbox.setOwner(actor);
         this.activityPubStorage.storeEntity(inbox);
+        actor.setInbox(new ActivityPubObjectReference<Inbox>().setObject(inbox));
 
         Outbox outbox = new Outbox();
         outbox.setOwner(actor);
         this.activityPubStorage.storeEntity(outbox);
+        actor.setOutbox(new ActivityPubObjectReference<Outbox>().setObject(outbox));
+
+        OrderedCollection following = new OrderedCollection();
+        this.activityPubStorage.storeEntity(following);
+        actor.setFollowing(new ActivityPubObjectReference<OrderedCollection>().setObject(following));
+
+        OrderedCollection followers = new OrderedCollection();
+        this.activityPubStorage.storeEntity(followers);
+        actor.setFollowers(new ActivityPubObjectReference<OrderedCollection>().setObject(followers));
+
         this.activityPubStorage.storeEntity(actor);
 
         return actor;
@@ -154,12 +167,12 @@ public class ActorHandler
         return this.getActor(resolveUser(serializedUserReference));
     }
 
-    private boolean isActorFromCurrentInstance(Actor actor)
+    public boolean isActorFromCurrentInstance(Actor actor)
     {
         XWikiContext context = this.contextProvider.get();
         try {
             URL serverURL = context.getURLFactory().getServerURL(context);
-            return (actor.getId().compareTo(serverURL.toURI()) > 0);
+            return (!actor.getId().relativize(serverURL.toURI()).toASCIIString().isEmpty());
         } catch (MalformedURLException | URISyntaxException e) {
             logger.error("Error while comparing server URL and actor ID", e);
         }

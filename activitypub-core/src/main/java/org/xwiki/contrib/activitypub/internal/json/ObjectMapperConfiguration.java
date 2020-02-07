@@ -53,9 +53,7 @@ public class ObjectMapperConfiguration implements Initializable
         // TODO: Check if we cannot use polymorphic serialization instead
         // cf https://github.com/FasterXML/jackson-docs/wiki/JacksonPolymorphicDeserialization
         module
-            .addSerializer(ActivityPubObjectReference.class, objectReferenceSerializer)
-            .addDeserializer(ActivityPubObject.class, new ActivityPubObjectDeserializer())
-            .addDeserializer(ActivityPubObjectReference.class, new ActivityPubObjectReferenceDeserializer());
+            .addSerializer(ActivityPubObjectReference.class, objectReferenceSerializer);
 
         objectMapper = new ObjectMapper()
             // we don't want null values field to be serialized

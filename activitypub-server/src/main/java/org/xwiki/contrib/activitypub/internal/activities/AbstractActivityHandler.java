@@ -31,6 +31,7 @@ import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubStore;
 import org.xwiki.contrib.activitypub.entities.Activity;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
+import org.xwiki.contrib.activitypub.internal.ActorHandler;
 
 public abstract class AbstractActivityHandler
 {
@@ -48,6 +49,9 @@ public abstract class AbstractActivityHandler
 
     @Inject
     protected ActivityPubObjectReferenceResolver activityPubObjectReferenceResolver;
+
+    @Inject
+    protected ActorHandler actorHandler;
 
     protected void answer(HttpServletResponse response, int statusCode, Activity activity) throws IOException
     {

@@ -19,25 +19,34 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStore;
 import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Outbox;
+import org.xwiki.resource.CreateResourceReferenceException;
+import org.xwiki.resource.ResourceReferenceResolver;
 import org.xwiki.resource.ResourceReferenceSerializer;
+import org.xwiki.resource.ResourceType;
 import org.xwiki.resource.SerializeResourceReferenceException;
 import org.xwiki.resource.UnsupportedResourceReferenceException;
+import org.xwiki.url.ExtendedURL;
 
 @Component
 @Singleton
@@ -51,6 +60,10 @@ public class DefaultActivityPubStore implements ActivityPubStore
     private ResourceReferenceSerializer<ActivityPubResourceReference, URI> serializer;
 
     @Inject
+    @Named("activitypub")
+    private ResourceReferenceResolver<ExtendedURL> urlResolver;
+
+    @Inject
     private Logger logger;
 
     public DefaultActivityPubStore()
@@ -59,10 +72,10 @@ public class DefaultActivityPubStore implements ActivityPubStore
     }
 
     @Override
-    public String storeEntity(ActivityPubObject entity)
+    public String storeEntity(ActivityPubObject entity) throws ActivityPubException
     {
         if (entity.getId() != null) {
-            throw new IllegalArgumentException("Entity with existing ID Not yet implemented");
+            this.storeEntity(entity.getId(), entity);
         }
 
         String uuid;
@@ -91,15 +104,31 @@ public class DefaultActivityPubStore implements ActivityPubStore
             this.storage.put(uuid, entity);
             return uuid;
         } catch (SerializeResourceReferenceException | UnsupportedResourceReferenceException e) {
-            this.logger.error("Error while serializing [{}].", resourceReference, e);
+            throw new ActivityPubException(String.format("Error while serializing [%s].", resourceReference), e);
         }
-
-        return null;
     }
 
     @Override
-    public boolean storeEntity(String uid, ActivityPubObject entity)
+    public boolean storeEntity(URI uri, ActivityPubObject entity) throws ActivityPubException
     {
+        try {
+            // FIXME: the prefix should be at the very least dynamically computed.
+            //  But maybe we should use a URI resolver.
+            ExtendedURL extendedURL = new ExtendedURL(uri.toURL(), "xwiki/activitypub");
+            ActivityPubResourceReference resourceReference = (ActivityPubResourceReference) this.urlResolver.
+                resolve(extendedURL, new ResourceType("activitypub"), Collections.emptyMap());
+            return this.storeEntity(resourceReference.getUuid(), entity);
+        } catch (MalformedURLException | CreateResourceReferenceException | UnsupportedResourceReferenceException e) {
+            throw new ActivityPubException(String.format("Error when getting UID from URI [%s]", uri), e);
+        }
+    }
+
+    @Override
+    public boolean storeEntity(String uid, ActivityPubObject entity) throws ActivityPubException
+    {
+        if (StringUtils.isEmpty(uid)) {
+            throw new ActivityPubException("The UID cannot be empty.");
+        }
         boolean result = !this.storage.containsKey(uid);
         this.storage.put(uid, entity);
         return result;
@@ -108,13 +137,7 @@ public class DefaultActivityPubStore implements ActivityPubStore
     @Override
     public <T extends ActivityPubObject> T retrieveEntity(String entityType, String uuid)
     {
-        String key = uuid;
-        if ("inbox".equalsIgnoreCase(entityType)) {
-            key = String.format("%s-%s", uuid, INBOX_SUFFIX_ID);
-        } else if ("outbox".equalsIgnoreCase(entityType)) {
-            key = String.format("%s-%s", uuid, OUTBOX_SUFFIX_ID);
-        }
-        return (T) this.storage.get(key);
+        return (T) this.storage.get(uuid);
     }
 
     private String getActorEntityUID(Actor actor, String entitySuffix)

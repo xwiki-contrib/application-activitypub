@@ -19,14 +19,24 @@
  */
 package org.xwiki.contrib.activitypub.entities;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public abstract class Actor extends ActivityPubObject
 {
     // TODO: Check IRI <-> URI conversion (https://tools.ietf.org/html/rfc3987#section-3.1)
     // We might have some weird cases with XWiki special username (containing non UTF-8 characters for example)
     private String preferredUsername;
+
+    @JsonProperty(required = true)
     private ActivityPubObjectReference<Inbox> inbox;
+
+    @JsonProperty(required = true)
     private ActivityPubObjectReference<Outbox> outbox;
+
+    @JsonProperty(required = true)
     private ActivityPubObjectReference<OrderedCollection> followers;
+
+    @JsonProperty(required = true)
     private ActivityPubObjectReference<OrderedCollection> following;
 
     public String getPreferredUsername()
