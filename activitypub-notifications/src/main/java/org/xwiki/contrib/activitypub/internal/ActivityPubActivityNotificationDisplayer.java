@@ -17,16 +17,16 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub;
-
-import java.util.Set;
+package org.xwiki.contrib.activitypub.internal;
 
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.Activity;
-import org.xwiki.model.reference.EntityReference;
+import org.xwiki.eventstream.Event;
+import org.xwiki.notifications.NotificationException;
+import org.xwiki.rendering.block.Block;
 
 @Role
-public interface ActivityPubNotifier
+public interface ActivityPubActivityNotificationDisplayer
 {
-    <T extends Activity> void notify(T activity, Set<EntityReference> targets);
+    Block displayActivityNotification(Event activityEvent, Activity activity) throws NotificationException;
 }

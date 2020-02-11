@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.httpclient.HttpClient;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubNotifier;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
@@ -52,6 +53,13 @@ public abstract class AbstractActivityHandler
 
     @Inject
     protected ActorHandler actorHandler;
+
+    protected HttpClient httpClient;
+
+    public AbstractActivityHandler()
+    {
+        this.httpClient = new HttpClient();
+    }
 
     protected void answer(HttpServletResponse response, int statusCode, Activity activity) throws IOException
     {

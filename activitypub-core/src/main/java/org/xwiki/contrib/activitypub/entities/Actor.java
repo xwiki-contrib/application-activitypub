@@ -34,10 +34,10 @@ public abstract class Actor extends ActivityPubObject
     private ActivityPubObjectReference<Outbox> outbox;
 
     @JsonProperty(required = true)
-    private ActivityPubObjectReference<OrderedCollection> followers;
+    private ActivityPubObjectReference<OrderedCollection<Actor>> followers;
 
     @JsonProperty(required = true)
-    private ActivityPubObjectReference<OrderedCollection> following;
+    private ActivityPubObjectReference<OrderedCollection<Actor>> following;
 
     public String getPreferredUsername()
     {
@@ -50,23 +50,23 @@ public abstract class Actor extends ActivityPubObject
         return (T) this;
     }
 
-    public ActivityPubObjectReference<OrderedCollection> getFollowers()
+    public ActivityPubObjectReference<OrderedCollection<Actor>> getFollowers()
     {
         return followers;
     }
 
-    public <T extends Actor> T setFollowers(ActivityPubObjectReference<OrderedCollection> followers)
+    public <T extends Actor> T setFollowers(ActivityPubObjectReference<OrderedCollection<Actor>> followers)
     {
         this.followers = followers;
         return (T) this;
     }
 
-    public ActivityPubObjectReference<OrderedCollection> getFollowing()
+    public ActivityPubObjectReference<OrderedCollection<Actor>> getFollowing()
     {
         return following;
     }
 
-    public <T extends Actor> T setFollowing(ActivityPubObjectReference<OrderedCollection> following)
+    public <T extends Actor> T setFollowing(ActivityPubObjectReference<OrderedCollection<Actor>> following)
     {
         this.following = following;
         return (T) this;

@@ -20,35 +20,29 @@
 package org.xwiki.contrib.activitypub.entities;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 @JsonDeserialize(as = OrderedCollection.class)
-public class OrderedCollection extends AbstractCollection
+public class OrderedCollection<T extends ActivityPubObject> extends AbstractCollection<T>
 {
-    private List<ActivityPubObjectReference<?>> orderedItems;
+    private List<ActivityPubObjectReference<T>> orderedItems;
 
     public OrderedCollection()
     {
         this.orderedItems = new ArrayList<>();
     }
 
-    public List<ActivityPubObjectReference<?>> getOrderedItems()
+    public List<ActivityPubObjectReference<T>> getOrderedItems()
     {
         return orderedItems;
     }
 
-    public OrderedCollection setOrderedItems(List<ActivityPubObjectReference<?>> orderedItems)
+    public OrderedCollection setOrderedItems(List<ActivityPubObjectReference<T>> orderedItems)
     {
         this.orderedItems = orderedItems;
-        return this;
-    }
-
-    @Override
-    public OrderedCollection addItem(ActivityPubObject item)
-    {
-        this.orderedItems.add(new ActivityPubObjectReference<>().setObject(item));
         return this;
     }
 
@@ -56,5 +50,18 @@ public class OrderedCollection extends AbstractCollection
     public int getTotalItems()
     {
         return this.orderedItems.size();
+    }
+
+    @Override
+    public <O extends AbstractCollection<T>> O addItem(T item)
+    {
+        this.orderedItems.add(new ActivityPubObjectReference<T>().setObject(item));
+        return (O) this;
+    }
+
+    @Override
+    public Iterator<ActivityPubObjectReference<T>> iterator()
+    {
+        return this.orderedItems.iterator();
     }
 }

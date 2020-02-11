@@ -27,7 +27,7 @@ import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubNotifier;
-import org.xwiki.contrib.activitypub.ActivityPubTargetableEvent;
+import org.xwiki.contrib.activitypub.ActivityPubEvent;
 import org.xwiki.contrib.activitypub.entities.Activity;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
@@ -44,9 +44,9 @@ public class DefaultActivityPubNotifier implements ActivityPubNotifier
     private ObservationManager observationManager;
 
     @Override
-    public void notify(Activity activity, Set<EntityReference> targets)
+    public <T extends Activity> void notify(T activity, Set<EntityReference> targets)
     {
-        ActivityPubTargetableEvent event = new ActivityPubTargetableEvent(activity, this.serializeTargets(targets));
+        ActivityPubEvent<T> event = new ActivityPubEvent<T>(activity, this.serializeTargets(targets));
         this.observationManager.notify(event, "org.xwiki.contrib:activitypub-notifications", activity.getType());
     }
 

@@ -86,9 +86,10 @@ public class ActivityPubObject extends JSONLDObjects
         return published;
     }
 
-    public void setPublished(Date published)
+    public <T extends ActivityPubObject> T setPublished(Date published)
     {
         this.published = published;
+        return (T) this;
     }
 
     public String getSummary()
@@ -107,9 +108,10 @@ public class ActivityPubObject extends JSONLDObjects
         return content;
     }
 
-    public void setContent(String content)
+    public <T extends ActivityPubObject> T setContent(String content)
     {
         this.content = content;
+        return (T) this;
     }
 
     public List<ActivityPubObjectReference<Actor>> getTo()
@@ -117,10 +119,10 @@ public class ActivityPubObject extends JSONLDObjects
         return to;
     }
 
-    public void setTo(
-        List<ActivityPubObjectReference<Actor>> to)
+    public <T extends ActivityPubObject> T setTo(List<ActivityPubObjectReference<Actor>> to)
     {
         this.to = to;
+        return (T) this;
     }
 
     public List<ActivityPubObjectReference<Actor>> getAttributedTo()
@@ -128,10 +130,10 @@ public class ActivityPubObject extends JSONLDObjects
         return attributedTo;
     }
 
-    public void setAttributedTo(
-        List<ActivityPubObjectReference<Actor>> attributedTo)
+    public <T extends ActivityPubObject> T setAttributedTo(List<ActivityPubObjectReference<Actor>> attributedTo)
     {
         this.attributedTo = attributedTo;
+        return (T) this;
     }
 
     @Override

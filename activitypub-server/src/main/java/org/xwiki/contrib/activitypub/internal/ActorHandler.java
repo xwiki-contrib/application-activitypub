@@ -121,13 +121,13 @@ public class ActorHandler
         this.activityPubStorage.storeEntity(outbox);
         actor.setOutbox(new ActivityPubObjectReference<Outbox>().setObject(outbox));
 
-        OrderedCollection following = new OrderedCollection();
+        OrderedCollection<Actor> following = new OrderedCollection<Actor>();
         this.activityPubStorage.storeEntity(following);
-        actor.setFollowing(new ActivityPubObjectReference<OrderedCollection>().setObject(following));
+        actor.setFollowing(new ActivityPubObjectReference<OrderedCollection<Actor>>().setObject(following));
 
-        OrderedCollection followers = new OrderedCollection();
+        OrderedCollection<Actor> followers = new OrderedCollection<Actor>();
         this.activityPubStorage.storeEntity(followers);
-        actor.setFollowers(new ActivityPubObjectReference<OrderedCollection>().setObject(followers));
+        actor.setFollowers(new ActivityPubObjectReference<OrderedCollection<Actor>>().setObject(followers));
 
         this.activityPubStorage.storeEntity(actor);
 

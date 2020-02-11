@@ -23,7 +23,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.activitypub.ActivityPubTargetableEvent;
+import org.xwiki.contrib.activitypub.ActivityPubEvent;
 import org.xwiki.eventstream.RecordableEventDescriptor;
 
 @Component
@@ -34,7 +34,7 @@ public class ActivityPubEventDescriptor implements RecordableEventDescriptor
     @Override
     public String getEventType()
     {
-        return ActivityPubTargetableEvent.class.getCanonicalName();
+        return ActivityPubEvent.class.getCanonicalName();
     }
 
     @Override

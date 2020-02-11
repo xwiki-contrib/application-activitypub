@@ -5,3 +5,5 @@ org.xwiki.contrib.activitypub.internal.activities.FollowActivityHandler
 org.xwiki.contrib.activitypub.internal.ActivityPubResourceReferenceResolver
 org.xwiki.contrib.activitypub.internal.ActivityPubResourceReferenceSerializer
 org.xwiki.contrib.activitypub.internal.DefaultActivityPubStore
+org.xwiki.contrib.activitypub.internal.listeners.DocumentCreatedEventListener
+org.xwiki.contrib.activitypub.internal.activities.CreateActivityHandler

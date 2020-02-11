@@ -19,49 +19,9 @@
  */
 package org.xwiki.contrib.activitypub.entities;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-@JsonDeserialize(as = Collection.class)
-public class Collection<T extends ActivityPubObject> extends AbstractCollection<T>
+@JsonDeserialize(as = Document.class)
+public class Document extends ActivityPubObject
 {
-    private Set<ActivityPubObjectReference<T>> items;
-
-    public Collection()
-    {
-        this.items = new HashSet<>();
-    }
-
-    public Set<ActivityPubObjectReference<T>> getItems()
-    {
-        return items;
-    }
-
-    public <O extends Collection<T>> O setItems(Set<ActivityPubObjectReference<T>> items)
-    {
-        this.items = items;
-        return (O) this;
-    }
-
-    @Override
-    public int getTotalItems()
-    {
-        return this.items.size();
-    }
-
-    @Override
-    public <O extends AbstractCollection<T>> O addItem(T item)
-    {
-        this.items.add(new ActivityPubObjectReference<T>().setObject(item));
-        return (O) this;
-    }
-
-    @Override
-    public Iterator<ActivityPubObjectReference<T>> iterator()
-    {
-        return this.items.iterator();
-    }
 }

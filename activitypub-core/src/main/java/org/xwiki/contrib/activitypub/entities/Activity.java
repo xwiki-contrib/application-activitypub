@@ -33,9 +33,10 @@ public class Activity extends ActivityPubObject
         return actor;
     }
 
-    public void setActor(ActivityPubObjectReference<? extends Actor> actor)
+    public <T extends Activity> T setActor(ActivityPubObjectReference<? extends Actor> actor)
     {
         this.actor = actor;
+        return (T) this;
     }
 
     public ActivityPubObjectReference<? extends ActivityPubObject> getObject()
@@ -43,8 +44,9 @@ public class Activity extends ActivityPubObject
         return object;
     }
 
-    public void setObject(ActivityPubObjectReference<? extends ActivityPubObject> object)
+    public <T extends Activity> T setObject(ActivityPubObjectReference<? extends ActivityPubObject> object)
     {
         this.object = object;
+        return (T) this;
     }
 }

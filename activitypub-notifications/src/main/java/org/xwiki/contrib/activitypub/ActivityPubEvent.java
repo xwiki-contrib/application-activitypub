@@ -19,18 +19,19 @@
  */
 package org.xwiki.contrib.activitypub;
 
+import java.util.Date;
 import java.util.Set;
 
 import org.xwiki.contrib.activitypub.entities.Activity;
 import org.xwiki.eventstream.RecordableEvent;
 import org.xwiki.eventstream.TargetableEvent;
 
-public class ActivityPubTargetableEvent implements RecordableEvent, TargetableEvent
+public class ActivityPubEvent<T extends Activity> implements RecordableEvent, TargetableEvent
 {
     private Set<String> target;
-    private Activity activity;
+    private T activity;
 
-    public ActivityPubTargetableEvent(Activity activity, Set<String> target)
+    public ActivityPubEvent(T activity, Set<String> target)
     {
         this.activity = activity;
         this.target = target;
@@ -42,9 +43,14 @@ public class ActivityPubTargetableEvent implements RecordableEvent, TargetableEv
         return target;
     }
 
+    public T getActivity()
+    {
+        return activity;
+    }
+
     @Override
     public boolean matches(Object otherEvent)
     {
-        return otherEvent != null && otherEvent instanceof ActivityPubTargetableEvent;
+        return otherEvent != null && otherEvent instanceof ActivityPubEvent;
     }
 }

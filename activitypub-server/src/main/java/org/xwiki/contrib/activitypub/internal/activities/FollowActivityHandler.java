@@ -41,10 +41,25 @@ import org.xwiki.contrib.activitypub.internal.ActorHandler;
 public class FollowActivityHandler extends AbstractActivityHandler implements ActivityHandler<Follow>
 {
     @Override
-    public void handleInboxRequest(ActivityRequest<Follow> activityRequest) throws IOException
+    public void handleInboxRequest(ActivityRequest<Follow> activityRequest) throws IOException, ActivityPubException
     {
-        this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_NOT_IMPLEMENTED,
-            "Only client to server is currently implemented.");
+        Follow follow = activityRequest.getActivity();
+        if (follow.getId() == null) {
+            this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_BAD_REQUEST,
+                "The ID of the activity must not be null.");
+        }
+        ActivityPubObject followedObject = this.activityPubObjectReferenceResolver.resolveReference(follow.getObject());
+        if (followedObject instanceof Actor) {
+            Actor followedActor = (Actor) followedObject;
+            Inbox actorInbox = this.activityPubObjectReferenceResolver.resolveReference(followedActor.getInbox());
+            actorInbox.addPendingFollow(follow);
+            actorInbox.addActivity(follow);
+            this.notifier.notify(follow, Collections.singleton(this.actorHandler.getXWikiUserReference(followedActor)));
+            this.answer(activityRequest.getResponse(), HttpServletResponse.SC_ACCEPTED, follow);
+        } else {
+            this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_NOT_IMPLEMENTED,
+                "Only following actors is implemented.");
+        }
     }
 
     /**
