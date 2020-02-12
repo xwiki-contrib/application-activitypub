@@ -31,14 +31,27 @@
   <version>1.0-SNAPSHOT</version>
   <name>XWiki ActivityPub - Parent POM</name>
   <packaging>pom</packaging>
-  <modules>
-    <module>activitypub-core</module>
-    <module>activitypub-server</module>
-    <module>activitypub-notifications</module>
-  </modules>
+  <developers>
+    <developer>
+      <id>surli</id>
+      <name>Simon Urli</name>
+      <organization>XWiki SAS</organization>
+      <organizationUrl>http://www.xwiki.com</organizationUrl>
+    </developer>
+  </developers>
+  <distributionManagement>
+    <repository>
+      <id>xwiki-staging</id>
+      <name>XWiki Staging Repository</name>
+      <url>http://nexus.xwiki.org/nexus/service/local/staging/deploy/maven2/</url>
+    </repository>
+  </distributionManagement>
   <properties>
     <activitypub.version>1.0-SNAPSHOT</activitypub.version>
     <jackson.version>2.10.2</jackson.version>
+    <!-- TODO: needs to be removed after 12.1 release -->
+    <commons.version>12.1-SNAPSHOT</commons.version>
+    <platform.version>12.1-SNAPSHOT</platform.version>
   </properties>
   <dependencies>
     <dependency>
@@ -58,19 +71,9 @@
       <version>3.9</version>
     </dependency>
   </dependencies>
-  <developers>
-    <developer>
-      <id>surli</id>
-      <name>Simon Urli</name>
-      <organization>XWiki SAS</organization>
-      <organizationUrl>http://www.xwiki.com</organizationUrl>
-    </developer>
-  </developers>
-  <distributionManagement>
-    <repository>
-      <id>xwiki-staging</id>
-      <name>XWiki Staging Repository</name>
-      <url>http://nexus.xwiki.org/nexus/service/local/staging/deploy/maven2/</url>
-    </repository>
-  </distributionManagement>
+  <modules>
+    <module>activitypub-core</module>
+    <module>activitypub-server</module>
+    <module>activitypub-notifications</module>
+  </modules>
 </project>

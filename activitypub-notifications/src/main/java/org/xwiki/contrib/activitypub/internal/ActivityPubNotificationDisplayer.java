@@ -40,13 +40,9 @@ import org.xwiki.rendering.block.GroupBlock;
 
 @Component
 @Singleton
-@Named(ActivityPubNotificationDisplayer.EVENT_TYPE)
+@Named("activitypub")
 public class ActivityPubNotificationDisplayer implements NotificationDisplayer
 {
-    public static final String EVENT_TYPE = "org.xwiki.contrib.activitypub.ActivityPubEvent";
-
-    private static final List<String> EVENTS = Arrays.asList(EVENT_TYPE);
-
     @Inject
     private Logger logger;
 
@@ -87,6 +83,6 @@ public class ActivityPubNotificationDisplayer implements NotificationDisplayer
     @Override
     public List<String> getSupportedEvents()
     {
-        return EVENTS;
+        return Arrays.asList("activitypub");
     }
 }

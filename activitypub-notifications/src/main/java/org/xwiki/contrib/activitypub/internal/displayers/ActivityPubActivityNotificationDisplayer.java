@@ -21,15 +21,16 @@ package org.xwiki.contrib.activitypub.internal.displayers;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.script.ScriptContext;
 
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.entities.Activity;
 import org.xwiki.eventstream.Event;
 import org.xwiki.notifications.NotificationException;
 import org.xwiki.rendering.block.Block;
+import org.xwiki.script.ScriptContextManager;
 import org.xwiki.template.Template;
 import org.xwiki.template.TemplateManager;
-import org.xwiki.velocity.VelocityManager;
 
 @Component
 @Singleton
@@ -43,15 +44,16 @@ public class ActivityPubActivityNotificationDisplayer
     private TemplateManager templateManager;
 
     @Inject
-    private VelocityManager velocityManager;
+    private ScriptContextManager scriptContextManager;
 
     @Override
     public Block displayActivityNotification(Event event, Activity activity)
         throws NotificationException
     {
+        ScriptContext scriptContext = scriptContextManager.getScriptContext();
         try {
-            velocityManager.getCurrentVelocityContext().put(EVENT_BINDING_NAME, event);
-            velocityManager.getCurrentVelocityContext().put(ACTIVITY_BINDING_NAME, activity);
+            scriptContext.setAttribute(EVENT_BINDING_NAME, event, ScriptContext.ENGINE_SCOPE);
+            scriptContext.setAttribute(ACTIVITY_BINDING_NAME, activity, ScriptContext.ENGINE_SCOPE);
 
             String templateName = String.format("activity/%s.vm", activity.getType());
             Template template = templateManager.getTemplate(templateName);
@@ -62,8 +64,8 @@ public class ActivityPubActivityNotificationDisplayer
         } catch (Exception e) {
             throw new NotificationException("Failed to render the notification.", e);
         } finally {
-            velocityManager.getCurrentVelocityContext().remove(EVENT_BINDING_NAME);
-            velocityManager.getCurrentVelocityContext().remove(ACTIVITY_BINDING_NAME);
+            scriptContext.removeAttribute(EVENT_BINDING_NAME, ScriptContext.ENGINE_SCOPE);
+            scriptContext.removeAttribute(ACTIVITY_BINDING_NAME, ScriptContext.ENGINE_SCOPE);
         }
     }
 }

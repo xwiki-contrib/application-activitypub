@@ -55,6 +55,7 @@ public class ActivityPubRecordableEventConverter implements RecordableEventConve
         Map<String, String> parameters = new HashMap<>(convertedEvent.getParameters());
         parameters.put("activity", this.activityPubJsonSerializer.serialize(activityPubEvent.getActivity()));
         convertedEvent.setParameters(parameters);
+        convertedEvent.setType("activitypub");
         return convertedEvent;
     }
 

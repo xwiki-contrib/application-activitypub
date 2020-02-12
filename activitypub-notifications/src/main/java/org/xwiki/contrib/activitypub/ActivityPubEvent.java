@@ -19,7 +19,6 @@
  */
 package org.xwiki.contrib.activitypub;
 
-import java.util.Date;
 import java.util.Set;
 
 import org.xwiki.contrib.activitypub.entities.Activity;

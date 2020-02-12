@@ -19,39 +19,39 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
+import java.util.Collections;
+
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.StringUtils;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.activitypub.ActivityPubEvent;
-import org.xwiki.eventstream.RecordableEventDescriptor;
+import org.xwiki.eventstream.Event;
+import org.xwiki.eventstream.store.internal.AbstractLegacyEventConverter;
+import org.xwiki.eventstream.store.internal.LegacyEvent;
 
 @Component
-@Named("ActivityPubTargetableEvent")
 @Singleton
-public class ActivityPubEventDescriptor implements RecordableEventDescriptor
+@Named("activitypub")
+public class ActivityPubLegacyEventConverter extends AbstractLegacyEventConverter
 {
     @Override
-    public String getEventType()
+    public LegacyEvent convertEventToLegacyActivity(Event e)
     {
-        return "activitypub";
+        LegacyEvent event = super.convertEventToLegacyActivity(e);
+        if (e.getParameters().containsKey("activity")) {
+            event.setParam3(e.getParameters().get("activity"));
+        }
+        return event;
     }
 
     @Override
-    public String getApplicationName()
+    public Event convertLegacyActivityToEvent(LegacyEvent e)
     {
-        return "activitypub.application.name";
-    }
-
-    @Override
-    public String getDescription()
-    {
-        return "activitypub.application.description";
-    }
-
-    @Override
-    public String getApplicationIcon()
-    {
-        return "branch";
+        Event event = super.convertLegacyActivityToEvent(e);
+        if (!StringUtils.isEmpty(e.getParam3())) {
+            event.setParameters(Collections.singletonMap("activity", e.getParam3()));
+        }
+        return event;
     }
 }

@@ -3,3 +3,4 @@ org.xwiki.contrib.activitypub.internal.ActivityPubEventDescriptor
 org.xwiki.contrib.activitypub.internal.ActivityPubNotificationDisplayer
 org.xwiki.contrib.activitypub.internal.displayers.ActivityPubActivityNotificationDisplayer
 org.xwiki.contrib.activitypub.internal.ActivityPubRecordableEventConverter
+org.xwiki.contrib.activitypub.internal.ActivityPubLegacyEventConverter
