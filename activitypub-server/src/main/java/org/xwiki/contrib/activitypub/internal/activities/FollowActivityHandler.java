@@ -51,9 +51,10 @@ public class FollowActivityHandler extends AbstractActivityHandler implements Ac
         ActivityPubObject followedObject = this.activityPubObjectReferenceResolver.resolveReference(follow.getObject());
         if (followedObject instanceof Actor) {
             Actor followedActor = (Actor) followedObject;
-            Inbox actorInbox = this.activityPubObjectReferenceResolver.resolveReference(followedActor.getInbox());
+            Inbox actorInbox = this.actorHandler.getInbox(followedActor);
             actorInbox.addPendingFollow(follow);
             actorInbox.addActivity(follow);
+            this.activityPubStorage.storeEntity(actorInbox);
             this.notifier.notify(follow, Collections.singleton(this.actorHandler.getXWikiUserReference(followedActor)));
             this.answer(activityRequest.getResponse(), HttpServletResponse.SC_ACCEPTED, follow);
         } else {
@@ -76,9 +77,10 @@ public class FollowActivityHandler extends AbstractActivityHandler implements Ac
         ActivityPubObject followedObject = this.activityPubObjectReferenceResolver.resolveReference(follow.getObject());
         if (followedObject instanceof Actor) {
             Actor followedActor = (Actor) followedObject;
-            Inbox actorInbox = this.activityPubObjectReferenceResolver.resolveReference(followedActor.getInbox());
+            Inbox actorInbox = this.actorHandler.getInbox(followedActor);
             actorInbox.addPendingFollow(follow);
             actorInbox.addActivity(follow);
+            this.activityPubStorage.storeEntity(actorInbox);
             this.notifier.notify(follow, Collections.singleton(this.actorHandler.getXWikiUserReference(followedActor)));
             this.answer(activityRequest.getResponse(), HttpServletResponse.SC_ACCEPTED, follow);
         } else {

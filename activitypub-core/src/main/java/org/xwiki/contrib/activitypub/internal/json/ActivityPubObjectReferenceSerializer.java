@@ -23,8 +23,13 @@ import java.io.IOException;
 import java.net.URI;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
+import org.xwiki.component.manager.ComponentLookupException;
+import org.xwiki.component.manager.ComponentManager;
+import org.xwiki.component.phase.Initializable;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubStore;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
@@ -39,13 +44,26 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
 @Component(roles = ActivityPubObjectReferenceSerializer.class)
+@Singleton
 public class ActivityPubObjectReferenceSerializer extends JsonSerializer<ActivityPubObjectReference>
 {
-    @Inject
+    // We don't inject it since it might need the serializer itself.
     private ActivityPubStore activityPubStore;
 
     @Inject
     private ResourceReferenceSerializer<ActivityPubResourceReference, URI> activityPubResourceReferenceSerializer;
+
+    @Inject
+    @Named("context")
+    private ComponentManager componentManager;
+
+    private ActivityPubStore getActivityPubStore() throws ComponentLookupException
+    {
+        if (this.activityPubStore == null) {
+            this.activityPubStore = this.componentManager.getInstance(ActivityPubStore.class);
+        }
+        return this.activityPubStore;
+    }
 
     @Override
     public void serialize(ActivityPubObjectReference objectReference, JsonGenerator jsonGenerator,
@@ -62,13 +80,13 @@ public class ActivityPubObjectReferenceSerializer extends JsonSerializer<Activit
             // it doesn't have an ID: we need to store it and we serialize it as a link to avoid big JSON answers.
             } else {
                 try {
-                    String uuid = this.activityPubStore.storeEntity(object);
+                    String uuid = getActivityPubStore().storeEntity(object);
                     ActivityPubResourceReference resourceReference =
                         new ActivityPubResourceReference(object.getType(), uuid);
                     URI uri = this.activityPubResourceReferenceSerializer.serialize(resourceReference);
                     jsonGenerator.writeString(uri.toString());
-                } catch (SerializeResourceReferenceException|
-                    UnsupportedResourceReferenceException|ActivityPubException e) {
+                } catch (SerializeResourceReferenceException | UnsupportedResourceReferenceException
+                    | ActivityPubException | ComponentLookupException e) {
                     throw new IOException(String.format("Error when serializing [%s]", object.toString()), e);
                 }
             }

@@ -63,15 +63,19 @@ public abstract class AbstractActivityHandler
 
     protected void answer(HttpServletResponse response, int statusCode, Activity activity) throws IOException
     {
-        response.setStatus(statusCode);
-        response.setContentType("application/activity+json");
-        this.activityPubJsonSerializer.serialize(response.getOutputStream(), activity);
+        if (response != null) {
+            response.setStatus(statusCode);
+            response.setContentType("application/activity+json");
+            this.activityPubJsonSerializer.serialize(response.getOutputStream(), activity);
+        }
     }
 
     protected void answerError(HttpServletResponse response, int statusCode, String error) throws IOException
     {
-        response.setStatus(statusCode);
-        response.setContentType("text/plain");
-        response.getOutputStream().write(error.getBytes(StandardCharsets.UTF_8));
+        if (response != null) {
+            response.setStatus(statusCode);
+            response.setContentType("text/plain");
+            response.getOutputStream().write(error.getBytes(StandardCharsets.UTF_8));
+        }
     }
 }

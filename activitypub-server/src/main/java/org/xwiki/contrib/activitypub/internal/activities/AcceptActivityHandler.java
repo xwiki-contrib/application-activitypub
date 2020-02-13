@@ -58,19 +58,16 @@ public class AcceptActivityHandler extends AbstractActivityHandler implements Ac
         if (object instanceof Follow) {
             Follow follow = (Follow) object;
             Actor followingActor = this.activityPubObjectReferenceResolver.resolveReference(follow.getActor());
-            OrderedCollection acceptingActorFollowers =
+            OrderedCollection<Actor> acceptingActorFollowers =
                 this.activityPubObjectReferenceResolver.resolveReference(acceptingActor.getFollowers());
-            OrderedCollection followingActorFollowing =
+            OrderedCollection<Actor> followingActorFollowing =
                 this.activityPubObjectReferenceResolver.resolveReference(followingActor.getFollowing());
             acceptingActorFollowers.addItem(followingActor);
             followingActorFollowing.addItem(acceptingActor);
 
-            if (this.actorHandler.isActorFromCurrentInstance(acceptingActor)) {
-                this.activityPubStorage.storeEntity(acceptingActorFollowers);
-            }
-            if (this.actorHandler.isActorFromCurrentInstance(followingActor)) {
-                this.activityPubStorage.storeEntity(followingActorFollowing);
-            }
+            this.activityPubStorage.storeEntity(acceptingActorFollowers);
+            this.activityPubStorage.storeEntity(followingActorFollowing);
+
             this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, accept);
         } else {
             this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_NOT_IMPLEMENTED,

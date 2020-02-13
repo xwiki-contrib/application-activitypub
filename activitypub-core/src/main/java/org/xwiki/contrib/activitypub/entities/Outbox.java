@@ -19,25 +19,19 @@
  */
 package org.xwiki.contrib.activitypub.entities;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 @JsonDeserialize(as = Outbox.class)
-public class Outbox extends OrderedCollection
+public class Outbox extends OrderedCollection<Activity>
 {
-    private transient Actor owner;
     private Map<String, Activity> items;
 
-    public Actor getOwner()
+    public Outbox()
     {
-        return owner;
-    }
-
-    public Outbox setOwner(Actor owner)
-    {
-        this.owner = owner;
-        return this;
+        this.items = new HashMap<>();
     }
 
     public void addActivity(Activity activity)

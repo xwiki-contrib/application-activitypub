@@ -28,11 +28,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 @JsonDeserialize(as = Inbox.class)
-public class Inbox extends OrderedCollection
+public class Inbox extends OrderedCollection<Activity>
 {
-    @JsonIgnore
-    private Actor owner;
-
     @JsonIgnore
     private Map<String, Activity> items;
 
@@ -43,17 +40,6 @@ public class Inbox extends OrderedCollection
     {
         this.items = new HashMap<>();
         this.pendingFollows = new ArrayList<>();
-    }
-
-    public Actor getOwner()
-    {
-        return owner;
-    }
-
-    public Inbox setOwner(Actor owner)
-    {
-        this.owner = owner;
-        return this;
     }
 
     public void addActivity(Activity activity)

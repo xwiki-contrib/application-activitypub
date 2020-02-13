@@ -31,9 +31,13 @@ import javax.inject.Singleton;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubEvent;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
+import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
+import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.eventstream.Event;
 import org.xwiki.eventstream.RecordableEvent;
 import org.xwiki.eventstream.RecordableEventConverter;
+import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.DocumentReferenceResolver;
 
 @Component
 @Singleton
@@ -46,6 +50,13 @@ public class ActivityPubRecordableEventConverter implements RecordableEventConve
     @Inject
     private ActivityPubJsonSerializer activityPubJsonSerializer;
 
+    @Inject
+    private ActivityPubObjectReferenceResolver objectReferenceResolver;
+
+    @Inject
+    @Named("current")
+    private DocumentReferenceResolver<String> stringDocumentReferenceResolver;
+
     @Override
     public Event convert(RecordableEvent recordableEvent, String source, Object data) throws Exception
     {
@@ -56,6 +67,13 @@ public class ActivityPubRecordableEventConverter implements RecordableEventConve
         parameters.put("activity", this.activityPubJsonSerializer.serialize(activityPubEvent.getActivity()));
         convertedEvent.setParameters(parameters);
         convertedEvent.setType("activitypub");
+
+        // FIXME: this is a really ugly hack to be sure we have a user in the notif, else it's never taken into account
+        if (convertedEvent.getUser() == null) {
+            Actor actor = this.objectReferenceResolver.resolveReference(activityPubEvent.getActivity().getActor());
+            DocumentReference userReference = stringDocumentReferenceResolver.resolve(actor.getPreferredUsername());
+            convertedEvent.setUser(userReference);
+        }
         return convertedEvent;
     }
 

@@ -32,6 +32,11 @@ public class ActivityRequest<T extends Activity>
     private HttpServletRequest request;
     private HttpServletResponse response;
 
+    public ActivityRequest(Actor actor, T activity, HttpServletRequest request)
+    {
+        this(actor, activity, request, null);
+    }
+
     public ActivityRequest(Actor actor, T activity, HttpServletRequest request, HttpServletResponse response)
     {
         this.actor = actor;

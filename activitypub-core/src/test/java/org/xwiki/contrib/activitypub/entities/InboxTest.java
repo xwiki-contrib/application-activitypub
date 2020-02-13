@@ -33,7 +33,6 @@ public class InboxTest extends AbstractEntityTest
     public void serialization() throws URISyntaxException, IOException
     {
         Inbox inbox = new Inbox()
-            .setOwner(new Person().setName("Foobar"))
             .setId(new URI("http://localhost:8080/xwiki/activitypub/Inbox/XWiki.Foo-inbox"));
 
         String expectedSerialization = this.readResource("inbox/inbox1.json");

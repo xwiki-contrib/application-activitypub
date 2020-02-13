@@ -44,6 +44,7 @@ import org.xwiki.container.servlet.ServletResponse;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
+import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStore;
 import org.xwiki.contrib.activitypub.ActivityRequest;
@@ -51,6 +52,8 @@ import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.entities.Activity;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
+import org.xwiki.contrib.activitypub.entities.Inbox;
+import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.resource.AbstractResourceReferenceHandler;
@@ -97,6 +100,9 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
     @Inject
     private Provider<XWikiContext> contextProvider;
 
+    @Inject
+    private ActivityPubObjectReferenceResolver objectReferenceResolver;
+
     @Override
     public List<ResourceType> getSupportedResourceReferences()
     {
@@ -119,25 +125,50 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
 
         try {
             if ("POST".equalsIgnoreCase(request.getMethod())) {
-                try {
-                    Actor actor = getActor(resourceReference);
-                    if (actor != null) {
-                        if ("inbox".equalsIgnoreCase(resourceReference.getEntityType())) {
-                            this.handleBox(actor, BOX_TYPE.INBOX);
-                        } else if ("outbox".equalsIgnoreCase(resourceReference.getEntityType())) {
-                            this.handleBox(actor, BOX_TYPE.OUTBOX);
-                        } else {
-                            response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+                if (entity != null && !((entity instanceof Inbox) || (entity instanceof Outbox))) {
+                    this.sendErrorResponse(HttpServletResponse.SC_BAD_REQUEST,
+                        "POST requests are only allowed on inbox or outbox.");
+                } else if (entity != null) {
+                    if (entity.getAttributedTo() == null || entity.getAttributedTo().isEmpty()) {
+                        this.sendErrorResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                            "This box is not attributed. Please report the error to the administrator.");
+                    } else {
+                        try {
+                            Actor actor = this.objectReferenceResolver
+                                .resolveReference(entity.getAttributedTo().get(0));
+
+                            if (entity instanceof Inbox) {
+                                this.handleBox(actor, BOX_TYPE.INBOX);
+                            } else {
+                                this.handleBox(actor, BOX_TYPE.OUTBOX);
+                            }
+                        } catch (ActivityPubException e) {
+                            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                             response.setContentType("text/plain");
-                            response.getOutputStream()
-                                .write("You cannot post anything outside an inbox our an outbox."
-                                    .getBytes(StandardCharsets.UTF_8));
+                            e.printStackTrace(response.getWriter());
                         }
                     }
-                } catch (ActivityPubException e) {
-                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                    response.setContentType("text/plain");
-                    e.printStackTrace(response.getWriter());
+                } else {
+                    try {
+                        Actor actor = getActor(resourceReference);
+                        if (actor != null) {
+                            if ("inbox".equalsIgnoreCase(resourceReference.getEntityType())) {
+                                this.handleBox(actor, BOX_TYPE.INBOX);
+                            } else if ("outbox".equalsIgnoreCase(resourceReference.getEntityType())) {
+                                this.handleBox(actor, BOX_TYPE.OUTBOX);
+                            } else {
+                                response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+                                response.setContentType("text/plain");
+                                response.getOutputStream()
+                                    .write("You cannot post anything outside an inbox our an outbox."
+                                        .getBytes(StandardCharsets.UTF_8));
+                            }
+                        }
+                    } catch (ActivityPubException e) {
+                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                        response.setContentType("text/plain");
+                        e.printStackTrace(response.getWriter());
+                    }
                 }
             } else {
                 if (entity == null && "person".equalsIgnoreCase(resourceReference.getEntityType())

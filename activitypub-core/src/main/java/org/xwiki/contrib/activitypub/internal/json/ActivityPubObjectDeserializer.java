@@ -52,7 +52,7 @@ public class ActivityPubObjectDeserializer extends JsonDeserializer<ActivityPubO
         ObjectMapper mapper = (ObjectMapper) jsonParser.getCodec();
         ObjectNode root = (ObjectNode) mapper.readTree(jsonParser);
 
-        JsonNode type = root.findValue("type");
+        JsonNode type = root.get("type");
         Class<? extends ActivityPubObject> instanceClass;
         if (type != null) {
             instanceClass = findClass(type.asText());

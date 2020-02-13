@@ -23,6 +23,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Collections;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -112,12 +113,12 @@ public class ActorHandler
         actor.setPreferredUsername(preferredName);
 
         Inbox inbox = new Inbox();
-        inbox.setOwner(actor);
+        inbox.setAttributedTo(Collections.singletonList(new ActivityPubObjectReference<Actor>().setObject(actor)));
         this.activityPubStorage.storeEntity(inbox);
         actor.setInbox(new ActivityPubObjectReference<Inbox>().setObject(inbox));
 
         Outbox outbox = new Outbox();
-        outbox.setOwner(actor);
+        outbox.setAttributedTo(Collections.singletonList(new ActivityPubObjectReference<Actor>().setObject(actor)));
         this.activityPubStorage.storeEntity(outbox);
         actor.setOutbox(new ActivityPubObjectReference<Outbox>().setObject(outbox));
 
@@ -166,15 +167,17 @@ public class ActorHandler
         return this.getActor(resolveUser(serializedUserReference));
     }
 
-    public boolean isActorFromCurrentInstance(Actor actor)
+    public Inbox getInbox(Actor actor) throws ActivityPubException
     {
-        XWikiContext context = this.contextProvider.get();
-        try {
-            URL serverURL = context.getURLFactory().getServerURL(context);
-            return (!actor.getId().relativize(serverURL.toURI()).toASCIIString().isEmpty());
-        } catch (MalformedURLException | URISyntaxException e) {
-            logger.error("Error while comparing server URL and actor ID", e);
-        }
-        return false;
+        Inbox inbox = this.activityPubObjectReferenceResolver.resolveReference(actor.getInbox());
+        inbox.setAttributedTo(Collections.singletonList(new ActivityPubObjectReference<Actor>().setObject(actor)));
+        return inbox;
+    }
+
+    public Outbox getOutbox(Actor actor) throws ActivityPubException
+    {
+        Outbox outbox = this.activityPubObjectReferenceResolver.resolveReference(actor.getOutbox());
+        outbox.setAttributedTo(Collections.singletonList(new ActivityPubObjectReference<Actor>().setObject(actor)));
+        return outbox;
     }
 }

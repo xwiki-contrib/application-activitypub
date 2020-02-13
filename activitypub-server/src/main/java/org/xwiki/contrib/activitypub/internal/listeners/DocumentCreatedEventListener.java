@@ -84,11 +84,10 @@ public class DocumentCreatedEventListener extends AbstractEventListener
         XWikiContext context = (XWikiContext) data;
 
         HttpServletRequest request = ((ServletRequest) this.container.getRequest()).getHttpServletRequest();
-        HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
         try {
             Create createActivity = getActivity(document, context);
             ActivityRequest<Create> activityRequest = new ActivityRequest<>(createActivity.getActor().getObject(),
-                createActivity, request, response);
+                createActivity, request);
             this.createActivityHandler.handleOutboxRequest(activityRequest);
         } catch (URISyntaxException | ActivityPubException | IOException e) {
             this.logger.error("Error while trying to handle DocumentCreatedEvent for document [{}]",

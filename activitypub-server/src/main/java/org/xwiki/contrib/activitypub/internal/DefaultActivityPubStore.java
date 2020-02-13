@@ -19,8 +19,11 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,12 +31,16 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
+import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
+import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStore;
 import org.xwiki.contrib.activitypub.entities.Actor;
@@ -48,13 +55,15 @@ import org.xwiki.resource.SerializeResourceReferenceException;
 import org.xwiki.resource.UnsupportedResourceReferenceException;
 import org.xwiki.url.ExtendedURL;
 
+import com.xpn.xwiki.XWikiContext;
+
 @Component
 @Singleton
 public class DefaultActivityPubStore implements ActivityPubStore
 {
     private static final String INBOX_SUFFIX_ID = "inbox";
     private static final String OUTBOX_SUFFIX_ID = "outbox";
-    private final Map<String, ActivityPubObject> storage;
+    private final Map<String, String> storage;
 
     @Inject
     private ResourceReferenceSerializer<ActivityPubResourceReference, URI> serializer;
@@ -64,6 +73,18 @@ public class DefaultActivityPubStore implements ActivityPubStore
     private ResourceReferenceResolver<ExtendedURL> urlResolver;
 
     @Inject
+    private Provider<XWikiContext> contextProvider;
+
+    @Inject
+    private ActivityPubJsonParser jsonParser;
+
+    @Inject
+    private ActivityPubJsonSerializer jsonSerializer;
+
+    @Inject
+    private ActivityPubObjectReferenceResolver resolver;
+
+    @Inject
     private Logger logger;
 
     public DefaultActivityPubStore()
@@ -71,26 +92,42 @@ public class DefaultActivityPubStore implements ActivityPubStore
         this.storage = new HashMap<>();
     }
 
+    private boolean isIdFromCurrentInstance(URI id)
+    {
+        XWikiContext context = this.contextProvider.get();
+        try {
+            URL serverURL = context.getURLFactory().getServerURL(context);
+            return (!id.relativize(serverURL.toURI()).toASCIIString().isEmpty());
+        } catch (MalformedURLException | URISyntaxException e) {
+            logger.error("Error while comparing server URL and actor ID", e);
+        }
+        return false;
+    }
+
     @Override
     public String storeEntity(ActivityPubObject entity) throws ActivityPubException
     {
-        if (entity.getId() != null) {
+        if (entity.getId() != null && isIdFromCurrentInstance(entity.getId())) {
             this.storeEntity(entity.getId(), entity);
+        } else if (entity.getId() != null && !isIdFromCurrentInstance(entity.getId())) {
+            this.logger.warn("Entity [{}] won't be stored since it's not part of the current instance", entity.getId());
         }
 
         String uuid;
         if (entity instanceof Inbox) {
             Inbox inbox = (Inbox) entity;
-            if (inbox.getOwner() == null) {
+            if (inbox.getAttributedTo() == null || inbox.getAttributedTo().isEmpty()) {
                 throw new IllegalArgumentException("Cannot store an inbox without owner.");
             }
-            uuid = getActorEntityUID(inbox.getOwner(), INBOX_SUFFIX_ID);
+            Actor owner = this.resolver.resolveReference(inbox.getAttributedTo().get(0));
+            uuid = getActorEntityUID(owner, INBOX_SUFFIX_ID);
         } else if (entity instanceof Outbox) {
             Outbox outbox = (Outbox) entity;
-            if (outbox.getOwner() == null) {
+            if (outbox.getAttributedTo() == null || outbox.getAttributedTo().isEmpty()) {
                 throw new IllegalArgumentException("Cannot store an outbox without owner.");
             }
-            uuid = getActorEntityUID(outbox.getOwner(), OUTBOX_SUFFIX_ID);
+            Actor owner = this.resolver.resolveReference(outbox.getAttributedTo().get(0));
+            uuid = getActorEntityUID(owner, OUTBOX_SUFFIX_ID);
         } else if (entity instanceof Actor) {
             uuid = ((Actor) entity).getPreferredUsername();
         } else {
@@ -101,9 +138,9 @@ public class DefaultActivityPubStore implements ActivityPubStore
         ActivityPubResourceReference resourceReference = new ActivityPubResourceReference(entity.getType(), uuid);
         try {
             entity.setId(this.serializer.serialize(resourceReference));
-            this.storage.put(uuid, entity);
+            this.storage.put(uuid, this.jsonSerializer.serialize(entity));
             return uuid;
-        } catch (SerializeResourceReferenceException | UnsupportedResourceReferenceException e) {
+        } catch (SerializeResourceReferenceException | UnsupportedResourceReferenceException | IOException e) {
             throw new ActivityPubException(String.format("Error while serializing [%s].", resourceReference), e);
         }
     }
@@ -130,14 +167,22 @@ public class DefaultActivityPubStore implements ActivityPubStore
             throw new ActivityPubException("The UID cannot be empty.");
         }
         boolean result = !this.storage.containsKey(uid);
-        this.storage.put(uid, entity);
+        try {
+            this.storage.put(uid, this.jsonSerializer.serialize(entity));
+        } catch (IOException e) {
+            throw new ActivityPubException("Error while serializing the entity to store.", e);
+        }
         return result;
     }
 
     @Override
     public <T extends ActivityPubObject> T retrieveEntity(String entityType, String uuid)
     {
-        return (T) this.storage.get(uuid);
+        if (this.storage.containsKey(uuid)) {
+            return (T) this.jsonParser.parseRequest(this.storage.get(uuid));
+        } else {
+            return null;
+        }
     }
 
     private String getActorEntityUID(Actor actor, String entitySuffix)
