@@ -51,13 +51,13 @@ public class PersonTest extends AbstractEntityTest
             .setName("XWiki.Foo");
 
         String personJson = this.readResource("person/person1.json");
-        Person obtainedPerson = this.parser.parseRequest(personJson, Person.class);
+        Person obtainedPerson = this.parser.parse(personJson, Person.class);
         assertEquals(person, obtainedPerson);
 
-        Actor obtainedActor = this.parser.parseRequest(personJson, Actor.class);
+        Actor obtainedActor = this.parser.parse(personJson, Actor.class);
         assertEquals(person, obtainedActor);
 
-        obtainedPerson = this.parser.parseRequest(personJson);
+        obtainedPerson = this.parser.parse(personJson);
         assertEquals(person, obtainedPerson);
     }
 
@@ -83,13 +83,13 @@ public class PersonTest extends AbstractEntityTest
             .setSummary("Lisp enthusiast hailing from MIT");
 
         String personJson = this.readResource("person/person2.json");
-        Person obtainedPerson = this.parser.parseRequest(personJson, Person.class);
+        Person obtainedPerson = this.parser.parse(personJson, Person.class);
         assertEquals(person, obtainedPerson);
 
-        Actor obtainedActor = this.parser.parseRequest(personJson, Actor.class);
+        Actor obtainedActor = this.parser.parse(personJson, Actor.class);
         assertEquals(person, obtainedActor);
 
-        obtainedPerson = this.parser.parseRequest(personJson);
+        obtainedPerson = this.parser.parse(personJson);
         assertEquals(person, obtainedPerson);
     }
 }

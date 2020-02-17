@@ -19,9 +19,9 @@
  */
 package org.xwiki.contrib.activitypub.entities;
 
-import org.xwiki.contrib.activitypub.entities.Actor;
-import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
-import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
+import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonSetter;
 
 public class Activity extends ActivityPubObject
 {
@@ -33,10 +33,16 @@ public class Activity extends ActivityPubObject
         return actor;
     }
 
+    @JsonSetter
     public <T extends Activity> T setActor(ActivityPubObjectReference<? extends Actor> actor)
     {
         this.actor = actor;
         return (T) this;
+    }
+
+    public <T extends Activity> T setActor(Actor actor)
+    {
+        return this.setActor(new ActivityPubObjectReference<Actor>().setObject(actor));
     }
 
     public ActivityPubObjectReference<? extends ActivityPubObject> getObject()
@@ -44,9 +50,38 @@ public class Activity extends ActivityPubObject
         return object;
     }
 
+    @JsonSetter
     public <T extends Activity> T setObject(ActivityPubObjectReference<? extends ActivityPubObject> object)
     {
         this.object = object;
         return (T) this;
+    }
+
+    public <T extends Activity> T setObject(ActivityPubObject object)
+    {
+        return this.setObject(new ActivityPubObjectReference<ActivityPubObject>().setObject(object));
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        Activity activity = (Activity) o;
+        return Objects.equals(actor, activity.actor) &&
+            Objects.equals(object, activity.object);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(super.hashCode(), actor, object);
     }
 }

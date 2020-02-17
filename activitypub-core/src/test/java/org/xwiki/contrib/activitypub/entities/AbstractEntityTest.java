@@ -23,37 +23,59 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.net.URI;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-
-import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
-import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.xwiki.component.manager.ComponentManager;
+import org.xwiki.component.util.DefaultParameterizedType;
+import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
+import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.internal.json.ActivityPubObjectReferenceSerializer;
 import org.xwiki.contrib.activitypub.internal.json.DefaultActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.internal.json.DefaultActivityPubJsonSerializer;
 import org.xwiki.contrib.activitypub.internal.json.ObjectMapperConfiguration;
+import org.xwiki.resource.ResourceReferenceSerializer;
+import org.xwiki.test.annotation.BeforeComponent;
 import org.xwiki.test.annotation.ComponentList;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
-import org.xwiki.test.junit5.mockito.MockComponent;
+import org.xwiki.test.mockito.MockitoComponentManager;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 /**
  * Utility class to use the actual ObjectMapperConfiguration and Parser/Serializer components to perform
  * Serialization/Parsing of the entities.
  */
 @ComponentTest
-@ComponentList({ObjectMapperConfiguration.class})
+@ComponentList({ObjectMapperConfiguration.class, ActivityPubObjectReferenceSerializer.class})
 public class AbstractEntityTest
 {
-    @MockComponent
-    protected ActivityPubObjectReferenceSerializer activityPubObjectReferenceSerializer;
-
     @InjectMockComponents
     protected DefaultActivityPubJsonParser parser;
 
     @InjectMockComponents
     protected DefaultActivityPubJsonSerializer serializer;
+
+    @BeforeComponent
+    public void setup(MockitoComponentManager componentManager) throws Exception
+    {
+        componentManager.registerMockComponent(ActivityPubStorage.class);
+        ResourceReferenceSerializer<ActivityPubResourceReference, URI> activityPubResourceReferenceSerializerMock =
+            componentManager.registerMockComponent(new DefaultParameterizedType(null, ResourceReferenceSerializer.class,
+                ActivityPubResourceReference.class, URI.class));
+
+        when(activityPubResourceReferenceSerializerMock.serialize(any())).thenAnswer(invocationOnMock -> {
+            ActivityPubResourceReference resourceReference = invocationOnMock.getArgument(0);
+            String serialized = String.format("http://www.xwiki.org/xwiki/%s/%s",
+                resourceReference.getEntityType(), resourceReference.getUuid());
+            return new URI(serialized);
+        });
+        componentManager.registerComponent(ComponentManager.class, "context", componentManager);
+    }
 
     protected String readResource(String entityPath) throws FileNotFoundException
     {

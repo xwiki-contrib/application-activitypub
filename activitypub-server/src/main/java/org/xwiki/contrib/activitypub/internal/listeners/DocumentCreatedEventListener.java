@@ -29,23 +29,18 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.xwiki.bridge.event.DocumentCreatedEvent;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.container.Container;
-import org.xwiki.container.servlet.ServletRequest;
-import org.xwiki.container.servlet.ServletResponse;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
+import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Document;
-import org.xwiki.contrib.activitypub.internal.ActorHandler;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.Event;
 
@@ -68,9 +63,6 @@ public class DocumentCreatedEventListener extends AbstractEventListener
     @Inject
     private ActivityHandler<Create> createActivityHandler;
 
-    @Inject
-    private Container container;
-
     public DocumentCreatedEventListener()
     {
         super("ActivityPubDocumentCreatedEventListener", EVENTS);
@@ -83,11 +75,10 @@ public class DocumentCreatedEventListener extends AbstractEventListener
         XWikiDocument document = (XWikiDocument) source;
         XWikiContext context = (XWikiContext) data;
 
-        HttpServletRequest request = ((ServletRequest) this.container.getRequest()).getHttpServletRequest();
         try {
             Create createActivity = getActivity(document, context);
             ActivityRequest<Create> activityRequest = new ActivityRequest<>(createActivity.getActor().getObject(),
-                createActivity, request);
+                createActivity);
             this.createActivityHandler.handleOutboxRequest(activityRequest);
         } catch (URISyntaxException | ActivityPubException | IOException e) {
             this.logger.error("Error while trying to handle DocumentCreatedEvent for document [{}]",

@@ -77,7 +77,7 @@ public class ActivityPubNotificationDisplayer implements NotificationDisplayer
     private Activity getActivity(Event event)
     {
         String activity = event.getParameters().get("activity");
-        return this.activityPubJsonParser.parseRequest(activity);
+        return this.activityPubJsonParser.parse(activity);
     }
 
     @Override

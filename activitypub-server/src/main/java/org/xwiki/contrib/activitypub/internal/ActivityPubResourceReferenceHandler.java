@@ -46,8 +46,9 @@ import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
-import org.xwiki.contrib.activitypub.ActivityPubStore;
+import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActivityRequest;
+import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.entities.Activity;
@@ -95,7 +96,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
     private ActorHandler actorHandler;
 
     @Inject
-    private ActivityPubStore activityPubStorage;
+    private ActivityPubStorage activityPubStorage;
 
     @Inject
     private Provider<XWikiContext> contextProvider;
@@ -175,7 +176,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
                     || "actor".equalsIgnoreCase(resourceReference.getEntityType())) {
                     if (this.actorHandler.isExistingUser(resourceReference.getUuid())) {
                         try {
-                            entity = this.actorHandler.getActor(resourceReference.getUuid());
+                            entity = this.actorHandler.getLocalActor(resourceReference.getUuid());
                         } catch (ActivityPubException e) {
                             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                             response.setContentType("text/plain");
@@ -214,7 +215,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         throws IOException, ActivityPubException
     {
         if (this.actorHandler.isExistingUser(resourceReference.getUuid())) {
-            return this.actorHandler.getActor(resourceReference.getUuid());
+            return this.actorHandler.getLocalActor(resourceReference.getUuid());
         } else {
             this.sendErrorResponse(HttpServletResponse.SC_NOT_FOUND,
                 String.format("User [%s] cannot be found.", resourceReference.getUuid()));
@@ -266,7 +267,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
         try {
             String requestBody = IOUtils.toString(request.getReader());
-            ActivityPubObject object = this.activityPubJsonParser.parseRequest(requestBody);
+            ActivityPubObject object = this.activityPubJsonParser.parse(requestBody);
             if (object != null) {
                 T activity = getActivity(object);
                 return new ActivityRequest<T>(actor, activity, request, response);

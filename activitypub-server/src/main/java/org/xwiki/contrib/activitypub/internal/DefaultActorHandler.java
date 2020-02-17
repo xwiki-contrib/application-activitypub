@@ -18,11 +18,9 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.xwiki.contrib.activitypub.internal;
-
-import java.net.MalformedURLException;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.Collections;
 
 import javax.inject.Inject;
@@ -30,12 +28,16 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.apache.commons.httpclient.HttpMethod;
 import org.slf4j.Logger;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
-import org.xwiki.contrib.activitypub.ActivityPubStore;
+import org.xwiki.contrib.activitypub.ActivityPubStorage;
+import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.contrib.activitypub.entities.Inbox;
@@ -55,9 +57,9 @@ import com.xpn.xwiki.user.api.XWikiUser;
 /**
  * Link an ActivityPub actor to an XWiki User and retrieves the inbox/outbox of users.
  */
-@Component(roles = ActorHandler.class)
+@Component
 @Singleton
-public class ActorHandler
+public class DefaultActorHandler implements ActorHandler
 {
     private static final LocalDocumentReference USER_CLASS_REFERENCE =
         new LocalDocumentReference("XWiki", "XWikiUsers");
@@ -69,7 +71,7 @@ public class ActorHandler
     private Logger logger;
 
     @Inject
-    private ActivityPubStore activityPubStorage;
+    private ActivityPubStorage activityPubStorage;
 
     @Inject
     private ActivityPubObjectReferenceResolver activityPubObjectReferenceResolver;
@@ -78,9 +80,28 @@ public class ActorHandler
     private Provider<XWikiContext> contextProvider;
 
     @Inject
+    private ActivityPubClient activityPubClient;
+
+    @Inject
     @Named("current")
     private DocumentReferenceResolver<String> stringDocumentReferenceResolver;
 
+    @Inject
+    private ActivityPubJsonParser jsonParser;
+
+    @Override
+    public Actor getCurrentActor() throws ActivityPubException
+    {
+        DocumentReference userReference = this.contextProvider.get().getUserReference();
+        if (userReference == null) {
+            throw new ActivityPubException("The context does not have any user reference, "
+                + "the request might be anonymous.");
+        } else {
+            return getActor(userReference);
+        }
+    }
+
+    @Override
     public Actor getActor(EntityReference entityReference) throws ActivityPubException
     {
         // TODO: introduce cache mechanism
@@ -135,6 +156,7 @@ public class ActorHandler
         return actor;
     }
 
+    @Override
     public EntityReference getXWikiUserReference(Actor actor)
     {
         String userName = actor.getPreferredUsername();
@@ -156,17 +178,34 @@ public class ActorHandler
         return userDocReference;
     }
 
+    @Override
     public boolean isExistingUser(String serializedUserReference)
     {
         XWikiUser xWikiUser = new XWikiUser(resolveUser(serializedUserReference));
         return xWikiUser.exists(this.contextProvider.get());
     }
 
-    public Actor getActor(String serializedUserReference) throws ActivityPubException
+    @Override
+    public Actor getLocalActor(String serializedUserReference) throws ActivityPubException
     {
         return this.getActor(resolveUser(serializedUserReference));
     }
 
+    @Override
+    public Actor getRemoteActor(String actorURL) throws ActivityPubException
+    {
+        try {
+            URI uri = new URI(actorURL);
+            HttpMethod httpMethod = this.activityPubClient.get(uri);
+            this.activityPubClient.checkAnswer(httpMethod);
+            return this.jsonParser.parse(httpMethod.getResponseBodyAsStream());
+        } catch (ActivityPubException | URISyntaxException | IOException e) {
+            throw new ActivityPubException(
+                String.format("Error when trying to retrieve the remote actor from [%s]", actorURL), e);
+        }
+    }
+
+    @Override
     public Inbox getInbox(Actor actor) throws ActivityPubException
     {
         Inbox inbox = this.activityPubObjectReferenceResolver.resolveReference(actor.getInbox());
@@ -174,6 +213,7 @@ public class ActorHandler
         return inbox;
     }
 
+    @Override
     public Outbox getOutbox(Actor actor) throws ActivityPubException
     {
         Outbox outbox = this.activityPubObjectReferenceResolver.resolveReference(actor.getOutbox());

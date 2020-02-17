@@ -26,9 +26,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.RequestEntity;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.commons.httpclient.HttpMethod;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityHandler;
@@ -82,27 +80,14 @@ public class CreateActivityHandler extends AbstractActivityHandler implements Ac
             this.activityPubObjectReferenceResolver.resolveReference(actor.getFollowers());
 
         if (orderedCollection != null && orderedCollection.getTotalItems() > 0) {
-            RequestEntity bodyRequest = new StringRequestEntity(
-                this.activityPubJsonSerializer.serialize(create),
-                "application/activity+json",
-                "UTF-8");
+
             for (ActivityPubObjectReference<Actor> actorReference : orderedCollection) {
                 Actor targetActor = this.activityPubObjectReferenceResolver.resolveReference(actorReference);
-                ActivityPubObjectReference<Inbox> inboxReference = targetActor.getInbox();
-
-                String inboxUrl;
-                if (inboxReference.isLink()) {
-                    inboxUrl = inboxReference.getLink().toASCIIString();
-                } else {
-                    inboxUrl = inboxReference.getObject().getId().toASCIIString();
-                }
-                PostMethod postMethod = new PostMethod(inboxUrl);
-                postMethod.setRequestEntity(bodyRequest);
-                this.httpClient.executeMethod(postMethod);
+                HttpMethod postMethod = this.activityPubClient.postInbox(targetActor, create);
 
                 if (postMethod.getStatusCode() > 200) {
                     this.logger.warn("The POST to [{}] didn't go well. Status code: [{}]. Answer: [{}]",
-                        inboxUrl, postMethod.getStatusCode(), postMethod.getResponseBodyAsString());
+                        targetActor.getInbox(), postMethod.getStatusCode(), postMethod.getResponseBodyAsString());
                 }
             }
         }

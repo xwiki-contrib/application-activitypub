@@ -26,13 +26,13 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.HttpClient;
-import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
+import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubNotifier;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
-import org.xwiki.contrib.activitypub.ActivityPubStore;
+import org.xwiki.contrib.activitypub.ActivityPubStorage;
+import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.Activity;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
-import org.xwiki.contrib.activitypub.internal.ActorHandler;
 
 public abstract class AbstractActivityHandler
 {
@@ -40,10 +40,7 @@ public abstract class AbstractActivityHandler
     protected ActivityPubJsonSerializer activityPubJsonSerializer;
 
     @Inject
-    protected ActivityPubJsonParser activityPubJsonParser;
-
-    @Inject
-    protected ActivityPubStore activityPubStorage;
+    protected ActivityPubStorage activityPubStorage;
 
     @Inject
     protected ActivityPubNotifier notifier;
@@ -53,6 +50,9 @@ public abstract class AbstractActivityHandler
 
     @Inject
     protected ActorHandler actorHandler;
+
+    @Inject
+    protected ActivityPubClient activityPubClient;
 
     protected HttpClient httpClient;
 

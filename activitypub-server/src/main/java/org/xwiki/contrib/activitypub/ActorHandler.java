@@ -19,41 +19,28 @@
  */
 package org.xwiki.contrib.activitypub;
 
-import java.net.URI;
-
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.contrib.activitypub.entities.Inbox;
-import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Outbox;
+import org.xwiki.model.reference.EntityReference;
 
 @Role
-public interface ActivityPubStore
+public interface ActorHandler
 {
-    /**
-     * Store a given entity and return a UUID to retrieve it.
-     *
-     * @param entity the entity to persist.
-     * @return an UUID to retrieve this entity.
-     */
-    String storeEntity(ActivityPubObject entity) throws ActivityPubException;
+    Actor getCurrentActor() throws ActivityPubException;
 
-    /**
-     * Store an entity with a given UID.
-     * @param uid the ID to use to store the entity.
-     * @param entity the entity to store.
-     * @return {@code true} iff the entity has been overridden.
-     */
-    boolean storeEntity(String uid, ActivityPubObject entity) throws ActivityPubException;
+    Actor getActor(EntityReference entityReference) throws ActivityPubException;
 
-    boolean storeEntity(URI uri, ActivityPubObject entity) throws ActivityPubException;
+    EntityReference getXWikiUserReference(Actor actor);
 
-    /**
-     * Extract an entity from its UUID.
-     *
-     * @param uuid the unique identifier of the entity as given by {@link #storeEntity(ActivityPubObject)}.
-     * @param <T>
-     * @return the stored entity or null if it has not been found.
-     */
-    <T extends ActivityPubObject> T retrieveEntity(String entityType, String uuid);
+    Actor getLocalActor(String serializedUserReference) throws ActivityPubException;
+
+    Actor getRemoteActor(String actorURL) throws ActivityPubException;
+
+    Inbox getInbox(Actor actor) throws ActivityPubException;
+
+    Outbox getOutbox(Actor actor) throws ActivityPubException;
+
+    boolean isExistingUser(String serializedUserReference);
 }

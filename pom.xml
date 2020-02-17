@@ -75,5 +75,6 @@
     <module>activitypub-core</module>
     <module>activitypub-server</module>
     <module>activitypub-notifications</module>
+    <module>activitypub-ui</module>
   </modules>
 </project>

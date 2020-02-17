@@ -22,7 +22,6 @@ package org.xwiki.contrib.activitypub.internal.activities;
 import java.io.IOException;
 import java.util.Collections;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
 
@@ -34,7 +33,6 @@ import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.contrib.activitypub.entities.Inbox;
-import org.xwiki.contrib.activitypub.internal.ActorHandler;
 
 @Component
 @Singleton
@@ -56,7 +54,7 @@ public class FollowActivityHandler extends AbstractActivityHandler implements Ac
             actorInbox.addActivity(follow);
             this.activityPubStorage.storeEntity(actorInbox);
             this.notifier.notify(follow, Collections.singleton(this.actorHandler.getXWikiUserReference(followedActor)));
-            this.answer(activityRequest.getResponse(), HttpServletResponse.SC_ACCEPTED, follow);
+            this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, follow);
         } else {
             this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_NOT_IMPLEMENTED,
                 "Only following actors is implemented.");
@@ -64,7 +62,6 @@ public class FollowActivityHandler extends AbstractActivityHandler implements Ac
     }
 
     /**
-     * Answer a 202 answer "Request accepted"
      * @param activityRequest
      */
     @Override
@@ -82,7 +79,7 @@ public class FollowActivityHandler extends AbstractActivityHandler implements Ac
             actorInbox.addActivity(follow);
             this.activityPubStorage.storeEntity(actorInbox);
             this.notifier.notify(follow, Collections.singleton(this.actorHandler.getXWikiUserReference(followedActor)));
-            this.answer(activityRequest.getResponse(), HttpServletResponse.SC_ACCEPTED, follow);
+            this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, follow);
         } else {
             this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_NOT_IMPLEMENTED,
                 "Only following actors is implemented.");

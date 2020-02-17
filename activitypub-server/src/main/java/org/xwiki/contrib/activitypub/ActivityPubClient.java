@@ -19,25 +19,24 @@
  */
 package org.xwiki.contrib.activitypub;
 
-import java.io.InputStream;
-import java.io.Reader;
+import java.io.IOException;
 import java.net.URI;
 
+import org.apache.commons.httpclient.HttpMethod;
 import org.xwiki.component.annotation.Role;
-import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
+import org.xwiki.contrib.activitypub.entities.Activity;
+import org.xwiki.contrib.activitypub.entities.Actor;
 
 @Role
-public interface ActivityPubJsonParser
+public interface ActivityPubClient
 {
-    <T extends ActivityPubObject> T parse(String requestBody);
+    HttpMethod postInbox(Actor actor, Activity activity) throws IOException;
 
-    <T extends ActivityPubObject> T parse(String requestBody, Class<T> type);
+    HttpMethod postOutbox(Actor actor, Activity activity) throws IOException;
 
-    <T extends ActivityPubObject> T parse(Reader requestBodyReader);
+    HttpMethod post(URI uri, Activity activity) throws IOException;
 
-    <T extends ActivityPubObject> T parse(Reader requestBodyReader, Class<T> type);
+    HttpMethod get(URI uri) throws IOException;
 
-    <T extends ActivityPubObject> T parse(InputStream requestBodyInputStream);
-
-    <T extends ActivityPubObject> T parse(InputStream requestBodyInputStream, Class<T> type);
+    void checkAnswer(HttpMethod method) throws ActivityPubException;
 }

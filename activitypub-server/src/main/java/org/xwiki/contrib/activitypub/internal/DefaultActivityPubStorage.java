@@ -42,7 +42,7 @@ import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
-import org.xwiki.contrib.activitypub.ActivityPubStore;
+import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.entities.Actor;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
@@ -59,7 +59,7 @@ import com.xpn.xwiki.XWikiContext;
 
 @Component
 @Singleton
-public class DefaultActivityPubStore implements ActivityPubStore
+public class DefaultActivityPubStorage implements ActivityPubStorage
 {
     private static final String INBOX_SUFFIX_ID = "inbox";
     private static final String OUTBOX_SUFFIX_ID = "outbox";
@@ -87,7 +87,7 @@ public class DefaultActivityPubStore implements ActivityPubStore
     @Inject
     private Logger logger;
 
-    public DefaultActivityPubStore()
+    public DefaultActivityPubStorage()
     {
         this.storage = new HashMap<>();
     }
@@ -179,7 +179,7 @@ public class DefaultActivityPubStore implements ActivityPubStore
     public <T extends ActivityPubObject> T retrieveEntity(String entityType, String uuid)
     {
         if (this.storage.containsKey(uuid)) {
-            return (T) this.jsonParser.parseRequest(this.storage.get(uuid));
+            return (T) this.jsonParser.parse(this.storage.get(uuid));
         } else {
             return null;
         }

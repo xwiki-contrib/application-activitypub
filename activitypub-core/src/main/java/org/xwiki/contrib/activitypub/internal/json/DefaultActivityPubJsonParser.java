@@ -44,13 +44,13 @@ public class DefaultActivityPubJsonParser implements ActivityPubJsonParser
     private Logger logger;
 
     @Override
-    public <T extends ActivityPubObject> T parseRequest(String requestBody)
+    public <T extends ActivityPubObject> T parse(String requestBody)
     {
-        return (T) parseRequest(requestBody, ActivityPubObject.class);
+        return (T) parse(requestBody, ActivityPubObject.class);
     }
 
     @Override
-    public <T extends ActivityPubObject> T parseRequest(String requestBody, Class<T> type)
+    public <T extends ActivityPubObject> T parse(String requestBody, Class<T> type)
     {
         try {
             return this.objectMapperConfiguration.getObjectMapper().readValue(requestBody, type);
@@ -61,13 +61,13 @@ public class DefaultActivityPubJsonParser implements ActivityPubJsonParser
     }
 
     @Override
-    public <T extends ActivityPubObject> T parseRequest(Reader requestBodyReader)
+    public <T extends ActivityPubObject> T parse(Reader requestBodyReader)
     {
-        return (T) parseRequest(requestBodyReader, ActivityPubObject.class);
+        return (T) parse(requestBodyReader, ActivityPubObject.class);
     }
 
     @Override
-    public <T extends ActivityPubObject> T parseRequest(Reader requestBodyReader, Class<T> type)
+    public <T extends ActivityPubObject> T parse(Reader requestBodyReader, Class<T> type)
     {
         try {
             return this.objectMapperConfiguration.getObjectMapper().readValue(requestBodyReader, type);
@@ -78,13 +78,13 @@ public class DefaultActivityPubJsonParser implements ActivityPubJsonParser
     }
 
     @Override
-    public <T extends ActivityPubObject> T parseRequest(InputStream requestBodyInputStream)
+    public <T extends ActivityPubObject> T parse(InputStream requestBodyInputStream)
     {
-        return (T) parseRequest(requestBodyInputStream, ActivityPubObject.class);
+        return (T) parse(requestBodyInputStream, ActivityPubObject.class);
     }
 
     @Override
-    public <T extends ActivityPubObject> T parseRequest(InputStream requestBodyInputStream, Class<T> type)
+    public <T extends ActivityPubObject> T parse(InputStream requestBodyInputStream, Class<T> type)
     {
         try {
             return this.objectMapperConfiguration.getObjectMapper().readValue(requestBodyInputStream, type);

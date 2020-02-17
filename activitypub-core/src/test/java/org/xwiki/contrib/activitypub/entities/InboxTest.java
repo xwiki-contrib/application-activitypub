@@ -46,7 +46,7 @@ public class InboxTest extends AbstractEntityTest
             .setId(new URI("http://localhost:8080/xwiki/activitypub/Inbox/XWiki.Foo-inbox"));
 
         String json = this.readResource("inbox/inbox1.json");
-        assertEquals(expectedInbox, this.parser.parseRequest(json, Inbox.class));
-        assertEquals(expectedInbox, this.parser.parseRequest(json));
+        assertEquals(expectedInbox, this.parser.parse(json, Inbox.class));
+        assertEquals(expectedInbox, this.parser.parse(json));
     }
 }
