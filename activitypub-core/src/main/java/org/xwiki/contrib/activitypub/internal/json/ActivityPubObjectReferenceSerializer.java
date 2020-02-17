@@ -42,6 +42,13 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
+/**
+ * A custom Jackson Serializer for {@link ActivityPubObjectReference}.
+ * This serializer only serialize the references with the objects IDs, which means that it also performs the storage
+ * when no ID is found for the object to serialize.
+ * The idea here is to avoid serializing big JSON and to avoid having to deal with self-referenced objects by only
+ * serializing the references.
+ */
 @Component(roles = ActivityPubObjectReferenceSerializer.class)
 @Singleton
 public class ActivityPubObjectReferenceSerializer extends JsonSerializer<ActivityPubObjectReference>

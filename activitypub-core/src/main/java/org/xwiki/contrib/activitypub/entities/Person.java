@@ -21,6 +21,11 @@ package org.xwiki.contrib.activitypub.entities;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+/**
+ * Represents a Person as defined by ActivityStream.
+ *
+ * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-person">ActivityStream Person definition</a>
+ */
 @JsonDeserialize(as = Person.class)
 public class Person extends Actor
 {

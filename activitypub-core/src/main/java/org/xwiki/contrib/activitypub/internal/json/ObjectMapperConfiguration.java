@@ -35,6 +35,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
+/**
+ * A self defined component to configure a Jackson {@link ObjectMapper} ready to be used in the parser and serializer.
+ */
 @Component(roles = ObjectMapperConfiguration.class)
 @Singleton
 public class ObjectMapperConfiguration implements Initializable
@@ -74,6 +77,9 @@ public class ObjectMapperConfiguration implements Initializable
             .registerModule(module);
     }
 
+    /**
+     * @return a configured object mapper ready to be used.
+     */
     public ObjectMapper getObjectMapper()
     {
         return this.objectMapper;

@@ -33,7 +33,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * are serialized in one or another type.
  * Note that it is then possible that in case of link the object is null: a specific resolver should be used to retrieve
  * (and potentially set) the proper object.
- * @param <T>
+ * See {@link org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver}.
+ * @param <T> the type of {@link ActivityPubObject} it refers to.
  */
 @JsonDeserialize(using = ActivityPubObjectReferenceDeserializer.class)
 public class ActivityPubObjectReference<T extends ActivityPubObject>
@@ -42,36 +43,54 @@ public class ActivityPubObjectReference<T extends ActivityPubObject>
     private URI link;
     private T object;
 
+    /**
+     * @return {@code true} if it contains a link and {@code false} if it contains a concrete object.
+     */
     public boolean isLink()
     {
         return isLink;
     }
 
-    public ActivityPubObjectReference<T> setLink(boolean link)
-    {
-        isLink = link;
-        return this;
-    }
-
+    /**
+     * @return the concrete object this refers to.
+     */
     public T getObject()
     {
         return object;
     }
 
+    /**
+     * Set the concrete object of this reference.
+     * This reference won't need to be resolved anymore so {@link #isLink} would then return {@code false} only if the
+     * given object is not null.
+     * @param object the concrete object to set.
+     * @return the current reference for fluent API.
+     */
     public ActivityPubObjectReference<T> setObject(T object)
     {
         this.object = object;
+        this.isLink = (object != null);
         return this;
     }
 
+    /**
+     * @return the current link this refers to: if the concrete object is resolved, it returns its id.
+     */
     public URI getLink()
     {
-        return link;
+        return (!isLink() && this.object != null) ? this.object.getId() : this.link;
     }
 
+    /**
+     * Set the link of this reference.
+     * Note that once this method is called, {@link #isLink} will return {@code true} for this instance.
+     * @param link the link to resolve the concrete object.
+     * @return the current reference for fluent API.
+     */
     public ActivityPubObjectReference<T> setLink(URI link)
     {
         this.link = link;
+        this.isLink = true;
         return this;
     }
 

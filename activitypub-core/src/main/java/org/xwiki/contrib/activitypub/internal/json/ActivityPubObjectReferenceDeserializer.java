@@ -32,20 +32,23 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class ActivityPubObjectReferenceDeserializer extends JsonDeserializer<ActivityPubObjectReference>
+/**
+ * A custom Jackson Deserializer to deserialize references {@link ActivityPubObjectReference}.
+ * This deserializer looks on the property value and deserialize the object if the value starts with a "{"
+ * or else deserialize the value as an URI and set the link of the reference with it.
+ */
+public class ActivityPubObjectReferenceDeserializer extends JsonDeserializer<ActivityPubObjectReference<?>>
 {
     @Override
-    public ActivityPubObjectReference deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
-        throws IOException, JsonProcessingException
+    public ActivityPubObjectReference<ActivityPubObject> deserialize(JsonParser jsonParser,
+        DeserializationContext deserializationContext) throws IOException, JsonProcessingException
     {
         ObjectMapper mapper = (ObjectMapper) jsonParser.getCodec();
 
-        ActivityPubObjectReference objectReference = new ActivityPubObjectReference();
+        ActivityPubObjectReference<ActivityPubObject> objectReference = new ActivityPubObjectReference<>();
         if (jsonParser.currentToken() == JsonToken.START_OBJECT) {
-            objectReference.setLink(false);
             objectReference.setObject(mapper.readValue(jsonParser, ActivityPubObject.class));
         } else {
-            objectReference.setLink(true);
             objectReference.setLink(mapper.readValue(jsonParser, URI.class));
         }
         return objectReference;

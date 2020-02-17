@@ -33,6 +33,10 @@ import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+/**
+ * Default implementation of {@link ActivityPubJsonParser}.
+ * This implementation directly use {@link ObjectMapperConfiguration}.
+ */
 @Component
 @Singleton
 public class DefaultActivityPubJsonParser implements ActivityPubJsonParser

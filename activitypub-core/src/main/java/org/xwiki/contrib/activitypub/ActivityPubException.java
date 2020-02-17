@@ -19,13 +19,25 @@
  */
 package org.xwiki.contrib.activitypub;
 
+/**
+ * Default exception type for ActivityPub application.
+ */
 public class ActivityPubException extends Exception
 {
+    /**
+     * Default constructor with message.
+     * @param message the message to be displayed.
+     */
     public ActivityPubException(String message)
     {
         super(message);
     }
 
+    /**
+     * Default constructor with message and root cause.
+     * @param message the message to be displayed.
+     * @param origin the root cause.
+     */
     public ActivityPubException(String message, Throwable origin)
     {
         super(message, origin);

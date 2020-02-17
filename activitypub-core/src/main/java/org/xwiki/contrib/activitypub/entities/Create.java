@@ -21,6 +21,10 @@ package org.xwiki.contrib.activitypub.entities;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+/**
+ * Represents a Create activity as defined by ActivityStream.
+ * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-create">ActivityStream Create definition</a>
+ */
 @JsonDeserialize(as = Create.class)
 public class Create extends Activity
 {

@@ -24,26 +24,33 @@ import java.util.Map;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+/**
+ * Represents an Outbox as defined by ActivityPub.
+ *
+ * @see <a href="https://www.w3.org/TR/activitypub/#outbox">ActivityPub Outbox definition</a>
+ */
 @JsonDeserialize(as = Outbox.class)
 public class Outbox extends OrderedCollection<Activity>
 {
     private Map<String, Activity> items;
 
+    /**
+     * Default constructor.
+     */
     public Outbox()
     {
         this.items = new HashMap<>();
     }
 
+    /**
+     * Store activities.
+     * @param activity the activity to store.
+     */
     public void addActivity(Activity activity)
     {
         if (activity.getId() == null) {
             throw new IllegalArgumentException("The activity ID must not be null.");
         }
         this.items.put(activity.getId().toASCIIString(), activity);
-    }
-
-    public Map<String, Activity> getItems()
-    {
-        return items;
     }
 }

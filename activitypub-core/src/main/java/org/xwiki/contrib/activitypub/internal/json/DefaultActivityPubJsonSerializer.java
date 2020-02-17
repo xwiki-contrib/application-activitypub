@@ -31,6 +31,10 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
 
+/**
+ * Default implementation of {@link ActivityPubJsonSerializer}.
+ * This implementation relies on {@link ObjectMapperConfiguration}.
+ */
 @Component
 @Singleton
 public class DefaultActivityPubJsonSerializer implements ActivityPubJsonSerializer

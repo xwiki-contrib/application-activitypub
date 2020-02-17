@@ -33,18 +33,26 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+/**
+ * A custom Jackson deserializer for {@link ActivityPubObject}.
+ * The main role of this deserializer is to check the type property of a JSON to create the right objects. Some utility
+ * methods are provided to allow finding the POJO in various packages.
+ */
 public class ActivityPubObjectDeserializer extends JsonDeserializer<ActivityPubObject>
 {
+    /**
+     * Packages where to look for POJOs.
+     */
     private static final List<String> packageExtensions = Arrays.asList(
-        "org.xwiki.contrib.activitypub.entities",
-        "org.xwiki.contrib.activitypub.entities.activities"
+        "org.xwiki.contrib.activitypub.entities"
     );
 
-    public static void registerPackageExtension(String packageExtension)
-    {
-        packageExtensions.add(0, packageExtension);
-    }
-
+    /**
+     * {@inheritDoc}
+     * Deserialize the current object based on the given "type" property. If the type attribute does not exist, or  if
+     * no class is found with the same type name, then the object is deserialized using {@link ActivityPubObject} as
+     * fallback.
+     */
     @Override
     public ActivityPubObject deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
         throws IOException, JsonProcessingException

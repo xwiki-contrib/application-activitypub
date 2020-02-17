@@ -19,75 +19,121 @@
  */
 package org.xwiki.contrib.activitypub.entities;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
+/**
+ * Abstract type to represent an ActivityStream Actor.
+ * Note that we actually reused both definition from ActivityStream and ActivityPub to define this entity since here
+ * it's aimed at being used for ActivityPub.
+ *
+ * @see <a href="https://www.w3.org/TR/activitystreams-core/#actors">ActivityStream Actor definition</a>
+ * @see <a href="https://www.w3.org/TR/activitypub/#actor-objects">ActivityPub Actor definition</a>
+ */
 public abstract class Actor extends ActivityPubObject
 {
     // TODO: Check IRI <-> URI conversion (https://tools.ietf.org/html/rfc3987#section-3.1)
     // We might have some weird cases with XWiki special username (containing non UTF-8 characters for example)
     private String preferredUsername;
-
-    @JsonProperty(required = true)
     private ActivityPubObjectReference<Inbox> inbox;
-
-    @JsonProperty(required = true)
     private ActivityPubObjectReference<Outbox> outbox;
-
-    @JsonProperty(required = true)
     private ActivityPubObjectReference<OrderedCollection<Actor>> followers;
-
-    @JsonProperty(required = true)
     private ActivityPubObjectReference<OrderedCollection<Actor>> following;
 
+    /**
+     * @return the username of the actor.
+     */
     public String getPreferredUsername()
     {
         return preferredUsername;
     }
 
+    /**
+     * @param preferredUsername the username of the actor.
+     * @param <T> the type of actor.
+     * @return the current object for fluent API.
+     */
     public <T extends Actor> T setPreferredUsername(String preferredUsername)
     {
         this.preferredUsername = preferredUsername;
         return (T) this;
     }
 
+    /**
+     * @return a reference to the collection of actors following the current one.
+     * @see <a href="https://www.w3.org/TR/activitypub/#followers">ActivityPub definition</a>
+     */
     public ActivityPubObjectReference<OrderedCollection<Actor>> getFollowers()
     {
         return followers;
     }
 
+    /**
+     * @param followers a reference to the collection of actors following the current one.
+     * @param <T> the type of actor.
+     * @return the current object for fluent API.
+     * @see <a href="https://www.w3.org/TR/activitypub/#followers">ActivityPub definition</a>
+     */
     public <T extends Actor> T setFollowers(ActivityPubObjectReference<OrderedCollection<Actor>> followers)
     {
         this.followers = followers;
         return (T) this;
     }
 
+    /**
+     * @return a reference to the collection of actors followed by the current one.
+     * @see <a href="https://www.w3.org/TR/activitypub/#following">ActivityPub definition</a>
+     */
     public ActivityPubObjectReference<OrderedCollection<Actor>> getFollowing()
     {
         return following;
     }
 
+    /**
+     * @param following a reference to the collection of actors followed by the current one.
+     * @param <T> the type of actor.
+     * @return the current object for fluent API.
+     * @see <a href="https://www.w3.org/TR/activitypub/#following">ActivityPub definition</a>
+     */
     public <T extends Actor> T setFollowing(ActivityPubObjectReference<OrderedCollection<Actor>> following)
     {
         this.following = following;
         return (T) this;
     }
 
+    /**
+     * @return a reference to the {@link Inbox} of the actor.
+     * @see <a href="https://www.w3.org/TR/activitypub/#inbox">ActivityPub definition</a>
+     */
     public ActivityPubObjectReference<Inbox> getInbox()
     {
         return inbox;
     }
 
+    /**
+     * @param inbox a reference to the {@link Inbox} of the actor.
+     * @param <T> the type of the actor.
+     * @return the current object for fluent API.
+     * @see <a href="https://www.w3.org/TR/activitypub/#inbox">ActivityPub definition</a>
+     */
     public <T extends Actor> T setInbox(ActivityPubObjectReference<Inbox> inbox)
     {
         this.inbox = inbox;
         return (T) this;
     }
 
+    /**
+     * @return a reference to the {@link Outbox} of the actor.
+     * @see <a href="https://www.w3.org/TR/activitypub/#outbox">ActivityPub definition</a>
+     */
     public ActivityPubObjectReference<Outbox> getOutbox()
     {
         return outbox;
     }
 
+    /**
+     * @param outbox a reference to the {@link Outbox} of the actor.
+     * @param <T> the type of the actor.
+     * @return the current object for fluent API.
+     * @see <a href="https://www.w3.org/TR/activitypub/#outbox">ActivityPub definition</a>
+     */
     public <T extends Actor> T setOutbox(ActivityPubObjectReference<Outbox> outbox)
     {
         this.outbox = outbox;

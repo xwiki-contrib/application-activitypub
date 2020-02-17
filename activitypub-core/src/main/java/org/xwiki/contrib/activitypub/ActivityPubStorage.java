@@ -27,6 +27,9 @@ import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 
+/**
+ * A storage for ActivityPub persistency.
+ */
 @Role
 public interface ActivityPubStorage
 {
@@ -35,6 +38,7 @@ public interface ActivityPubStorage
      *
      * @param entity the entity to persist.
      * @return an UUID to retrieve this entity.
+     * @throws ActivityPubException
      */
     String storeEntity(ActivityPubObject entity) throws ActivityPubException;
 
@@ -46,6 +50,13 @@ public interface ActivityPubStorage
      */
     boolean storeEntity(String uid, ActivityPubObject entity) throws ActivityPubException;
 
+    /**
+     *
+     * @param uri
+     * @param entity
+     * @return
+     * @throws ActivityPubException
+     */
     boolean storeEntity(URI uri, ActivityPubObject entity) throws ActivityPubException;
 
     /**

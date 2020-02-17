@@ -35,6 +35,10 @@ import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 
+/**
+ * Default implementation of {@link ActivityPubObjectReferenceResolver}.
+ * FIXME: looks really similar than DefaultActivityPubClient, I guess we'd need to merge them.
+ */
 @Component
 @Singleton
 public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObjectReferenceResolver, Initializable

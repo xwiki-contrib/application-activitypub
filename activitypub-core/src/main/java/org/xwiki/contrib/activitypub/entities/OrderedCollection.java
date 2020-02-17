@@ -25,22 +25,41 @@ import java.util.List;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+/**
+ * Represents an Ordered Collection as defined by ActivityStream.
+ * Note that internally the storage is managed by a {@link List}.
+ *
+ * @param <T> the type of {@link ActivityPubObject} to store in the collection.
+ * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-orderedcollection">ActivityStream Collection
+ * definition</a>
+ */
 @JsonDeserialize(as = OrderedCollection.class)
 public class OrderedCollection<T extends ActivityPubObject> extends AbstractCollection<T>
 {
     private List<ActivityPubObjectReference<T>> orderedItems;
 
+    /**
+     * Default constructor to initialize the internal {@link ArrayList}.
+     */
     public OrderedCollection()
     {
         this.orderedItems = new ArrayList<>();
     }
 
+    /**
+     * @return the list of references to all items.
+     * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-items">ActivityStream definition</a>
+     */
     public List<ActivityPubObjectReference<T>> getOrderedItems()
     {
         return orderedItems;
     }
 
-    public OrderedCollection setOrderedItems(List<ActivityPubObjectReference<T>> orderedItems)
+    /**
+     * @param orderedItems the list of references to all items.
+     * @return the current collection for fluent API.
+     */
+    public OrderedCollection<T> setOrderedItems(List<ActivityPubObjectReference<T>> orderedItems)
     {
         this.orderedItems = orderedItems;
         return this;
@@ -52,6 +71,10 @@ public class OrderedCollection<T extends ActivityPubObject> extends AbstractColl
         return this.orderedItems.size();
     }
 
+    /**
+     * Wrap the item in an {@link ActivityPubObjectReference} before storing it.
+     * {@inheritDoc}
+     */
     @Override
     public <O extends AbstractCollection<T>> O addItem(T item)
     {

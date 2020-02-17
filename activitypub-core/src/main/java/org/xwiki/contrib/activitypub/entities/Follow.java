@@ -21,6 +21,10 @@ package org.xwiki.contrib.activitypub.entities;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+/**
+ * Represents a Follow activity as defined by ActivityStream.
+ * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-follow">ActivityStream Follow definition</a>
+ */
 @JsonDeserialize(as = Follow.class)
 public class Follow extends Activity
 {

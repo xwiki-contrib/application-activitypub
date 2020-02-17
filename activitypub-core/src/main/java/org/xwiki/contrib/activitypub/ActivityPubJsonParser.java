@@ -21,11 +21,13 @@ package org.xwiki.contrib.activitypub;
 
 import java.io.InputStream;
 import java.io.Reader;
-import java.net.URI;
 
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 
+/**
+ * Defines parsing operations for ActivityPub.
+ */
 @Role
 public interface ActivityPubJsonParser
 {

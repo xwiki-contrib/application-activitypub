@@ -21,6 +21,11 @@ package org.xwiki.contrib.activitypub.entities;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+/**
+ * Represents the Accept activity as defined by ActivityStream.
+ *
+ * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-accept">ActivityStream Accept definition</a>
+ */
 @JsonDeserialize(as = Accept.class)
 public class Accept extends Activity
 {

@@ -19,11 +19,29 @@
  */
 package org.xwiki.contrib.activitypub.entities;
 
+/**
+ * Abstract type to represent ordered and unordered collection as defined by ActivityStream.
+ *
+ * @see <a href="https://www.w3.org/TR/activitystreams-core/#collections">ActivityStream explanation
+ * about Collections</a>
+ * @param <I> the type of item contained in the collection to be able to iterate on them.
+ */
 public abstract class AbstractCollection<I extends ActivityPubObject>
     extends ActivityPubObject
     implements Iterable<ActivityPubObjectReference<I>>
 {
+    /**
+     * @return the number of items contained in the collection.
+     * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-totalitems">ActivityStream definition</a>
+     */
     public abstract int getTotalItems();
 
+    /**
+     * Put the item in the collection.
+     * It depends on the implementation of the collection to chose where to put it.
+     * @param item the item to add.
+     * @param <T> the type of collection to actually return.
+     * @return the current collection.
+     */
     public abstract <T extends AbstractCollection<I>> T addItem(I item);
 }

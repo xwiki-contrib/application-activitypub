@@ -27,6 +27,11 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+/**
+ * Represents an Inbox as defined by ActivityPub.
+ *
+ * @see <a href="https://www.w3.org/TR/activitypub/#inbox">ActivityPub Inbox definition</a>
+ */
 @JsonDeserialize(as = Inbox.class)
 public class Inbox extends OrderedCollection<Activity>
 {
@@ -36,12 +41,19 @@ public class Inbox extends OrderedCollection<Activity>
     @JsonIgnore
     private List<Follow> pendingFollows;
 
+    /**
+     * Default constructor.
+     */
     public Inbox()
     {
         this.items = new HashMap<>();
         this.pendingFollows = new ArrayList<>();
     }
 
+    /**
+     * Store an activity.
+     * @param activity the activity to be stored.
+     */
     public void addActivity(Activity activity)
     {
         if (activity.getId() == null) {
@@ -50,11 +62,10 @@ public class Inbox extends OrderedCollection<Activity>
         this.items.put(activity.getId().toASCIIString(), activity);
     }
 
-    public Map<String, Activity> getItems()
-    {
-        return items;
-    }
-
+    /**
+     * Store the follow activities not yet handled.
+     * @param follow a new follow activity received.
+     */
     public void addPendingFollow(Follow follow)
     {
         this.pendingFollows.add(follow);

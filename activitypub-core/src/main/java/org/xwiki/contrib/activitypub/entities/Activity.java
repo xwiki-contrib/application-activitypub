@@ -23,16 +23,32 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonSetter;
 
-public class Activity extends ActivityPubObject
+/**
+ * An abstract type to represent any kind of Activity defined by ActivityStream.
+ *
+ * @see <a href="https://www.w3.org/TR/activitystreams-core/#activities">ActivityStream explanation about activities</a>
+ */
+public abstract class Activity extends ActivityPubObject
 {
     private ActivityPubObjectReference<? extends Actor> actor;
     private ActivityPubObjectReference<? extends ActivityPubObject> object;
 
+    /**
+     * @return the reference to the actor of the activity.
+     */
     public ActivityPubObjectReference<? extends Actor> getActor()
     {
         return actor;
     }
 
+    /**
+     * Set the actor of the activity with the given reference.
+     * This method is meant to be used by the JSON parser.
+     *
+     * @param actor the reference to use to set the actor.
+     * @param <T> the type of activity.
+     * @return the current activity for fluent API.
+     */
     @JsonSetter
     public <T extends Activity> T setActor(ActivityPubObjectReference<? extends Actor> actor)
     {
@@ -40,16 +56,34 @@ public class Activity extends ActivityPubObject
         return (T) this;
     }
 
+    /**
+     * Helper to set directly the actor of the activity by using the concrete object instead of the reference.
+     *
+     * @param actor the concrete actor to set.
+     * @param <T> the type of activity.
+     * @return the current activity for fluent API.
+     */
     public <T extends Activity> T setActor(Actor actor)
     {
         return this.setActor(new ActivityPubObjectReference<Actor>().setObject(actor));
     }
 
+    /**
+     * @return the reference to the object of the activity.
+     */
     public ActivityPubObjectReference<? extends ActivityPubObject> getObject()
     {
         return object;
     }
 
+    /**
+     * Set the object of the activity with the given reference.
+     * This method is meant to be used by the JSON parser.
+     *
+     * @param object the reference to use to set the object.
+     * @param <T> the type of activity.
+     * @return the current activity for fluent API.
+     */
     @JsonSetter
     public <T extends Activity> T setObject(ActivityPubObjectReference<? extends ActivityPubObject> object)
     {
@@ -57,6 +91,13 @@ public class Activity extends ActivityPubObject
         return (T) this;
     }
 
+    /**
+     * Helper to set directly the object of the activity by using the concrete object instead of the reference.
+     *
+     * @param object the concrete object to set.
+     * @param <T> the type of activity.
+     * @return the current activity for fluent API.
+     */
     public <T extends Activity> T setObject(ActivityPubObject object)
     {
         return this.setObject(new ActivityPubObjectReference<ActivityPubObject>().setObject(object));

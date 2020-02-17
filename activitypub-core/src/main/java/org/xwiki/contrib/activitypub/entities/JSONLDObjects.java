@@ -24,6 +24,9 @@ import java.net.URISyntaxException;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * An artificial type to put the right JSON-LD context property everywhere.
+ */
 public class JSONLDObjects
 {
     private final static String ACTIVITY_STREAM_CONTEXT = "https://www.w3.org/ns/activitystreams";
@@ -31,6 +34,9 @@ public class JSONLDObjects
     @JsonProperty("@context")
     private URI context;
 
+    /**
+     * @return the current context or ActivityStream context if not defined.
+     */
     public URI getContext()
     {
         if (context == null) {
@@ -44,6 +50,9 @@ public class JSONLDObjects
         return context;
     }
 
+    /**
+     * @param context the current context.
+     */
     public void setContext(URI context)
     {
         this.context = context;

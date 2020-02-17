@@ -25,21 +25,38 @@ import java.util.Set;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+/**
+ * Represents an Unordered Collection as defined by ActivityStream.
+ * Note that it is internally managed by a {@link Set}.
+ * @param <T> the type of {@link ActivityPubObject} to store.
+ * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-collection">ActivityStream definition</a>
+ */
 @JsonDeserialize(as = Collection.class)
 public class Collection<T extends ActivityPubObject> extends AbstractCollection<T>
 {
     private Set<ActivityPubObjectReference<T>> items;
 
+    /**
+     * Default constructor which initialize the internal representation of the collection with a {@link HashSet}.
+     */
     public Collection()
     {
         this.items = new HashSet<>();
     }
 
+    /**
+     * @return references to all items of the collection.
+     */
     public Set<ActivityPubObjectReference<T>> getItems()
     {
         return items;
     }
 
+    /**
+     * @param items references to all items of the collection.
+     * @param <O> the type of the collection.
+     * @return the current instance for fluent API.
+     */
     public <O extends Collection<T>> O setItems(Set<ActivityPubObjectReference<T>> items)
     {
         this.items = items;
@@ -52,6 +69,10 @@ public class Collection<T extends ActivityPubObject> extends AbstractCollection<
         return this.items.size();
     }
 
+    /**
+     * Wrap the item in an {@link ActivityPubObjectReference} before storing it.
+     * {@inheritDoc}
+     */
     @Override
     public <O extends AbstractCollection<T>> O addItem(T item)
     {
