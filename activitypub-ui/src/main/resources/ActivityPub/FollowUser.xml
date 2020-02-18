@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.3" reference="ActivityPub.FollowUser.WebHome" locale="">
+<xwikidoc version="1.3" reference="ActivityPub.FollowUser" locale="">
   <web>ActivityPub</web>
   <name>FollowUser</name>
   <language/>
@@ -37,16 +37,10 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>false</hidden>
   <content>{{velocity}}
-#if ($xcontext.action == "get" &amp;&amp; $services.csrf.isTokenValid($request.form_token) &amp;&amp; "$!request.followInput" != "")
-  #set ($followWorked = $services.activitypub.follow($request.followInput))
-  $response.setContentType("text/plain")
-  $followWorked
-#else
 {{html clean="false"}}
-&lt;form method="post" id="authenticationSecurityConfigForm" action="${xwiki.getURL('ActivityPub.FollowUser.WebHome', 'get')}" class='xform'&gt;
+&lt;form method="post" id="authenticationSecurityConfigForm" action="${xwiki.getURL('ActivityPub.FollowUser', 'view')}" class='xform'&gt;
   &lt;div class="hidden"&gt;
     &lt;input type='hidden' name='form_token' value="$!{services.csrf.getToken()}" /&gt;
-    &lt;input type="hidden" name="xredirect" value="${xwiki.getURL('ActivityPub.FollowUser.WebHome', 'view')}" /&gt;
   &lt;/div&gt;
   &lt;dl&gt;
     &lt;dt&gt;
@@ -61,8 +55,15 @@
     &lt;input value="$services.localization.render('activitypub.follow.button')" class='button' type='submit'&gt;
   &lt;/div&gt;
 &lt;/form&gt;
-{{/html}}
+#if ($services.csrf.isTokenValid($request.form_token) &amp;&amp; "$!request.followInput" != "")
+  #set ($followWorked = $services.activitypub.follow($request.followInput))
+  #if ($followWorked)
+      $services.localization.render('activitypub.follow.followRequested')
+  #else
+      $services.localization.render('activitypub.follow.followNotRequested')
+  #end
 #end
+{{/html}}
 {{/velocity}}
 </content>
 </xwikidoc>

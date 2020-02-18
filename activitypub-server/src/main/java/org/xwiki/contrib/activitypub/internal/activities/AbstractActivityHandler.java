@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
+import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubNotifier;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
@@ -55,6 +56,9 @@ public abstract class AbstractActivityHandler
     @Inject
     protected ActivityPubClient activityPubClient;
 
+    @Inject
+    protected ActivityPubConfiguration activityPubConfiguration;
+
     protected HttpClient httpClient;
 
     public AbstractActivityHandler()
@@ -63,16 +67,12 @@ public abstract class AbstractActivityHandler
     }
 
     protected void answer(HttpServletResponse response, int statusCode, AbstractActivity activity)
-        throws ActivityPubException
+        throws ActivityPubException, IOException
     {
         if (response != null) {
             response.setStatus(statusCode);
             response.setContentType("application/activity+json");
-            try {
-                this.activityPubJsonSerializer.serialize(response.getOutputStream(), activity);
-            } catch (IOException e) {
-                throw new ActivityPubException("Error when getting the output stream", e);
-            }
+            this.activityPubJsonSerializer.serialize(response.getOutputStream(), activity);
         }
     }
 

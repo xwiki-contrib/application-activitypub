@@ -33,6 +33,7 @@ import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.contrib.activitypub.entities.Inbox;
+import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 
 @Component
 @Singleton
@@ -49,15 +50,45 @@ public class FollowActivityHandler extends AbstractActivityHandler implements Ac
         ActivityPubObject followedObject = this.activityPubObjectReferenceResolver.resolveReference(follow.getObject());
         if (followedObject instanceof AbstractActor) {
             AbstractActor followedActor = (AbstractActor) followedObject;
-            Inbox actorInbox = this.actorHandler.getInbox(followedActor);
-            actorInbox.addPendingFollow(follow);
-            actorInbox.addActivity(follow);
-            this.activityPubStorage.storeEntity(actorInbox);
-            this.notifier.notify(follow, Collections.singleton(this.actorHandler.getXWikiUserReference(followedActor)));
-            this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, follow);
+            AbstractActor followingActor = activityRequest.getActor();
+            this.handleFollow(follow, followingActor, followedActor, activityRequest.getResponse());
         } else {
             this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_NOT_IMPLEMENTED,
                 "Only following actors is implemented.");
+        }
+    }
+
+    private void handleFollow(Follow follow, AbstractActor followingActor, AbstractActor followedActor,
+        HttpServletResponse servletResponse)
+        throws ActivityPubException, IOException
+    {
+        switch (this.activityPubConfiguration.getFollowPolicy()) {
+            case ASK:
+                Inbox actorInbox = this.actorHandler.getInbox(followedActor);
+                actorInbox.addPendingFollow(follow);
+                this.answer(servletResponse, HttpServletResponse.SC_OK, follow);
+                break;
+
+            case ACCEPT:
+                follow.setAccepted(true);
+                this.activityPubStorage.storeEntity(follow);
+                OrderedCollection<AbstractActor> followers =
+                    this.activityPubObjectReferenceResolver.resolveReference(followedActor.getFollowers());
+                followers.addItem(followingActor);
+                this.activityPubStorage.storeEntity(followers);
+                OrderedCollection<AbstractActor> followings =
+                    this.activityPubObjectReferenceResolver.resolveReference(followingActor.getFollowing());
+                followings.addItem(followedActor);
+                this.notifier.notify(follow, Collections.singleton(this.actorHandler
+                    .getXWikiUserReference(followedActor)));
+                this.answer(servletResponse, HttpServletResponse.SC_OK, follow);
+                break;
+
+            case REJECT:
+                follow.setRejected(true);
+                this.activityPubStorage.storeEntity(follow);
+                this.answerError(servletResponse, HttpServletResponse.SC_UNAUTHORIZED,
+                    "Follow request are not accepted on this server.");
         }
     }
 
@@ -74,12 +105,8 @@ public class FollowActivityHandler extends AbstractActivityHandler implements Ac
         ActivityPubObject followedObject = this.activityPubObjectReferenceResolver.resolveReference(follow.getObject());
         if (followedObject instanceof AbstractActor) {
             AbstractActor followedActor = (AbstractActor) followedObject;
-            Inbox actorInbox = this.actorHandler.getInbox(followedActor);
-            actorInbox.addPendingFollow(follow);
-            actorInbox.addActivity(follow);
-            this.activityPubStorage.storeEntity(actorInbox);
-            this.notifier.notify(follow, Collections.singleton(this.actorHandler.getXWikiUserReference(followedActor)));
-            this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, follow);
+            AbstractActor followingActor = activityRequest.getActor();
+            this.handleFollow(follow, followingActor, followedActor, activityRequest.getResponse());
         } else {
             this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_NOT_IMPLEMENTED,
                 "Only following actors is implemented.");

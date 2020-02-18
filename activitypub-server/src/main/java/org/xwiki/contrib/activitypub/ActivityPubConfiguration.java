@@ -19,26 +19,37 @@
  */
 package org.xwiki.contrib.activitypub;
 
-import java.util.Set;
-
 import org.xwiki.component.annotation.Role;
-import org.xwiki.contrib.activitypub.entities.AbstractActivity;
-import org.xwiki.model.reference.EntityReference;
 
 /**
- * External API to send an ActivityPub notification.
- *
+ * Defines the configuration of the server.
  * @version $Id$
  */
 @Role
-public interface ActivityPubNotifier
+public interface ActivityPubConfiguration
 {
     /**
-     * Send a notification related to the given activity to the given targets.
-     *
-     * @param activity the activity source of the notification.
-     * @param targets the target users of the notification.
-     * @param <T> the real type of the activity
+     * Behaviour to adopt in case of Follow request.
      */
-    <T extends AbstractActivity> void notify(T activity, Set<EntityReference> targets);
+    enum FOLLOW_POLICY {
+        /**
+         * Always Accept follow request.
+         */
+        ACCEPT,
+
+        /**
+         * Always Reject follow request.
+         */
+        REJECT,
+
+        /**
+         * Always Ask users in case of follow request.
+         */
+        ASK
+    }
+
+    /**
+     * Define which follow policy is used by the server.
+     */
+    FOLLOW_POLICY getFollowPolicy();
 }

@@ -20,6 +20,7 @@
 package org.xwiki.contrib.activitypub.internal.activities;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
@@ -67,7 +68,10 @@ public class AcceptActivityHandler extends AbstractActivityHandler implements Ac
 
             this.activityPubStorage.storeEntity(acceptingActorFollowers);
             this.activityPubStorage.storeEntity(followingActorFollowing);
-
+            if (this.actorHandler.isLocalActor(followingActor)) {
+                this.notifier
+                    .notify(accept, Collections.singleton(this.actorHandler.getXWikiUserReference(followingActor)));
+            }
             this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, accept);
         } else {
             this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_NOT_IMPLEMENTED,

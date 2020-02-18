@@ -17,28 +17,19 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub;
+package org.xwiki.contrib.activitypub.internal;
 
-import java.util.Set;
-
-import org.xwiki.component.annotation.Role;
-import org.xwiki.contrib.activitypub.entities.AbstractActivity;
-import org.xwiki.model.reference.EntityReference;
+import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
 
 /**
- * External API to send an ActivityPub notification.
- *
- * @version $Id$
+ * Default configuration.
+ * @version $id$
  */
-@Role
-public interface ActivityPubNotifier
+public class DefaultActivityPubConfiguration implements ActivityPubConfiguration
 {
-    /**
-     * Send a notification related to the given activity to the given targets.
-     *
-     * @param activity the activity source of the notification.
-     * @param targets the target users of the notification.
-     * @param <T> the real type of the activity
-     */
-    <T extends AbstractActivity> void notify(T activity, Set<EntityReference> targets);
+    @Override
+    public FOLLOW_POLICY getFollowPolicy()
+    {
+        return FOLLOW_POLICY.ACCEPT;
+    }
 }

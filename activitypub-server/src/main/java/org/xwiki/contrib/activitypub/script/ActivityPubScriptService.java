@@ -32,9 +32,13 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
+import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
+import org.xwiki.contrib.activitypub.entities.Accept;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.script.service.ScriptService;
 
@@ -61,6 +65,9 @@ public class ActivityPubScriptService implements ScriptService
     private ActivityPubStorage activityPubStorage;
 
     @Inject
+    private ActivityPubObjectReferenceResolver activityPubObjectReferenceResolver;
+
+    @Inject
     private Logger logger;
 
     public boolean follow(String profileURL)
@@ -80,5 +87,26 @@ public class ActivityPubScriptService implements ScriptService
         }
 
         return result;
+    }
+
+    public boolean acceptFollow(Follow follow)
+    {
+        boolean result = false;
+        try {
+            AbstractActor currentActor = this.actorHandler.getCurrentActor();
+            Accept accept = new Accept().setActor(currentActor).setObject(follow);
+            this.activityPubStorage.storeEntity(accept);
+            HttpMethod httpMethod = this.activityPubClient.postOutbox(currentActor, accept);
+            this.activityPubClient.checkAnswer(httpMethod);
+            result = true;
+        } catch (ActivityPubException e) {
+            this.logger.error("Error while trying to send the accept follow request [{}]", follow, e);
+        }
+        return result;
+    }
+
+    public <T extends ActivityPubObject> T resolve(ActivityPubObjectReference<T> reference) throws ActivityPubException
+    {
+        return this.activityPubObjectReferenceResolver.resolveReference(reference);
     }
 }

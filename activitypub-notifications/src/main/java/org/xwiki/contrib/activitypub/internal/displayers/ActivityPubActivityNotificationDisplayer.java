@@ -55,7 +55,7 @@ public class ActivityPubActivityNotificationDisplayer
             scriptContext.setAttribute(EVENT_BINDING_NAME, event, ScriptContext.ENGINE_SCOPE);
             scriptContext.setAttribute(ACTIVITY_BINDING_NAME, activity, ScriptContext.ENGINE_SCOPE);
 
-            String templateName = String.format("activity/%s.vm", activity.getType());
+            String templateName = String.format("activity/%s.vm", activity.getType().toLowerCase());
             Template template = templateManager.getTemplate(templateName);
 
             return (template != null) ? templateManager.execute(template)

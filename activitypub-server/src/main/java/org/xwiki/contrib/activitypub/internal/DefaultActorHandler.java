@@ -186,6 +186,12 @@ public class DefaultActorHandler implements ActorHandler
     }
 
     @Override
+    public boolean isLocalActor(AbstractActor actor)
+    {
+        return getXWikiUserReference(actor) != null;
+    }
+
+    @Override
     public AbstractActor getLocalActor(String serializedUserReference) throws ActivityPubException
     {
         return this.getActor(resolveUser(serializedUserReference));
