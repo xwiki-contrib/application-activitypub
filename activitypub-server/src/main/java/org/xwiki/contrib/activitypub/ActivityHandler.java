@@ -22,10 +22,10 @@ package org.xwiki.contrib.activitypub;
 import java.io.IOException;
 
 import org.xwiki.component.annotation.Role;
-import org.xwiki.contrib.activitypub.entities.Activity;
+import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 
 @Role
-public interface ActivityHandler<T extends Activity>
+public interface ActivityHandler<T extends AbstractActivity>
 {
     void handleInboxRequest(ActivityRequest<T> activityRequest) throws IOException, ActivityPubException;
     void handleOutboxRequest(ActivityRequest<T> activityRequest) throws IOException, ActivityPubException;

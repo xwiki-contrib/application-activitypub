@@ -24,7 +24,7 @@ import javax.inject.Singleton;
 import javax.script.ScriptContext;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.activitypub.entities.Activity;
+import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.eventstream.Event;
 import org.xwiki.notifications.NotificationException;
 import org.xwiki.rendering.block.Block;
@@ -47,7 +47,7 @@ public class ActivityPubActivityNotificationDisplayer
     private ScriptContextManager scriptContextManager;
 
     @Override
-    public Block displayActivityNotification(Event event, Activity activity)
+    public Block displayActivityNotification(Event event, AbstractActivity activity)
         throws NotificationException
     {
         ScriptContext scriptContext = scriptContextManager.getScriptContext();

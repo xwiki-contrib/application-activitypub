@@ -28,11 +28,12 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * Represents an Outbox as defined by ActivityPub.
  *
  * @see <a href="https://www.w3.org/TR/activitypub/#outbox">ActivityPub Outbox definition</a>
+ * @version $Id$
  */
 @JsonDeserialize(as = Outbox.class)
-public class Outbox extends OrderedCollection<Activity>
+public class Outbox extends OrderedCollection<AbstractActivity>
 {
-    private Map<String, Activity> items;
+    private Map<String, AbstractActivity> items;
 
     /**
      * Default constructor.
@@ -46,7 +47,7 @@ public class Outbox extends OrderedCollection<Activity>
      * Store activities.
      * @param activity the activity to store.
      */
-    public void addActivity(Activity activity)
+    public void addActivity(AbstractActivity activity)
     {
         if (activity.getId() == null) {
             throw new IllegalArgumentException("The activity ID must not be null.");

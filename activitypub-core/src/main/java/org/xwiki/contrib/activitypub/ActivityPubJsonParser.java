@@ -27,19 +27,82 @@ import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 
 /**
  * Defines parsing operations for ActivityPub.
+ * @version $Id$
  */
 @Role
 public interface ActivityPubJsonParser
 {
-    <T extends ActivityPubObject> T parse(String requestBody);
+    /**
+     * Parse the given JSON to an {@link ActivityPubObject} or one of its inherited type.
+     * Note that no check is performed in advance on the JSON: it is directly used for parsing. Any error that might
+     * occur will be wrapped in an {@link ActivityPubException}.
+     * @param json a complete JSON representation of an ActivityStream or ActivityPub element.
+     * @param <T> the type of object to retrieve
+     * @return a POJO corresponding to the given JSON
+     * @throws ActivityPubException in case of exception during the parsing.
+     */
+    <T extends ActivityPubObject> T parse(String json) throws ActivityPubException;
 
-    <T extends ActivityPubObject> T parse(String requestBody, Class<T> type);
+    /**
+     * Parse the given JSON to the given type.
+     * Note that no check is performed in advance on the JSON: it is directly used for parsing. Any error that might
+     * occur will be wrapped in an {@link ActivityPubException}.
+     * @param json a complete JSON representation of an ActivityStream or ActivityPub element.
+     * @param type the expected return type
+     * @param <T> the type of object to retrieve
+     * @return a POJO of the given type corresponding to the given JSON
+     * @throws ActivityPubException in case of exception during the parsing.
+     */
+    <T extends ActivityPubObject> T parse(String json, Class<T> type) throws ActivityPubException;
 
-    <T extends ActivityPubObject> T parse(Reader requestBodyReader);
+    /**
+     * Parse the given JSON to an {@link ActivityPubObject} or one of its inherited type.
+     * Note that no check is performed in advance on the JSON: it is directly used for parsing. Any error that might
+     * occur will be wrapped in an {@link ActivityPubException}.
+     * @param jsonReader a {@link Reader} to the complete JSON representation of an ActivityStream or ActivityPub
+     * element.
+     * @param <T> the type of object to retrieve
+     * @return a POJO corresponding to the given JSON
+     * @throws ActivityPubException in case of exception during the parsing.
+     */
+    <T extends ActivityPubObject> T parse(Reader jsonReader) throws ActivityPubException;
 
-    <T extends ActivityPubObject> T parse(Reader requestBodyReader, Class<T> type);
+    /**
+     * Parse the given JSON to the given type.
+     * Note that no check is performed in advance on the JSON: it is directly used for parsing. Any error that might
+     * occur will be wrapped in an {@link ActivityPubException}.
+     * @param jsonReader a {@link Reader} to the complete JSON representation of an ActivityStream or ActivityPub
+     * element.
+     * @param type the expected return type
+     * @param <T> the type of object to retrieve
+     * @return a POJO of the given type corresponding to the given JSON
+     * @throws ActivityPubException in case of exception during the parsing.
+     */
+    <T extends ActivityPubObject> T parse(Reader jsonReader, Class<T> type) throws ActivityPubException;
 
-    <T extends ActivityPubObject> T parse(InputStream requestBodyInputStream);
+    /**
+     * Parse the given JSON to an {@link ActivityPubObject} or one of its inherited type.
+     * Note that no check is performed in advance on the JSON: it is directly used for parsing. Any error that might
+     * occur will be wrapped in an {@link ActivityPubException}.
+     * @param jsonInput a {@link InputStream} to the complete JSON representation of an ActivityStream or ActivityPub
+     * element.
+     * @param <T> the type of object to retrieve
+     * @return a POJO corresponding to the given JSON
+     * @throws ActivityPubException in case of exception during the parsing.
+     */
+    <T extends ActivityPubObject> T parse(InputStream jsonInput) throws ActivityPubException;
 
-    <T extends ActivityPubObject> T parse(InputStream requestBodyInputStream, Class<T> type);
+    /**
+     * Parse the given JSON to the given type.
+     * Note that no check is performed in advance on the JSON: it is directly used for parsing. Any error that might
+     * occur will be wrapped in an {@link ActivityPubException}.
+     * @param jsonInput a {@link InputStream} to the complete JSON representation of an ActivityStream or ActivityPub
+     * element.
+     * @param type the expected return type
+     * @param <T> the type of object to retrieve
+     * @return a POJO of the given type corresponding to the given JSON
+     * @throws ActivityPubException in case of exception during the parsing.
+     */
+    <T extends ActivityPubObject> T parse(InputStream jsonInput, Class<T> type)
+        throws ActivityPubException;
 }

@@ -36,10 +36,10 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
-import org.xwiki.contrib.activitypub.entities.Activity;
+import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
-import org.xwiki.contrib.activitypub.entities.Actor;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 
 @Component
 @Singleton
@@ -56,13 +56,13 @@ public class DefaultActivityPubClient implements ActivityPubClient
     }
 
     @Override
-    public HttpMethod postInbox(Actor actor, Activity activity) throws IOException
+    public HttpMethod postInbox(AbstractActor actor, AbstractActivity activity) throws IOException
     {
         return post(getURIFromObjectReference(actor.getInbox()), activity);
     }
 
     @Override
-    public HttpMethod postOutbox(Actor actor, Activity activity) throws IOException
+    public HttpMethod postOutbox(AbstractActor actor, AbstractActivity activity) throws IOException
     {
         return post(getURIFromObjectReference(actor.getOutbox()), activity);
     }
@@ -77,7 +77,7 @@ public class DefaultActivityPubClient implements ActivityPubClient
     }
 
     @Override
-    public HttpMethod post(URI uri, Activity activity) throws IOException
+    public HttpMethod post(URI uri, AbstractActivity activity) throws IOException
     {
         RequestEntity bodyRequest = new StringRequestEntity(this.activityPubJsonSerializer.serialize(activity),
             "application/activity+json",

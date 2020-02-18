@@ -24,17 +24,17 @@ import java.net.URI;
 
 import org.apache.commons.httpclient.HttpMethod;
 import org.xwiki.component.annotation.Role;
-import org.xwiki.contrib.activitypub.entities.Activity;
-import org.xwiki.contrib.activitypub.entities.Actor;
+import org.xwiki.contrib.activitypub.entities.AbstractActivity;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 
 @Role
 public interface ActivityPubClient
 {
-    HttpMethod postInbox(Actor actor, Activity activity) throws IOException;
+    HttpMethod postInbox(AbstractActor actor, AbstractActivity activity) throws IOException;
 
-    HttpMethod postOutbox(Actor actor, Activity activity) throws IOException;
+    HttpMethod postOutbox(AbstractActor actor, AbstractActivity activity) throws IOException;
 
-    HttpMethod post(URI uri, Activity activity) throws IOException;
+    HttpMethod post(URI uri, AbstractActivity activity) throws IOException;
 
     HttpMethod get(URI uri) throws IOException;
 

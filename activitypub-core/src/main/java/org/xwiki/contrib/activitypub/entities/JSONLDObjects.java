@@ -26,10 +26,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * An artificial type to put the right JSON-LD context property everywhere.
+ * @version $Id$
  */
 public class JSONLDObjects
 {
-    private final static String ACTIVITY_STREAM_CONTEXT = "https://www.w3.org/ns/activitystreams";
+    private static final String ACTIVITY_STREAM_CONTEXT = "https://www.w3.org/ns/activitystreams";
 
     @JsonProperty("@context")
     private URI context;

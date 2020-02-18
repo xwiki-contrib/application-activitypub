@@ -19,7 +19,6 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -43,7 +42,7 @@ import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
-import org.xwiki.contrib.activitypub.entities.Actor;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Outbox;
@@ -110,26 +109,28 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         if (entity.getId() != null && isIdFromCurrentInstance(entity.getId())) {
             this.storeEntity(entity.getId(), entity);
         } else if (entity.getId() != null && !isIdFromCurrentInstance(entity.getId())) {
-            this.logger.warn("Entity [{}] won't be stored since it's not part of the current instance", entity.getId());
+            throw new ActivityPubException(
+                String.format("Entity [%s] won't be stored since it's not part of the current instance", entity.getId())
+            );
         }
 
         String uuid;
         if (entity instanceof Inbox) {
             Inbox inbox = (Inbox) entity;
             if (inbox.getAttributedTo() == null || inbox.getAttributedTo().isEmpty()) {
-                throw new IllegalArgumentException("Cannot store an inbox without owner.");
+                throw new ActivityPubException("Cannot store an inbox without owner.");
             }
-            Actor owner = this.resolver.resolveReference(inbox.getAttributedTo().get(0));
+            AbstractActor owner = this.resolver.resolveReference(inbox.getAttributedTo().get(0));
             uuid = getActorEntityUID(owner, INBOX_SUFFIX_ID);
         } else if (entity instanceof Outbox) {
             Outbox outbox = (Outbox) entity;
             if (outbox.getAttributedTo() == null || outbox.getAttributedTo().isEmpty()) {
-                throw new IllegalArgumentException("Cannot store an outbox without owner.");
+                throw new ActivityPubException("Cannot store an outbox without owner.");
             }
-            Actor owner = this.resolver.resolveReference(outbox.getAttributedTo().get(0));
+            AbstractActor owner = this.resolver.resolveReference(outbox.getAttributedTo().get(0));
             uuid = getActorEntityUID(owner, OUTBOX_SUFFIX_ID);
-        } else if (entity instanceof Actor) {
-            uuid = ((Actor) entity).getPreferredUsername();
+        } else if (entity instanceof AbstractActor) {
+            uuid = ((AbstractActor) entity).getPreferredUsername();
         } else {
             // FIXME: we cannot rely on hashCode because of possible collisions and size limitation, but we shouldn't
             // rely on total randomness because of dedup.
@@ -140,8 +141,8 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
             entity.setId(this.serializer.serialize(resourceReference));
             this.storage.put(uuid, this.jsonSerializer.serialize(entity));
             return uuid;
-        } catch (SerializeResourceReferenceException | UnsupportedResourceReferenceException | IOException e) {
-            throw new ActivityPubException(String.format("Error while serializing [%s].", resourceReference), e);
+        } catch (SerializeResourceReferenceException | UnsupportedResourceReferenceException e) {
+            throw new ActivityPubException(String.format("Error while storing [%s].", resourceReference), e);
         }
     }
 
@@ -167,16 +168,12 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
             throw new ActivityPubException("The UID cannot be empty.");
         }
         boolean result = !this.storage.containsKey(uid);
-        try {
-            this.storage.put(uid, this.jsonSerializer.serialize(entity));
-        } catch (IOException e) {
-            throw new ActivityPubException("Error while serializing the entity to store.", e);
-        }
+        this.storage.put(uid, this.jsonSerializer.serialize(entity));
         return result;
     }
 
     @Override
-    public <T extends ActivityPubObject> T retrieveEntity(String entityType, String uuid)
+    public <T extends ActivityPubObject> T retrieveEntity(String entityType, String uuid) throws ActivityPubException
     {
         if (this.storage.containsKey(uuid)) {
             return (T) this.jsonParser.parse(this.storage.get(uuid));
@@ -185,7 +182,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         }
     }
 
-    private String getActorEntityUID(Actor actor, String entitySuffix)
+    private String getActorEntityUID(AbstractActor actor, String entitySuffix)
     {
         return String.format("%s-%s", actor.getPreferredUsername(), entitySuffix);
     }

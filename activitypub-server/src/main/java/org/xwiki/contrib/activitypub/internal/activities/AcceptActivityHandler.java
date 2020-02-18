@@ -28,7 +28,7 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
-import org.xwiki.contrib.activitypub.entities.Actor;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.contrib.activitypub.entities.Follow;
@@ -52,15 +52,15 @@ public class AcceptActivityHandler extends AbstractActivityHandler implements Ac
         if (accept.getId() == null) {
             this.activityPubStorage.storeEntity(accept);
         }
-        Actor acceptingActor = this.activityPubObjectReferenceResolver.resolveReference(accept.getActor());
+        AbstractActor acceptingActor = this.activityPubObjectReferenceResolver.resolveReference(accept.getActor());
         ActivityPubObject object = this.activityPubObjectReferenceResolver.resolveReference(accept.getObject());
 
         if (object instanceof Follow) {
             Follow follow = (Follow) object;
-            Actor followingActor = this.activityPubObjectReferenceResolver.resolveReference(follow.getActor());
-            OrderedCollection<Actor> acceptingActorFollowers =
+            AbstractActor followingActor = this.activityPubObjectReferenceResolver.resolveReference(follow.getActor());
+            OrderedCollection<AbstractActor> acceptingActorFollowers =
                 this.activityPubObjectReferenceResolver.resolveReference(acceptingActor.getFollowers());
-            OrderedCollection<Actor> followingActorFollowing =
+            OrderedCollection<AbstractActor> followingActorFollowing =
                 this.activityPubObjectReferenceResolver.resolveReference(followingActor.getFollowing());
             acceptingActorFollowers.addItem(followingActor);
             followingActorFollowing.addItem(acceptingActor);

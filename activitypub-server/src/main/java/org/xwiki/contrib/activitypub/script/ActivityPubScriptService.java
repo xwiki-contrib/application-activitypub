@@ -20,8 +20,6 @@
 package org.xwiki.contrib.activitypub.script;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -36,10 +34,8 @@ import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActorHandler;
-import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
-import org.xwiki.contrib.activitypub.entities.Actor;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Follow;
-import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.script.service.ScriptService;
 
 import com.xpn.xwiki.XWikiContext;
@@ -72,8 +68,8 @@ public class ActivityPubScriptService implements ScriptService
         boolean result = false;
 
         try {
-            Actor remoteActor = this.actorHandler.getRemoteActor(profileURL);
-            Actor currentActor = this.actorHandler.getCurrentActor();
+            AbstractActor remoteActor = this.actorHandler.getRemoteActor(profileURL);
+            AbstractActor currentActor = this.actorHandler.getCurrentActor();
             Follow follow = new Follow().setActor(currentActor).setObject(remoteActor);
             this.activityPubStorage.storeEntity(follow);
             HttpMethod httpMethod = this.activityPubClient.postInbox(remoteActor, follow);

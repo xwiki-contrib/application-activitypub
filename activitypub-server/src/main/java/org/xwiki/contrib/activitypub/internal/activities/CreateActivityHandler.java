@@ -33,7 +33,7 @@ import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
-import org.xwiki.contrib.activitypub.entities.Actor;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
@@ -55,7 +55,7 @@ public class CreateActivityHandler extends AbstractActivityHandler implements Ac
                 "The ID of the activity must not be null.");
         }
 
-        Actor actor = activityRequest.getActor();
+        AbstractActor actor = activityRequest.getActor();
         Inbox inbox = this.actorHandler.getInbox(actor);
         inbox.addActivity(create);
         this.activityPubStorage.storeEntity(inbox);
@@ -72,17 +72,17 @@ public class CreateActivityHandler extends AbstractActivityHandler implements Ac
             this.activityPubStorage.storeEntity(create);
         }
 
-        Actor actor = this.activityPubObjectReferenceResolver.resolveReference(create.getActor());
+        AbstractActor actor = this.activityPubObjectReferenceResolver.resolveReference(create.getActor());
         Outbox outbox = this.actorHandler.getOutbox(actor);
         outbox.addActivity(create);
         this.activityPubStorage.storeEntity(outbox);
-        OrderedCollection<Actor> orderedCollection =
+        OrderedCollection<AbstractActor> orderedCollection =
             this.activityPubObjectReferenceResolver.resolveReference(actor.getFollowers());
 
         if (orderedCollection != null && orderedCollection.getTotalItems() > 0) {
 
-            for (ActivityPubObjectReference<Actor> actorReference : orderedCollection) {
-                Actor targetActor = this.activityPubObjectReferenceResolver.resolveReference(actorReference);
+            for (ActivityPubObjectReference<AbstractActor> actorReference : orderedCollection) {
+                AbstractActor targetActor = this.activityPubObjectReferenceResolver.resolveReference(actorReference);
                 HttpMethod postMethod = this.activityPubClient.postInbox(targetActor, create);
 
                 if (postMethod.getStatusCode() > 200) {

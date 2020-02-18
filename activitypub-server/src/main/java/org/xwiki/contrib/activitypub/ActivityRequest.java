@@ -22,22 +22,22 @@ package org.xwiki.contrib.activitypub;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.xwiki.contrib.activitypub.entities.Activity;
-import org.xwiki.contrib.activitypub.entities.Actor;
+import org.xwiki.contrib.activitypub.entities.AbstractActivity;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 
-public class ActivityRequest<T extends Activity>
+public class ActivityRequest<T extends AbstractActivity>
 {
-    private Actor actor;
+    private AbstractActor actor;
     private T activity;
     private HttpServletRequest request;
     private HttpServletResponse response;
 
-    public ActivityRequest(Actor actor, T activity)
+    public ActivityRequest(AbstractActor actor, T activity)
     {
         this(actor, activity, null, null);
     }
 
-    public ActivityRequest(Actor actor, T activity, HttpServletRequest request, HttpServletResponse response)
+    public ActivityRequest(AbstractActor actor, T activity, HttpServletRequest request, HttpServletResponse response)
     {
         this.actor = actor;
         this.activity = activity;
@@ -45,7 +45,7 @@ public class ActivityRequest<T extends Activity>
         this.response = response;
     }
 
-    public Actor getActor()
+    public AbstractActor getActor()
     {
         return actor;
     }

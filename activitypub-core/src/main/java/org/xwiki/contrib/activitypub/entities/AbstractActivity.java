@@ -27,16 +27,17 @@ import com.fasterxml.jackson.annotation.JsonSetter;
  * An abstract type to represent any kind of Activity defined by ActivityStream.
  *
  * @see <a href="https://www.w3.org/TR/activitystreams-core/#activities">ActivityStream explanation about activities</a>
+ * @version $Id$
  */
-public abstract class Activity extends ActivityPubObject
+public abstract class AbstractActivity extends ActivityPubObject
 {
-    private ActivityPubObjectReference<? extends Actor> actor;
+    private ActivityPubObjectReference<? extends AbstractActor> actor;
     private ActivityPubObjectReference<? extends ActivityPubObject> object;
 
     /**
      * @return the reference to the actor of the activity.
      */
-    public ActivityPubObjectReference<? extends Actor> getActor()
+    public ActivityPubObjectReference<? extends AbstractActor> getActor()
     {
         return actor;
     }
@@ -50,7 +51,7 @@ public abstract class Activity extends ActivityPubObject
      * @return the current activity for fluent API.
      */
     @JsonSetter
-    public <T extends Activity> T setActor(ActivityPubObjectReference<? extends Actor> actor)
+    public <T extends AbstractActivity> T setActor(ActivityPubObjectReference<? extends AbstractActor> actor)
     {
         this.actor = actor;
         return (T) this;
@@ -63,9 +64,9 @@ public abstract class Activity extends ActivityPubObject
      * @param <T> the type of activity.
      * @return the current activity for fluent API.
      */
-    public <T extends Activity> T setActor(Actor actor)
+    public <T extends AbstractActivity> T setActor(AbstractActor actor)
     {
-        return this.setActor(new ActivityPubObjectReference<Actor>().setObject(actor));
+        return this.setActor(new ActivityPubObjectReference<AbstractActor>().setObject(actor));
     }
 
     /**
@@ -85,7 +86,7 @@ public abstract class Activity extends ActivityPubObject
      * @return the current activity for fluent API.
      */
     @JsonSetter
-    public <T extends Activity> T setObject(ActivityPubObjectReference<? extends ActivityPubObject> object)
+    public <T extends AbstractActivity> T setObject(ActivityPubObjectReference<? extends ActivityPubObject> object)
     {
         this.object = object;
         return (T) this;
@@ -98,7 +99,7 @@ public abstract class Activity extends ActivityPubObject
      * @param <T> the type of activity.
      * @return the current activity for fluent API.
      */
-    public <T extends Activity> T setObject(ActivityPubObject object)
+    public <T extends AbstractActivity> T setObject(ActivityPubObject object)
     {
         return this.setObject(new ActivityPubObjectReference<ActivityPubObject>().setObject(object));
     }
@@ -115,9 +116,9 @@ public abstract class Activity extends ActivityPubObject
         if (!super.equals(o)) {
             return false;
         }
-        Activity activity = (Activity) o;
-        return Objects.equals(actor, activity.actor) &&
-            Objects.equals(object, activity.object);
+        AbstractActivity activity = (AbstractActivity) o;
+        return Objects.equals(actor, activity.actor)
+            && Objects.equals(object, activity.object);
     }
 
     @Override

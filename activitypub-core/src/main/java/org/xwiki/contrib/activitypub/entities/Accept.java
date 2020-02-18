@@ -25,8 +25,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * Represents the Accept activity as defined by ActivityStream.
  *
  * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-accept">ActivityStream Accept definition</a>
+ * @version $Id$
  */
 @JsonDeserialize(as = Accept.class)
-public class Accept extends Activity
+public class Accept extends AbstractActivity
 {
 }

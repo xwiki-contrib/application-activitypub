@@ -35,6 +35,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * (and potentially set) the proper object.
  * See {@link org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver}.
  * @param <T> the type of {@link ActivityPubObject} it refers to.
+ * @version $Id$
  */
 @JsonDeserialize(using = ActivityPubObjectReferenceDeserializer.class)
 public class ActivityPubObjectReference<T extends ActivityPubObject>
@@ -69,7 +70,7 @@ public class ActivityPubObjectReference<T extends ActivityPubObject>
     public ActivityPubObjectReference<T> setObject(T object)
     {
         this.object = object;
-        this.isLink = (object != null);
+        this.isLink = (object == null);
         return this;
     }
 
@@ -94,6 +95,7 @@ public class ActivityPubObjectReference<T extends ActivityPubObject>
         return this;
     }
 
+    // FIXME: use XWiki helpers to equals/hashcode/tostring
     @Override
     public boolean equals(java.lang.Object o)
     {
@@ -104,9 +106,9 @@ public class ActivityPubObjectReference<T extends ActivityPubObject>
             return false;
         }
         ActivityPubObjectReference<?> that = (ActivityPubObjectReference<?>) o;
-        return isLink == that.isLink &&
-            Objects.equals(link, that.link) &&
-            Objects.equals(object, that.object);
+        return isLink == that.isLink
+            && Objects.equals(link, that.link)
+            && Objects.equals(object, that.object);
     }
 
     @Override

@@ -26,16 +26,17 @@ package org.xwiki.contrib.activitypub.entities;
  *
  * @see <a href="https://www.w3.org/TR/activitystreams-core/#actors">ActivityStream Actor definition</a>
  * @see <a href="https://www.w3.org/TR/activitypub/#actor-objects">ActivityPub Actor definition</a>
+ * @version $Id$
  */
-public abstract class Actor extends ActivityPubObject
+public abstract class AbstractActor extends ActivityPubObject
 {
     // TODO: Check IRI <-> URI conversion (https://tools.ietf.org/html/rfc3987#section-3.1)
     // We might have some weird cases with XWiki special username (containing non UTF-8 characters for example)
     private String preferredUsername;
     private ActivityPubObjectReference<Inbox> inbox;
     private ActivityPubObjectReference<Outbox> outbox;
-    private ActivityPubObjectReference<OrderedCollection<Actor>> followers;
-    private ActivityPubObjectReference<OrderedCollection<Actor>> following;
+    private ActivityPubObjectReference<OrderedCollection<AbstractActor>> followers;
+    private ActivityPubObjectReference<OrderedCollection<AbstractActor>> following;
 
     /**
      * @return the username of the actor.
@@ -50,7 +51,7 @@ public abstract class Actor extends ActivityPubObject
      * @param <T> the type of actor.
      * @return the current object for fluent API.
      */
-    public <T extends Actor> T setPreferredUsername(String preferredUsername)
+    public <T extends AbstractActor> T setPreferredUsername(String preferredUsername)
     {
         this.preferredUsername = preferredUsername;
         return (T) this;
@@ -60,7 +61,7 @@ public abstract class Actor extends ActivityPubObject
      * @return a reference to the collection of actors following the current one.
      * @see <a href="https://www.w3.org/TR/activitypub/#followers">ActivityPub definition</a>
      */
-    public ActivityPubObjectReference<OrderedCollection<Actor>> getFollowers()
+    public ActivityPubObjectReference<OrderedCollection<AbstractActor>> getFollowers()
     {
         return followers;
     }
@@ -71,7 +72,8 @@ public abstract class Actor extends ActivityPubObject
      * @return the current object for fluent API.
      * @see <a href="https://www.w3.org/TR/activitypub/#followers">ActivityPub definition</a>
      */
-    public <T extends Actor> T setFollowers(ActivityPubObjectReference<OrderedCollection<Actor>> followers)
+    public <T extends AbstractActor> T setFollowers(
+        ActivityPubObjectReference<OrderedCollection<AbstractActor>> followers)
     {
         this.followers = followers;
         return (T) this;
@@ -81,7 +83,7 @@ public abstract class Actor extends ActivityPubObject
      * @return a reference to the collection of actors followed by the current one.
      * @see <a href="https://www.w3.org/TR/activitypub/#following">ActivityPub definition</a>
      */
-    public ActivityPubObjectReference<OrderedCollection<Actor>> getFollowing()
+    public ActivityPubObjectReference<OrderedCollection<AbstractActor>> getFollowing()
     {
         return following;
     }
@@ -92,7 +94,8 @@ public abstract class Actor extends ActivityPubObject
      * @return the current object for fluent API.
      * @see <a href="https://www.w3.org/TR/activitypub/#following">ActivityPub definition</a>
      */
-    public <T extends Actor> T setFollowing(ActivityPubObjectReference<OrderedCollection<Actor>> following)
+    public <T extends AbstractActor> T setFollowing(
+        ActivityPubObjectReference<OrderedCollection<AbstractActor>> following)
     {
         this.following = following;
         return (T) this;
@@ -113,7 +116,7 @@ public abstract class Actor extends ActivityPubObject
      * @return the current object for fluent API.
      * @see <a href="https://www.w3.org/TR/activitypub/#inbox">ActivityPub definition</a>
      */
-    public <T extends Actor> T setInbox(ActivityPubObjectReference<Inbox> inbox)
+    public <T extends AbstractActor> T setInbox(ActivityPubObjectReference<Inbox> inbox)
     {
         this.inbox = inbox;
         return (T) this;
@@ -134,7 +137,7 @@ public abstract class Actor extends ActivityPubObject
      * @return the current object for fluent API.
      * @see <a href="https://www.w3.org/TR/activitypub/#outbox">ActivityPub definition</a>
      */
-    public <T extends Actor> T setOutbox(ActivityPubObjectReference<Outbox> outbox)
+    public <T extends AbstractActor> T setOutbox(ActivityPubObjectReference<Outbox> outbox)
     {
         this.outbox = outbox;
         return (T) this;

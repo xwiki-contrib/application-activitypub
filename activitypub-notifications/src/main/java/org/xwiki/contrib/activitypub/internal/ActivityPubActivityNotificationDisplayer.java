@@ -20,7 +20,7 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import org.xwiki.component.annotation.Role;
-import org.xwiki.contrib.activitypub.entities.Activity;
+import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.eventstream.Event;
 import org.xwiki.notifications.NotificationException;
 import org.xwiki.rendering.block.Block;
@@ -28,5 +28,5 @@ import org.xwiki.rendering.block.Block;
 @Role
 public interface ActivityPubActivityNotificationDisplayer
 {
-    Block displayActivityNotification(Event activityEvent, Activity activity) throws NotificationException;
+    Block displayActivityNotification(Event activityEvent, AbstractActivity activity) throws NotificationException;
 }

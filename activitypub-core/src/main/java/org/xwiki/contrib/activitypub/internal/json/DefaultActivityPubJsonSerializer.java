@@ -28,12 +28,14 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
 
 /**
  * Default implementation of {@link ActivityPubJsonSerializer}.
  * This implementation relies on {@link ObjectMapperConfiguration}.
+ * @version $Id$
  */
 @Component
 @Singleton
@@ -43,7 +45,7 @@ public class DefaultActivityPubJsonSerializer implements ActivityPubJsonSerializ
     private ObjectMapperConfiguration objectMapperConfiguration;
 
     @Override
-    public <T extends ActivityPubObject> String serialize(T object) throws IOException
+    public <T extends ActivityPubObject> String serialize(T object) throws ActivityPubException
     {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         this.serialize(byteArrayOutputStream, object);
@@ -51,8 +53,13 @@ public class DefaultActivityPubJsonSerializer implements ActivityPubJsonSerializ
     }
 
     @Override
-    public <T extends ActivityPubObject> void serialize(OutputStream stream, T object) throws IOException
+    public <T extends ActivityPubObject> void serialize(OutputStream stream, T object) throws ActivityPubException
     {
-        this.objectMapperConfiguration.getObjectMapper().writeValue(stream, object);
+        try {
+            this.objectMapperConfiguration.getObjectMapper().writeValue(stream, object);
+        } catch (IOException e) {
+            throw new ActivityPubException(
+                String.format("Error while serializing the stream to type [%s]", object.getClass()), e);
+        }
     }
 }

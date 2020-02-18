@@ -49,9 +49,9 @@ import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.ActorHandler;
-import org.xwiki.contrib.activitypub.entities.Actor;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
-import org.xwiki.contrib.activitypub.entities.Activity;
+import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.Outbox;
@@ -135,7 +135,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
                             "This box is not attributed. Please report the error to the administrator.");
                     } else {
                         try {
-                            Actor actor = this.objectReferenceResolver
+                            AbstractActor actor = this.objectReferenceResolver
                                 .resolveReference(entity.getAttributedTo().get(0));
 
                             if (entity instanceof Inbox) {
@@ -151,7 +151,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
                     }
                 } else {
                     try {
-                        Actor actor = getActor(resourceReference);
+                        AbstractActor actor = getActor(resourceReference);
                         if (actor != null) {
                             if ("inbox".equalsIgnoreCase(resourceReference.getEntityType())) {
                                 this.handleBox(actor, BOX_TYPE.INBOX);
@@ -211,7 +211,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         chain.handleNext(reference);
     }
 
-    private Actor getActor(ActivityPubResourceReference resourceReference)
+    private AbstractActor getActor(ActivityPubResourceReference resourceReference)
         throws IOException, ActivityPubException
     {
         if (this.actorHandler.isExistingUser(resourceReference.getUuid())) {
@@ -231,12 +231,12 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         response.getOutputStream().write(message.getBytes(StandardCharsets.UTF_8));
     }
 
-    private void handleBox(Actor actor, BOX_TYPE boxType)
+    private void handleBox(AbstractActor actor, BOX_TYPE boxType)
         throws IOException, ActivityPubException
     {
-        ActivityRequest<Activity> activityRequest = this.parseRequest(actor);
+        ActivityRequest<AbstractActivity> activityRequest = this.parseRequest(actor);
         if (activityRequest != null && activityRequest.getActor() != null) {
-            ActivityHandler<Activity> handler = this.getHandler(activityRequest);
+            ActivityHandler<AbstractActivity> handler = this.getHandler(activityRequest);
             if (handler != null) {
                 if (boxType == BOX_TYPE.INBOX) {
                     handler.handleInboxRequest(activityRequest);
@@ -261,7 +261,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         }
     }
 
-    private <T extends Activity> ActivityRequest<T> parseRequest(Actor actor)
+    private <T extends AbstractActivity> ActivityRequest<T> parseRequest(AbstractActor actor)
     {
         HttpServletRequest request = ((ServletRequest) this.container.getRequest()).getHttpServletRequest();
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
@@ -280,9 +280,9 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         return null;
     }
 
-    private <T extends Activity> T getActivity(ActivityPubObject object)
+    private <T extends AbstractActivity> T getActivity(ActivityPubObject object)
     {
-        if (Activity.class.isAssignableFrom(object.getClass())) {
+        if (AbstractActivity.class.isAssignableFrom(object.getClass())) {
             return (T) object;
         } else {
             // TODO: handle wrapping object in a create activity
@@ -290,12 +290,12 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         }
     }
 
-    private <T extends Activity> Class<T> getActivityClass(T object)
+    private <T extends AbstractActivity> Class<T> getActivityClass(T object)
     {
         return (Class<T>) object.getClass();
     }
 
-    private <T extends Activity> ActivityHandler<T> getHandler(ActivityRequest<T> activityRequest)
+    private <T extends AbstractActivity> ActivityHandler<T> getHandler(ActivityRequest<T> activityRequest)
     {
         try {
             Type activityHandlerType = new DefaultParameterizedType(null, ActivityHandler.class,

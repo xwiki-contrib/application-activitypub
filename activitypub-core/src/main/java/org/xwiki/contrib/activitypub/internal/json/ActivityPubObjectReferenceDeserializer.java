@@ -36,6 +36,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * A custom Jackson Deserializer to deserialize references {@link ActivityPubObjectReference}.
  * This deserializer looks on the property value and deserialize the object if the value starts with a "{"
  * or else deserialize the value as an URI and set the link of the reference with it.
+ * @version $Id$
  */
 public class ActivityPubObjectReferenceDeserializer extends JsonDeserializer<ActivityPubObjectReference<?>>
 {

@@ -31,12 +31,13 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * Represents an Inbox as defined by ActivityPub.
  *
  * @see <a href="https://www.w3.org/TR/activitypub/#inbox">ActivityPub Inbox definition</a>
+ * @version $Id$
  */
 @JsonDeserialize(as = Inbox.class)
-public class Inbox extends OrderedCollection<Activity>
+public class Inbox extends OrderedCollection<AbstractActivity>
 {
     @JsonIgnore
-    private Map<String, Activity> items;
+    private Map<String, AbstractActivity> items;
 
     @JsonIgnore
     private List<Follow> pendingFollows;
@@ -54,7 +55,7 @@ public class Inbox extends OrderedCollection<Activity>
      * Store an activity.
      * @param activity the activity to be stored.
      */
-    public void addActivity(Activity activity)
+    public void addActivity(AbstractActivity activity)
     {
         if (activity.getId() == null) {
             throw new IllegalArgumentException("The activity ID must not be null.");

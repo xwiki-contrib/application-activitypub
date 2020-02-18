@@ -19,16 +19,33 @@
  */
 package org.xwiki.contrib.activitypub;
 
-import java.io.IOException;
 import java.io.OutputStream;
 
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 
+/**
+ * Define serializing operations for ActivityPub.
+ * @version $Id$
+ */
 @Role
 public interface ActivityPubJsonSerializer
 {
-    <T extends ActivityPubObject> String serialize(T object) throws IOException;
+    /**
+     * Serialize the given {@link ActivityPubObject} (or any inherited type) to a {@link String}.
+     * @param object the object to serialize.
+     * @param <T> the concrete type of the given object.
+     * @return a string representing the serialization of the given object.
+     * @throws ActivityPubException in case any issue occurred during the serialization.
+     */
+    <T extends ActivityPubObject> String serialize(T object) throws ActivityPubException;
 
-    <T extends ActivityPubObject> void serialize(OutputStream stream, T object) throws IOException;
+    /**
+     * Serialize the given {@link ActivityPubObject} (or any inherited type) to the output stream.
+     * @param stream the stream where to output the serialized object.
+     * @param object the object to serialize.
+     * @param <T> the concrete type of the given object.
+     * @throws ActivityPubException in case any issue occurred during the serialization.
+     */
+    <T extends ActivityPubObject> void serialize(OutputStream stream, T object) throws ActivityPubException;
 }

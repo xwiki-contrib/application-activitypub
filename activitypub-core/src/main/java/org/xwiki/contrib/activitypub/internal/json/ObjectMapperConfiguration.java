@@ -25,7 +25,6 @@ import javax.inject.Singleton;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.phase.Initializable;
 import org.xwiki.component.phase.InitializationException;
-import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -37,6 +36,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 
 /**
  * A self defined component to configure a Jackson {@link ObjectMapper} ready to be used in the parser and serializer.
+ * @version $Id$
  */
 @Component(roles = ObjectMapperConfiguration.class)
 @Singleton

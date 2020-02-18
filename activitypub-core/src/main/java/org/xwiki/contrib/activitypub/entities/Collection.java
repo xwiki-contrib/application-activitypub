@@ -30,6 +30,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * Note that it is internally managed by a {@link Set}.
  * @param <T> the type of {@link ActivityPubObject} to store.
  * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-collection">ActivityStream definition</a>
+ * @version $Id$
  */
 @JsonDeserialize(as = Collection.class)
 public class Collection<T extends ActivityPubObject> extends AbstractCollection<T>

@@ -25,6 +25,7 @@ package org.xwiki.contrib.activitypub.entities;
  * @see <a href="https://www.w3.org/TR/activitystreams-core/#collections">ActivityStream explanation
  * about Collections</a>
  * @param <I> the type of item contained in the collection to be able to iterate on them.
+ * @version $Id$
  */
 public abstract class AbstractCollection<I extends ActivityPubObject>
     extends ActivityPubObject

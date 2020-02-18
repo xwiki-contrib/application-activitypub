@@ -38,7 +38,7 @@ import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
-import org.xwiki.contrib.activitypub.entities.Actor;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.observation.AbstractEventListener;
@@ -90,15 +90,15 @@ public class DocumentCreatedEventListener extends AbstractEventListener
         throws URISyntaxException, ActivityPubException
     {
         URI documentId = new URI(xWikiDocument.getURL("view", context));
-        Actor author = this.actorHandler.getActor(xWikiDocument.getAuthorReference());
+        AbstractActor author = this.actorHandler.getActor(xWikiDocument.getAuthorReference());
         Document document = new Document()
             .setId(documentId)
             .setName(xWikiDocument.getTitle())
-            .setAttributedTo(Collections.singletonList(new ActivityPubObjectReference<Actor>().setObject(author)))
+            .setAttributedTo(Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(author)))
             .setPublished(xWikiDocument.getCreationDate());
 
         return new Create()
-            .setActor(new ActivityPubObjectReference<Actor>().setObject(author))
+            .setActor(new ActivityPubObjectReference<AbstractActor>().setObject(author))
             .setObject(new ActivityPubObjectReference<>().setObject(document))
             .setName(String.format("Creation of document [%s]", xWikiDocument.getTitle()))
             .setPublished(xWikiDocument.getCreationDate());

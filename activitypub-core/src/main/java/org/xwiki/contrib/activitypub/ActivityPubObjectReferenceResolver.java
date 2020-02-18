@@ -23,9 +23,21 @@ import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 
+/**
+ * A resolver to automatically retrieve the object associated to a {@link ActivityPubObjectReference}.
+ * @version $Id$
+ */
 @Role
 public interface ActivityPubObjectReferenceResolver
 {
+    /**
+     * Resolve the given reference either by returning its concrete object if the reference is already resolved, or by
+     * loading and parsing the linked entity.
+     * @param reference the reference to resolve.
+     * @param <T> the concrete type of the object pointed by the reference.
+     * @return a real instance of the object pointed by the reference.
+     * @throws ActivityPubException in case any error occurred when loading or parsing the reference.
+     */
     <T extends ActivityPubObject> T resolveReference(ActivityPubObjectReference<T> reference)
         throws ActivityPubException;
 }

@@ -39,7 +39,7 @@ import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
-import org.xwiki.contrib.activitypub.entities.Actor;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Outbox;
@@ -90,7 +90,7 @@ public class DefaultActorHandler implements ActorHandler
     private ActivityPubJsonParser jsonParser;
 
     @Override
-    public Actor getCurrentActor() throws ActivityPubException
+    public AbstractActor getCurrentActor() throws ActivityPubException
     {
         DocumentReference userReference = this.contextProvider.get().getUserReference();
         if (userReference == null) {
@@ -102,7 +102,7 @@ public class DefaultActorHandler implements ActorHandler
     }
 
     @Override
-    public Actor getActor(EntityReference entityReference) throws ActivityPubException
+    public AbstractActor getActor(EntityReference entityReference) throws ActivityPubException
     {
         // TODO: introduce cache mechanism
         try {
@@ -111,7 +111,7 @@ public class DefaultActorHandler implements ActorHandler
             if (userXObject != null) {
                 XWikiUser xWikiUser = new XWikiUser(new DocumentReference(entityReference));
                 String login = xWikiUser.getFullName();
-                Actor actor = this.activityPubStorage.retrieveEntity("actor", login);
+                AbstractActor actor = this.activityPubStorage.retrieveEntity("actor", login);
                 if (actor == null) {
                     String fullname = String.format("%s %s",
                         userXObject.getStringValue("first_name"), userXObject.getStringValue("last_name"));
@@ -127,29 +127,29 @@ public class DefaultActorHandler implements ActorHandler
         }
     }
 
-    private Actor createActor(String fullName, String preferredName) throws ActivityPubException
+    private AbstractActor createActor(String fullName, String preferredName) throws ActivityPubException
     {
-        Actor actor = new Person();
+        AbstractActor actor = new Person();
         actor.setName(fullName);
         actor.setPreferredUsername(preferredName);
 
         Inbox inbox = new Inbox();
-        inbox.setAttributedTo(Collections.singletonList(new ActivityPubObjectReference<Actor>().setObject(actor)));
+        inbox.setAttributedTo(Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(actor)));
         this.activityPubStorage.storeEntity(inbox);
         actor.setInbox(new ActivityPubObjectReference<Inbox>().setObject(inbox));
 
         Outbox outbox = new Outbox();
-        outbox.setAttributedTo(Collections.singletonList(new ActivityPubObjectReference<Actor>().setObject(actor)));
+        outbox.setAttributedTo(Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(actor)));
         this.activityPubStorage.storeEntity(outbox);
         actor.setOutbox(new ActivityPubObjectReference<Outbox>().setObject(outbox));
 
-        OrderedCollection<Actor> following = new OrderedCollection<Actor>();
+        OrderedCollection<AbstractActor> following = new OrderedCollection<AbstractActor>();
         this.activityPubStorage.storeEntity(following);
-        actor.setFollowing(new ActivityPubObjectReference<OrderedCollection<Actor>>().setObject(following));
+        actor.setFollowing(new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(following));
 
-        OrderedCollection<Actor> followers = new OrderedCollection<Actor>();
+        OrderedCollection<AbstractActor> followers = new OrderedCollection<AbstractActor>();
         this.activityPubStorage.storeEntity(followers);
-        actor.setFollowers(new ActivityPubObjectReference<OrderedCollection<Actor>>().setObject(followers));
+        actor.setFollowers(new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(followers));
 
         this.activityPubStorage.storeEntity(actor);
 
@@ -157,7 +157,7 @@ public class DefaultActorHandler implements ActorHandler
     }
 
     @Override
-    public EntityReference getXWikiUserReference(Actor actor)
+    public EntityReference getXWikiUserReference(AbstractActor actor)
     {
         String userName = actor.getPreferredUsername();
         if (isExistingUser(userName)) {
@@ -186,13 +186,13 @@ public class DefaultActorHandler implements ActorHandler
     }
 
     @Override
-    public Actor getLocalActor(String serializedUserReference) throws ActivityPubException
+    public AbstractActor getLocalActor(String serializedUserReference) throws ActivityPubException
     {
         return this.getActor(resolveUser(serializedUserReference));
     }
 
     @Override
-    public Actor getRemoteActor(String actorURL) throws ActivityPubException
+    public AbstractActor getRemoteActor(String actorURL) throws ActivityPubException
     {
         try {
             URI uri = new URI(actorURL);
@@ -206,18 +206,18 @@ public class DefaultActorHandler implements ActorHandler
     }
 
     @Override
-    public Inbox getInbox(Actor actor) throws ActivityPubException
+    public Inbox getInbox(AbstractActor actor) throws ActivityPubException
     {
         Inbox inbox = this.activityPubObjectReferenceResolver.resolveReference(actor.getInbox());
-        inbox.setAttributedTo(Collections.singletonList(new ActivityPubObjectReference<Actor>().setObject(actor)));
+        inbox.setAttributedTo(Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(actor)));
         return inbox;
     }
 
     @Override
-    public Outbox getOutbox(Actor actor) throws ActivityPubException
+    public Outbox getOutbox(AbstractActor actor) throws ActivityPubException
     {
         Outbox outbox = this.activityPubObjectReferenceResolver.resolveReference(actor.getOutbox());
-        outbox.setAttributedTo(Collections.singletonList(new ActivityPubObjectReference<Actor>().setObject(actor)));
+        outbox.setAttributedTo(Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(actor)));
         return outbox;
     }
 }

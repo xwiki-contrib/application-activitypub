@@ -22,11 +22,11 @@ package org.xwiki.contrib.activitypub;
 import java.util.Set;
 
 import org.xwiki.component.annotation.Role;
-import org.xwiki.contrib.activitypub.entities.Activity;
+import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.model.reference.EntityReference;
 
 @Role
 public interface ActivityPubNotifier
 {
-    <T extends Activity> void notify(T activity, Set<EntityReference> targets);
+    <T extends AbstractActivity> void notify(T activity, Set<EntityReference> targets);
 }

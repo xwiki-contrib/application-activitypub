@@ -25,13 +25,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.junit.jupiter.api.Test;
+import org.xwiki.contrib.activitypub.ActivityPubException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PersonTest extends AbstractEntityTest
 {
     @Test
-    public void serializePerson1() throws URISyntaxException, IOException
+    public void serializePerson1() throws URISyntaxException, IOException, ActivityPubException
     {
         Person person = new Person()
             .setPreferredUsername("Foo bar")
@@ -43,7 +44,7 @@ public class PersonTest extends AbstractEntityTest
     }
 
     @Test
-    public void parsePerson1() throws FileNotFoundException, URISyntaxException
+    public void parsePerson1() throws FileNotFoundException, URISyntaxException, ActivityPubException
     {
         Person person = new Person()
             .setPreferredUsername("Foo bar")
@@ -54,7 +55,7 @@ public class PersonTest extends AbstractEntityTest
         Person obtainedPerson = this.parser.parse(personJson, Person.class);
         assertEquals(person, obtainedPerson);
 
-        Actor obtainedActor = this.parser.parse(personJson, Actor.class);
+        AbstractActor obtainedActor = this.parser.parse(personJson, AbstractActor.class);
         assertEquals(person, obtainedActor);
 
         obtainedPerson = this.parser.parse(personJson);
@@ -62,21 +63,17 @@ public class PersonTest extends AbstractEntityTest
     }
 
     @Test
-    public void parsePerson2() throws URISyntaxException, IOException
+    public void parsePerson2() throws URISyntaxException, IOException, ActivityPubException
     {
         Person person = new Person()
             .setPreferredUsername("alyssa")
             .setInbox(new ActivityPubObjectReference<Inbox>()
-                .setLink(true)
                 .setLink(new URI("https://social.example/alyssa/inbox/")))
             .setOutbox(new ActivityPubObjectReference<Outbox>()
-                .setLink(true)
                 .setLink(new URI("https://social.example/alyssa/outbox/")))
-            .setFollowers(new ActivityPubObjectReference<OrderedCollection<Actor>>()
-                .setLink(true)
+            .setFollowers(new ActivityPubObjectReference<OrderedCollection<AbstractActor>>()
                 .setLink(new URI("https://social.example/alyssa/followers/")))
-            .setFollowing(new ActivityPubObjectReference<OrderedCollection<Actor>>()
-                .setLink(true)
+            .setFollowing(new ActivityPubObjectReference<OrderedCollection<AbstractActor>>()
                 .setLink(new URI("https://social.example/alyssa/following/")))
             .setId(new URI("https://social.example/alyssa/"))
             .setName("Alyssa P. Hacker")
@@ -86,7 +83,7 @@ public class PersonTest extends AbstractEntityTest
         Person obtainedPerson = this.parser.parse(personJson, Person.class);
         assertEquals(person, obtainedPerson);
 
-        Actor obtainedActor = this.parser.parse(personJson, Actor.class);
+        AbstractActor obtainedActor = this.parser.parse(personJson, AbstractActor.class);
         assertEquals(person, obtainedActor);
 
         obtainedPerson = this.parser.parse(personJson);

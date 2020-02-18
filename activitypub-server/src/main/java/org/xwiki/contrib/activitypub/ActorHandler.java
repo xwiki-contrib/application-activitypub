@@ -20,7 +20,7 @@
 package org.xwiki.contrib.activitypub;
 
 import org.xwiki.component.annotation.Role;
-import org.xwiki.contrib.activitypub.entities.Actor;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.model.reference.EntityReference;
@@ -28,19 +28,19 @@ import org.xwiki.model.reference.EntityReference;
 @Role
 public interface ActorHandler
 {
-    Actor getCurrentActor() throws ActivityPubException;
+    AbstractActor getCurrentActor() throws ActivityPubException;
 
-    Actor getActor(EntityReference entityReference) throws ActivityPubException;
+    AbstractActor getActor(EntityReference entityReference) throws ActivityPubException;
 
-    EntityReference getXWikiUserReference(Actor actor);
+    EntityReference getXWikiUserReference(AbstractActor actor);
 
-    Actor getLocalActor(String serializedUserReference) throws ActivityPubException;
+    AbstractActor getLocalActor(String serializedUserReference) throws ActivityPubException;
 
-    Actor getRemoteActor(String actorURL) throws ActivityPubException;
+    AbstractActor getRemoteActor(String actorURL) throws ActivityPubException;
 
-    Inbox getInbox(Actor actor) throws ActivityPubException;
+    Inbox getInbox(AbstractActor actor) throws ActivityPubException;
 
-    Outbox getOutbox(Actor actor) throws ActivityPubException;
+    Outbox getOutbox(AbstractActor actor) throws ActivityPubException;
 
     boolean isExistingUser(String serializedUserReference);
 }

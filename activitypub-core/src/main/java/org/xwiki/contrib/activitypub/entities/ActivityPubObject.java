@@ -37,6 +37,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * Only {@link #getType()} and {@link #setType(String)} are a bit special since they don't rely on stored information.
  *
  * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-object">ActivityStream Object definition</a>.
+ * @version $Id$
  */
 @JsonDeserialize(using = ActivityPubObjectDeserializer.class)
 public class ActivityPubObject extends JSONLDObjects
@@ -45,9 +46,9 @@ public class ActivityPubObject extends JSONLDObjects
     private String name;
     private Date published;
     private String summary;
-    private List<ActivityPubObjectReference<Actor>> to;
+    private List<ActivityPubObjectReference<AbstractActor>> to;
     private String content;
-    private List<ActivityPubObjectReference<Actor>> attributedTo;
+    private List<ActivityPubObjectReference<AbstractActor>> attributedTo;
 
     /**
      * The type is not stored as a property but instead we rely on the class name to return it.
@@ -178,7 +179,7 @@ public class ActivityPubObject extends JSONLDObjects
      * @return the references of the actors the object is targeted to.
      * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-to">ActivityStream definition</a>
      */
-    public List<ActivityPubObjectReference<Actor>> getTo()
+    public List<ActivityPubObjectReference<AbstractActor>> getTo()
     {
         return to;
     }
@@ -189,7 +190,7 @@ public class ActivityPubObject extends JSONLDObjects
      * @return the current object for fluent API.
      * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-to">ActivityStream definition</a>
      */
-    public <T extends ActivityPubObject> T setTo(List<ActivityPubObjectReference<Actor>> to)
+    public <T extends ActivityPubObject> T setTo(List<ActivityPubObjectReference<AbstractActor>> to)
     {
         this.to = to;
         return (T) this;
@@ -199,7 +200,7 @@ public class ActivityPubObject extends JSONLDObjects
      * @return the list of references of the actors the object is attributed to.
      * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-attributedto">ActivityStream definition</a>
      */
-    public List<ActivityPubObjectReference<Actor>> getAttributedTo()
+    public List<ActivityPubObjectReference<AbstractActor>> getAttributedTo()
     {
         return attributedTo;
     }
@@ -210,7 +211,7 @@ public class ActivityPubObject extends JSONLDObjects
      * @return the current object for fluent API.
      * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-attributedto">ActivityStream definition</a>
      */
-    public <T extends ActivityPubObject> T setAttributedTo(List<ActivityPubObjectReference<Actor>> attributedTo)
+    public <T extends ActivityPubObject> T setAttributedTo(List<ActivityPubObjectReference<AbstractActor>> attributedTo)
     {
         this.attributedTo = attributedTo;
         return (T) this;
@@ -226,13 +227,13 @@ public class ActivityPubObject extends JSONLDObjects
             return false;
         }
         ActivityPubObject object = (ActivityPubObject) o;
-        return Objects.equals(id, object.id) &&
-            Objects.equals(name, object.name) &&
-            Objects.equals(published, object.published) &&
-            Objects.equals(summary, object.summary) &&
-            Objects.equals(to, object.to) &&
-            Objects.equals(content, object.content) &&
-            Objects.equals(attributedTo, object.attributedTo);
+        return Objects.equals(id, object.id)
+            && Objects.equals(name, object.name)
+            && Objects.equals(published, object.published)
+            && Objects.equals(summary, object.summary)
+            && Objects.equals(to, object.to)
+            && Objects.equals(content, object.content)
+            && Objects.equals(attributedTo, object.attributedTo);
     }
 
     @Override

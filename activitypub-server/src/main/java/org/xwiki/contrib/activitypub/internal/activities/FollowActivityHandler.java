@@ -30,7 +30,7 @@ import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
-import org.xwiki.contrib.activitypub.entities.Actor;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 
@@ -47,8 +47,8 @@ public class FollowActivityHandler extends AbstractActivityHandler implements Ac
                 "The ID of the activity must not be null.");
         }
         ActivityPubObject followedObject = this.activityPubObjectReferenceResolver.resolveReference(follow.getObject());
-        if (followedObject instanceof Actor) {
-            Actor followedActor = (Actor) followedObject;
+        if (followedObject instanceof AbstractActor) {
+            AbstractActor followedActor = (AbstractActor) followedObject;
             Inbox actorInbox = this.actorHandler.getInbox(followedActor);
             actorInbox.addPendingFollow(follow);
             actorInbox.addActivity(follow);
@@ -72,8 +72,8 @@ public class FollowActivityHandler extends AbstractActivityHandler implements Ac
             this.activityPubStorage.storeEntity(follow);
         }
         ActivityPubObject followedObject = this.activityPubObjectReferenceResolver.resolveReference(follow.getObject());
-        if (followedObject instanceof Actor) {
-            Actor followedActor = (Actor) followedObject;
+        if (followedObject instanceof AbstractActor) {
+            AbstractActor followedActor = (AbstractActor) followedObject;
             Inbox actorInbox = this.actorHandler.getInbox(followedActor);
             actorInbox.addPendingFollow(follow);
             actorInbox.addActivity(follow);

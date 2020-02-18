@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * Represents a Note as defined by ActivityStream.
  *
  * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-note">ActivityStream Note definition</a>
+ * @version $Id$
  */
 @JsonDeserialize(as = Note.class)
 public class Note extends ActivityPubObject

@@ -24,13 +24,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.junit.jupiter.api.Test;
+import org.xwiki.contrib.activitypub.ActivityPubException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class InboxTest extends AbstractEntityTest
 {
     @Test
-    public void serialization() throws URISyntaxException, IOException
+    public void serialization() throws URISyntaxException, IOException, ActivityPubException
     {
         Inbox inbox = new Inbox()
             .setId(new URI("http://localhost:8080/xwiki/activitypub/Inbox/XWiki.Foo-inbox"));
@@ -40,7 +41,7 @@ public class InboxTest extends AbstractEntityTest
     }
 
     @Test
-    public void parsing() throws URISyntaxException, IOException
+    public void parsing() throws URISyntaxException, IOException, ActivityPubException
     {
         Inbox expectedInbox = new Inbox()
             .setId(new URI("http://localhost:8080/xwiki/activitypub/Inbox/XWiki.Foo-inbox"));

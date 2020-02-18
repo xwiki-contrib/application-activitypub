@@ -31,7 +31,7 @@ import org.xwiki.contrib.activitypub.ActivityPubNotifier;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActorHandler;
-import org.xwiki.contrib.activitypub.entities.Activity;
+import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
 
 public abstract class AbstractActivityHandler
@@ -61,7 +61,7 @@ public abstract class AbstractActivityHandler
         this.httpClient = new HttpClient();
     }
 
-    protected void answer(HttpServletResponse response, int statusCode, Activity activity) throws IOException
+    protected void answer(HttpServletResponse response, int statusCode, AbstractActivity activity) throws IOException
     {
         if (response != null) {
             response.setStatus(statusCode);

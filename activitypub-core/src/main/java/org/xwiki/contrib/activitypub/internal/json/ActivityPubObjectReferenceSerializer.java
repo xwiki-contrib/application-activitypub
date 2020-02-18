@@ -48,6 +48,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
  * when no ID is found for the object to serialize.
  * The idea here is to avoid serializing big JSON and to avoid having to deal with self-referenced objects by only
  * serializing the references.
+ * @version $Id$
  */
 @Component(roles = ActivityPubObjectReferenceSerializer.class)
 @Singleton

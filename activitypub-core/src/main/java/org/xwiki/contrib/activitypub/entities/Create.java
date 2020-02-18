@@ -24,8 +24,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 /**
  * Represents a Create activity as defined by ActivityStream.
  * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-create">ActivityStream Create definition</a>
+ * @version $Id$
  */
 @JsonDeserialize(as = Create.class)
-public class Create extends Activity
+public class Create extends AbstractActivity
 {
 }

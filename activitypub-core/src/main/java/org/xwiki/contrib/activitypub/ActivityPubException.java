@@ -21,6 +21,7 @@ package org.xwiki.contrib.activitypub;
 
 /**
  * Default exception type for ActivityPub application.
+ * @version $Id$
  */
 public class ActivityPubException extends Exception
 {

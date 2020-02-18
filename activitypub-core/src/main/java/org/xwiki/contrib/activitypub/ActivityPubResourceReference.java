@@ -23,7 +23,9 @@ import org.xwiki.resource.AbstractResourceReference;
 import org.xwiki.resource.ResourceType;
 
 /**
- * A resource reference to be able to identify and retrieve any activity pub entity.
+ * A resource reference to be able to identify and retrieve any stored ActivityPub entity.
+ * This is tightly related to {@link ActivityPubStorage}.
+ * @version $Id$
  */
 public class ActivityPubResourceReference extends AbstractResourceReference
 {
@@ -35,6 +37,11 @@ public class ActivityPubResourceReference extends AbstractResourceReference
     private String entityType;
     private String uuid;
 
+    /**
+     * Default constructor.
+     * @param entityType the type of the entity (e.g. Create, Note, etc)
+     * @param uuid the identifier as returned by {@link ActivityPubStorage}
+     */
     public ActivityPubResourceReference(String entityType, String uuid)
     {
         setType(TYPE);
@@ -42,11 +49,17 @@ public class ActivityPubResourceReference extends AbstractResourceReference
         this.uuid = uuid;
     }
 
+    /**
+     * @return the entity type.
+     */
     public String getEntityType()
     {
         return entityType;
     }
 
+    /**
+     * @return the unique identifier of the object in the storage.
+     */
     public String getUuid()
     {
         return uuid;

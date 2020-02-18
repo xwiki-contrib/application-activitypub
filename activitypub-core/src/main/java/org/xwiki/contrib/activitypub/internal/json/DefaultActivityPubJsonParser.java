@@ -28,6 +28,7 @@ import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 
@@ -36,11 +37,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 /**
  * Default implementation of {@link ActivityPubJsonParser}.
  * This implementation directly use {@link ObjectMapperConfiguration}.
+ * @version $Id$
  */
 @Component
 @Singleton
 public class DefaultActivityPubJsonParser implements ActivityPubJsonParser
 {
+    private static final String ERROR_MSG = "Error while parsing request with type [%s].";
     @Inject
     private ObjectMapperConfiguration objectMapperConfiguration;
     
@@ -48,53 +51,51 @@ public class DefaultActivityPubJsonParser implements ActivityPubJsonParser
     private Logger logger;
 
     @Override
-    public <T extends ActivityPubObject> T parse(String requestBody)
+    public <T extends ActivityPubObject> T parse(String requestBody) throws ActivityPubException
     {
         return (T) parse(requestBody, ActivityPubObject.class);
     }
 
     @Override
-    public <T extends ActivityPubObject> T parse(String requestBody, Class<T> type)
+    public <T extends ActivityPubObject> T parse(String requestBody, Class<T> type) throws ActivityPubException
     {
         try {
             return this.objectMapperConfiguration.getObjectMapper().readValue(requestBody, type);
         } catch (JsonProcessingException e) {
-            this.logger.error("Error while parsing request with type [{}].", type, e);
-            return null;
+            throw new ActivityPubException(String.format(ERROR_MSG, type), e);
         }
     }
 
     @Override
-    public <T extends ActivityPubObject> T parse(Reader requestBodyReader)
+    public <T extends ActivityPubObject> T parse(Reader requestBodyReader) throws ActivityPubException
     {
         return (T) parse(requestBodyReader, ActivityPubObject.class);
     }
 
     @Override
-    public <T extends ActivityPubObject> T parse(Reader requestBodyReader, Class<T> type)
+    public <T extends ActivityPubObject> T parse(Reader requestBodyReader, Class<T> type) throws ActivityPubException
     {
         try {
             return this.objectMapperConfiguration.getObjectMapper().readValue(requestBodyReader, type);
         } catch (IOException e) {
-            this.logger.error("Error while parsing request with type [{}].", type, e);
-            return null;
+            throw new ActivityPubException(String.format(ERROR_MSG, type), e);
         }
     }
 
     @Override
-    public <T extends ActivityPubObject> T parse(InputStream requestBodyInputStream)
+    public <T extends ActivityPubObject> T parse(InputStream requestBodyInputStream) throws ActivityPubException
     {
         return (T) parse(requestBodyInputStream, ActivityPubObject.class);
     }
 
     @Override
     public <T extends ActivityPubObject> T parse(InputStream requestBodyInputStream, Class<T> type)
+        throws ActivityPubException
     {
         try {
             return this.objectMapperConfiguration.getObjectMapper().readValue(requestBodyInputStream, type);
         } catch (IOException e) {
-            this.logger.error("Error while parsing request with type [{}].", type, e);
-            return null;
+            throw new ActivityPubException(String.format(ERROR_MSG, type), e);
         }
     }
 }

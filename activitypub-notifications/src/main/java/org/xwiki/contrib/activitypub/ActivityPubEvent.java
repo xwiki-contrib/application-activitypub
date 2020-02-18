@@ -21,11 +21,11 @@ package org.xwiki.contrib.activitypub;
 
 import java.util.Set;
 
-import org.xwiki.contrib.activitypub.entities.Activity;
+import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.eventstream.RecordableEvent;
 import org.xwiki.eventstream.TargetableEvent;
 
-public class ActivityPubEvent<T extends Activity> implements RecordableEvent, TargetableEvent
+public class ActivityPubEvent<T extends AbstractActivity> implements RecordableEvent, TargetableEvent
 {
     private Set<String> target;
     private T activity;
