@@ -29,6 +29,7 @@ import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.eventstream.Event;
@@ -65,7 +66,12 @@ public class ActivityPubNotificationDisplayer implements NotificationDisplayer
         List<Block> result = new ArrayList<>();
         for (Event event : events) {
             if (event.getParameters().containsKey("activity")) {
-                AbstractActivity activity = this.getActivity(event);
+                AbstractActivity activity = null;
+                try {
+                    activity = this.getActivity(event);
+                } catch (ActivityPubException e) {
+                    throw new NotificationException("Error while getting the activity of an event", e);
+                }
                 result.add(activityPubActivityNotificationDisplayer.displayActivityNotification(event, activity));
             } else {
                 this.logger.error("The event [{}] cannot be processed.", event);
@@ -74,7 +80,7 @@ public class ActivityPubNotificationDisplayer implements NotificationDisplayer
         return result;
     }
 
-    private AbstractActivity getActivity(Event event)
+    private AbstractActivity getActivity(Event event) throws ActivityPubException
     {
         String activity = event.getParameters().get("activity");
         return this.activityPubJsonParser.parse(activity);

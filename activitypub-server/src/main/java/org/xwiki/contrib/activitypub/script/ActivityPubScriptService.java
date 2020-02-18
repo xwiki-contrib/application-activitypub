@@ -75,7 +75,7 @@ public class ActivityPubScriptService implements ScriptService
             HttpMethod httpMethod = this.activityPubClient.postInbox(remoteActor, follow);
             this.activityPubClient.checkAnswer(httpMethod);
             result = true;
-        } catch (ActivityPubException | IOException e) {
+        } catch (ActivityPubException e) {
             this.logger.error("Error while trying to send a follow request to [{}].", profileURL, e);
         }
 

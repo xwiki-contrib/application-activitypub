@@ -121,10 +121,9 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         ActivityPubResourceReference resourceReference = (ActivityPubResourceReference) reference;
         HttpServletRequest request = ((ServletRequest) this.container.getRequest()).getHttpServletRequest();
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
-        ActivityPubObject entity = this.activityPubStorage
-            .retrieveEntity(resourceReference.getEntityType(), resourceReference.getUuid());
-
         try {
+            ActivityPubObject entity = this.activityPubStorage
+                .retrieveEntity(resourceReference.getEntityType(), resourceReference.getUuid());
             if ("POST".equalsIgnoreCase(request.getMethod())) {
                 if (entity != null && !((entity instanceof Inbox) || (entity instanceof Outbox))) {
                     this.sendErrorResponse(HttpServletResponse.SC_BAD_REQUEST,
@@ -201,7 +200,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
                             .getBytes(StandardCharsets.UTF_8));
                 }
             }
-        } catch (IOException e) {
+        } catch (ActivityPubException | IOException e) {
             throw
                 new ResourceReferenceHandlerException(String.format("Error while handling [%s]", resourceReference), e);
         }
@@ -262,22 +261,15 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
     }
 
     private <T extends AbstractActivity> ActivityRequest<T> parseRequest(AbstractActor actor)
+        throws IOException, ActivityPubException
     {
         HttpServletRequest request = ((ServletRequest) this.container.getRequest()).getHttpServletRequest();
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
-        try {
-            String requestBody = IOUtils.toString(request.getReader());
-            ActivityPubObject object = this.activityPubJsonParser.parse(requestBody);
-            if (object != null) {
-                T activity = getActivity(object);
-                return new ActivityRequest<T>(actor, activity, request, response);
-            } else {
-                this.logger.warn("Parsing of ActivityPub request body returned a null object.");
-            }
-        } catch (IOException e) {
-            this.logger.error("Error while getting body from current request.", e);
-        }
-        return null;
+
+        String requestBody = IOUtils.toString(request.getReader());
+        ActivityPubObject object = this.activityPubJsonParser.parse(requestBody);
+        T activity = getActivity(object);
+        return new ActivityRequest<T>(actor, activity, request, response);
     }
 
     private <T extends AbstractActivity> T getActivity(ActivityPubObject object)

@@ -30,11 +30,11 @@ import org.xwiki.contrib.activitypub.entities.AbstractActor;
 @Role
 public interface ActivityPubClient
 {
-    HttpMethod postInbox(AbstractActor actor, AbstractActivity activity) throws IOException;
+    HttpMethod postInbox(AbstractActor actor, AbstractActivity activity) throws ActivityPubException;
 
-    HttpMethod postOutbox(AbstractActor actor, AbstractActivity activity) throws IOException;
+    HttpMethod postOutbox(AbstractActor actor, AbstractActivity activity) throws ActivityPubException;
 
-    HttpMethod post(URI uri, AbstractActivity activity) throws IOException;
+    HttpMethod post(URI uri, AbstractActivity activity) throws ActivityPubException;
 
     HttpMethod get(URI uri) throws IOException;
 

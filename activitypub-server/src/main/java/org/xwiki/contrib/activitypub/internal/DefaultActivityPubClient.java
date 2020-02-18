@@ -56,13 +56,13 @@ public class DefaultActivityPubClient implements ActivityPubClient
     }
 
     @Override
-    public HttpMethod postInbox(AbstractActor actor, AbstractActivity activity) throws IOException
+    public HttpMethod postInbox(AbstractActor actor, AbstractActivity activity) throws ActivityPubException
     {
         return post(getURIFromObjectReference(actor.getInbox()), activity);
     }
 
     @Override
-    public HttpMethod postOutbox(AbstractActor actor, AbstractActivity activity) throws IOException
+    public HttpMethod postOutbox(AbstractActor actor, AbstractActivity activity) throws ActivityPubException
     {
         return post(getURIFromObjectReference(actor.getOutbox()), activity);
     }
@@ -77,15 +77,19 @@ public class DefaultActivityPubClient implements ActivityPubClient
     }
 
     @Override
-    public HttpMethod post(URI uri, AbstractActivity activity) throws IOException
+    public HttpMethod post(URI uri, AbstractActivity activity) throws ActivityPubException
     {
-        RequestEntity bodyRequest = new StringRequestEntity(this.activityPubJsonSerializer.serialize(activity),
-            "application/activity+json",
-            "UTF-8");
-        PostMethod postMethod = new PostMethod(uri.toASCIIString());
-        postMethod.setRequestEntity(bodyRequest);
-        this.httpClient.executeMethod(postMethod);
-        return postMethod;
+        try {
+            RequestEntity bodyRequest = new StringRequestEntity(this.activityPubJsonSerializer.serialize(activity),
+                "application/activity+json",
+                "UTF-8");
+            PostMethod postMethod = new PostMethod(uri.toASCIIString());
+            postMethod.setRequestEntity(bodyRequest);
+            this.httpClient.executeMethod(postMethod);
+            return postMethod;
+        } catch (IOException e) {
+            throw new ActivityPubException(String.format("Error when getting entity from [%s]", uri), e);
+        }
     }
 
     @Override
