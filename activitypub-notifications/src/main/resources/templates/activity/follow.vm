@@ -32,7 +32,7 @@
   #elseif(!$activity.rejected)
     #set ($summary = "$username wants to follow you.")
   #end
-  <div class="activity-summary">$activity.actor.object.preferredusername wants to follow you</div>
+  <div class="activity-summary">$summary</div>
   #if (!$activity.accepted && !$activity.rejected)
   <div class="action">
     <input type="hidden" name="follow-id" value="$activity.id" />

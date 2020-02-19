@@ -82,7 +82,7 @@ public interface ActorHandler
      * @throws ActivityPubException in case of problem when resolving the inbox reference.
      */
     Inbox getInbox(AbstractActor actor) throws ActivityPubException;
-    
+
     Outbox getOutbox(AbstractActor actor) throws ActivityPubException;
 
     boolean isExistingUser(String serializedUserReference);
