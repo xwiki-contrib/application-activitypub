@@ -25,20 +25,18 @@
 <div class="notification-description">
   #set ($actor = $services.activitypub.resolve($activity.actor))
   #set ($username = $actor.preferredUsername)
+  #set ($object = $services.activitypub.resolve($activity.object))
+  #if ($object.type == "Document")
+      #define($summary)
+          $username created the document <a href="$object.id">$object.name</a>.
+      #end
+  #else
+      #define($summary)
+          $username created <a href="$object.id">$object.name</a>.
+      #end
+  #end
   <div class="activity-type">$activity.type</div>
-  #if ($activity.accepted)
-    #set ($summary = "$username is now following you.")
-  #elseif(!$activity.rejected)
-    #set ($summary = "$username wants to follow you.")
-  #end
   <div class="activity-summary">$summary</div>
-  #if (!$activity.accepted && !$activity.rejected)
-  <div class="action">
-    <input type="hidden" name="follow-id" value="$activity.id" />
-    <input type="button" name="follow-answer" id="$activity.id" value="Accept" class="btn-primary" />
-    <input type="button" name="follow-answer" id="$activity.id" value="Reject" class="btn-primary" />
-  </div>
-  #end
   <div><small class="text-muted">$escapetool.xml($services.date.displayTimeAgo($event.date))</small></div>
 </div>
 #end

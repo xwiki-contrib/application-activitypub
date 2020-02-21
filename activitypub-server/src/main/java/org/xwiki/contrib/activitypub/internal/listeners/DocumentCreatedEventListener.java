@@ -35,12 +35,14 @@ import org.xwiki.bridge.event.DocumentCreatedEvent;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Document;
+import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.Event;
 
@@ -56,6 +58,9 @@ public class DocumentCreatedEventListener extends AbstractEventListener
 
     @Inject
     private ActorHandler actorHandler;
+
+    @Inject
+    private ActivityPubObjectReferenceResolver objectReferenceResolver;
 
     @Inject
     private Logger logger;
@@ -76,21 +81,27 @@ public class DocumentCreatedEventListener extends AbstractEventListener
         XWikiContext context = (XWikiContext) data;
 
         try {
-            Create createActivity = getActivity(document, context);
-            ActivityRequest<Create> activityRequest = new ActivityRequest<>(createActivity.getActor().getObject(),
-                createActivity);
-            this.createActivityHandler.handleOutboxRequest(activityRequest);
+            AbstractActor author = this.actorHandler.getActor(document.getAuthorReference());
+            OrderedCollection<AbstractActor> followers =
+                this.objectReferenceResolver.resolveReference(author.getFollowers());
+
+            if (!followers.isEmpty()) {
+                Create createActivity = getActivity(author, document, context);
+                ActivityRequest<Create> activityRequest = new ActivityRequest<>(createActivity.getActor().getObject(),
+                    createActivity);
+                this.createActivityHandler.handleOutboxRequest(activityRequest);
+            }
         } catch (URISyntaxException | ActivityPubException | IOException e) {
             this.logger.error("Error while trying to handle DocumentCreatedEvent for document [{}]",
                 document.getDocumentReference(), e);
         }
     }
 
-    private Create getActivity(XWikiDocument xWikiDocument, XWikiContext context)
+    private Create getActivity(AbstractActor author, XWikiDocument xWikiDocument, XWikiContext context)
         throws URISyntaxException, ActivityPubException
     {
         URI documentId = new URI(xWikiDocument.getURL("view", context));
-        AbstractActor author = this.actorHandler.getActor(xWikiDocument.getAuthorReference());
+
         Document document = new Document()
             .setId(documentId)
             .setName(xWikiDocument.getTitle())

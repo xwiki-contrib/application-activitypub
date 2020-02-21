@@ -19,6 +19,8 @@
  */
 package org.xwiki.contrib.activitypub.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * Abstract type to represent ordered and unordered collection as defined by ActivityStream.
  *
@@ -45,4 +47,13 @@ public abstract class AbstractCollection<I extends ActivityPubObject>
      * @return the current collection.
      */
     public abstract <T extends AbstractCollection<I>> T addItem(I item);
+
+    /**
+     * @return {@code true} if {@link #getTotalItems()} equals 0.
+     */
+    @JsonIgnore
+    public boolean isEmpty()
+    {
+        return getTotalItems() == 0;
+    }
 }
