@@ -33,6 +33,12 @@ import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.observation.ObservationManager;
 
+/**
+ * Default implementation of the notifier: basically it creates an {@link ActivityPubEvent} and send it to the
+ * {@link ObservationManager}.
+ *
+ * @version $Id$
+ */
 @Component
 @Singleton
 public class DefaultActivityPubNotifier implements ActivityPubNotifier

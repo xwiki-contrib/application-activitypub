@@ -25,7 +25,7 @@ import java.nio.charset.StandardCharsets;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.HttpClient;
+import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
 import org.xwiki.contrib.activitypub.ActivityPubException;
@@ -36,7 +36,13 @@ import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
 
-public abstract class AbstractActivityHandler
+/**
+ * Abstract handler for all {@link ActivityHandler}.
+ *
+ * @param <T> the type of activity to handle.
+ * @version $Id$
+ */
+public abstract class AbstractActivityHandler<T extends AbstractActivity> implements ActivityHandler<T>
 {
     @Inject
     protected ActivityPubJsonSerializer activityPubJsonSerializer;
@@ -59,13 +65,14 @@ public abstract class AbstractActivityHandler
     @Inject
     protected ActivityPubConfiguration activityPubConfiguration;
 
-    protected HttpClient httpClient;
-
-    public AbstractActivityHandler()
-    {
-        this.httpClient = new HttpClient();
-    }
-
+    /**
+     * Answer with an activity in the response body: generally used for 2xx answers.
+     * @param response the servlet used to answer.
+     * @param statusCode the code of the response.
+     * @param activity the activity to serialize in the body of the response.
+     * @throws ActivityPubException in case of problem during the serialization.
+     * @throws IOException in case of problem in the HTTP answer.
+     */
     protected void answer(HttpServletResponse response, int statusCode, AbstractActivity activity)
         throws ActivityPubException, IOException
     {
@@ -76,6 +83,13 @@ public abstract class AbstractActivityHandler
         }
     }
 
+    /**
+     * Answer with an error message.
+     * @param response the servlet used to answer.
+     * @param statusCode the code of the response.
+     * @param error the error message to put in the response body (in text/plain).
+     * @throws IOException in case of problem in the HTTP answer.
+     */
     protected void answerError(HttpServletResponse response, int statusCode, String error) throws IOException
     {
         if (response != null) {

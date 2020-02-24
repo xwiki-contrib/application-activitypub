@@ -26,11 +26,13 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import javax.script.ScriptContext;
 
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
+import org.xwiki.contrib.activitypub.ActivityPubNotifier;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.eventstream.Event;
 import org.xwiki.notifications.CompositeEvent;
@@ -38,20 +40,31 @@ import org.xwiki.notifications.NotificationException;
 import org.xwiki.notifications.notifiers.NotificationDisplayer;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.GroupBlock;
+import org.xwiki.script.ScriptContextManager;
+import org.xwiki.template.Template;
+import org.xwiki.template.TemplateManager;
+
+import static org.xwiki.contrib.activitypub.internal.ActivityPubRecordableEventConverter.ACTIVITY_PARAMETER_KEY;
 
 @Component
 @Singleton
-@Named("activitypub")
+@Named(ActivityPubNotifier.EVENT_TYPE)
 public class ActivityPubNotificationDisplayer implements NotificationDisplayer
 {
+    private static final String EVENT_BINDING_NAME = "event";
+    private static final String ACTIVITY_BINDING_NAME = "activity";
+
     @Inject
     private Logger logger;
 
     @Inject
-    private ActivityPubActivityNotificationDisplayer activityPubActivityNotificationDisplayer;
+    private ActivityPubJsonParser activityPubJsonParser;
 
     @Inject
-    private ActivityPubJsonParser activityPubJsonParser;
+    private TemplateManager templateManager;
+
+    @Inject
+    private ScriptContextManager scriptContextManager;
 
     @Override
     public Block renderNotification(CompositeEvent compositeEvent) throws NotificationException
@@ -65,14 +78,14 @@ public class ActivityPubNotificationDisplayer implements NotificationDisplayer
     {
         List<Block> result = new ArrayList<>();
         for (Event event : events) {
-            if (event.getParameters().containsKey("activity")) {
+            if (event.getParameters().containsKey(ACTIVITY_PARAMETER_KEY)) {
                 AbstractActivity activity = null;
                 try {
                     activity = this.getActivity(event);
                 } catch (ActivityPubException e) {
                     throw new NotificationException("Error while getting the activity of an event", e);
                 }
-                result.add(activityPubActivityNotificationDisplayer.displayActivityNotification(event, activity));
+                result.add(this.displayActivityNotification(event, activity));
             } else {
                 this.logger.error("The event [{}] cannot be processed.", event);
             }
@@ -82,13 +95,35 @@ public class ActivityPubNotificationDisplayer implements NotificationDisplayer
 
     private AbstractActivity getActivity(Event event) throws ActivityPubException
     {
-        String activity = event.getParameters().get("activity");
+        String activity = event.getParameters().get(ACTIVITY_PARAMETER_KEY);
         return this.activityPubJsonParser.parse(activity);
+    }
+
+    private Block displayActivityNotification(Event event, AbstractActivity activity)
+        throws NotificationException
+    {
+        ScriptContext scriptContext = scriptContextManager.getScriptContext();
+        try {
+            scriptContext.setAttribute(EVENT_BINDING_NAME, event, ScriptContext.ENGINE_SCOPE);
+            scriptContext.setAttribute(ACTIVITY_BINDING_NAME, activity, ScriptContext.ENGINE_SCOPE);
+
+            String templateName = String.format("activity/%s.vm", activity.getType().toLowerCase());
+            Template template = templateManager.getTemplate(templateName);
+
+            return (template != null) ? templateManager.execute(template)
+                : templateManager.execute("activity/activity.vm");
+
+        } catch (Exception e) {
+            throw new NotificationException("Failed to render the notification.", e);
+        } finally {
+            scriptContext.removeAttribute(EVENT_BINDING_NAME, ScriptContext.ENGINE_SCOPE);
+            scriptContext.removeAttribute(ACTIVITY_BINDING_NAME, ScriptContext.ENGINE_SCOPE);
+        }
     }
 
     @Override
     public List<String> getSupportedEvents()
     {
-        return Arrays.asList("activitypub");
+        return Arrays.asList(ActivityPubNotifier.EVENT_TYPE);
     }
 }

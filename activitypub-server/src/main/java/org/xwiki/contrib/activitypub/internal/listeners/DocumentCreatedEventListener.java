@@ -36,6 +36,7 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
+import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
@@ -43,18 +44,30 @@ import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.Event;
+import org.xwiki.security.authorization.AuthorizationManager;
+import org.xwiki.security.authorization.Right;
 
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
+import com.xpn.xwiki.user.api.XWikiRightService;
 
+/**
+ * Listen for {@link DocumentCreatedEvent} and notify the followers of the creator with ActivityPub protocol.
+ *
+ * @version $Id$
+ */
 @Component
 @Singleton
 @Named("ActivityPubDocumentCreatedEventListener")
 public class DocumentCreatedEventListener extends AbstractEventListener
 {
     private static final List<Event> EVENTS = Arrays.asList(new DocumentCreatedEvent());
+
+    private static final DocumentReference GUEST_USER =
+        new DocumentReference("xwiki", "XWiki", XWikiRightService.GUEST_USER);
 
     @Inject
     private ActorHandler actorHandler;
@@ -63,11 +76,20 @@ public class DocumentCreatedEventListener extends AbstractEventListener
     private ActivityPubObjectReferenceResolver objectReferenceResolver;
 
     @Inject
+    private ActivityPubStorage storage;
+
+    @Inject
+    private AuthorizationManager authorizationManager;
+
+    @Inject
     private Logger logger;
 
     @Inject
     private ActivityHandler<Create> createActivityHandler;
 
+    /**
+     * Default constructor.
+     */
     public DocumentCreatedEventListener()
     {
         super("ActivityPubDocumentCreatedEventListener", EVENTS);
@@ -85,7 +107,10 @@ public class DocumentCreatedEventListener extends AbstractEventListener
             OrderedCollection<AbstractActor> followers =
                 this.objectReferenceResolver.resolveReference(author.getFollowers());
 
-            if (!followers.isEmpty()) {
+            // ensure the page can be viewed with guest user to not disclose private stuff in a notif
+            boolean guestAccess =
+                this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, document.getDocumentReference());
+            if (guestAccess && !followers.isEmpty()) {
                 Create createActivity = getActivity(author, document, context);
                 ActivityRequest<Create> activityRequest = new ActivityRequest<>(createActivity.getActor().getObject(),
                     createActivity);
@@ -100,13 +125,18 @@ public class DocumentCreatedEventListener extends AbstractEventListener
     private Create getActivity(AbstractActor author, XWikiDocument xWikiDocument, XWikiContext context)
         throws URISyntaxException, ActivityPubException
     {
-        URI documentId = new URI(xWikiDocument.getURL("view", context));
+        URI documentUrl = new URI(xWikiDocument.getURL("view", context));
 
         Document document = new Document()
-            .setId(documentId)
             .setName(xWikiDocument.getTitle())
-            .setAttributedTo(Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(author)))
-            .setPublished(xWikiDocument.getCreationDate());
+            .setAttributedTo(
+                Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(author)))
+            .setPublished(xWikiDocument.getCreationDate())
+            // We cannot put it as a document id, since we need to be able to resolve it with an activitypub answer.
+            .setUrl(Collections.singletonList(documentUrl));
+
+        // Make sure it's stored so it can be resolved later.
+        this.storage.storeEntity(document);
 
         return new Create()
             .setActor(new ActivityPubObjectReference<AbstractActor>().setObject(author))

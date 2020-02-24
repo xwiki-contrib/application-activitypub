@@ -33,6 +33,11 @@ import org.xwiki.resource.UnsupportedResourceReferenceException;
 import org.xwiki.url.ExtendedURL;
 import org.xwiki.url.internal.AbstractResourceReferenceResolver;
 
+/**
+ * Resolve an {@link ExtendedURL} to an {@link ActivityPubResourceReference}.
+ *
+ * @version $Id$
+ */
 @Component
 @Named("activitypub")
 @Singleton

@@ -29,7 +29,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.httpclient.HttpMethod;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
@@ -39,9 +38,14 @@ import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 
+/**
+ * Specific handler for {@link Create} activities.
+ *
+ * @version $Id$
+ */
 @Component
 @Singleton
-public class CreateActivityHandler extends AbstractActivityHandler implements ActivityHandler<Create>
+public class CreateActivityHandler extends AbstractActivityHandler<Create>
 {
     @Inject
     private Logger logger;

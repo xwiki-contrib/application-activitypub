@@ -31,7 +31,8 @@ public interface ActivityPubConfiguration
     /**
      * Behaviour to adopt in case of Follow request.
      */
-    enum FOLLOW_POLICY {
+    enum FollowPolicy
+    {
         /**
          * Always Accept follow request.
          */
@@ -49,7 +50,7 @@ public interface ActivityPubConfiguration
     }
 
     /**
-     * Define which follow policy is used by the server.
+     * @return which follow policy is used by the server.
      */
-    FOLLOW_POLICY getFollowPolicy();
+    FollowPolicy getFollowPolicy();
 }

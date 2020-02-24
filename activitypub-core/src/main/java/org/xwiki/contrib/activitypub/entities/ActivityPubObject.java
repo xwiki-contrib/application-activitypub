@@ -49,6 +49,7 @@ public class ActivityPubObject extends JSONLDObjects
     private List<ActivityPubObjectReference<AbstractActor>> to;
     private String content;
     private List<ActivityPubObjectReference<AbstractActor>> attributedTo;
+    private List<URI> url;
 
     /**
      * The type is not stored as a property but instead we rely on the class name to return it.
@@ -214,6 +215,27 @@ public class ActivityPubObject extends JSONLDObjects
     public <T extends ActivityPubObject> T setAttributedTo(List<ActivityPubObjectReference<AbstractActor>> attributedTo)
     {
         this.attributedTo = attributedTo;
+        return (T) this;
+    }
+
+    /**
+     * @return the list of URLs that represents the object.
+     * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-url">ActivityStream definition</a>
+     */
+    public List<URI> getUrl()
+    {
+        return url;
+    }
+
+    /**
+     * @param url the list of URLs that represents the object.
+     * @param <T> the type of the object.
+     * @return the current object for fluent API.
+     * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-url">ActivityStream definition</a>
+     */
+    public <T extends ActivityPubObject> T setUrl(List<URI> url)
+    {
+        this.url = url;
         return (T) this;
     }
 

@@ -31,6 +31,7 @@ import javax.inject.Singleton;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubEvent;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
+import org.xwiki.contrib.activitypub.ActivityPubNotifier;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.eventstream.Event;
@@ -39,11 +40,23 @@ import org.xwiki.eventstream.RecordableEventConverter;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 
+/**
+ * Define the conversion from an {@link ActivityPubEvent} to a {@link org.xwiki.eventstream.internal.DefaultEvent}.
+ * The component will set the activity in a parameter of the {@link org.xwiki.eventstream.internal.DefaultEvent} and
+ * will ensure that the event have a defined user.
+ *
+ * @version $Id$
+ */
 @Component
 @Singleton
-@Named("activitypub")
+@Named(ActivityPubNotifier.EVENT_TYPE)
 public class ActivityPubRecordableEventConverter implements RecordableEventConverter
 {
+    /**
+     * Key of the parameter where the activity is put.
+     */
+    public static final String ACTIVITY_PARAMETER_KEY = "activity";
+
     @Inject
     private RecordableEventConverter defaultConverter;
 
@@ -62,15 +75,17 @@ public class ActivityPubRecordableEventConverter implements RecordableEventConve
     {
         Event convertedEvent = this.defaultConverter.convert(recordableEvent, source, data);
 
-        ActivityPubEvent activityPubEvent = (ActivityPubEvent) recordableEvent;
+        ActivityPubEvent<?> activityPubEvent = (ActivityPubEvent<?>) recordableEvent;
         Map<String, String> parameters = new HashMap<>(convertedEvent.getParameters());
-        parameters.put("activity", this.activityPubJsonSerializer.serialize(activityPubEvent.getActivity()));
+        parameters.put(ACTIVITY_PARAMETER_KEY,
+            this.activityPubJsonSerializer.serialize(activityPubEvent.getActivity()));
         convertedEvent.setParameters(parameters);
-        convertedEvent.setType("activitypub");
+        convertedEvent.setType(ActivityPubNotifier.EVENT_TYPE);
 
         // FIXME: this is a really ugly hack to be sure we have a user in the notif, else it's never taken into account
         if (convertedEvent.getUser() == null) {
-            AbstractActor actor = this.objectReferenceResolver.resolveReference(activityPubEvent.getActivity().getActor());
+            AbstractActor actor = this.objectReferenceResolver
+                .resolveReference(activityPubEvent.getActivity().getActor());
             DocumentReference userReference = stringDocumentReferenceResolver.resolve(actor.getPreferredUsername());
             convertedEvent.setUser(userReference);
         }

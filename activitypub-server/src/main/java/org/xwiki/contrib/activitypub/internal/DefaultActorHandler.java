@@ -29,7 +29,6 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.httpclient.HttpMethod;
-import org.slf4j.Logger;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
@@ -56,6 +55,8 @@ import com.xpn.xwiki.user.api.XWikiUser;
 
 /**
  * Link an ActivityPub actor to an XWiki User and retrieves the inbox/outbox of users.
+ *
+ * @version $Id$
  */
 @Component
 @Singleton
@@ -66,9 +67,6 @@ public class DefaultActorHandler implements ActorHandler
 
     @Inject
     private DocumentAccessBridge documentAccess;
-
-    @Inject
-    private Logger logger;
 
     @Inject
     private ActivityPubStorage activityPubStorage;
@@ -134,12 +132,14 @@ public class DefaultActorHandler implements ActorHandler
         actor.setPreferredUsername(preferredName);
 
         Inbox inbox = new Inbox();
-        inbox.setAttributedTo(Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(actor)));
+        inbox.setAttributedTo(
+            Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(actor)));
         this.activityPubStorage.storeEntity(inbox);
         actor.setInbox(new ActivityPubObjectReference<Inbox>().setObject(inbox));
 
         Outbox outbox = new Outbox();
-        outbox.setAttributedTo(Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(actor)));
+        outbox.setAttributedTo(
+            Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(actor)));
         this.activityPubStorage.storeEntity(outbox);
         actor.setOutbox(new ActivityPubObjectReference<Outbox>().setObject(outbox));
 
@@ -215,7 +215,8 @@ public class DefaultActorHandler implements ActorHandler
     public Inbox getInbox(AbstractActor actor) throws ActivityPubException
     {
         Inbox inbox = this.activityPubObjectReferenceResolver.resolveReference(actor.getInbox());
-        inbox.setAttributedTo(Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(actor)));
+        inbox.setAttributedTo(
+            Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(actor)));
         return inbox;
     }
 
@@ -223,7 +224,8 @@ public class DefaultActorHandler implements ActorHandler
     public Outbox getOutbox(AbstractActor actor) throws ActivityPubException
     {
         Outbox outbox = this.activityPubObjectReferenceResolver.resolveReference(actor.getOutbox());
-        outbox.setAttributedTo(Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(actor)));
+        outbox.setAttributedTo(
+            Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(actor)));
         return outbox;
     }
 }

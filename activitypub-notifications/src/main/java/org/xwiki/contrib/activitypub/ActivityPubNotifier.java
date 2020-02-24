@@ -34,6 +34,11 @@ import org.xwiki.model.reference.EntityReference;
 public interface ActivityPubNotifier
 {
     /**
+     * Event type of the application.
+     */
+    String EVENT_TYPE = "activitypub";
+
+    /**
      * Send a notification related to the given activity to the given targets.
      *
      * @param activity the activity source of the notification.

@@ -26,7 +26,6 @@ import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
@@ -35,9 +34,14 @@ import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 
+/**
+ * Specific handler for {@link Follow} activities.
+ *
+ * @version $Id$
+ */
 @Component
 @Singleton
-public class FollowActivityHandler extends AbstractActivityHandler implements ActivityHandler<Follow>
+public class FollowActivityHandler extends AbstractActivityHandler<Follow>
 {
     private void handleFollow(Follow follow, HttpServletResponse servletResponse)
         throws ActivityPubException, IOException
@@ -73,6 +77,7 @@ public class FollowActivityHandler extends AbstractActivityHandler implements Ac
                     this.answer(servletResponse, HttpServletResponse.SC_OK, follow);
                     break;
 
+                default:
                 case REJECT:
                     follow.setRejected(true);
                     this.activityPubStorage.storeEntity(follow);

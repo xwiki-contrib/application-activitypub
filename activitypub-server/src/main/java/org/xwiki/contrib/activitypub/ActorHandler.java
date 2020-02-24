@@ -83,8 +83,20 @@ public interface ActorHandler
      */
     Inbox getInbox(AbstractActor actor) throws ActivityPubException;
 
+    /**
+     * Utility method to retrieve the outbox of the given actor.
+     * This methods allow to automatically resolve the reference of the outbox and to link it to the actor.
+     * @param actor the actor for which to retrieve the outbox
+     * @return the outbox of the actor.
+     * @throws ActivityPubException in case of problem when resolving the outbox reference.
+     */
     Outbox getOutbox(AbstractActor actor) throws ActivityPubException;
 
+    /**
+     * Verify if an user with the given serialized reference exist.
+     * @param serializedUserReference a serialized reference to an user.
+     * @return {@code true} if the user exists.
+     */
     boolean isExistingUser(String serializedUserReference);
 
     /**

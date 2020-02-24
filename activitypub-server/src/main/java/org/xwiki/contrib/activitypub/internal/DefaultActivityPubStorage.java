@@ -56,6 +56,12 @@ import org.xwiki.url.ExtendedURL;
 
 import com.xpn.xwiki.XWikiContext;
 
+/**
+ * Default implementation of {@link ActivityPubStorage}.
+ * Only keep the information in memory for now.
+ *
+ * @version $Id$
+ */
 @Component
 @Singleton
 public class DefaultActivityPubStorage implements ActivityPubStorage
@@ -86,6 +92,9 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     @Inject
     private Logger logger;
 
+    /**
+     * Default constructor.
+     */
     public DefaultActivityPubStorage()
     {
         this.storage = new HashMap<>();

@@ -23,18 +23,23 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.activitypub.ActivityPubEvent;
+import org.xwiki.contrib.activitypub.ActivityPubNotifier;
 import org.xwiki.eventstream.RecordableEventDescriptor;
 
+/**
+ * An event descriptor for ActivityPub to allows enabling/disabling the notifications.
+ *
+ * @version $Id$
+ */
 @Component
-@Named("ActivityPubTargetableEvent")
+@Named("ActivityPubEvent")
 @Singleton
 public class ActivityPubEventDescriptor implements RecordableEventDescriptor
 {
     @Override
     public String getEventType()
     {
-        return "activitypub";
+        return ActivityPubNotifier.EVENT_TYPE;
     }
 
     @Override

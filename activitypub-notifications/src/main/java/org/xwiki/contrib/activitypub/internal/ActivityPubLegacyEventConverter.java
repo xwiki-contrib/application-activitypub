@@ -26,21 +26,31 @@ import javax.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityPubNotifier;
 import org.xwiki.eventstream.Event;
 import org.xwiki.eventstream.store.internal.AbstractLegacyEventConverter;
 import org.xwiki.eventstream.store.internal.LegacyEvent;
 
+import static org.xwiki.contrib.activitypub.internal.ActivityPubRecordableEventConverter.ACTIVITY_PARAMETER_KEY;
+
+/**
+ * We need this custom legacy converter to ensure that the activity parameters from the
+ * {@link org.xwiki.eventstream.internal.DefaultEvent} are set in the parameter3 of the {@link LegacyEvent}: this is
+ * what will be stored.
+ *
+ * @version $Id$
+ */
 @Component
 @Singleton
-@Named("activitypub")
+@Named(ActivityPubNotifier.EVENT_TYPE)
 public class ActivityPubLegacyEventConverter extends AbstractLegacyEventConverter
 {
     @Override
     public LegacyEvent convertEventToLegacyActivity(Event e)
     {
         LegacyEvent event = super.convertEventToLegacyActivity(e);
-        if (e.getParameters().containsKey("activity")) {
-            event.setParam3(e.getParameters().get("activity"));
+        if (e.getParameters().containsKey(ACTIVITY_PARAMETER_KEY)) {
+            event.setParam3(e.getParameters().get(ACTIVITY_PARAMETER_KEY));
         }
         return event;
     }
@@ -50,7 +60,7 @@ public class ActivityPubLegacyEventConverter extends AbstractLegacyEventConverte
     {
         Event event = super.convertLegacyActivityToEvent(e);
         if (!StringUtils.isEmpty(e.getParam3())) {
-            event.setParameters(Collections.singletonMap("activity", e.getParam3()));
+            event.setParameters(Collections.singletonMap(ACTIVITY_PARAMETER_KEY, e.getParam3()));
         }
         return event;
     }

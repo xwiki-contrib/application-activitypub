@@ -22,14 +22,15 @@ package org.xwiki.contrib.activitypub.internal;
 import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
 
 /**
- * Default configuration.
- * @version $id$
+ * Default configuration: it always accept Follow request for now.
+ *
+ * @version $Id$
  */
 public class DefaultActivityPubConfiguration implements ActivityPubConfiguration
 {
     @Override
-    public FOLLOW_POLICY getFollowPolicy()
+    public FollowPolicy getFollowPolicy()
     {
-        return FOLLOW_POLICY.ACCEPT;
+        return FollowPolicy.ACCEPT;
     }
 }

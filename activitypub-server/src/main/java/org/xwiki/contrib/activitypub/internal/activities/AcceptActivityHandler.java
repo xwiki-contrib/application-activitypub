@@ -26,7 +26,6 @@ import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
@@ -35,9 +34,14 @@ import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 
+/**
+ * Specific handler for {@link Accept} activities.
+ *
+ * @version $Id$
+ */
 @Component
 @Singleton
-public class AcceptActivityHandler extends AbstractActivityHandler implements ActivityHandler<Accept>
+public class AcceptActivityHandler extends AbstractActivityHandler<Accept>
 {
     @Override
     public void handleInboxRequest(ActivityRequest<Accept> activityRequest) throws IOException

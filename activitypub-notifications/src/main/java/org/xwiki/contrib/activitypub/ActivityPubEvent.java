@@ -25,11 +25,21 @@ import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.eventstream.RecordableEvent;
 import org.xwiki.eventstream.TargetableEvent;
 
+/**
+ * Defines the ActivityPub event to be displayed as Notifications.
+ * @param <T> the type of the activity
+ * @version $Id$
+ */
 public class ActivityPubEvent<T extends AbstractActivity> implements RecordableEvent, TargetableEvent
 {
     private Set<String> target;
     private T activity;
 
+    /**
+     * Default constructor.
+     * @param activity the activity to notify about
+     * @param target the serialized references of users to notify to
+     */
     public ActivityPubEvent(T activity, Set<String> target)
     {
         this.activity = activity;
@@ -42,6 +52,9 @@ public class ActivityPubEvent<T extends AbstractActivity> implements RecordableE
         return target;
     }
 
+    /**
+     * @return the activity this event is about.
+     */
     public T getActivity()
     {
         return activity;

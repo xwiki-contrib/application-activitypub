@@ -3,7 +3,7 @@
 ## information regarding copyright ownership.
 ##
 ## This is free software; you can redistribute it and/or modify it
-## under the terms of the GNU Lesser General Public License as-
+## under the terms of the GNU Lesser General Public License as
 ## published by the Free Software Foundation; either version 2.1 of
 ## the License, or (at your option) any later version.
 ##
@@ -28,7 +28,7 @@
   #set ($object = $services.activitypub.resolve($activity.object))
   #if ($object.type == "Document")
       #define($summary)
-          $username created the document <a href="$object.id">$object.name</a>.
+          $username created the document <a href="$object.url.get(0)">$object.name</a>.
       #end
   #else
       #define($summary)

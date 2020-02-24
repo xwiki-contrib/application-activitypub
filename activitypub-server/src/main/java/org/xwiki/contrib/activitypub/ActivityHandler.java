@@ -24,9 +24,27 @@ import java.io.IOException;
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 
+/**
+ * Handle an activity posted in an inbox or in an outbox, wrapped in an {@link ActivityRequest}.
+ * @param <T> the type of the activity.
+ * @version $Id$
+ */
 @Role
 public interface ActivityHandler<T extends AbstractActivity>
 {
+    /**
+     * Handle a post of the activity in the inbox.
+     * @param activityRequest the request to handle.
+     * @throws IOException in case of problem when handling the HTTP answer.
+     * @throws ActivityPubException in case of error when handling the request.
+     */
     void handleInboxRequest(ActivityRequest<T> activityRequest) throws IOException, ActivityPubException;
+
+    /**
+     * Handle a post of the activity in the outbox.
+     * @param activityRequest the request to handle.
+     * @throws IOException in case of problem when handling the HTTP answer.
+     * @throws ActivityPubException in case of error when handling the request.
+     */
     void handleOutboxRequest(ActivityRequest<T> activityRequest) throws IOException, ActivityPubException;
 }

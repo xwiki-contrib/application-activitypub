@@ -19,8 +19,6 @@
  */
 package org.xwiki.contrib.activitypub.script;
 
-import java.io.IOException;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
@@ -44,6 +42,11 @@ import org.xwiki.script.service.ScriptService;
 
 import com.xpn.xwiki.XWikiContext;
 
+/**
+ * Script service for ActivityPub.
+ *
+ * @version $Id$
+ */
 @Component
 @Singleton
 @Named("activitypub")
@@ -70,12 +73,18 @@ public class ActivityPubScriptService implements ScriptService
     @Inject
     private Logger logger;
 
-    public boolean follow(String profileURL)
+    /**
+     * Send a Follow request to the given actor.
+     * @param actor URL to the actor to follow.
+     * @return {@code true} iff the request has been sent properly.
+     */
+    // FIXME: this should only be used when authenticated
+    public boolean follow(String actor)
     {
         boolean result = false;
 
         try {
-            AbstractActor remoteActor = this.actorHandler.getRemoteActor(profileURL);
+            AbstractActor remoteActor = this.actorHandler.getRemoteActor(actor);
             AbstractActor currentActor = this.actorHandler.getCurrentActor();
             Follow follow = new Follow().setActor(currentActor).setObject(remoteActor);
             this.activityPubStorage.storeEntity(follow);
@@ -83,12 +92,18 @@ public class ActivityPubScriptService implements ScriptService
             this.activityPubClient.checkAnswer(httpMethod);
             result = true;
         } catch (ActivityPubException e) {
-            this.logger.error("Error while trying to send a follow request to [{}].", profileURL, e);
+            this.logger.error("Error while trying to send a follow request to [{}].", actor, e);
         }
 
         return result;
     }
 
+    /**
+     * Send an Accept request to a received Follow.
+     * @param follow the follow activity to accept.
+     * @return {@code true} iff the request has been sent properly.
+     */
+    // FIXME: we should check that the current actor and followed actor is the same.
     public boolean acceptFollow(Follow follow)
     {
         boolean result = false;
@@ -105,6 +120,13 @@ public class ActivityPubScriptService implements ScriptService
         return result;
     }
 
+    /**
+     * Resolve and returns the given {@link ActivityPubObjectReference}.
+     * @param reference the reference to resolve.
+     * @param <T> the type of the reference.
+     * @return the resulted object.
+     * @throws ActivityPubException in case of error during the resolving.
+     */
     public <T extends ActivityPubObject> T resolve(ActivityPubObjectReference<T> reference) throws ActivityPubException
     {
         return this.activityPubObjectReferenceResolver.resolveReference(reference);

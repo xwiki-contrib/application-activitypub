@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.NotImplementedException;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentLookupException;
@@ -66,8 +67,20 @@ import org.xwiki.resource.annotations.Authenticate;
 
 import com.xpn.xwiki.XWikiContext;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
+/**
+ * Main handler for ActivityPub.
+ * This handler receives requests on the form /activitypub/entitytype/identifier with entitytype being one of the
+ * concrete type of {@link ActivityPubObject}. In case of GET request, the resource is looked for in the storage and
+ * immediately returned if found.
+ *
+ * In case of a GET request for an Actor, the actor is created if not find in the storage: this allows to create lazily
+ * the actors.
+ *
+ * In case of POST request some checks are performed to ensure the user is authorized to do it, and then the activity
+ * is sent to the right {@link ActivityHandler}.
+ *
+ * @version $Id$
+ */
 @Component
 @Named("activitypub")
 @Singleton
@@ -110,7 +123,8 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         return Arrays.asList(TYPE);
     }
 
-    private enum BOX_TYPE {
+    private enum BoxType
+    {
         INBOX, OUTBOX;
     }
 
@@ -138,9 +152,9 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
                                 .resolveReference(entity.getAttributedTo().get(0));
 
                             if (entity instanceof Inbox) {
-                                this.handleBox(actor, BOX_TYPE.INBOX);
+                                this.handleBox(actor, BoxType.INBOX);
                             } else {
-                                this.handleBox(actor, BOX_TYPE.OUTBOX);
+                                this.handleBox(actor, BoxType.OUTBOX);
                             }
                         } catch (ActivityPubException e) {
                             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -153,9 +167,9 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
                         AbstractActor actor = getActor(resourceReference);
                         if (actor != null) {
                             if ("inbox".equalsIgnoreCase(resourceReference.getEntityType())) {
-                                this.handleBox(actor, BOX_TYPE.INBOX);
+                                this.handleBox(actor, BoxType.INBOX);
                             } else if ("outbox".equalsIgnoreCase(resourceReference.getEntityType())) {
-                                this.handleBox(actor, BOX_TYPE.OUTBOX);
+                                this.handleBox(actor, BoxType.OUTBOX);
                             } else {
                                 response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
                                 response.setContentType("text/plain");
@@ -230,14 +244,14 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         response.getOutputStream().write(message.getBytes(StandardCharsets.UTF_8));
     }
 
-    private void handleBox(AbstractActor actor, BOX_TYPE boxType)
+    private void handleBox(AbstractActor actor, BoxType boxType)
         throws IOException, ActivityPubException
     {
         ActivityRequest<AbstractActivity> activityRequest = this.parseRequest(actor);
         if (activityRequest != null && activityRequest.getActor() != null) {
             ActivityHandler<AbstractActivity> handler = this.getHandler(activityRequest);
             if (handler != null) {
-                if (boxType == BOX_TYPE.INBOX) {
+                if (boxType == BoxType.INBOX) {
                     handler.handleInboxRequest(activityRequest);
                 } else {
                     DocumentReference sessionUserReference = this.contextProvider.get().getUserReference();

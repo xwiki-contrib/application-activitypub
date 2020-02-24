@@ -41,15 +41,26 @@ import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 
+/**
+ * Default implementation of the {@link ActivityPubClient}.
+ *
+ * @version $Id$
+ */
 @Component
 @Singleton
 public class DefaultActivityPubClient implements ActivityPubClient
 {
+    private static final String CONTENTTYPE_HEADER = "Content-Type";
+    private static final String ACTIVITYPUB_CONTENTTYPE = "application/activity+json";
+
     private HttpClient httpClient;
 
     @Inject
     private ActivityPubJsonSerializer activityPubJsonSerializer;
 
+    /**
+     * Default constructor.
+     */
     public DefaultActivityPubClient()
     {
         this.httpClient = new HttpClient();
@@ -81,7 +92,7 @@ public class DefaultActivityPubClient implements ActivityPubClient
     {
         try {
             RequestEntity bodyRequest = new StringRequestEntity(this.activityPubJsonSerializer.serialize(activity),
-                "application/activity+json",
+                ACTIVITYPUB_CONTENTTYPE,
                 "UTF-8");
             PostMethod postMethod = new PostMethod(uri.toASCIIString());
             postMethod.setRequestEntity(bodyRequest);
@@ -102,7 +113,7 @@ public class DefaultActivityPubClient implements ActivityPubClient
 
     private boolean checkContentTypeHeader(Header contentTypeHeader)
     {
-        return  (contentTypeHeader != null && contentTypeHeader.getValue().contains("application/activity+json"));
+        return  (contentTypeHeader != null && contentTypeHeader.getValue().contains(ACTIVITYPUB_CONTENTTYPE));
     }
 
     @Override
@@ -113,9 +124,9 @@ public class DefaultActivityPubClient implements ActivityPubClient
             exceptionMessage = "The request has not been sent yet.";
         } else if (method.getStatusCode() != 200) {
             exceptionMessage = String.format("200 status code expected, got [%s] instead", method.getStatusCode());
-        } else if (!checkContentTypeHeader(method.getResponseHeader("Content-Type"))) {
-            exceptionMessage = String.format("Content-Type header should return 'application/activity+json' "
-                + "and got [%s] instead", method.getResponseHeader("Content-Type"));
+        } else if (!checkContentTypeHeader(method.getResponseHeader(CONTENTTYPE_HEADER))) {
+            exceptionMessage = String.format("Content-Type header should return '%s' and got [%s] instead",
+                ACTIVITYPUB_CONTENTTYPE, method.getResponseHeader(CONTENTTYPE_HEADER));
         }
 
         if (exceptionMessage != null) {

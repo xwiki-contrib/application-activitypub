@@ -42,6 +42,12 @@ import org.xwiki.url.URLNormalizer;
 
 import com.xpn.xwiki.XWikiContext;
 
+/**
+ * Serialize an {@link ActivityPubResourceReference} to an {@link URI}.
+ * This is particularly useful to set the ID of some {@link org.xwiki.contrib.activitypub.entities.ActivityPubObject}.
+ *
+ * @version $Id$
+ */
 @Component
 @Singleton
 public class ActivityPubResourceReferenceSerializer implements
