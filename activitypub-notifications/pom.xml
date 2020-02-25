@@ -32,7 +32,7 @@
   <name>XWiki ActivityPub - Notifications UI for ActivityPub</name>
   <packaging>jar</packaging>
   <properties>
-    <xwiki.jacoco.instructionRatio>0.11</xwiki.jacoco.instructionRatio>
+    <xwiki.jacoco.instructionRatio>0.49</xwiki.jacoco.instructionRatio>
   </properties>
   <dependencies>
     <dependency>
