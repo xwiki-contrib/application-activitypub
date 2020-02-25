@@ -56,7 +56,7 @@ public class FollowActivityHandler extends AbstractActivityHandler<Follow>
             AbstractActor followedActor = (AbstractActor) followedObject;
             switch (this.activityPubConfiguration.getFollowPolicy()) {
                 case ASK:
-                    Inbox actorInbox = this.actorHandler.getInbox(followedActor);
+                    Inbox actorInbox = this.getInbox(followedActor);
                     actorInbox.addPendingFollow(follow);
                     this.answer(servletResponse, HttpServletResponse.SC_OK, follow);
                     break;

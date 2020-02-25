@@ -60,7 +60,7 @@ public class CreateActivityHandler extends AbstractActivityHandler<Create>
         }
 
         AbstractActor actor = activityRequest.getActor();
-        Inbox inbox = this.actorHandler.getInbox(actor);
+        Inbox inbox = this.getInbox(actor);
         inbox.addActivity(create);
         this.activityPubStorage.storeEntity(inbox);
         this.notifier.notify(create, Collections.singleton(this.actorHandler.getXWikiUserReference(actor)));
@@ -77,7 +77,7 @@ public class CreateActivityHandler extends AbstractActivityHandler<Create>
         }
 
         AbstractActor actor = this.activityPubObjectReferenceResolver.resolveReference(create.getActor());
-        Outbox outbox = this.actorHandler.getOutbox(actor);
+        Outbox outbox = this.getOutbox(actor);
         outbox.addActivity(create);
         this.activityPubStorage.storeEntity(outbox);
         OrderedCollection<AbstractActor> orderedCollection =

@@ -35,6 +35,9 @@ import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
+import org.xwiki.contrib.activitypub.entities.Inbox;
+import org.xwiki.contrib.activitypub.entities.Outbox;
 
 /**
  * Abstract handler for all {@link ActivityHandler}.
@@ -64,6 +67,28 @@ public abstract class AbstractActivityHandler<T extends AbstractActivity> implem
 
     @Inject
     protected ActivityPubConfiguration activityPubConfiguration;
+
+    /**
+     * Helper method to return the actual {@link Inbox} from an {@link AbstractActor}.
+     * @param actor the actor from which to retrieve the inbox
+     * @return a concrete instance of inbox
+     * @throws ActivityPubException in case of error when resolving the reference.
+     */
+    protected Inbox getInbox(AbstractActor actor) throws ActivityPubException
+    {
+        return this.activityPubObjectReferenceResolver.resolveReference(actor.getInbox());
+    }
+
+    /**
+     * Helper method to return the actual {@link Outbox} from an {@link AbstractActor}.
+     * @param actor the actor from which to retrieve the outbox
+     * @return a concrete instance of outbox
+     * @throws ActivityPubException in case of error when resolving the reference.
+     */
+    protected Outbox getOutbox(AbstractActor actor) throws ActivityPubException
+    {
+        return this.activityPubObjectReferenceResolver.resolveReference(actor.getOutbox());
+    }
 
     /**
      * Answer with an activity in the response body: generally used for 2xx answers.

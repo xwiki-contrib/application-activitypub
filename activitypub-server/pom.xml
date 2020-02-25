@@ -31,6 +31,9 @@
   <version>1.0-SNAPSHOT</version>
   <name>XWiki ActivityPub - Server implementation for ActivityPub</name>
   <packaging>jar</packaging>
+  <properties>
+    <xwiki.jacoco.instructionRatio>0.12</xwiki.jacoco.instructionRatio>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>org.xwiki.contrib</groupId>
@@ -85,7 +88,7 @@
             <id>default</id>
             <configuration>
               <excludes>
-                <!-- Fan-Out complexity: 23 on 20 max -->
+                <!-- Fan-Out complexity: 24 on 20 max -->
                 **/DefaultActorHandler.java,
 
                 <!-- Cyclomatic Complexity: 13 on 10 -->

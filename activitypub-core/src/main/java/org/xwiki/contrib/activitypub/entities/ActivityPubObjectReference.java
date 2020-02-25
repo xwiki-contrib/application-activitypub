@@ -110,19 +110,34 @@ public class ActivityPubObjectReference<T extends ActivityPubObject>
         }
 
         ActivityPubObjectReference<?> rhs = (ActivityPubObjectReference<?>) o;
-        return new EqualsBuilder()
+        EqualsBuilder equalsBuilder = new EqualsBuilder()
             .append(link, rhs.link)
-            .append(isLink, rhs.isLink)
-            .append(object, rhs.object).build();
+            .append(isLink, rhs.isLink);
+
+        // TODO: Improve this piece of code. We cannot really do an equals on the objects since it might lead to
+        // stackoverflow exceptions
+        if (object == null && rhs.object == null) {
+            return equalsBuilder.build();
+        } else if (object != null && rhs.object != null) {
+            return equalsBuilder.append(object.toString(), rhs.object.toString()).build();
+        } else {
+            return false;
+        }
     }
 
     @Override
     public int hashCode()
     {
-        return new HashCodeBuilder()
+        HashCodeBuilder hashCodeBuilder = new HashCodeBuilder()
             .append(link)
-            .append(isLink)
-            .append(object).build();
+            .append(isLink);
+
+        // TODO: Improve this piece of code. We cannot really do an hashCode on the objects since it might lead to
+        // stackoverflow exceptions
+        if (object != null) {
+            hashCodeBuilder.append(object.toString());
+        }
+        return hashCodeBuilder.build();
     }
 
     @Override
