@@ -173,9 +173,8 @@ public class DefaultActorHandler implements ActorHandler
         if (!username.contains(".")) {
             serializedRef = String.format("XWiki.%s", username);
         }
-        DocumentReference userDocReference =
-            this.stringDocumentReferenceResolver.resolve(serializedRef);
-        return userDocReference;
+
+        return this.stringDocumentReferenceResolver.resolve(serializedRef);
     }
 
     @Override

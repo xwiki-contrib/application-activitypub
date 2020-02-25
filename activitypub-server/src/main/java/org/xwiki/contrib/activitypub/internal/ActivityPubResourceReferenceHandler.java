@@ -123,11 +123,6 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         return Arrays.asList(TYPE);
     }
 
-    private enum BoxType
-    {
-        INBOX, OUTBOX;
-    }
-
     @Override
     public void handle(ResourceReference reference, ResourceReferenceHandlerChain chain)
         throws ResourceReferenceHandlerException
