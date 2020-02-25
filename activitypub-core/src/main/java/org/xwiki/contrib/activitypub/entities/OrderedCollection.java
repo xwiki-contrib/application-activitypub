@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.xwiki.stability.Unstable;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -91,5 +93,29 @@ public class OrderedCollection<T extends ActivityPubObject> extends AbstractColl
     public Iterator<ActivityPubObjectReference<T>> iterator()
     {
         return this.orderedItems.iterator();
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        OrderedCollection<?> object = (OrderedCollection<?>) o;
+        return new EqualsBuilder()
+            .appendSuper(super.equals(o))
+            .append(orderedItems, object.orderedItems).build();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder()
+            .appendSuper(super.hashCode())
+            .append(orderedItems).build();
     }
 }

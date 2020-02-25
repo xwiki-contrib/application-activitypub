@@ -20,8 +20,9 @@
 package org.xwiki.contrib.activitypub.entities;
 
 import java.net.URI;
-import java.util.Objects;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.xwiki.contrib.activitypub.internal.json.ActivityPubObjectReferenceDeserializer;
 import org.xwiki.stability.Unstable;
 import org.xwiki.text.XWikiToStringBuilder;
@@ -98,9 +99,8 @@ public class ActivityPubObjectReference<T extends ActivityPubObject>
         return this;
     }
 
-    // FIXME: use XWiki helpers to equals/hashcode/tostring
     @Override
-    public boolean equals(java.lang.Object o)
+    public boolean equals(Object o)
     {
         if (this == o) {
             return true;
@@ -108,16 +108,21 @@ public class ActivityPubObjectReference<T extends ActivityPubObject>
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        ActivityPubObjectReference<?> that = (ActivityPubObjectReference<?>) o;
-        return isLink == that.isLink
-            && Objects.equals(link, that.link)
-            && Objects.equals(object, that.object);
+
+        ActivityPubObjectReference<?> rhs = (ActivityPubObjectReference<?>) o;
+        return new EqualsBuilder()
+            .append(link, rhs.link)
+            .append(isLink, rhs.isLink)
+            .append(object, rhs.object).build();
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(isLink, link, object);
+        return new HashCodeBuilder()
+            .append(link)
+            .append(isLink)
+            .append(object).build();
     }
 
     @Override

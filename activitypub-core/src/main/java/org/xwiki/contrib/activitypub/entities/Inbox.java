@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.xwiki.stability.Unstable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -74,5 +76,31 @@ public class Inbox extends OrderedCollection<AbstractActivity>
     public void addPendingFollow(Follow follow)
     {
         this.pendingFollows.add(follow);
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        Inbox object = (Inbox) o;
+        return new EqualsBuilder()
+            .appendSuper(super.equals(o))
+            .append(items, object.items)
+            .append(pendingFollows, object.pendingFollows).build();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder()
+            .appendSuper(super.hashCode())
+            .append(items)
+            .append(pendingFollows).build();
     }
 }

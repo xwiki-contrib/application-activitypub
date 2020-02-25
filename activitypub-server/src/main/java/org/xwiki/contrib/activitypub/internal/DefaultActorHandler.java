@@ -105,33 +105,39 @@ public class DefaultActorHandler implements ActorHandler
     public AbstractActor getActor(EntityReference entityReference) throws ActivityPubException
     {
         // TODO: introduce cache mechanism
+        XWikiDocument document;
         try {
-            XWikiDocument document = (XWikiDocument) this.documentAccess.getDocumentInstance(entityReference);
-            BaseObject userXObject = document.getXObject(USER_CLASS_REFERENCE);
-            if (userXObject != null) {
-                XWikiUser xWikiUser = new XWikiUser(new DocumentReference(entityReference));
-                String login = xWikiUser.getFullName();
-                AbstractActor actor = this.activityPubStorage.retrieveEntity("actor", login);
-                if (actor == null) {
-                    String fullname = String.format("%s %s",
-                        userXObject.getStringValue("first_name"), userXObject.getStringValue("last_name"));
-                    actor = createActor(fullname, login);
-                }
-                return actor;
-            } else {
-                return null;
-            }
+            document = (XWikiDocument) this.documentAccess.getDocumentInstance(entityReference);
         } catch (Exception e) {
             throw new ActivityPubException(
                 String.format("Error while loading user document with reference [%s]", entityReference), e);
         }
+        if (document == null) {
+            throw new ActivityPubException(
+                String.format("Cannot load document with reference [%s]", entityReference));
+        }
+        BaseObject userXObject = document.getXObject(USER_CLASS_REFERENCE);
+        if (userXObject != null) {
+            XWikiUser xWikiUser = new XWikiUser(new DocumentReference(entityReference));
+            String login = xWikiUser.getFullName();
+            AbstractActor actor = this.activityPubStorage.retrieveEntity("actor", login);
+            if (actor == null) {
+                String fullname = String.format("%s %s",
+                    userXObject.getStringValue("first_name"), userXObject.getStringValue("last_name"));
+                actor = createActor(fullname, login);
+            }
+            return actor;
+        } else {
+            throw new ActivityPubException(
+                String.format("Cannot find any user in document [%s]", document.getDocumentReference()));
+        }
     }
 
-    private AbstractActor createActor(String fullName, String preferredName) throws ActivityPubException
+    private AbstractActor createActor(String fullName, String login) throws ActivityPubException
     {
         AbstractActor actor = new Person();
         actor.setName(fullName);
-        actor.setPreferredUsername(preferredName);
+        actor.setPreferredUsername(login);
 
         Inbox inbox = new Inbox();
         inbox.setAttributedTo(
@@ -161,6 +167,7 @@ public class DefaultActorHandler implements ActorHandler
     @Override
     public EntityReference getXWikiUserReference(AbstractActor actor)
     {
+        // FIXME: We should add a check to ensure the actor belongs to the current instance
         String userName = actor.getPreferredUsername();
         if (isExistingUser(userName)) {
             return resolveUser(userName);

@@ -23,6 +23,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.xwiki.stability.Unstable;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -89,5 +91,29 @@ public class Collection<T extends ActivityPubObject> extends AbstractCollection<
     public Iterator<ActivityPubObjectReference<T>> iterator()
     {
         return this.items.iterator();
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        Collection<?> object = (Collection<?>) o;
+        return new EqualsBuilder()
+            .appendSuper(super.equals(o))
+            .append(items, object.items).build();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder()
+            .appendSuper(super.hashCode())
+            .append(items).build();
     }
 }

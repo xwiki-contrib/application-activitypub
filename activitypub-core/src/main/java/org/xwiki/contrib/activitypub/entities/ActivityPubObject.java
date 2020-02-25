@@ -22,9 +22,10 @@ package org.xwiki.contrib.activitypub.entities;
 import java.net.URI;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.xwiki.contrib.activitypub.internal.json.ActivityPubObjectDeserializer;
 import org.xwiki.stability.Unstable;
 
@@ -243,7 +244,7 @@ public class ActivityPubObject extends JSONLDObjects
     }
 
     @Override
-    public boolean equals(java.lang.Object o)
+    public boolean equals(Object o)
     {
         if (this == o) {
             return true;
@@ -251,19 +252,31 @@ public class ActivityPubObject extends JSONLDObjects
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
+
         ActivityPubObject object = (ActivityPubObject) o;
-        return Objects.equals(id, object.id)
-            && Objects.equals(name, object.name)
-            && Objects.equals(published, object.published)
-            && Objects.equals(summary, object.summary)
-            && Objects.equals(to, object.to)
-            && Objects.equals(content, object.content)
-            && Objects.equals(attributedTo, object.attributedTo);
+        return new EqualsBuilder()
+            .appendSuper(super.equals(o))
+            .append(id, object.id)
+            .append(name, object.name)
+            .append(published, object.published)
+            .append(summary, object.summary)
+            .append(to, object.to)
+            .append(content, object.content)
+            .append(attributedTo, object.attributedTo)
+            .append(url, object.url).build();
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(id, name, published, summary, to, content, attributedTo);
+        return new HashCodeBuilder()
+            .appendSuper(super.hashCode())
+            .append(id)
+            .append(name)
+            .append(published)
+            .append(summary)
+            .append(to)
+            .append(content)
+            .append(attributedTo).build();
     }
 }

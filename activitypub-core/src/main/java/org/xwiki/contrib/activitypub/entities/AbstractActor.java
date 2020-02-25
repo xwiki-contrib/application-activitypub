@@ -19,7 +19,10 @@
  */
 package org.xwiki.contrib.activitypub.entities;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.xwiki.stability.Unstable;
+import org.xwiki.text.XWikiToStringBuilder;
 
 /**
  * Abstract type to represent an ActivityStream Actor.
@@ -145,5 +148,47 @@ public abstract class AbstractActor extends ActivityPubObject
     {
         this.outbox = outbox;
         return (T) this;
+    }
+
+    @Override
+    public String toString()
+    {
+        return new XWikiToStringBuilder(this)
+            .append("id", getId())
+            .append("name", getName())
+            .append("preferredUsername", getPreferredUsername())
+            .build();
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        AbstractActor object = (AbstractActor) o;
+        return new EqualsBuilder()
+            .appendSuper(super.equals(o))
+            .append(preferredUsername, object.preferredUsername)
+            .append(inbox, object.inbox)
+            .append(outbox, object.outbox)
+            .append(followers, object.followers)
+            .append(following, object.following).build();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder()
+            .appendSuper(super.hashCode())
+            .append(preferredUsername)
+            .append(inbox)
+            .append(outbox)
+            .append(followers)
+            .append(following).build();
     }
 }

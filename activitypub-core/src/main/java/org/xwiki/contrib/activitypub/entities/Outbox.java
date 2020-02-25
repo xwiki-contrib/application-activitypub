@@ -22,6 +22,8 @@ package org.xwiki.contrib.activitypub.entities;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.xwiki.stability.Unstable;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -57,5 +59,29 @@ public class Outbox extends OrderedCollection<AbstractActivity>
             throw new IllegalArgumentException("The activity ID must not be null.");
         }
         this.items.put(activity.getId().toASCIIString(), activity);
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        Outbox object = (Outbox) o;
+        return new EqualsBuilder()
+            .appendSuper(super.equals(o))
+            .append(items, object.items).build();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder()
+            .appendSuper(super.hashCode())
+            .append(items).build();
     }
 }
