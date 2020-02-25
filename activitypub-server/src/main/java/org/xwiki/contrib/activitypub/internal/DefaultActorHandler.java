@@ -29,6 +29,8 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.httpclient.HttpMethod;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
@@ -197,8 +199,9 @@ public class DefaultActorHandler implements ActorHandler
     }
 
     @Override
-    public AbstractActor getRemoteActor(String actorURL) throws ActivityPubException
+    public AbstractActor getRemoteActor(String xWikiActorURL) throws ActivityPubException
     {
+        String actorURL = this.resolveXWikiActorURL(xWikiActorURL);
         try {
             URI uri = new URI(actorURL);
             HttpMethod httpMethod = this.activityPubClient.get(uri);
@@ -207,6 +210,26 @@ public class DefaultActorHandler implements ActorHandler
         } catch (ActivityPubException | URISyntaxException | IOException e) {
             throw new ActivityPubException(
                 String.format("Error when trying to retrieve the remote actor from [%s]", actorURL), e);
+        }
+    }
+
+    /**
+     * Resolve the activity pub endpoint of an user from it's XWiki profile url.
+     *
+     * @param xWikiActorURL The user's XWiki profile url.
+     * @return The activitpub endpoint of the user.
+     * @throws ActivityPubException In case of error during the query to the user profile url.
+     */
+    private String resolveXWikiActorURL(String xWikiActorURL) throws ActivityPubException
+    {
+        try {
+            Document doc = Jsoup.connect(xWikiActorURL).get();
+            String userName = doc.selectFirst("html").attr("data-xwiki-document");
+            URI uri = new URI(xWikiActorURL);
+            return String.format("%s://%s/xwiki/activitypub/Person/%s", uri.getScheme(), uri.getAuthority(), userName);
+        } catch (IOException | URISyntaxException e) {
+            throw new ActivityPubException(
+                String.format("Error when trying to resolve the XWiki actor from [%s]", xWikiActorURL), e);
         }
     }
 
