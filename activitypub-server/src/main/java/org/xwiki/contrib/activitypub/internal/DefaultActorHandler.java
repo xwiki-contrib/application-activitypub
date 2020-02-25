@@ -257,22 +257,4 @@ public class DefaultActorHandler implements ActorHandler
                 String.format("Error when trying to resolve the XWiki actor from [%s]", xWikiActorURL), e);
         }
     }
-
-    @Override
-    public Inbox getInbox(AbstractActor actor) throws ActivityPubException
-    {
-        Inbox inbox = this.activityPubObjectReferenceResolver.resolveReference(actor.getInbox());
-        inbox.setAttributedTo(
-            Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(actor)));
-        return inbox;
-    }
-
-    @Override
-    public Outbox getOutbox(AbstractActor actor) throws ActivityPubException
-    {
-        Outbox outbox = this.activityPubObjectReferenceResolver.resolveReference(actor.getOutbox());
-        outbox.setAttributedTo(
-            Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(actor)));
-        return outbox;
-    }
 }

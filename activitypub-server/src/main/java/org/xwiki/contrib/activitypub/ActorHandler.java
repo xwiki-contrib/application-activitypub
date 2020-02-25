@@ -21,8 +21,6 @@ package org.xwiki.contrib.activitypub;
 
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
-import org.xwiki.contrib.activitypub.entities.Inbox;
-import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.stability.Unstable;
 
@@ -76,24 +74,6 @@ public interface ActorHandler
      * @throws ActivityPubException in case of error while loading and parsing the request.
      */
     AbstractActor getRemoteActor(String actorURL) throws ActivityPubException;
-
-    /**
-     * Utility method to retrieve the inbox of the given actor.
-     * This methods allow to automatically resolve the reference of the inbox and to link it to the actor.
-     * @param actor the actor for which to retrieve the inbox
-     * @return the inbox of the actor.
-     * @throws ActivityPubException in case of problem when resolving the inbox reference.
-     */
-    Inbox getInbox(AbstractActor actor) throws ActivityPubException;
-
-    /**
-     * Utility method to retrieve the outbox of the given actor.
-     * This methods allow to automatically resolve the reference of the outbox and to link it to the actor.
-     * @param actor the actor for which to retrieve the outbox
-     * @return the outbox of the actor.
-     * @throws ActivityPubException in case of problem when resolving the outbox reference.
-     */
-    Outbox getOutbox(AbstractActor actor) throws ActivityPubException;
 
     /**
      * Verify if an user with the given serialized reference exist.
