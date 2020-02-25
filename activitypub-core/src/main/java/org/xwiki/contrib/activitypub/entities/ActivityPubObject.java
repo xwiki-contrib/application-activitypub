@@ -26,6 +26,7 @@ import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 import org.xwiki.contrib.activitypub.internal.json.ActivityPubObjectDeserializer;
+import org.xwiki.stability.Unstable;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
@@ -38,7 +39,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  *
  * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-object">ActivityStream Object definition</a>.
  * @version $Id$
+ * @since 1.0
  */
+@Unstable
 @JsonDeserialize(using = ActivityPubObjectDeserializer.class)
 public class ActivityPubObject extends JSONLDObjects
 {

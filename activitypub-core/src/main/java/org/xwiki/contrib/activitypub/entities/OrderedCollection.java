@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.xwiki.stability.Unstable;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
@@ -33,7 +35,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-orderedcollection">ActivityStream Collection
  * definition</a>
  * @version $Id$
+ * @since 1.0
  */
+@Unstable
 @JsonDeserialize(as = OrderedCollection.class)
 public class OrderedCollection<T extends ActivityPubObject> extends AbstractCollection<T>
 {

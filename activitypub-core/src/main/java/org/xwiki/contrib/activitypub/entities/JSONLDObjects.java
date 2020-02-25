@@ -22,12 +22,17 @@ package org.xwiki.contrib.activitypub.entities;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.xwiki.stability.Unstable;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * An artificial type to put the right JSON-LD context property everywhere.
+ *
  * @version $Id$
+ * @since 1.0
  */
+@Unstable
 public class JSONLDObjects
 {
     private static final String ACTIVITY_STREAM_CONTEXT = "https://www.w3.org/ns/activitystreams";

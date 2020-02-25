@@ -23,6 +23,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.xwiki.stability.Unstable;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
@@ -31,7 +33,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * @param <T> the type of {@link ActivityPubObject} to store.
  * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-collection">ActivityStream definition</a>
  * @version $Id$
+ * @since 1.0
  */
+@Unstable
 @JsonDeserialize(as = Collection.class)
 public class Collection<T extends ActivityPubObject> extends AbstractCollection<T>
 {

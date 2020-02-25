@@ -19,10 +19,15 @@
  */
 package org.xwiki.contrib.activitypub;
 
+import org.xwiki.stability.Unstable;
+
 /**
  * Default exception type for ActivityPub application.
+ *
+ * @since 1.0
  * @version $Id$
  */
+@Unstable
 public class ActivityPubException extends Exception
 {
     /**

@@ -24,11 +24,15 @@ import java.io.Reader;
 
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
+import org.xwiki.stability.Unstable;
 
 /**
  * Defines parsing operations for ActivityPub.
+ *
+ * @since 1.0
  * @version $Id$
  */
+@Unstable
 @Role
 public interface ActivityPubJsonParser
 {

@@ -19,6 +19,8 @@
  */
 package org.xwiki.contrib.activitypub.entities;
 
+import org.xwiki.stability.Unstable;
+
 /**
  * Abstract type to represent an ActivityStream Actor.
  * Note that we actually reused both definition from ActivityStream and ActivityPub to define this entity since here
@@ -27,7 +29,9 @@ package org.xwiki.contrib.activitypub.entities;
  * @see <a href="https://www.w3.org/TR/activitystreams-core/#actors">ActivityStream Actor definition</a>
  * @see <a href="https://www.w3.org/TR/activitypub/#actor-objects">ActivityPub Actor definition</a>
  * @version $Id$
+ * @since 1.0
  */
+@Unstable
 public abstract class AbstractActor extends ActivityPubObject
 {
     // TODO: Check IRI <-> URI conversion (https://tools.ietf.org/html/rfc3987#section-3.1)

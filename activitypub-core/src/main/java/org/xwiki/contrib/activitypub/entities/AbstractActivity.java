@@ -21,6 +21,8 @@ package org.xwiki.contrib.activitypub.entities;
 
 import java.util.Objects;
 
+import org.xwiki.stability.Unstable;
+
 import com.fasterxml.jackson.annotation.JsonSetter;
 
 /**
@@ -28,7 +30,9 @@ import com.fasterxml.jackson.annotation.JsonSetter;
  *
  * @see <a href="https://www.w3.org/TR/activitystreams-core/#activities">ActivityStream explanation about activities</a>
  * @version $Id$
+ * @since 1.0
  */
+@Unstable
 public abstract class AbstractActivity extends ActivityPubObject
 {
     private ActivityPubObjectReference<? extends AbstractActor> actor;

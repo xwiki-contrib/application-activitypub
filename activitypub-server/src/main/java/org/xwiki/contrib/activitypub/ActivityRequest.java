@@ -28,8 +28,10 @@ import org.xwiki.stability.Unstable;
 
 /**
  * A request to be handled by an {@link ActivityHandler}.
+ *
  * @param <T> the type of activity
  * @version $Id$
+ * @since 1.0
  */
 @Unstable
 public class ActivityRequest<T extends AbstractActivity>

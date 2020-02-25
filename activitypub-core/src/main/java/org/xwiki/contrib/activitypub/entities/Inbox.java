@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.xwiki.stability.Unstable;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
@@ -32,7 +34,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  *
  * @see <a href="https://www.w3.org/TR/activitypub/#inbox">ActivityPub Inbox definition</a>
  * @version $Id$
+ * @since 1.0
  */
+@Unstable
 @JsonDeserialize(as = Inbox.class)
 public class Inbox extends OrderedCollection<AbstractActivity>
 {

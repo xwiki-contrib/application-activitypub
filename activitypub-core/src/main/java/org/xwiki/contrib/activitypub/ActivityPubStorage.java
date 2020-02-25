@@ -23,11 +23,15 @@ import java.net.URI;
 
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
+import org.xwiki.stability.Unstable;
 
 /**
  * A storage for ActivityPub persistency.
+ *
+ * @since 1.0
  * @version $Id$
  */
+@Unstable
 @Role
 public interface ActivityPubStorage
 {

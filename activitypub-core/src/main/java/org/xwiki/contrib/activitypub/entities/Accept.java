@@ -19,6 +19,8 @@
  */
 package org.xwiki.contrib.activitypub.entities;
 
+import org.xwiki.stability.Unstable;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
@@ -26,7 +28,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  *
  * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-accept">ActivityStream Accept definition</a>
  * @version $Id$
+ * @since 1.0
  */
+@Unstable
 @JsonDeserialize(as = Accept.class)
 public class Accept extends AbstractActivity
 {

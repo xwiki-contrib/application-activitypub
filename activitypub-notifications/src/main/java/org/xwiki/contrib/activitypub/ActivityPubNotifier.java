@@ -24,12 +24,15 @@ import java.util.Set;
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.model.reference.EntityReference;
+import org.xwiki.stability.Unstable;
 
 /**
  * External API to send an ActivityPub notification.
  *
  * @version $Id$
+ * @since 1.0
  */
+@Unstable
 @Role
 public interface ActivityPubNotifier
 {

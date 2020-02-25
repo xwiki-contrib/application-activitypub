@@ -19,6 +19,8 @@
  */
 package org.xwiki.contrib.activitypub.entities;
 
+import org.xwiki.stability.Unstable;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
@@ -26,7 +28,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  *
  * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-note">ActivityStream Note definition</a>
  * @version $Id$
+ * @since 1.0
  */
+@Unstable
 @JsonDeserialize(as = Note.class)
 public class Note extends ActivityPubObject
 {

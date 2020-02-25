@@ -33,7 +33,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.NotImplementedException;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentLookupException;
@@ -55,7 +54,6 @@ import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Inbox;
-import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.resource.AbstractResourceReferenceHandler;
@@ -88,6 +86,8 @@ import com.xpn.xwiki.XWikiContext;
 public class ActivityPubResourceReferenceHandler extends AbstractResourceReferenceHandler<ResourceType>
 {
     private static final ResourceType TYPE = new ResourceType("activitypub");
+
+    private static final String TEXTPLAIN_CONTENTTYPE = "text/plain";
 
     @Inject
     private Logger logger;
@@ -138,179 +138,223 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         try {
             ActivityPubObject entity = this.activityPubStorage
                 .retrieveEntity(resourceReference.getEntityType(), resourceReference.getUuid());
-            if ("POST".equalsIgnoreCase(request.getMethod())) {
-                if (entity != null && !((entity instanceof Inbox) || (entity instanceof Outbox))) {
-                    this.sendErrorResponse(HttpServletResponse.SC_BAD_REQUEST,
-                        "POST requests are only allowed on inbox or outbox.");
-                } else if (entity != null) {
-                    if (entity.getAttributedTo() == null || entity.getAttributedTo().isEmpty()) {
-                        this.sendErrorResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                            "This box is not attributed. Please report the error to the administrator.");
-                    } else {
-                        try {
-                            AbstractActor actor = this.objectReferenceResolver
-                                .resolveReference(entity.getAttributedTo().get(0));
 
-                            if (entity instanceof Inbox) {
-                                this.handleBox(actor, BoxType.INBOX);
-                            } else {
-                                this.handleBox(actor, BoxType.OUTBOX);
-                            }
-                        } catch (ActivityPubException e) {
-                            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                            response.setContentType("text/plain");
-                            e.printStackTrace(response.getWriter());
-                        }
-                    }
-                } else {
-                    try {
-                        AbstractActor actor = getActor(resourceReference);
-                        if (actor != null) {
-                            if ("inbox".equalsIgnoreCase(resourceReference.getEntityType())) {
-                                this.handleBox(actor, BoxType.INBOX);
-                            } else if ("outbox".equalsIgnoreCase(resourceReference.getEntityType())) {
-                                this.handleBox(actor, BoxType.OUTBOX);
-                            } else {
-                                response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-                                response.setContentType("text/plain");
-                                response.getOutputStream()
-                                    .write("You cannot post anything outside an inbox our an outbox."
-                                        .getBytes(StandardCharsets.UTF_8));
-                            }
-                        }
-                    } catch (ActivityPubException e) {
-                        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                        response.setContentType("text/plain");
-                        e.printStackTrace(response.getWriter());
-                    }
-                }
+            // We didn't manage to retrieve the entity from storage, but it's about an Actor: we lazily create it.
+            if (entity == null && isAboutExistingUser(resourceReference)) {
+                entity = this.actorHandler.getLocalActor(resourceReference.getUuid());
+            }
+
+            // if the entity is still null, then it's a 404: we don't know about it.
+            if (entity == null) {
+                this.sendErrorResponse(HttpServletResponse.SC_NOT_FOUND,
+                    String.format("The entity of type [%s] and uid [%s] cannot be found.",
+                        resourceReference.getEntityType(), resourceReference.getUuid()));
+
+            // We are in a GET request with an entity: we just serve it.
+            } else if (isGet(request)) {
+                this.handleGetOnExistingEntity(response, entity);
+
+            // TODO: we should check the Content-Type headers for POST requests.
+            // We are in a POST request but not in a box: we don't accept those requests.
+            } else if (!isAboutBox(resourceReference)) {
+                this.sendErrorResponse(HttpServletResponse.SC_BAD_REQUEST,
+                    "POST requests are only allowed on inbox or outbox.");
+
+                // We are in a POST request, in a box, but the attributedTo entity is empty: this shouldn't happen
+                // we cannot identify who the box belongs to, so we have to report an error.
+            } else if (!isAttributedTo(entity)) {
+                this.sendErrorResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "This box is not attributed. Please report the error to the administrator.");
+
+                // We are finally in a POST request to a box and we can handle it.
             } else {
-                if (entity == null && "person".equalsIgnoreCase(resourceReference.getEntityType())
-                    || "actor".equalsIgnoreCase(resourceReference.getEntityType())) {
-                    if (this.actorHandler.isExistingUser(resourceReference.getUuid())) {
-                        try {
-                            entity = this.actorHandler.getLocalActor(resourceReference.getUuid());
-                        } catch (ActivityPubException e) {
-                            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                            response.setContentType("text/plain");
-                            e.printStackTrace(response.getWriter());
-                        }
-                    }
-                }
-                if (entity != null) {
-                    response.setStatus(HttpServletResponse.SC_OK);
-                    response.setContentType("application/activity+json");
-                    response.setCharacterEncoding(StandardCharsets.UTF_8.toString());
-
-                    // FIXME: This should be more complicated, we'd need to check authorization etc.
-                    // We probably need an entity handler component to manage the various kind of entities to retrieve.
-                    this.activityPubJsonSerializer.serialize(response.getOutputStream(), entity);
-                } else {
-                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                    response.setContentType("text/plain");
-                    response.getOutputStream().write(
-                        String.format("The entity of type [%s] and uid [%s] cannot be found.",
-                            resourceReference.getEntityType(), resourceReference.getUuid())
-                            .getBytes(StandardCharsets.UTF_8));
-                }
+                this.handleBox(entity);
             }
         } catch (ActivityPubException | IOException e) {
-            throw
-                new ResourceReferenceHandlerException(String.format("Error while handling [%s]", resourceReference), e);
+            try {
+                this.handleException(response, e);
+            } catch (IOException ex) {
+                logger.error("Cannot handle exception properly", ex);
+                logger.error("Root exception to handle", e);
+            }
         }
-
         // Be a good citizen, continue the chain, in case some lower-priority Handler has something to do for this
         // Resource Reference.
         chain.handleNext(reference);
     }
 
-    private AbstractActor getActor(ActivityPubResourceReference resourceReference)
-        throws IOException, ActivityPubException
-    {
-        if (this.actorHandler.isExistingUser(resourceReference.getUuid())) {
-            return this.actorHandler.getLocalActor(resourceReference.getUuid());
-        } else {
-            this.sendErrorResponse(HttpServletResponse.SC_NOT_FOUND,
-                String.format("User [%s] cannot be found.", resourceReference.getUuid()));
-        }
-        return null;
-    }
-
-    private void sendErrorResponse(int statusCode, String message) throws IOException
-    {
-        HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
-        response.setStatus(statusCode);
-        response.setContentType("text/plain");
-        response.getOutputStream().write(message.getBytes(StandardCharsets.UTF_8));
-    }
-
-    private void handleBox(AbstractActor actor, BoxType boxType)
-        throws IOException, ActivityPubException
-    {
-        ActivityRequest<AbstractActivity> activityRequest = this.parseRequest(actor);
-        if (activityRequest != null && activityRequest.getActor() != null) {
-            ActivityHandler<AbstractActivity> handler = this.getHandler(activityRequest);
-            if (handler != null) {
-                if (boxType == BoxType.INBOX) {
-                    handler.handleInboxRequest(activityRequest);
-                } else {
-                    DocumentReference sessionUserReference = this.contextProvider.get().getUserReference();
-                    EntityReference xWikiUserReference = this.actorHandler.getXWikiUserReference(actor);
-                    if (xWikiUserReference != null && xWikiUserReference.equals(sessionUserReference)) {
-                        handler.handleOutboxRequest(activityRequest);
-                    } else {
-                        this.sendErrorResponse(HttpServletResponse.SC_FORBIDDEN,
-                            String.format("The session user [%s] cannot post to [%s] outbox.",
-                                sessionUserReference, xWikiUserReference));
-                    }
-                }
-            } else {
-                throw new ActivityPubException(String.format("Error while looking for an handler for activity [%s]",
-                    activityRequest.getActivity().getType()));
-            }
-        } else {
-            throw new ActivityPubException("Error while parsing the request: the activity or its actor "
-                + "cannot be retrieved.");
-        }
-    }
-
-    private <T extends AbstractActivity> ActivityRequest<T> parseRequest(AbstractActor actor)
-        throws IOException, ActivityPubException
+    /**
+     * Handle the POST made on the given box: this methods parse the body of the request, perform some checks on it,
+     * build an {@link ActivityRequest}, retrieve the right {@link ActivityHandler} and delegates to it the request.
+     *
+     * @param box the box where the POST was performed
+     * @throws ActivityPubException in case of error during the checks on the body
+     * @throws IOException in case of error during an HTTP response.
+     */
+    private void handleBox(ActivityPubObject box) throws ActivityPubException, IOException
     {
         HttpServletRequest request = ((ServletRequest) this.container.getRequest()).getHttpServletRequest();
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
 
+        // resolve the actor with the attributed to reference
+        // FIXME: check if it's actually useful: we might have resolved it by getting an url /inbox/userId
+        AbstractActor actor = this.objectReferenceResolver.resolveReference(box.getAttributedTo().get(0));
+
+        // Parse the body of the request to retrieve the activity
         String requestBody = IOUtils.toString(request.getReader());
         ActivityPubObject object = this.activityPubJsonParser.parse(requestBody);
-        T activity = getActivity(object);
-        return new ActivityRequest<T>(actor, activity, request, response);
+        AbstractActivity activity = getActivity(object);
+
+        // Create the ActivityRequest and retrieve the handler for it
+        ActivityRequest<AbstractActivity> activityRequest = new ActivityRequest<>(actor, activity, request, response);
+        ActivityHandler<AbstractActivity> handler = this.getHandler(activity);
+
+        if (box instanceof Inbox) {
+            handler.handleInboxRequest(activityRequest);
+        } else {
+
+            // Perform some authorization checks
+            DocumentReference sessionUserReference = this.contextProvider.get().getUserReference();
+            EntityReference xWikiUserReference = this.actorHandler.getXWikiUserReference(actor);
+            if (xWikiUserReference != null && xWikiUserReference.equals(sessionUserReference)) {
+                handler.handleOutboxRequest(activityRequest);
+            } else {
+                this.sendErrorResponse(HttpServletResponse.SC_FORBIDDEN,
+                    String.format("The session user [%s] cannot post to [%s] outbox.",
+                        sessionUserReference, xWikiUserReference));
+            }
+        }
     }
 
-    private <T extends AbstractActivity> T getActivity(ActivityPubObject object)
+    /**
+     * Ensure that the given {@link ActivityPubObject} has an attributedTo parameter filled.
+     * @param entity the object that needs an attributedTo parameter.
+     * @return {@code true} iff {@link ActivityPubObject#getAttributedTo()} returns a filled collection.
+     */
+    private boolean isAttributedTo(ActivityPubObject entity)
+    {
+        return entity.getAttributedTo() != null && !entity.getAttributedTo().isEmpty();
+    }
+
+    /**
+     * Ensure that the given {@link ActivityPubResourceReference} is about an inbox or an outbox.
+     * @param resourceReference the reference to check
+     * @return {@code true} iff the type of the reference is inbox or outbox.
+     */
+    private boolean isAboutBox(ActivityPubResourceReference resourceReference)
+    {
+        return "inbox".equalsIgnoreCase(resourceReference.getEntityType())
+            || "outbox".equalsIgnoreCase(resourceReference.getEntityType());
+    }
+
+    /**
+     * Ensure that the request method is a GET.
+     * @param request the request to test
+     * @return {@code true} iff the method of the request is GET.
+     */
+    private boolean isGet(HttpServletRequest request)
+    {
+        return "get".equalsIgnoreCase(request.getMethod());
+    }
+
+    /**
+     * Serialize the given entity in the response and set the headers.
+     * @param response the response servlet to use.
+     * @param entity the entity to serialize.
+     * @throws IOException in case of error during the HTTP response.
+     * @throws ActivityPubException in case of error during the serialization.
+     */
+    private void handleGetOnExistingEntity(HttpServletResponse response, ActivityPubObject entity)
+        throws IOException, ActivityPubException
+    {
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setContentType("application/activity+json");
+        response.setCharacterEncoding(StandardCharsets.UTF_8.toString());
+
+        // FIXME: This should be more complicated, we'd need to check authorization etc.
+        // We probably need an entity handler component to manage the various kind of entities to retrieve.
+        this.activityPubJsonSerializer.serialize(response.getOutputStream(), entity);
+    }
+
+    /**
+     * Utility method to send an error message in case of exception.
+     * @param response the servlet response to use
+     * @param e the exception to handle.
+     * @throws IOException in case of error during the HTTP response
+     */
+    private void handleException(HttpServletResponse response, Exception e) throws IOException
+    {
+        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        response.setContentType(TEXTPLAIN_CONTENTTYPE);
+        e.printStackTrace(response.getWriter());
+    }
+
+    /**
+     * Check that the given resource reference is a request about an existing user: we accept request about actor or
+     * person.
+     * @param resourceReference the reference to check
+     * @return {@code true} if the request is about an actor or a person and the uid is an existing user.
+     */
+    private boolean isAboutExistingUser(ActivityPubResourceReference resourceReference)
+    {
+        return ("person".equalsIgnoreCase(resourceReference.getEntityType())
+            || "actor".equalsIgnoreCase(resourceReference.getEntityType())
+            || isAboutBox(resourceReference))
+            && this.actorHandler.isExistingUser(resourceReference.getUuid());
+    }
+
+    /**
+     * Send an error message as plain text.
+     * @param statusCode the HTTP status to send
+     * @param message the error message to send
+     * @throws IOException in case of error during the HTTP response
+     */
+    private void sendErrorResponse(int statusCode, String message) throws IOException
+    {
+        HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
+        response.setStatus(statusCode);
+        response.setContentType(TEXTPLAIN_CONTENTTYPE);
+        response.getOutputStream().write(message.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Ensure that the actual object class inherits from AbstractActivity and returns it.
+     * TODO: in case it's not the case, it should return a Create wrapper around the object.
+     * @param object the object to check
+     * @param <T> the type of activity
+     * @throws ActivityPubException in case the object is not an activity
+     * @return the activity
+     */
+    private <T extends AbstractActivity> T getActivity(ActivityPubObject object) throws ActivityPubException
     {
         if (AbstractActivity.class.isAssignableFrom(object.getClass())) {
             return (T) object;
         } else {
             // TODO: handle wrapping object in a create activity
-            throw new NotImplementedException();
+            throw new ActivityPubException("The body does not contain an activity, "
+                + "the wrapping of objects in a Create activity is not yet supported. "
+                + "Please report it if you have this issue.");
         }
     }
 
-    private <T extends AbstractActivity> Class<T> getActivityClass(T object)
-    {
-        return (Class<T>) object.getClass();
-    }
-
-    private <T extends AbstractActivity> ActivityHandler<T> getHandler(ActivityRequest<T> activityRequest)
+    /**
+     * Retrieve the {@link ActivityHandler} concrete component based on the given activity class.
+     * @param activity the activity for which we need a handler
+     * @param <T> the type of the activity
+     * @return an activity handler for this activity
+     * @throws ActivityPubException in case no component for this activity can be found.
+     */
+    private <T extends AbstractActivity> ActivityHandler<T> getHandler(T activity)
+        throws ActivityPubException
     {
         try {
             Type activityHandlerType = new DefaultParameterizedType(null, ActivityHandler.class,
-                getActivityClass(activityRequest.getActivity()));
+                activity.getClass());
             return this.componentManager.getInstance(activityHandlerType);
         } catch (ComponentLookupException e) {
-            this.logger.error("Error while getting the ActivityHandler for activity [{}]",
-                activityRequest.getActivity().getType(), e);
+            throw new ActivityPubException(
+                String.format("Error while getting the ActivityHandler for activity [%s]",
+                    activity.getType()), e);
         }
-        return null;
     }
 }

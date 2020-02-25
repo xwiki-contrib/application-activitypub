@@ -26,12 +26,15 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
+import org.xwiki.stability.Unstable;
 
 /**
  * A simple HttpClient dedicated to use ActivityPub.
  *
  * @version $Id$
+ * @since 1.0
  */
+@Unstable
 @Role
 public interface ActivityPubClient
 {

@@ -24,12 +24,15 @@ import java.util.Set;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.eventstream.RecordableEvent;
 import org.xwiki.eventstream.TargetableEvent;
+import org.xwiki.stability.Unstable;
 
 /**
  * Defines the ActivityPub event to be displayed as Notifications.
  * @param <T> the type of the activity
  * @version $Id$
+ * @since 1.0
  */
+@Unstable
 public class ActivityPubEvent<T extends AbstractActivity> implements RecordableEvent, TargetableEvent
 {
     private Set<String> target;

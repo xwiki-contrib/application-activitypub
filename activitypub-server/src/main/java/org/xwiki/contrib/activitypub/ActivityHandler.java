@@ -23,12 +23,15 @@ import java.io.IOException;
 
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
+import org.xwiki.stability.Unstable;
 
 /**
  * Handle an activity posted in an inbox or in an outbox, wrapped in an {@link ActivityRequest}.
  * @param <T> the type of the activity.
  * @version $Id$
+ * @since 1.0
  */
+@Unstable
 @Role
 public interface ActivityHandler<T extends AbstractActivity>
 {

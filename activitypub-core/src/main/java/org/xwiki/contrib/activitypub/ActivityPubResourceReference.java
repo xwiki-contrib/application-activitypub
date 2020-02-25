@@ -21,12 +21,16 @@ package org.xwiki.contrib.activitypub;
 
 import org.xwiki.resource.AbstractResourceReference;
 import org.xwiki.resource.ResourceType;
+import org.xwiki.stability.Unstable;
 
 /**
  * A resource reference to be able to identify and retrieve any stored ActivityPub entity.
  * This is tightly related to {@link ActivityPubStorage}.
+ *
+ * @since 1.0
  * @version $Id$
  */
+@Unstable
 public class ActivityPubResourceReference extends AbstractResourceReference
 {
     /**

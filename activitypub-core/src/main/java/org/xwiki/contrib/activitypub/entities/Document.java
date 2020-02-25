@@ -19,13 +19,17 @@
  */
 package org.xwiki.contrib.activitypub.entities;
 
+import org.xwiki.stability.Unstable;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
  * Represents a Document as defined by ActivityStream.
  * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-document">ActivityStream Document definition</a>
  * @version $Id$
+ * @since 1.0
  */
+@Unstable
 @JsonDeserialize(as = Document.class)
 public class Document extends ActivityPubObject
 {

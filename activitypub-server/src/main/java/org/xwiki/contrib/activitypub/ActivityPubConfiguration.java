@@ -20,11 +20,15 @@
 package org.xwiki.contrib.activitypub;
 
 import org.xwiki.component.annotation.Role;
+import org.xwiki.stability.Unstable;
 
 /**
  * Defines the configuration of the server.
+ *
  * @version $Id$
+ * @since 1.0
  */
+@Unstable
 @Role
 public interface ActivityPubConfiguration
 {

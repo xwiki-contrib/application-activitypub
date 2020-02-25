@@ -22,6 +22,8 @@ package org.xwiki.contrib.activitypub.entities;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.xwiki.stability.Unstable;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
@@ -29,7 +31,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  *
  * @see <a href="https://www.w3.org/TR/activitypub/#outbox">ActivityPub Outbox definition</a>
  * @version $Id$
+ * @since 1.0
  */
+@Unstable
 @JsonDeserialize(as = Outbox.class)
 public class Outbox extends OrderedCollection<AbstractActivity>
 {

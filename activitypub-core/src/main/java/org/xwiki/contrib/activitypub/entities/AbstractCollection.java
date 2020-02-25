@@ -19,6 +19,8 @@
  */
 package org.xwiki.contrib.activitypub.entities;
 
+import org.xwiki.stability.Unstable;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
@@ -28,7 +30,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * about Collections</a>
  * @param <I> the type of item contained in the collection to be able to iterate on them.
  * @version $Id$
+ * @since 1.0
  */
+@Unstable
 public abstract class AbstractCollection<I extends ActivityPubObject>
     extends ActivityPubObject
     implements Iterable<ActivityPubObjectReference<I>>

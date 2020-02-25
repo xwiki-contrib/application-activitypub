@@ -23,6 +23,7 @@ import java.net.URI;
 import java.util.Objects;
 
 import org.xwiki.contrib.activitypub.internal.json.ActivityPubObjectReferenceDeserializer;
+import org.xwiki.stability.Unstable;
 import org.xwiki.text.XWikiToStringBuilder;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -36,7 +37,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * See {@link org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver}.
  * @param <T> the type of {@link ActivityPubObject} it refers to.
  * @version $Id$
+ * @since 1.0
  */
+@Unstable
 @JsonDeserialize(using = ActivityPubObjectReferenceDeserializer.class)
 public class ActivityPubObjectReference<T extends ActivityPubObject>
 {

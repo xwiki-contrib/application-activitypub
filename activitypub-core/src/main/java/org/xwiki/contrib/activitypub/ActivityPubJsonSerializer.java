@@ -23,11 +23,15 @@ import java.io.OutputStream;
 
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
+import org.xwiki.stability.Unstable;
 
 /**
  * Define serializing operations for ActivityPub.
+ *
+ * @since 1.0
  * @version $Id$
  */
+@Unstable
 @Role
 public interface ActivityPubJsonSerializer
 {

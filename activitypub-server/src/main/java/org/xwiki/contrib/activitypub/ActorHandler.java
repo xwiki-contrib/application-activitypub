@@ -24,12 +24,15 @@ import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.model.reference.EntityReference;
+import org.xwiki.stability.Unstable;
 
 /**
  * Handles the mapping between XWiki Users and ActivityPub actors.
  *
  * @version $Id$
+ * @since 1.0
  */
+@Unstable
 @Role
 public interface ActorHandler
 {
