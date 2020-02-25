@@ -206,17 +206,35 @@ public class DefaultActorHandler implements ActorHandler
     }
 
     @Override
-    public AbstractActor getRemoteActor(String xWikiActorURL) throws ActivityPubException
+    public AbstractActor getRemoteActor(String actorURL) throws ActivityPubException
     {
-        String actorURL = this.resolveXWikiActorURL(xWikiActorURL);
+        return getRemoteActor(actorURL, true);
+    }
+
+    /**
+     * Implements {@see getRemoteActor} but tries to use actorURL as a XWiki url profile URL if the standard activitypub
+     * request fails. 
+     *
+     * @param actorURL the URL of the remote actor.
+     * @param fallback Specify if the url should be tried an a XWiki user profile URL in case of failure.
+     * @return an instance of the actor.
+     * @throws ActivityPubException in case of error while loading and parsing the request.
+     */
+    private AbstractActor getRemoteActor(String actorURL, boolean fallback) throws ActivityPubException
+    {
         try {
             URI uri = new URI(actorURL);
             HttpMethod httpMethod = this.activityPubClient.get(uri);
             this.activityPubClient.checkAnswer(httpMethod);
             return this.jsonParser.parse(httpMethod.getResponseBodyAsStream());
         } catch (ActivityPubException | URISyntaxException | IOException e) {
-            throw new ActivityPubException(
-                String.format("Error when trying to retrieve the remote actor from [%s]", actorURL), e);
+            if (fallback) {
+                String xWikiActorURL = this.resolveXWikiActorURL(actorURL);
+                return this.getRemoteActor(xWikiActorURL, false);
+            } else {
+                throw new ActivityPubException(
+                    String.format("Error when trying to retrieve the remote actor from [%s]", actorURL), e);
+            }
         }
     }
 
