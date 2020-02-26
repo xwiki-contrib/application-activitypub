@@ -26,8 +26,6 @@ import java.io.FileReader;
 import java.net.URI;
 import java.util.stream.Collectors;
 
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.component.util.DefaultParameterizedType;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;

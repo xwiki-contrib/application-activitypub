@@ -20,7 +20,6 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 
 import javax.inject.Inject;
