@@ -37,7 +37,7 @@
   <syntaxId>plain/1.0</syntaxId>
   <hidden>true</hidden>
   <content>activitypub.follow.input.label=Follow the given user
-activitypub.follow.input.hint=Enter the full URL of an ActitivityPub user profile to start following him/her
+activitypub.follow.input.hint=Enter the full URL of an user profile (XWiki Profile or ActivityPub Actor URL) to start following him/her
 activitypub.follow.input.placeholder=http://mywiki/xwiki/activitypub/person/Foo
 activitypub.follow.button=Follow
 activitypub.follow.followRequested=The follow request has been sent.
