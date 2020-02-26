@@ -30,6 +30,7 @@ import javax.inject.Singleton;
 
 import org.apache.commons.httpclient.HttpMethod;
 import org.jsoup.Jsoup;
+import org.jsoup.helper.HttpConnection;
 import org.jsoup.nodes.Document;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
@@ -88,6 +89,25 @@ public class DefaultActorHandler implements ActorHandler
 
     @Inject
     private ActivityPubJsonParser jsonParser;
+
+    private HttpConnection jsoupConnection;
+
+    private HttpConnection getJsoupConnection()
+    {
+        if (this.jsoupConnection == null) {
+            this.jsoupConnection = new HttpConnection();
+        }
+        return this.jsoupConnection;
+    }
+
+    /**
+     * Helper to inject a mock of HttpConnection for testing purpose.
+     * @param connection the connection to use.
+     */
+    protected void setJsoupConnection(HttpConnection connection)
+    {
+        this.jsoupConnection = connection;
+    }
 
     @Override
     public AbstractActor getCurrentActor() throws ActivityPubException
@@ -248,7 +268,7 @@ public class DefaultActorHandler implements ActorHandler
     private String resolveXWikiActorURL(String xWikiActorURL) throws ActivityPubException
     {
         try {
-            Document doc = Jsoup.connect(xWikiActorURL).get();
+            Document doc = getJsoupConnection().url(xWikiActorURL).get();
             String userName = doc.selectFirst("html").attr("data-xwiki-document");
             URI uri = new URI(xWikiActorURL);
             return String.format("%s://%s/xwiki/activitypub/Person/%s", uri.getScheme(), uri.getAuthority(), userName);

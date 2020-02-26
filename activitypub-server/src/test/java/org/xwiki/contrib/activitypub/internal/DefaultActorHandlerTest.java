@@ -20,17 +20,25 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import java.lang.reflect.Type;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
 
 import javax.inject.Named;
 import javax.inject.Provider;
 
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.jsoup.helper.HttpConnection;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.component.util.DefaultParameterizedType;
+import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
@@ -61,6 +69,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -97,6 +106,12 @@ public class DefaultActorHandlerTest
     @MockComponent
     @Named("current")
     private DocumentReferenceResolver<String> stringDocumentReferenceResolver;
+
+    @MockComponent
+    private ActivityPubClient activityPubClient;
+
+    @MockComponent
+    private ActivityPubJsonParser jsonParser;
 
     @BeforeComponent
     public void setup(MockitoComponentManager componentManager) throws Exception
@@ -248,5 +263,42 @@ public class DefaultActorHandlerTest
             actorHandler.getLocalActor("Bar");
         });
         assertEquals("Cannot find any user in document [xwiki:XWiki.Bar]", activityPubException.getMessage());
+    }
+
+    @Test
+    public void getRemoteActor() throws Exception
+    {
+        Person person = new Person().setPreferredUsername("Foobar");
+        String remoteActorUrl = "http://www.xwiki.org/xwiki/activitypub/Person/Foobar";
+        GetMethod getMethod = mock(GetMethod.class);
+        when(this.activityPubClient.get(new URI(remoteActorUrl))).thenReturn(getMethod);
+        when(this.jsonParser.parse(getMethod.getResponseBodyAsStream())).thenReturn(person);
+        assertSame(person, this.actorHandler.getRemoteActor(remoteActorUrl));
+    }
+
+    @Test
+    public void getRemoteActorWithFallback() throws Exception
+    {
+        Person person = new Person().setPreferredUsername("Foobar");
+        String remoteProfileUrl = "http://www.xwiki.org/xwiki/view/bin/XWiki/Foobar";
+        String remoteActorUrl = "http://www.xwiki.org/xwiki/activitypub/Person/XWiki.Foobar";
+
+        GetMethod getMethodProfile = mock(GetMethod.class);
+        when(this.activityPubClient.get(new URI(remoteProfileUrl))).thenReturn(getMethodProfile);
+        doThrow(new ActivityPubException("Check issue")).when(this.activityPubClient).checkAnswer(getMethodProfile);
+
+        HttpConnection jsoupConnection = mock(HttpConnection.class);
+        this.actorHandler.setJsoupConnection(jsoupConnection);
+        when(jsoupConnection.url(remoteProfileUrl)).thenReturn(jsoupConnection);
+        Document document = mock(Document.class);
+        when(jsoupConnection.get()).thenReturn(document);
+        Element element = mock(Element.class);
+        when(document.selectFirst("html")).thenReturn(element);
+        when(element.attr("data-xwiki-document")).thenReturn("XWiki.Foobar");
+
+        GetMethod getMethodActor = mock(GetMethod.class);
+        when(this.activityPubClient.get(new URI(remoteActorUrl))).thenReturn(getMethodActor);
+        when(this.jsonParser.parse(getMethodActor.getResponseBodyAsStream())).thenReturn(person);
+        assertSame(person, this.actorHandler.getRemoteActor(remoteActorUrl));
     }
 }
