@@ -22,7 +22,6 @@ package org.xwiki.contrib.activitypub.internal;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.xwiki.eventstream.Event;
 import org.xwiki.eventstream.EventFactory;
@@ -36,10 +35,18 @@ import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 import static org.xwiki.contrib.activitypub.internal.ActivityPubRecordableEventConverter.ACTIVITY_PARAMETER_KEY;
 
+/**
+ * Tests of {@link ActivityPubLegacyEventConverter}.
+ *
+ * @since 1.0
+ * @version $Id$
+ */
 @ComponentTest
 public class ActivityPubLegacyEventConverterTest
 {
@@ -52,56 +59,84 @@ public class ActivityPubLegacyEventConverterTest
     @MockComponent
     private EntityReferenceResolver<String> resolver;
 
+    /**
+     * Test {@link ActivityPubLegacyEventConverter#convertEventToLegacyActivity(Event)} when 
+     * no {@link ActivityPubRecordableEventConverter#ACTIVITY_PARAMETER_KEY} is defined in the converted 
+     * {@link DefaultEvent}.
+     */
     @Test
-    public void testConvertEventToLegacyActivityWithActivityParameterKey()
+    void convertEventToLegacyActivityWithoutActivityParameterKey()
     {
-        final DefaultEvent e = new DefaultEvent();
-        final Map<String, String> parameters = new HashMap<>();
+        DefaultEvent e = new DefaultEvent();
+        LegacyEvent actual = this.activityPubLegacyEventConverter.convertEventToLegacyActivity(e);
+        assertEquals("", actual.getParam3());
+    }
+
+    /**
+     * Test {@link ActivityPubLegacyEventConverter#convertEventToLegacyActivity(Event)} when 
+     * an {@link ActivityPubRecordableEventConverter#ACTIVITY_PARAMETER_KEY} is defined in the converted 
+     * {@link DefaultEvent}.
+     */
+    @Test
+    void convertEventToLegacyActivityWithActivityParameterKey()
+    {
+        DefaultEvent e = new DefaultEvent();
+        Map<String, String> parameters = new HashMap<>();
         parameters.put(ACTIVITY_PARAMETER_KEY, "randomValue");
         e.setParameters(parameters);
-        final LegacyEvent actual = this.activityPubLegacyEventConverter.convertEventToLegacyActivity(e);
-        Assertions.assertEquals("randomValue", actual.getParam3());
+        LegacyEvent actual = this.activityPubLegacyEventConverter.convertEventToLegacyActivity(e);
+        assertEquals("randomValue", actual.getParam3());
     }
 
+    /**
+     * Test {@link ActivityPubLegacyEventConverter#convertLegacyActivityToEvent(LegacyEvent)}.
+     * When the third param of the {@link LegacyEvent} is not set, the
+     * {@link ActivityPubRecordableEventConverter#ACTIVITY_PARAMETER_KEY} param of the returned  {@link DefaultEvent}
+     * must be null.
+     */
     @Test
-    public void testConvertEventToLegacyActivityWithoutActivityParameterKey()
+    void convertLegacyActivityToEventWithoutActivityParameterKey()
     {
-        final DefaultEvent e = new DefaultEvent();
-        final LegacyEvent actual = this.activityPubLegacyEventConverter.convertEventToLegacyActivity(e);
-        Assertions.assertEquals("", actual.getParam3());
+        mockCreateRawEvent();
+        mockEntityReferenceResolve();
+
+        LegacyEvent e = new LegacyEvent();
+        Event actual = this.activityPubLegacyEventConverter.convertLegacyActivityToEvent(e);
+        assertFalse(actual.getParameters().containsKey(ACTIVITY_PARAMETER_KEY));
     }
 
+    /**
+     * Test {@link ActivityPubLegacyEventConverter#convertLegacyActivityToEvent(LegacyEvent)}.
+     * The third param of the {@link LegacyEvent} must be set in the
+     * {@link ActivityPubRecordableEventConverter#ACTIVITY_PARAMETER_KEY} of the returned  {@link DefaultEvent}.
+     */
     @Test
-    public void testConvertLegacyActivityToEventWithActivityParameterKey()
+    void convertLegacyActivityToEventWithActivityParameterKey()
     {
         mockCreateRawEvent();
         mockEntityReferenceResolve();
         LegacyEvent e = new LegacyEvent();
         e.setParam3("randomValue2");
         Event actual = this.activityPubLegacyEventConverter.convertLegacyActivityToEvent(e);
-        Assertions.assertEquals("randomValue2", actual.getParameters().get(ACTIVITY_PARAMETER_KEY));
+        assertEquals("randomValue2", actual.getParameters().get(ACTIVITY_PARAMETER_KEY));
     }
 
-    @Test
-    public void testConvertLegacyActivityToEventWithoutActivityParameterKey()
-    {
-        mockCreateRawEvent();
-        mockEntityReferenceResolve();
-
-        LegacyEvent e = new LegacyEvent();
-        Event actual = this.activityPubLegacyEventConverter.convertLegacyActivityToEvent(e);
-        Assertions.assertFalse(actual.getParameters().containsKey(ACTIVITY_PARAMETER_KEY));
-    }
-
+    /**
+     * Mock {@link EventFactory#createRawEvent()} and return a {@link DefaultEvent}.
+     */
     private void mockCreateRawEvent()
     {
         when(eventFactory.createRawEvent()).thenReturn(new DefaultEvent());
     }
 
+    /**
+     * Mocl {@link EntityReferenceResolver#resolve(Object, EntityType, Object...)} and returns a minimal
+     * {@link EntityReference}.
+     */
     private void mockEntityReferenceResolve()
     {
-        final EntityReference parent = new SpaceReference("parentTest", "spaceTest1");
-        final EntityReference test = new EntityReference("test", EntityType.DOCUMENT, parent);
+        EntityReference parent = new SpaceReference("parentTest", "spaceTest1");
+        EntityReference test = new EntityReference("test", EntityType.DOCUMENT, parent);
         when(resolver.resolve(any(), any())).thenReturn(test);
     }
 }

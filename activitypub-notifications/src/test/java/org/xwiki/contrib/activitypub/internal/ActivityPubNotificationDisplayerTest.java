@@ -25,8 +25,6 @@ import java.util.List;
 
 import javax.script.SimpleScriptContext;
 
-import org.junit.Assert;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.xwiki.contrib.activitypub.ActivityPubException;
@@ -49,11 +47,23 @@ import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.xwiki.contrib.activitypub.internal.ActivityPubRecordableEventConverter.ACTIVITY_PARAMETER_KEY;
 
+/**
+ * Test of {@link ActivityPubNotificationDisplayer}.
+ *
+ * @since 1.0
+ * @version $Id$
+ */
 @ComponentTest
 public class ActivityPubNotificationDisplayerTest
 {
@@ -61,7 +71,7 @@ public class ActivityPubNotificationDisplayerTest
     private ActivityPubNotificationDisplayer activityPubNotificationDisplayer;
 
     @RegisterExtension
-    static LogCaptureExtension logCapture = new LogCaptureExtension(LogLevel.ERROR);
+    LogCaptureExtension logCapture = new LogCaptureExtension(LogLevel.ERROR);
 
     @MockComponent
     private ActivityPubJsonParser activityPubJsonParser;
@@ -73,73 +83,61 @@ public class ActivityPubNotificationDisplayerTest
     private TemplateManager templateManager;
 
     @Test
-    public void testRenderNotificationNoValidEvent() throws Exception
+    void renderNotificationNoValidEvent() throws Exception
     {
-        final DefaultEvent event = new DefaultEvent();
-        final CompositeEvent compositeEvent = new CompositeEvent(event);
+        DefaultEvent event = new DefaultEvent();
+        CompositeEvent compositeEvent = new CompositeEvent(event);
         Block actual = activityPubNotificationDisplayer.renderNotification(compositeEvent);
         assertTrue(actual.getChildren().isEmpty());
-        Assert.assertEquals(String.format("The event [%s] cannot be processed.", event.toString()),
+        assertEquals(String.format("The event [%s] cannot be processed.", event.toString()),
             logCapture.getMessage(0));
     }
 
     @Test
-    public void testRenderNotificationOneEvent() throws Exception
+    void renderNotificationOneEvent() throws Exception
     {
 
         when(activityPubJsonParser.parse("my content")).thenReturn(new Accept());
         when(scriptContextManager.getScriptContext()).thenReturn(new SimpleScriptContext());
-        final Template t = new Template()
-        {
-            @Override public String getId()
-            {
-                return null;
-            }
-
-            @Override public String getPath()
-            {
-                return null;
-            }
-
-            @Override public TemplateContent getContent() throws Exception
-            {
-                return null;
-            }
-        };
+        Template t = mock(Template.class);
         when(templateManager.getTemplate("activity/accept.vm")).thenReturn(t);
-        final ArrayList<Block> childBlocks = new ArrayList<>();
+        ArrayList<Block> childBlocks = new ArrayList<>();
         childBlocks.add(new IdBlock("ok"));
         when(templateManager.execute(t)).thenReturn(new XDOM(childBlocks));
 
-        final DefaultEvent event = new DefaultEvent();
-        final HashMap<String, String> parameters = new HashMap<>();
+        DefaultEvent event = new DefaultEvent();
+        HashMap<String, String> parameters = new HashMap<>();
         parameters.put(ACTIVITY_PARAMETER_KEY, "my content");
         event.setParameters(parameters);
-        final CompositeEvent compositeEvent = new CompositeEvent(event);
+        CompositeEvent compositeEvent = new CompositeEvent(event);
         Block actual = activityPubNotificationDisplayer.renderNotification(compositeEvent);
         assertEquals(1, actual.getChildren().size());
         assertEquals("ok", ((IdBlock) actual.getChildren().get(0).getChildren().get(0)).getName());
+        verify(templateManager, times(1)).getTemplate("activity/accept.vm");
     }
 
     @Test
-    public void testRenderNotificationRetrieveError() throws Exception
+    void renderNotificationRetrieveError() throws Exception
     {
 
         when(activityPubJsonParser.parse(anyString())).thenThrow(new ActivityPubException("throwed"));
 
-        final DefaultEvent event = new DefaultEvent();
-        final HashMap<String, String> parameters = new HashMap<>();
+        DefaultEvent event = new DefaultEvent();
+        HashMap<String, String> parameters = new HashMap<>();
         parameters.put(ACTIVITY_PARAMETER_KEY, "my content");
         event.setParameters(parameters);
         CompositeEvent compositeEvent = new CompositeEvent(event);
-        assertThrows(NotificationException.class,
+
+        NotificationException expt = assertThrows(NotificationException.class,
             () -> activityPubNotificationDisplayer.renderNotification(compositeEvent));
+
+        assertEquals("Error while getting the activity of an event", expt.getMessage());
     }
 
     @Test
-    public void testGetSuppotedEvents()
+    void getSuppotedEventsDefault()
     {
-        final List<String> supportedEvents = activityPubNotificationDisplayer.getSupportedEvents();
+        List<String> supportedEvents = activityPubNotificationDisplayer.getSupportedEvents();
         assertEquals(ActivityPubNotifier.EVENT_TYPE, supportedEvents.get(0));
     }
 }

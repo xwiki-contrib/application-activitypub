@@ -23,8 +23,6 @@ import java.util.List;
 
 import javax.inject.Named;
 
-import org.junit.Assert;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.xwiki.contrib.activitypub.ActivityPubEvent;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
@@ -42,11 +40,19 @@ import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.xwiki.contrib.activitypub.internal.ActivityPubRecordableEventConverter.ACTIVITY_PARAMETER_KEY;
 
+/**
+ * Test of {@link ActivityPubRecordableEventConverter}
+ * 
+ * @since 1.0
+ * @version $Id$
+ */
 @ComponentTest
 public class ActivityPubRecordableEventConverterTest
 {
@@ -67,15 +73,15 @@ public class ActivityPubRecordableEventConverterTest
     private ActivityPubObjectReferenceResolver objectReferenceResolver;
 
     @Test
-    public void testConvertWithUser() throws Exception
+    void testConvertWithUser() throws Exception
     {
-        final DefaultEvent e = new DefaultEvent();
+        DefaultEvent e = new DefaultEvent();
         e.setUser(new DocumentReference("xwiki", "XWiki", "jdoe"));
         when(recordableEventConverter.convert(any(), any(), any())).thenReturn(e);
         when(activityPubJsonSerializer.serialize(any())).thenReturn("Serialized AP");
         when(stringDocumentReferenceResolver.resolve(any())).thenReturn(new DocumentReference("xwiki",
             "XWiki", "Foo"));
-        final Person person = new Person();
+        Person person = new Person();
         person.setPreferredUsername("John Doe");
         when(objectReferenceResolver.resolveReference(any())).thenReturn(person);
         when(stringDocumentReferenceResolver.resolve(anyString()))
@@ -86,20 +92,20 @@ public class ActivityPubRecordableEventConverterTest
         Object data = null;
         Event actual =
             this.activityPubRecordableEventConverter.convert(recordableEvent, source, data);
-        Assertions.assertNotNull(actual);
-        Assertions.assertEquals("Serialized AP", actual.getParameters().get(ACTIVITY_PARAMETER_KEY));
-        Assertions.assertEquals(ActivityPubNotifier.EVENT_TYPE, actual.getType());
-        Assertions.assertEquals("jdoe", actual.getUser().getName());
+        assertNotNull(actual);
+        assertEquals("Serialized AP", actual.getParameters().get(ACTIVITY_PARAMETER_KEY));
+        assertEquals(ActivityPubNotifier.EVENT_TYPE, actual.getType());
+        assertEquals("jdoe", actual.getUser().getName());
     }
-    
+
     @Test
-    public void testConvertWithoutUser() throws Exception
+    void convertWithoutUser() throws Exception
     {
         when(recordableEventConverter.convert(any(), any(), any())).thenReturn(new DefaultEvent());
         when(activityPubJsonSerializer.serialize(any())).thenReturn("Serialized AP");
         when(stringDocumentReferenceResolver.resolve(any())).thenReturn(new DocumentReference("xwiki",
             "XWiki", "Foo"));
-        final Person person = new Person();
+        Person person = new Person();
         person.setPreferredUsername("John Doe");
         when(objectReferenceResolver.resolveReference(any())).thenReturn(person);
         when(stringDocumentReferenceResolver.resolve(anyString()))
@@ -110,18 +116,18 @@ public class ActivityPubRecordableEventConverterTest
         Object data = null;
         Event actual =
             this.activityPubRecordableEventConverter.convert(recordableEvent, source, data);
-        Assertions.assertNotNull(actual);
-        Assertions.assertEquals("Serialized AP", actual.getParameters().get(ACTIVITY_PARAMETER_KEY));
-        Assertions.assertEquals(ActivityPubNotifier.EVENT_TYPE, actual.getType());
-        Assertions.assertEquals("user", actual.getUser().getName());
+        assertNotNull(actual);
+        assertEquals("Serialized AP", actual.getParameters().get(ACTIVITY_PARAMETER_KEY));
+        assertEquals(ActivityPubNotifier.EVENT_TYPE, actual.getType());
+        assertEquals("user", actual.getUser().getName());
     }
 
     @Test
-    public void testSupportedEvents()
+    void supportedEventsDefault()
     {
         List<RecordableEvent> actual =
             this.activityPubRecordableEventConverter.getSupportedEvents();
-        Assert.assertEquals(1, actual.size());
-        Assert.assertEquals(ActivityPubEvent.class, actual.get(0).getClass());
+        assertEquals(1, actual.size());
+        assertEquals(ActivityPubEvent.class, actual.get(0).getClass());
     }
 }
