@@ -23,12 +23,9 @@ import java.io.IOException;
 import java.net.URI;
 
 import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
-import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
-import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.stability.Unstable;
 
 /**
@@ -58,16 +55,6 @@ public interface ActivityPubClient
      * @throws ActivityPubException in case of error during the post or the activity serialization.
      */
     HttpMethod postOutbox(AbstractActor actor, AbstractActivity activity) throws ActivityPubException, IOException;
-
-    /**
-     * Resolve an object reference.
-     * @param <T> The expected type of the resolved reference.
-     * @param reference The object reference to be resolved.
-     * @return a {@link GetMethod} which contains the answer.
-     * @throws ActivityPubException in case of error during the object reference resolution. 
-     */
-    <T extends ActivityPubObject> HttpMethod resolveReference(ActivityPubObjectReference<T> reference)
-        throws ActivityPubException, IOException;
 
     /**
      * Post an activity in the given URI.

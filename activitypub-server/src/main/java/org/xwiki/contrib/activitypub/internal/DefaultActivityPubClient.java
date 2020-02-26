@@ -92,13 +92,6 @@ public class DefaultActivityPubClient implements ActivityPubClient
         return post(getURIFromObjectReference(actor.getOutbox()), activity);
     }
 
-    @Override
-    public <T extends ActivityPubObject> HttpMethod resolveReference(ActivityPubObjectReference<T> reference)
-        throws IOException
-    {
-        return this.get(this.getURIFromObjectReference(reference));
-    }
-
     private URI getURIFromObjectReference(ActivityPubObjectReference<? extends ActivityPubObject> objectReference)
     {
         if (objectReference.isLink()) {
