@@ -36,7 +36,6 @@ import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
-import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Follow;
@@ -100,27 +99,28 @@ public class ActivityPubScriptService implements ScriptService
         return result;
     }
 
-    /**
-     * Send an Accept request to a received Follow.
-     * @param follow the follow activity to accept.
-     * @return {@code true} iff the request has been sent properly.
-     */
-    // FIXME: we should check that the current actor and followed actor is the same.
-    public boolean acceptFollow(Follow follow)
-    {
-        boolean result = false;
-        try {
-            AbstractActor currentActor = this.actorHandler.getCurrentActor();
-            Accept accept = new Accept().setActor(currentActor).setObject(follow);
-            this.activityPubStorage.storeEntity(accept);
-            HttpMethod httpMethod = this.activityPubClient.postOutbox(currentActor, accept);
-            this.activityPubClient.checkAnswer(httpMethod);
-            result = true;
-        } catch (ActivityPubException | IOException e) {
-            this.logger.error("Error while trying to send the accept follow request [{}]", follow, e);
-        }
-        return result;
-    }
+// This is not supported in 1.0
+//    /**
+//     * Send an Accept request to a received Follow.
+//     * @param follow the follow activity to accept.
+//     * @return {@code true} iff the request has been sent properly.
+//     */
+//    // FIXME: we should check that the current actor and followed actor is the same.
+//    public boolean acceptFollow(Follow follow)
+//    {
+//        boolean result = false;
+//        try {
+//            AbstractActor currentActor = this.actorHandler.getCurrentActor();
+//            Accept accept = new Accept().setActor(currentActor).setObject(follow);
+//            this.activityPubStorage.storeEntity(accept);
+//            HttpMethod httpMethod = this.activityPubClient.postOutbox(currentActor, accept);
+//            this.activityPubClient.checkAnswer(httpMethod);
+//            result = true;
+//        } catch (ActivityPubException | IOException e) {
+//            this.logger.error("Error while trying to send the accept follow request [{}]", follow, e);
+//        }
+//        return result;
+//    }
 
     /**
      * Resolve and returns the given {@link ActivityPubObjectReference}.
