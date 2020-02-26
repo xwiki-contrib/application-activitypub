@@ -39,7 +39,6 @@ import org.xwiki.rendering.block.IdBlock;
 import org.xwiki.rendering.block.XDOM;
 import org.xwiki.script.ScriptContextManager;
 import org.xwiki.template.Template;
-import org.xwiki.template.TemplateContent;
 import org.xwiki.template.TemplateManager;
 import org.xwiki.test.LogLevel;
 import org.xwiki.test.junit5.LogCaptureExtension;
@@ -50,7 +49,6 @@ import org.xwiki.test.junit5.mockito.MockComponent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -87,40 +85,40 @@ public class ActivityPubNotificationDisplayerTest
     {
         DefaultEvent event = new DefaultEvent();
         CompositeEvent compositeEvent = new CompositeEvent(event);
-        Block actual = activityPubNotificationDisplayer.renderNotification(compositeEvent);
+        Block actual = this.activityPubNotificationDisplayer.renderNotification(compositeEvent);
         assertTrue(actual.getChildren().isEmpty());
         assertEquals(String.format("The event [%s] cannot be processed.", event.toString()),
-            logCapture.getMessage(0));
+            this.logCapture.getMessage(0));
     }
 
     @Test
     void renderNotificationOneEvent() throws Exception
     {
 
-        when(activityPubJsonParser.parse("my content")).thenReturn(new Accept());
-        when(scriptContextManager.getScriptContext()).thenReturn(new SimpleScriptContext());
+        when(this.activityPubJsonParser.parse("my content")).thenReturn(new Accept());
+        when(this.scriptContextManager.getScriptContext()).thenReturn(new SimpleScriptContext());
         Template t = mock(Template.class);
-        when(templateManager.getTemplate("activity/accept.vm")).thenReturn(t);
+        when(this.templateManager.getTemplate("activity/accept.vm")).thenReturn(t);
         ArrayList<Block> childBlocks = new ArrayList<>();
         childBlocks.add(new IdBlock("ok"));
-        when(templateManager.execute(t)).thenReturn(new XDOM(childBlocks));
+        when(this.templateManager.execute(t)).thenReturn(new XDOM(childBlocks));
 
         DefaultEvent event = new DefaultEvent();
         HashMap<String, String> parameters = new HashMap<>();
         parameters.put(ACTIVITY_PARAMETER_KEY, "my content");
         event.setParameters(parameters);
         CompositeEvent compositeEvent = new CompositeEvent(event);
-        Block actual = activityPubNotificationDisplayer.renderNotification(compositeEvent);
+        Block actual = this.activityPubNotificationDisplayer.renderNotification(compositeEvent);
         assertEquals(1, actual.getChildren().size());
         assertEquals("ok", ((IdBlock) actual.getChildren().get(0).getChildren().get(0)).getName());
-        verify(templateManager, times(1)).getTemplate("activity/accept.vm");
+        verify(this.templateManager, times(1)).getTemplate("activity/accept.vm");
     }
 
     @Test
     void renderNotificationRetrieveError() throws Exception
     {
 
-        when(activityPubJsonParser.parse(anyString())).thenThrow(new ActivityPubException("throwed"));
+        when(this.activityPubJsonParser.parse(anyString())).thenThrow(new ActivityPubException("throwed"));
 
         DefaultEvent event = new DefaultEvent();
         HashMap<String, String> parameters = new HashMap<>();
@@ -129,7 +127,7 @@ public class ActivityPubNotificationDisplayerTest
         CompositeEvent compositeEvent = new CompositeEvent(event);
 
         NotificationException expt = assertThrows(NotificationException.class,
-            () -> activityPubNotificationDisplayer.renderNotification(compositeEvent));
+            () -> this.activityPubNotificationDisplayer.renderNotification(compositeEvent));
 
         assertEquals("Error while getting the activity of an event", expt.getMessage());
     }
@@ -137,7 +135,7 @@ public class ActivityPubNotificationDisplayerTest
     @Test
     void getSuppotedEventsDefault()
     {
-        List<String> supportedEvents = activityPubNotificationDisplayer.getSupportedEvents();
+        List<String> supportedEvents = this.activityPubNotificationDisplayer.getSupportedEvents();
         assertEquals(ActivityPubNotifier.EVENT_TYPE, supportedEvents.get(0));
     }
 }

@@ -48,7 +48,7 @@ import static org.mockito.Mockito.when;
 import static org.xwiki.contrib.activitypub.internal.ActivityPubRecordableEventConverter.ACTIVITY_PARAMETER_KEY;
 
 /**
- * Test of {@link ActivityPubRecordableEventConverter}
+ * Test of {@link ActivityPubRecordableEventConverter}.
  * 
  * @since 1.0
  * @version $Id$
@@ -77,14 +77,14 @@ public class ActivityPubRecordableEventConverterTest
     {
         DefaultEvent e = new DefaultEvent();
         e.setUser(new DocumentReference("xwiki", "XWiki", "jdoe"));
-        when(recordableEventConverter.convert(any(), any(), any())).thenReturn(e);
-        when(activityPubJsonSerializer.serialize(any())).thenReturn("Serialized AP");
-        when(stringDocumentReferenceResolver.resolve(any())).thenReturn(new DocumentReference("xwiki",
+        when(this.recordableEventConverter.convert(any(), any(), any())).thenReturn(e);
+        when(this.activityPubJsonSerializer.serialize(any())).thenReturn("Serialized AP");
+        when(this.stringDocumentReferenceResolver.resolve(any())).thenReturn(new DocumentReference("xwiki",
             "XWiki", "Foo"));
         Person person = new Person();
         person.setPreferredUsername("John Doe");
-        when(objectReferenceResolver.resolveReference(any())).thenReturn(person);
-        when(stringDocumentReferenceResolver.resolve(anyString()))
+        when(this.objectReferenceResolver.resolveReference(any())).thenReturn(person);
+        when(this.stringDocumentReferenceResolver.resolve(anyString()))
             .thenReturn(new DocumentReference("xwiki", "XWiki", "user"));
 
         RecordableEvent recordableEvent = new ActivityPubEvent<>(new Accept(), null);
@@ -101,14 +101,14 @@ public class ActivityPubRecordableEventConverterTest
     @Test
     void convertWithoutUser() throws Exception
     {
-        when(recordableEventConverter.convert(any(), any(), any())).thenReturn(new DefaultEvent());
-        when(activityPubJsonSerializer.serialize(any())).thenReturn("Serialized AP");
-        when(stringDocumentReferenceResolver.resolve(any())).thenReturn(new DocumentReference("xwiki",
+        when(this.recordableEventConverter.convert(any(), any(), any())).thenReturn(new DefaultEvent());
+        when(this.activityPubJsonSerializer.serialize(any())).thenReturn("Serialized AP");
+        when(this.stringDocumentReferenceResolver.resolve(any())).thenReturn(new DocumentReference("xwiki",
             "XWiki", "Foo"));
         Person person = new Person();
         person.setPreferredUsername("John Doe");
-        when(objectReferenceResolver.resolveReference(any())).thenReturn(person);
-        when(stringDocumentReferenceResolver.resolve(anyString()))
+        when(this.objectReferenceResolver.resolveReference(any())).thenReturn(person);
+        when(this.stringDocumentReferenceResolver.resolve(anyString()))
             .thenReturn(new DocumentReference("xwiki", "XWiki", "user"));
 
         RecordableEvent recordableEvent = new ActivityPubEvent<>(new Accept(), null);

@@ -97,8 +97,8 @@ public class ActivityPubLegacyEventConverterTest
     @Test
     void convertLegacyActivityToEventWithoutActivityParameterKey()
     {
-        mockCreateRawEvent();
-        mockEntityReferenceResolve();
+        this.mockCreateRawEvent();
+        this.mockEntityReferenceResolve();
 
         LegacyEvent e = new LegacyEvent();
         Event actual = this.activityPubLegacyEventConverter.convertLegacyActivityToEvent(e);
@@ -113,8 +113,8 @@ public class ActivityPubLegacyEventConverterTest
     @Test
     void convertLegacyActivityToEventWithActivityParameterKey()
     {
-        mockCreateRawEvent();
-        mockEntityReferenceResolve();
+        this.mockCreateRawEvent();
+        this.mockEntityReferenceResolve();
         LegacyEvent e = new LegacyEvent();
         e.setParam3("randomValue2");
         Event actual = this.activityPubLegacyEventConverter.convertLegacyActivityToEvent(e);
@@ -126,7 +126,7 @@ public class ActivityPubLegacyEventConverterTest
      */
     private void mockCreateRawEvent()
     {
-        when(eventFactory.createRawEvent()).thenReturn(new DefaultEvent());
+        when(this.eventFactory.createRawEvent()).thenReturn(new DefaultEvent());
     }
 
     /**
@@ -137,6 +137,6 @@ public class ActivityPubLegacyEventConverterTest
     {
         EntityReference parent = new SpaceReference("parentTest", "spaceTest1");
         EntityReference test = new EntityReference("test", EntityType.DOCUMENT, parent);
-        when(resolver.resolve(any(), any())).thenReturn(test);
+        when(this.resolver.resolve(any(), any())).thenReturn(test);
     }
 }
