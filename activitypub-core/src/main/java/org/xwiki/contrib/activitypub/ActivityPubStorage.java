@@ -72,11 +72,10 @@ public interface ActivityPubStorage
     /**
      * Extract an entity from its UUID.
      *
-     * @param entityType the type of the entity as returned by the {@link ActivityPubResourceReference}.
      * @param uuid the unique identifier of the entity as given by {@link #storeEntity(ActivityPubObject)}.
      * @param <T> the concrete type of the entity to retrieve.
      * @return the stored entity or null if it has not been found.
      * @throws ActivityPubException if the parsing of the entity failed.
      */
-    <T extends ActivityPubObject> T retrieveEntity(String entityType, String uuid) throws ActivityPubException;
+    <T extends ActivityPubObject> T retrieveEntity(String uuid) throws ActivityPubException;
 }

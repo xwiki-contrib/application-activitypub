@@ -147,7 +147,7 @@ public class DefaultActorHandlerTest
     public void getActorWithAlreadyExistingActor() throws Exception
     {
         AbstractActor expectedActor = new Person().setPreferredUsername("XWiki.Foo");
-        when(this.activityPubStorage.retrieveEntity("actor", "XWiki.Foo")).thenReturn(expectedActor);
+        when(this.activityPubStorage.retrieveEntity("XWiki.Foo")).thenReturn(expectedActor);
 
         assertSame(expectedActor, this.actorHandler.getActor(FOO_REFERENCE));
     }

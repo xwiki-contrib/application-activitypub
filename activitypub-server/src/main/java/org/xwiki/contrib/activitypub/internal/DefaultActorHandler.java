@@ -120,7 +120,7 @@ public class DefaultActorHandler implements ActorHandler
         if (userXObject != null) {
             XWikiUser xWikiUser = new XWikiUser(new DocumentReference(entityReference));
             String login = xWikiUser.getFullName();
-            AbstractActor actor = this.activityPubStorage.retrieveEntity("actor", login);
+            AbstractActor actor = this.activityPubStorage.retrieveEntity(login);
             if (actor == null) {
                 String fullname = String.format("%s %s",
                     userXObject.getStringValue("first_name"), userXObject.getStringValue("last_name"));

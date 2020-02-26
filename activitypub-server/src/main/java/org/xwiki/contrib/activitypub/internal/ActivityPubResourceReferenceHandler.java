@@ -131,8 +131,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         HttpServletRequest request = ((ServletRequest) this.container.getRequest()).getHttpServletRequest();
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
         try {
-            ActivityPubObject entity = this.activityPubStorage
-                .retrieveEntity(resourceReference.getEntityType(), resourceReference.getUuid());
+            ActivityPubObject entity = this.activityPubStorage.retrieveEntity(resourceReference.getUuid());
 
             // We didn't manage to retrieve the entity from storage, but it's about an Actor: we lazily create it.
             if (entity == null && isAboutExistingUser(resourceReference)) {

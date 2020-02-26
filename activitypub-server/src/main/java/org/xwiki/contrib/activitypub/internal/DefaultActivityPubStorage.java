@@ -92,6 +92,8 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     @Inject
     private Logger logger;
 
+    private URL serverUrl;
+
     /**
      * Default constructor.
      */
@@ -100,13 +102,21 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         this.storage = new HashMap<>();
     }
 
+    private URL getServerUrl() throws MalformedURLException
+    {
+        if (this.serverUrl == null) {
+            XWikiContext context = this.contextProvider.get();
+            this.serverUrl = context.getURLFactory().getServerURL(context);
+        }
+        return this.serverUrl;
+    }
+
     private boolean isIdFromCurrentInstance(URI id)
     {
-        XWikiContext context = this.contextProvider.get();
+        // FIXME: This should definitely be computed in a better way
         try {
-            URL serverURL = context.getURLFactory().getServerURL(context);
-            return (!id.relativize(serverURL.toURI()).toASCIIString().isEmpty());
-        } catch (MalformedURLException | URISyntaxException e) {
+            return id.toURL().toString().contains(getServerUrl().toString());
+        } catch (MalformedURLException e) {
             logger.error("Error while comparing server URL and actor ID", e);
         }
         return false;
@@ -182,7 +192,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     }
 
     @Override
-    public <T extends ActivityPubObject> T retrieveEntity(String entityType, String uuid) throws ActivityPubException
+    public <T extends ActivityPubObject> T retrieveEntity(String uuid) throws ActivityPubException
     {
         if (this.storage.containsKey(uuid)) {
             return (T) this.jsonParser.parse(this.storage.get(uuid));
