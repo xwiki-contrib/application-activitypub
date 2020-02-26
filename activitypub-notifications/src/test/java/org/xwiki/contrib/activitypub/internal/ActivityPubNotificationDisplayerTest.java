@@ -21,19 +21,17 @@ package org.xwiki.contrib.activitypub.internal;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
-import javax.inject.Inject;
-import javax.script.ScriptContext;
 import javax.script.SimpleScriptContext;
 
 import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.mockito.Mock;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
-import org.xwiki.contrib.activitypub.entities.AbstractActivity;
+import org.xwiki.contrib.activitypub.ActivityPubNotifier;
 import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.eventstream.internal.DefaultEvent;
 import org.xwiki.notifications.CompositeEvent;
@@ -51,7 +49,9 @@ import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
 
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.when;
 import static org.xwiki.contrib.activitypub.internal.ActivityPubRecordableEventConverter.ACTIVITY_PARAMETER_KEY;
 
 @ComponentTest
@@ -78,7 +78,7 @@ public class ActivityPubNotificationDisplayerTest
         final DefaultEvent event = new DefaultEvent();
         final CompositeEvent compositeEvent = new CompositeEvent(event);
         Block actual = activityPubNotificationDisplayer.renderNotification(compositeEvent);
-        Assertions.assertTrue(actual.getChildren().isEmpty());
+        assertTrue(actual.getChildren().isEmpty());
         Assert.assertEquals(String.format("The event [%s] cannot be processed.", event.toString()),
             logCapture.getMessage(0));
     }
@@ -117,7 +117,8 @@ public class ActivityPubNotificationDisplayerTest
         event.setParameters(parameters);
         final CompositeEvent compositeEvent = new CompositeEvent(event);
         Block actual = activityPubNotificationDisplayer.renderNotification(compositeEvent);
-        Assertions.assertEquals(1, actual.getChildren().size());
+        assertEquals(1, actual.getChildren().size());
+        assertEquals("ok", ((IdBlock) actual.getChildren().get(0).getChildren().get(0)).getName());
     }
 
     @Test
@@ -131,7 +132,14 @@ public class ActivityPubNotificationDisplayerTest
         parameters.put(ACTIVITY_PARAMETER_KEY, "my content");
         event.setParameters(parameters);
         CompositeEvent compositeEvent = new CompositeEvent(event);
-        Assertions.assertThrows(NotificationException.class,
+        assertThrows(NotificationException.class,
             () -> activityPubNotificationDisplayer.renderNotification(compositeEvent));
+    }
+
+    @Test
+    public void testGetSuppotedEvents()
+    {
+        final List<String> supportedEvents = activityPubNotificationDisplayer.getSupportedEvents();
+        assertEquals(ActivityPubNotifier.EVENT_TYPE, supportedEvents.get(0));
     }
 }
