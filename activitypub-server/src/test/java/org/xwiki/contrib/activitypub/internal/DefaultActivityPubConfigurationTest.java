@@ -19,45 +19,27 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
-import java.util.Arrays;
-import java.util.Collections;
-
 import org.junit.jupiter.api.Test;
-import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
-import org.xwiki.resource.CreateResourceReferenceException;
-import org.xwiki.resource.ResourceType;
-import org.xwiki.resource.UnsupportedResourceReferenceException;
+import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
-import org.xwiki.url.ExtendedURL;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Test for {@link ActivityPubResourceReferenceResolver}.
+ * Test for {@link DefaultActivityPubConfiguration}.
  *
  * @version $Id$
  */
 @ComponentTest
-public class ActivityPubResourceReferenceResolverTest
+public class DefaultActivityPubConfigurationTest
 {
     @InjectMockComponents
-    private ActivityPubResourceReferenceResolver resourceReferenceResolver;
+    private DefaultActivityPubConfiguration activityPubConfiguration;
 
     @Test
-    public void resolve() throws CreateResourceReferenceException, UnsupportedResourceReferenceException
+    public void getFollowPolicy()
     {
-        ExtendedURL extendedURL = new ExtendedURL(Arrays.asList("foo", "bar"),
-            Collections.singletonMap("test", Arrays.asList("42", "43")));
-
-        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("foo", "bar");
-        resourceReference.addParameter("test", "42");
-        resourceReference.addParameter("test", "43");
-
-        assertEquals(resourceReference,
-            this.resourceReferenceResolver.resolve(
-                extendedURL,
-                new ResourceType("activitypub"),
-                Collections.emptyMap()));
+        assertEquals(ActivityPubConfiguration.FollowPolicy.ACCEPT, this.activityPubConfiguration.getFollowPolicy());
     }
 }

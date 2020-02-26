@@ -64,10 +64,10 @@ public interface ActivityPubStorage
      * calls {@link #storeEntity(String, ActivityPubObject)} in order to store it.
      * @param uri the URI to resolve
      * @param entity the entity to persist
-     * @return {@code true} iff the entity has been overridden
+     * @return the actual ID of the entity to be retrieved.
      * @throws ActivityPubException in case the URI has not been properly resolved or if the storing failed.
      */
-    boolean storeEntity(URI uri, ActivityPubObject entity) throws ActivityPubException;
+    String storeEntity(URI uri, ActivityPubObject entity) throws ActivityPubException;
 
     /**
      * Extract an entity from its UUID.

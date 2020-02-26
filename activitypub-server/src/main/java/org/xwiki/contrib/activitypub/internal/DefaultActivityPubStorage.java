@@ -126,7 +126,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     public String storeEntity(ActivityPubObject entity) throws ActivityPubException
     {
         if (entity.getId() != null && isIdFromCurrentInstance(entity.getId())) {
-            this.storeEntity(entity.getId(), entity);
+            return this.storeEntity(entity.getId(), entity);
         } else if (entity.getId() != null && !isIdFromCurrentInstance(entity.getId())) {
             throw new ActivityPubException(
                 String.format("Entity [%s] won't be stored since it's not part of the current instance", entity.getId())
@@ -166,7 +166,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     }
 
     @Override
-    public boolean storeEntity(URI uri, ActivityPubObject entity) throws ActivityPubException
+    public String storeEntity(URI uri, ActivityPubObject entity) throws ActivityPubException
     {
         try {
             // FIXME: the prefix should be at the very least dynamically computed.
@@ -174,7 +174,8 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
             ExtendedURL extendedURL = new ExtendedURL(uri.toURL(), "xwiki/activitypub");
             ActivityPubResourceReference resourceReference = (ActivityPubResourceReference) this.urlResolver.
                 resolve(extendedURL, new ResourceType("activitypub"), Collections.emptyMap());
-            return this.storeEntity(resourceReference.getUuid(), entity);
+            this.storeEntity(resourceReference.getUuid(), entity);
+            return resourceReference.getUuid();
         } catch (MalformedURLException | CreateResourceReferenceException | UnsupportedResourceReferenceException e) {
             throw new ActivityPubException(String.format("Error when getting UID from URI [%s]", uri), e);
         }
