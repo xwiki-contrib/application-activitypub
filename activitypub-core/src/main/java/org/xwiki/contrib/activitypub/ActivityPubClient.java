@@ -20,7 +20,6 @@
 package org.xwiki.contrib.activitypub;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 
 import org.apache.commons.httpclient.HttpMethod;
