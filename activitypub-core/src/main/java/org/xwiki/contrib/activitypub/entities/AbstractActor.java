@@ -37,7 +37,6 @@ import org.xwiki.text.XWikiToStringBuilder;
 @Unstable
 public abstract class AbstractActor extends ActivityPubObject
 {
-    // TODO: Check IRI <-> URI conversion (https://tools.ietf.org/html/rfc3987#section-3.1)
     // We might have some weird cases with XWiki special username (containing non UTF-8 characters for example)
     private String preferredUsername;
     private ActivityPubObjectReference<Inbox> inbox;

@@ -144,11 +144,13 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
                     String.format("The entity of type [%s] and uid [%s] cannot be found.",
                         resourceReference.getEntityType(), resourceReference.getUuid()));
 
+            // FIXME: we should check the Content-Type and Accept headers
+            // See: https://www.w3.org/TR/activitypub/#client-to-server-interactions for POST and
+            // https://www.w3.org/TR/activitypub/#retrieving-objects for GET
             // We are in a GET request with an entity: we just serve it.
             } else if (isGet(request)) {
                 this.handleGetOnExistingEntity(response, entity);
 
-            // TODO: we should check the Content-Type headers for POST requests.
             // We are in a POST request but not in a box: we don't accept those requests.
             } else if (!isAboutBox(resourceReference)) {
                 this.sendErrorResponse(HttpServletResponse.SC_BAD_REQUEST,

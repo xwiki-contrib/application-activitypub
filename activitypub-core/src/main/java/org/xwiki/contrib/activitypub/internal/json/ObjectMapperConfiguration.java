@@ -53,7 +53,7 @@ public class ObjectMapperConfiguration implements Initializable
         SimpleModule module = new SimpleModule();
 
         // defines which serializer/deserializer to use.
-        // TODO: Check if we cannot use polymorphic serialization instead
+        // Maybe we could have use Jackon Polymorphic deserialization, but so far we didn't manage to use it properly
         // cf https://github.com/FasterXML/jackson-docs/wiki/JacksonPolymorphicDeserialization
         module
             .addSerializer(ActivityPubObjectReference.class, objectReferenceSerializer);

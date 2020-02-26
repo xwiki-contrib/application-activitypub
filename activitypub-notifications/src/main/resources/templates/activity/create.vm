@@ -18,7 +18,6 @@
 ## 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 ## ---------------------------------------------------------------------------
 #template('notification/macros.vm')
-## FIXME: We cannot work with the buttons right now because we cannot use JSFX
 #set ($smallIcon = "branch")
 #set ($mainIcon = "branch")
 #define ($content)

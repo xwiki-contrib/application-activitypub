@@ -51,7 +51,9 @@ import org.xwiki.contrib.activitypub.entities.AbstractActor;
 public class DefaultActivityPubClient implements ActivityPubClient
 {
     private static final String CONTENTTYPE_HEADER = "Content-Type";
-    private static final String ACTIVITYPUB_CONTENTTYPE = "application/activity+json";
+
+    private static final String CLIENT_CONTENT_TYPE =
+        "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"";
 
     private HttpClient httpClient;
 
@@ -66,12 +68,23 @@ public class DefaultActivityPubClient implements ActivityPubClient
         this.httpClient = new HttpClient();
     }
 
+    /**
+     * A setter for httpclient for testing purpose.
+     * @param client the {@link HttpClient} implementation to use.
+     */
+    protected void setHttpClient(HttpClient client)
+    {
+        this.httpClient = client;
+    }
+
     @Override
     public HttpMethod postInbox(AbstractActor actor, AbstractActivity activity) throws ActivityPubException
     {
         return post(getURIFromObjectReference(actor.getInbox()), activity);
     }
 
+    // FIXME: Credentials must be provided to post in an outbox.
+    // See: https://www.w3.org/TR/activitypub/#client-to-server-interactions
     @Override
     public HttpMethod postOutbox(AbstractActor actor, AbstractActivity activity) throws ActivityPubException
     {
@@ -92,7 +105,7 @@ public class DefaultActivityPubClient implements ActivityPubClient
     {
         try {
             RequestEntity bodyRequest = new StringRequestEntity(this.activityPubJsonSerializer.serialize(activity),
-                ACTIVITYPUB_CONTENTTYPE,
+                CLIENT_CONTENT_TYPE,
                 "UTF-8");
             PostMethod postMethod = new PostMethod(uri.toASCIIString());
             postMethod.setRequestEntity(bodyRequest);
@@ -107,13 +120,14 @@ public class DefaultActivityPubClient implements ActivityPubClient
     public HttpMethod get(URI uri) throws IOException
     {
         GetMethod getMethod = new GetMethod(uri.toASCIIString());
+        getMethod.addRequestHeader("Accept", CLIENT_CONTENT_TYPE);
         this.httpClient.executeMethod(getMethod);
         return getMethod;
     }
 
     private boolean checkContentTypeHeader(Header contentTypeHeader)
     {
-        return  (contentTypeHeader != null && contentTypeHeader.getValue().contains(ACTIVITYPUB_CONTENTTYPE));
+        return  (contentTypeHeader != null && contentTypeHeader.getValue().contains(CLIENT_CONTENT_TYPE));
     }
 
     @Override
@@ -121,12 +135,12 @@ public class DefaultActivityPubClient implements ActivityPubClient
     {
         String exceptionMessage = null;
         if (!method.isRequestSent()) {
-            exceptionMessage = "The request has not been sent yet.";
+            exceptionMessage = "The request has not been sent.";
         } else if (method.getStatusCode() != 200) {
             exceptionMessage = String.format("200 status code expected, got [%s] instead", method.getStatusCode());
         } else if (!checkContentTypeHeader(method.getResponseHeader(CONTENTTYPE_HEADER))) {
             exceptionMessage = String.format("Content-Type header should return '%s' and got [%s] instead",
-                ACTIVITYPUB_CONTENTTYPE, method.getResponseHeader(CONTENTTYPE_HEADER));
+                CLIENT_CONTENT_TYPE, method.getResponseHeader(CONTENTTYPE_HEADER));
         }
 
         if (exceptionMessage != null) {
