@@ -22,6 +22,8 @@ package org.xwiki.contrib.activitypub;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.stability.Unstable;
@@ -98,5 +100,37 @@ public class ActivityRequest<T extends AbstractActivity>
     public HttpServletResponse getResponse()
     {
         return response;
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        ActivityRequest<?> that = (ActivityRequest<?>) o;
+
+        return new EqualsBuilder()
+            .append(actor, that.actor)
+            .append(activity, that.activity)
+            .append(request, that.request)
+            .append(response, that.response)
+            .isEquals();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder(17, 37)
+            .append(actor)
+            .append(activity)
+            .append(request)
+            .append(response)
+            .toHashCode();
     }
 }

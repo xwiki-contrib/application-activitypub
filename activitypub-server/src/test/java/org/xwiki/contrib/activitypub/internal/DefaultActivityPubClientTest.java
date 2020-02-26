@@ -51,6 +51,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Test for {@link DefaultActivityPubClient}
+ *
+ * @version $Id$
+ */
 @ComponentTest
 public class DefaultActivityPubClientTest
 {

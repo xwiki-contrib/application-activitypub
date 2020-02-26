@@ -42,6 +42,7 @@ import org.xwiki.container.Container;
 import org.xwiki.container.servlet.ServletRequest;
 import org.xwiki.container.servlet.ServletResponse;
 import org.xwiki.contrib.activitypub.ActivityHandler;
+import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
@@ -156,13 +157,13 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
                 this.sendErrorResponse(HttpServletResponse.SC_BAD_REQUEST,
                     "POST requests are only allowed on inbox or outbox.");
 
-                // We are in a POST request, in a box, but the attributedTo entity is empty: this shouldn't happen
-                // we cannot identify who the box belongs to, so we have to report an error.
+            // We are in a POST request, in a box, but the attributedTo entity is empty: this shouldn't happen
+            // we cannot identify who the box belongs to, so we have to report an error.
             } else if (!isAttributedTo(entity)) {
                 this.sendErrorResponse(HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     "This box is not attributed. Please report the error to the administrator.");
 
-                // We are finally in a POST request to a box and we can handle it.
+            // We are finally in a POST request to a box and we can handle it.
             } else {
                 this.handleBox(entity);
             }
@@ -193,7 +194,6 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
 
         // resolve the actor with the attributed to reference
-        // FIXME: check if it's actually useful: we might have resolved it by getting an url /inbox/userId
         AbstractActor actor = this.objectReferenceResolver.resolveReference(box.getAttributedTo().get(0));
 
         // Parse the body of the request to retrieve the activity
@@ -208,7 +208,6 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         if (box instanceof Inbox) {
             handler.handleInboxRequest(activityRequest);
         } else {
-
             // Perform some authorization checks
             DocumentReference sessionUserReference = this.contextProvider.get().getUserReference();
             EntityReference xWikiUserReference = this.actorHandler.getXWikiUserReference(actor);
@@ -264,7 +263,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         throws IOException, ActivityPubException
     {
         response.setStatus(HttpServletResponse.SC_OK);
-        response.setContentType("application/activity+json");
+        response.setContentType(ActivityPubClient.CONTENT_TYPE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.toString());
 
         // FIXME: This should be more complicated, we'd need to check authorization etc.
@@ -294,8 +293,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
     private boolean isAboutExistingUser(ActivityPubResourceReference resourceReference)
     {
         return ("person".equalsIgnoreCase(resourceReference.getEntityType())
-            || "actor".equalsIgnoreCase(resourceReference.getEntityType())
-            || isAboutBox(resourceReference))
+            || "actor".equalsIgnoreCase(resourceReference.getEntityType()))
             && this.actorHandler.isExistingUser(resourceReference.getUuid());
     }
 

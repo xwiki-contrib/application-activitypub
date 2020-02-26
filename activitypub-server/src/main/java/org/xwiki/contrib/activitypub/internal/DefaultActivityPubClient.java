@@ -50,10 +50,7 @@ import org.xwiki.contrib.activitypub.entities.AbstractActor;
 @Singleton
 public class DefaultActivityPubClient implements ActivityPubClient
 {
-    private static final String CONTENTTYPE_HEADER = "Content-Type";
-
-    private static final String CLIENT_CONTENT_TYPE =
-        "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"";
+    private static final String CONTENT_TYPE_HEADER_NAME = "Content-Type";
 
     private HttpClient httpClient;
 
@@ -105,7 +102,7 @@ public class DefaultActivityPubClient implements ActivityPubClient
     public HttpMethod post(URI uri, AbstractActivity activity) throws ActivityPubException, IOException
     {
         RequestEntity bodyRequest =
-            new StringRequestEntity(this.activityPubJsonSerializer.serialize(activity), CLIENT_CONTENT_TYPE, "UTF-8");
+            new StringRequestEntity(this.activityPubJsonSerializer.serialize(activity), CONTENT_TYPE, "UTF-8");
         PostMethod postMethod = new PostMethod(uri.toASCIIString());
         postMethod.setRequestEntity(bodyRequest);
         this.httpClient.executeMethod(postMethod);
@@ -116,14 +113,14 @@ public class DefaultActivityPubClient implements ActivityPubClient
     public HttpMethod get(URI uri) throws IOException
     {
         GetMethod getMethod = new GetMethod(uri.toASCIIString());
-        getMethod.addRequestHeader("Accept", CLIENT_CONTENT_TYPE);
+        getMethod.addRequestHeader("Accept", CONTENT_TYPE);
         this.httpClient.executeMethod(getMethod);
         return getMethod;
     }
 
     private boolean checkContentTypeHeader(Header contentTypeHeader)
     {
-        return  (contentTypeHeader != null && contentTypeHeader.getValue().contains(CLIENT_CONTENT_TYPE));
+        return  (contentTypeHeader != null && contentTypeHeader.getValue().contains(CONTENT_TYPE));
     }
 
     @Override
@@ -134,9 +131,9 @@ public class DefaultActivityPubClient implements ActivityPubClient
             exceptionMessage = "The request has not been sent.";
         } else if (method.getStatusCode() != 200) {
             exceptionMessage = String.format("200 status code expected, got [%s] instead", method.getStatusCode());
-        } else if (!checkContentTypeHeader(method.getResponseHeader(CONTENTTYPE_HEADER))) {
+        } else if (!checkContentTypeHeader(method.getResponseHeader(CONTENT_TYPE_HEADER_NAME))) {
             exceptionMessage = String.format("Content-Type header should return '%s' and got [%s] instead",
-                CLIENT_CONTENT_TYPE, method.getResponseHeader(CONTENTTYPE_HEADER));
+                CONTENT_TYPE, method.getResponseHeader(CONTENT_TYPE_HEADER_NAME));
         }
 
         if (exceptionMessage != null) {

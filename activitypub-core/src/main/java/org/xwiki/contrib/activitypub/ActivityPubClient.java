@@ -39,6 +39,12 @@ import org.xwiki.stability.Unstable;
 public interface ActivityPubClient
 {
     /**
+     * The content type that should be used in headers for ActivityPub.
+     */
+    String CONTENT_TYPE =
+        "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"";
+
+    /**
      * Post an activity in the actor inbox.
      * @param actor the actor who owns the inbox in which to post.
      * @param activity the activity to post.
