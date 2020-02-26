@@ -20,6 +20,7 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 
 import javax.inject.Inject;
@@ -78,7 +79,7 @@ public class DefaultActivityPubClient implements ActivityPubClient
     }
 
     @Override
-    public HttpMethod postInbox(AbstractActor actor, AbstractActivity activity) throws ActivityPubException
+    public HttpMethod postInbox(AbstractActor actor, AbstractActivity activity) throws ActivityPubException, IOException
     {
         return post(getURIFromObjectReference(actor.getInbox()), activity);
     }
@@ -86,9 +87,17 @@ public class DefaultActivityPubClient implements ActivityPubClient
     // FIXME: Credentials must be provided to post in an outbox.
     // See: https://www.w3.org/TR/activitypub/#client-to-server-interactions
     @Override
-    public HttpMethod postOutbox(AbstractActor actor, AbstractActivity activity) throws ActivityPubException
+    public HttpMethod postOutbox(AbstractActor actor, AbstractActivity activity)
+        throws ActivityPubException, IOException
     {
         return post(getURIFromObjectReference(actor.getOutbox()), activity);
+    }
+
+    @Override
+    public <T extends ActivityPubObject> HttpMethod resolveReference(ActivityPubObjectReference<T> reference)
+        throws IOException
+    {
+        return this.get(this.getURIFromObjectReference(reference));
     }
 
     private URI getURIFromObjectReference(ActivityPubObjectReference<? extends ActivityPubObject> objectReference)
@@ -101,19 +110,14 @@ public class DefaultActivityPubClient implements ActivityPubClient
     }
 
     @Override
-    public HttpMethod post(URI uri, AbstractActivity activity) throws ActivityPubException
+    public HttpMethod post(URI uri, AbstractActivity activity) throws ActivityPubException, IOException
     {
-        try {
-            RequestEntity bodyRequest = new StringRequestEntity(this.activityPubJsonSerializer.serialize(activity),
-                CLIENT_CONTENT_TYPE,
-                "UTF-8");
-            PostMethod postMethod = new PostMethod(uri.toASCIIString());
-            postMethod.setRequestEntity(bodyRequest);
-            this.httpClient.executeMethod(postMethod);
-            return postMethod;
-        } catch (IOException e) {
-            throw new ActivityPubException(String.format("Error when getting entity from [%s]", uri), e);
-        }
+        RequestEntity bodyRequest =
+            new StringRequestEntity(this.activityPubJsonSerializer.serialize(activity), CLIENT_CONTENT_TYPE, "UTF-8");
+        PostMethod postMethod = new PostMethod(uri.toASCIIString());
+        postMethod.setRequestEntity(bodyRequest);
+        this.httpClient.executeMethod(postMethod);
+        return postMethod;
     }
 
     @Override

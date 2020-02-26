@@ -24,11 +24,9 @@ import java.io.IOException;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.HttpMethod;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.component.phase.Initializable;
-import org.xwiki.component.phase.InitializationException;
+import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
@@ -37,44 +35,18 @@ import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 
 /**
  * Default implementation of {@link ActivityPubObjectReferenceResolver}.
- * FIXME: looks really similar than DefaultActivityPubClient, I guess we'd need to merge them.
+ * 
  * @version $Id$
  */
 @Component
 @Singleton
-public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObjectReferenceResolver, Initializable
+public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObjectReferenceResolver
 {
-    private HttpClient httpClient;
-
     @Inject
     private ActivityPubJsonParser activityPubJsonParser;
-
-    @Override
-    public void initialize() throws InitializationException
-    {
-        this.httpClient = new HttpClient();
-    }
-
-    private boolean isAcceptedContentType(String contentType)
-    {
-        return contentType != null && contentType.contains("application/activity+json");
-    }
-
-    private void checkResponse(GetMethod method) throws IOException
-    {
-        if (method.getStatusCode() != 200) {
-            throw new IOException(String.format("Response code not 200: [%s]", method.getStatusCode()));
-        } else {
-            String contentType = method.getResponseHeader("content-type").getValue();
-            if (!isAcceptedContentType(contentType)) {
-                throw
-                    new IOException(String.format("Content type response invalid for ActivityPub: [%s]", contentType));
-            }
-            if (method.getResponseContentLength() == 0) {
-                throw new IOException("Body reponse is empty.");
-            }
-        }
-    }
+    
+    @Inject
+    private ActivityPubClient activityPubClient;
 
     @Override
     public <T extends ActivityPubObject> T resolveReference(ActivityPubObjectReference<T> reference)
@@ -86,9 +58,8 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
         }
         if (result == null) {
             try {
-                GetMethod getMethod = new GetMethod(reference.getLink().toString());
-                this.httpClient.executeMethod(getMethod);
-                checkResponse(getMethod);
+                HttpMethod getMethod = this.activityPubClient.resolveReference(reference);
+                this.activityPubClient.checkAnswer(getMethod);
                 result = this.activityPubJsonParser.parse(getMethod.getResponseBodyAsString());
                 reference.setObject(result);
             } catch (IOException e) {
@@ -99,6 +70,4 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
         }
         return result;
     }
-
-
 }

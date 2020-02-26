@@ -20,12 +20,16 @@
 package org.xwiki.contrib.activitypub;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.stability.Unstable;
 
 /**
@@ -45,7 +49,7 @@ public interface ActivityPubClient
      * @return an {@link HttpMethod} which contains the answer.
      * @throws ActivityPubException in case of error during the post or the activity serialization.
      */
-    HttpMethod postInbox(AbstractActor actor, AbstractActivity activity) throws ActivityPubException;
+    HttpMethod postInbox(AbstractActor actor, AbstractActivity activity) throws ActivityPubException, IOException;
 
     /**
      * Post an activity in the actor outbox.
@@ -54,7 +58,17 @@ public interface ActivityPubClient
      * @return an {@link HttpMethod} which contains the answer.
      * @throws ActivityPubException in case of error during the post or the activity serialization.
      */
-    HttpMethod postOutbox(AbstractActor actor, AbstractActivity activity) throws ActivityPubException;
+    HttpMethod postOutbox(AbstractActor actor, AbstractActivity activity) throws ActivityPubException, IOException;
+
+    /**
+     * Resolve an object reference.
+     * @param <T> The expected type of the resolved reference.
+     * @param reference The object reference to be resolved.
+     * @return a {@link GetMethod} which contains the answer.
+     * @throws ActivityPubException in case of error during the object reference resolution. 
+     */
+    <T extends ActivityPubObject> HttpMethod resolveReference(ActivityPubObjectReference<T> reference)
+        throws ActivityPubException, IOException;
 
     /**
      * Post an activity in the given URI.
@@ -63,7 +77,7 @@ public interface ActivityPubClient
      * @return an {@link HttpMethod} which contains the answer.
      * @throws ActivityPubException in case of error during the post or the activity serialization.
      */
-    HttpMethod post(URI uri, AbstractActivity activity) throws ActivityPubException;
+    HttpMethod post(URI uri, AbstractActivity activity) throws ActivityPubException, IOException;
 
     /**
      * Performs an HTTP GET on the given URI.

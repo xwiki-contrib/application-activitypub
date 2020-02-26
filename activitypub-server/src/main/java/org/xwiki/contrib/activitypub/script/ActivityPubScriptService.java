@@ -19,6 +19,8 @@
  */
 package org.xwiki.contrib.activitypub.script;
 
+import java.io.IOException;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
@@ -91,7 +93,7 @@ public class ActivityPubScriptService implements ScriptService
             HttpMethod httpMethod = this.activityPubClient.postInbox(remoteActor, follow);
             this.activityPubClient.checkAnswer(httpMethod);
             result = true;
-        } catch (ActivityPubException e) {
+        } catch (ActivityPubException | IOException e) {
             this.logger.error("Error while trying to send a follow request to [{}].", actor, e);
         }
 
@@ -114,7 +116,7 @@ public class ActivityPubScriptService implements ScriptService
             HttpMethod httpMethod = this.activityPubClient.postOutbox(currentActor, accept);
             this.activityPubClient.checkAnswer(httpMethod);
             result = true;
-        } catch (ActivityPubException e) {
+        } catch (ActivityPubException | IOException e) {
             this.logger.error("Error while trying to send the accept follow request [{}]", follow, e);
         }
         return result;
