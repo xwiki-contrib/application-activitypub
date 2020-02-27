@@ -132,10 +132,10 @@ public class ActivityPubResourceReferenceHandlerTest
         when(contextProvider.get()).thenReturn(this.xWikiContext);
     }
 
-    private void verifyResponse(int code, String message, String contentType) throws IOException
+    private void verifyResponse(int code, String message) throws IOException
     {
         verify(servletResponse, times(1)).setStatus(code);
-        verify(servletResponse, times(1)).setContentType(contentType);
+        verify(servletResponse, times(1)).setContentType("text/plain");
         verify(responseOutput, times(1)).write(message.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -155,7 +155,7 @@ public class ActivityPubResourceReferenceHandlerTest
     {
         ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("create", "43");
         this.handler.handle(resourceReference, this.handlerChain);
-        this.verifyResponse(404, "The entity of type [create] and uid [43] cannot be found.", "text/plain");
+        this.verifyResponse(404, "The entity of type [create] and uid [43] cannot be found.");
         verify(handlerChain, times(1)).handleNext(resourceReference);
         verify(servletRequest, never()).getMethod();
     }
@@ -165,7 +165,7 @@ public class ActivityPubResourceReferenceHandlerTest
     {
         ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("actor", "Foo");
         this.handler.handle(resourceReference, this.handlerChain);
-        this.verifyResponse(404, "The entity of type [actor] and uid [Foo] cannot be found.", "text/plain");
+        this.verifyResponse(404, "The entity of type [actor] and uid [Foo] cannot be found.");
         verify(handlerChain, times(1)).handleNext(resourceReference);
         verify(servletRequest, never()).getMethod();
     }
@@ -203,7 +203,7 @@ public class ActivityPubResourceReferenceHandlerTest
         ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("create", "42");
         when(this.activityPubStorage.retrieveEntity("42")).thenReturn(create);
         this.handler.handle(resourceReference, this.handlerChain);
-        this.verifyResponse(400, "POST requests are only allowed on inbox or outbox.", "text/plain");
+        this.verifyResponse(400, "POST requests are only allowed on inbox or outbox.");
         verify(handlerChain, times(1)).handleNext(resourceReference);
     }
 
@@ -216,8 +216,7 @@ public class ActivityPubResourceReferenceHandlerTest
         when(this.activityPubStorage.retrieveEntity("42")).thenReturn(inbox);
         this.handler.handle(resourceReference, this.handlerChain);
         this.verifyResponse(500,
-            "This box is not attributed. Please report the error to the administrator.",
-            "text/plain");
+            "This box is not attributed. Please report the error to the administrator.");
         verify(handlerChain, times(1)).handleNext(resourceReference);
     }
 
@@ -270,7 +269,7 @@ public class ActivityPubResourceReferenceHandlerTest
 
         verify(activityHandler, never())
             .handleOutboxRequest(new ActivityRequest<>(person, create, servletRequest, servletResponse));
-        verifyResponse(403, "The session user [null] cannot post to [xwiki:XWiki.Foo] outbox.", "text/plain");
+        verifyResponse(403, "The session user [null] cannot post to [xwiki:XWiki.Foo] outbox.");
         verify(handlerChain, times(1)).handleNext(resourceReference);
     }
 

@@ -28,10 +28,12 @@ import javax.inject.Singleton;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
@@ -56,6 +58,9 @@ public class DefaultActivityPubClient implements ActivityPubClient
 
     @Inject
     private ActivityPubJsonSerializer activityPubJsonSerializer;
+
+    @Inject
+    private Logger logger;
 
     /**
      * Default constructor.
@@ -137,7 +142,14 @@ public class DefaultActivityPubClient implements ActivityPubClient
         }
 
         if (exceptionMessage != null) {
-            throw new ActivityPubException(exceptionMessage);
+            String baseMessage = null;
+            try {
+                baseMessage = String.format("Error when performing [%s] on [%s]: ",
+                    method.getName(), method.getURI());
+            } catch (URIException e) {
+                logger.error("Cannot retrieve URI from HttpMethod.", e);
+            }
+            throw new ActivityPubException(baseMessage + exceptionMessage);
         }
     }
 }

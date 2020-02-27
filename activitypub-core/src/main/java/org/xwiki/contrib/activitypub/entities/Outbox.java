@@ -61,6 +61,14 @@ public class Outbox extends OrderedCollection<AbstractActivity>
         this.items.put(activity.getId().toASCIIString(), activity);
     }
 
+    /**
+     * @return all the activities of the outbox.
+     */
+    public java.util.Collection<AbstractActivity> getAllActivities()
+    {
+        return this.items.values();
+    }
+
     @Override
     public boolean equals(Object o)
     {

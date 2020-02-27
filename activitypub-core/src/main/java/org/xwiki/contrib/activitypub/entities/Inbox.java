@@ -70,12 +70,29 @@ public class Inbox extends OrderedCollection<AbstractActivity>
     }
 
     /**
+     * @return all activities contained in the inbox.
+     */
+    @JsonIgnore
+    public java.util.Collection<AbstractActivity> getAllActivities()
+    {
+        return this.items.values();
+    }
+
+    /**
      * Store the follow activities not yet handled.
      * @param follow a new follow activity received.
      */
     public void addPendingFollow(Follow follow)
     {
         this.pendingFollows.add(follow);
+    }
+
+    /**
+     * @return the list of follow not yet accepted or rejected.
+     */
+    public List<Follow> getPendingFollows()
+    {
+        return this.pendingFollows;
     }
 
     @Override

@@ -195,27 +195,34 @@ public class DefaultActivityPubClientTest
     }
 
     @Test
-    public void checkAsnwer() throws ActivityPubException
+    public void checkAsnwer() throws Exception
     {
         HttpMethod method = mock(GetMethod.class);
+        when(method.getURI()).thenReturn(new org.apache.commons.httpclient.URI("http://www.xwiki.org", false));
+
         when(method.isRequestSent()).thenReturn(false);
+        when(method.getName()).thenReturn("POST");
         ActivityPubException activityPubException = assertThrows(ActivityPubException.class, () -> {
             this.activityPubClient.checkAnswer(method);
         });
-        assertEquals("The request has not been sent.", activityPubException.getMessage());
+        assertEquals("Error when performing [POST] on [http://www.xwiki.org]: The request has not been sent.",
+            activityPubException.getMessage());
 
         when(method.isRequestSent()).thenReturn(true);
+        when(method.getName()).thenReturn("GET");
         when(method.getStatusCode()).thenReturn(404);
         activityPubException = assertThrows(ActivityPubException.class, () -> {
             this.activityPubClient.checkAnswer(method);
         });
-        assertEquals("200 status code expected, got [404] instead", activityPubException.getMessage());
+        assertEquals("Error when performing [GET] on [http://www.xwiki.org]: "
+            + "200 status code expected, got [404] instead", activityPubException.getMessage());
 
         when(method.getStatusCode()).thenReturn(200);
         activityPubException = assertThrows(ActivityPubException.class, () -> {
             this.activityPubClient.checkAnswer(method);
         });
-        assertEquals("Content-Type header should return 'application/ld+json; "
+        assertEquals("Error when performing [GET] on [http://www.xwiki.org]: "
+                + "Content-Type header should return 'application/ld+json; "
             + "profile=\"https://www.w3.org/ns/activitystreams\"' and got [null] instead",
             activityPubException.getMessage());
 

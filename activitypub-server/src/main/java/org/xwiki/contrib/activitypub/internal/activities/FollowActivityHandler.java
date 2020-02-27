@@ -58,6 +58,9 @@ public class FollowActivityHandler extends AbstractActivityHandler<Follow>
                 case ASK:
                     Inbox actorInbox = this.getInbox(followedActor);
                     actorInbox.addPendingFollow(follow);
+                    this.activityPubStorage.storeEntity(actorInbox);
+                    this.notifier.notify(follow, Collections.singleton(this.actorHandler
+                        .getXWikiUserReference(followedActor)));
                     this.answer(servletResponse, HttpServletResponse.SC_OK, follow);
                     break;
 
@@ -94,9 +97,9 @@ public class FollowActivityHandler extends AbstractActivityHandler<Follow>
         if (follow.getId() == null) {
             this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_BAD_REQUEST,
                 "The ID of the activity must not be null.");
+        } else {
+            this.handleFollow(follow, activityRequest.getResponse());
         }
-
-        this.handleFollow(follow, activityRequest.getResponse());
     }
 
     /**

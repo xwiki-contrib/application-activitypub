@@ -35,13 +35,13 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 @Unstable
 public abstract class AbstractActivity extends ActivityPubObject
 {
-    private ActivityPubObjectReference<? extends AbstractActor> actor;
+    private ActivityPubObjectReference<AbstractActor> actor;
     private ActivityPubObjectReference<? extends ActivityPubObject> object;
 
     /**
      * @return the reference to the actor of the activity.
      */
-    public ActivityPubObjectReference<? extends AbstractActor> getActor()
+    public ActivityPubObjectReference<AbstractActor> getActor()
     {
         return actor;
     }
@@ -55,7 +55,7 @@ public abstract class AbstractActivity extends ActivityPubObject
      * @return the current activity for fluent API.
      */
     @JsonSetter
-    public <T extends AbstractActivity> T setActor(ActivityPubObjectReference<? extends AbstractActor> actor)
+    public <T extends AbstractActivity> T setActor(ActivityPubObjectReference<AbstractActor> actor)
     {
         this.actor = actor;
         return (T) this;
@@ -105,7 +105,7 @@ public abstract class AbstractActivity extends ActivityPubObject
      */
     public <T extends AbstractActivity> T setObject(ActivityPubObject object)
     {
-        return this.setObject(new ActivityPubObjectReference<ActivityPubObject>().setObject(object));
+        return this.setObject(new ActivityPubObjectReference<>().setObject(object));
     }
 
     @Override

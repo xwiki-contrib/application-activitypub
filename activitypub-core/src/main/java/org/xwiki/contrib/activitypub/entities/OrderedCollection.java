@@ -68,7 +68,7 @@ public class OrderedCollection<T extends ActivityPubObject> extends AbstractColl
      */
     public OrderedCollection<T> setOrderedItems(List<ActivityPubObjectReference<T>> orderedItems)
     {
-        this.orderedItems = orderedItems;
+        this.orderedItems = new ArrayList<>(orderedItems);
         return this;
     }
 

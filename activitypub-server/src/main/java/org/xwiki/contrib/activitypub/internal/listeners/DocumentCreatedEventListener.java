@@ -139,8 +139,8 @@ public class DocumentCreatedEventListener extends AbstractEventListener
         this.storage.storeEntity(document);
 
         return new Create()
-            .setActor(new ActivityPubObjectReference<AbstractActor>().setObject(author))
-            .setObject(new ActivityPubObjectReference<>().setObject(document))
+            .setActor(author)
+            .setObject(document)
             .setName(String.format("Creation of document [%s]", xWikiDocument.getTitle()))
             .setPublished(xWikiDocument.getCreationDate());
     }

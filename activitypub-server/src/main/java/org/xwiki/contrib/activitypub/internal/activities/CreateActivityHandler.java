@@ -22,12 +22,10 @@ package org.xwiki.contrib.activitypub.internal.activities;
 import java.io.IOException;
 import java.util.Collections;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.HttpMethod;
-import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
@@ -47,9 +45,6 @@ import org.xwiki.contrib.activitypub.entities.Outbox;
 @Singleton
 public class CreateActivityHandler extends AbstractActivityHandler<Create>
 {
-    @Inject
-    private Logger logger;
-
     @Override
     public void handleInboxRequest(ActivityRequest<Create> activityRequest) throws IOException, ActivityPubException
     {
@@ -57,14 +52,14 @@ public class CreateActivityHandler extends AbstractActivityHandler<Create>
         if (create.getId() == null) {
             this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_BAD_REQUEST,
                 "The ID of the activity must not be null.");
+        } else {
+            AbstractActor actor = activityRequest.getActor();
+            Inbox inbox = this.getInbox(actor);
+            inbox.addActivity(create);
+            this.activityPubStorage.storeEntity(inbox);
+            this.notifier.notify(create, Collections.singleton(this.actorHandler.getXWikiUserReference(actor)));
+            this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, create);
         }
-
-        AbstractActor actor = activityRequest.getActor();
-        Inbox inbox = this.getInbox(actor);
-        inbox.addActivity(create);
-        this.activityPubStorage.storeEntity(inbox);
-        this.notifier.notify(create, Collections.singleton(this.actorHandler.getXWikiUserReference(actor)));
-        this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, create);
     }
 
     @Override
@@ -76,7 +71,7 @@ public class CreateActivityHandler extends AbstractActivityHandler<Create>
             this.activityPubStorage.storeEntity(create);
         }
 
-        AbstractActor actor = this.activityPubObjectReferenceResolver.resolveReference(create.getActor());
+        AbstractActor actor = activityRequest.getActor();
         Outbox outbox = this.getOutbox(actor);
         outbox.addActivity(create);
         this.activityPubStorage.storeEntity(outbox);
@@ -84,14 +79,15 @@ public class CreateActivityHandler extends AbstractActivityHandler<Create>
             this.activityPubObjectReferenceResolver.resolveReference(actor.getFollowers());
 
         if (orderedCollection != null && orderedCollection.getTotalItems() > 0) {
-
             for (ActivityPubObjectReference<AbstractActor> actorReference : orderedCollection) {
                 AbstractActor targetActor = this.activityPubObjectReferenceResolver.resolveReference(actorReference);
                 HttpMethod postMethod = this.activityPubClient.postInbox(targetActor, create);
 
-                if (postMethod.getStatusCode() > 200) {
-                    this.logger.warn("The POST to [{}] didn't go well. Status code: [{}]. Answer: [{}]",
-                        targetActor.getInbox(), postMethod.getStatusCode(), postMethod.getResponseBodyAsString());
+                try {
+                    this.activityPubClient.checkAnswer(postMethod);
+                } catch (ActivityPubException e) {
+                    // FIXME: in that case is the final answer still a 200 OK?
+                    this.logger.error("The sharing to followers didn't go well.", e);
                 }
             }
         }

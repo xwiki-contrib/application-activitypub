@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
@@ -68,6 +69,9 @@ public abstract class AbstractActivityHandler<T extends AbstractActivity> implem
     @Inject
     protected ActivityPubConfiguration activityPubConfiguration;
 
+    @Inject
+    protected Logger logger;
+
     /**
      * Helper method to return the actual {@link Inbox} from an {@link AbstractActor}.
      * @param actor the actor from which to retrieve the inbox
@@ -103,7 +107,8 @@ public abstract class AbstractActivityHandler<T extends AbstractActivity> implem
     {
         if (response != null) {
             response.setStatus(statusCode);
-            response.setContentType("application/activity+json");
+            response.setContentType(ActivityPubClient.CONTENT_TYPE);
+            response.setCharacterEncoding("UTF-8");
             this.activityPubJsonSerializer.serialize(response.getOutputStream(), activity);
         }
     }
@@ -121,6 +126,8 @@ public abstract class AbstractActivityHandler<T extends AbstractActivity> implem
             response.setStatus(statusCode);
             response.setContentType("text/plain");
             response.getOutputStream().write(error.getBytes(StandardCharsets.UTF_8));
+        } else {
+            this.logger.error(error);
         }
     }
 }
