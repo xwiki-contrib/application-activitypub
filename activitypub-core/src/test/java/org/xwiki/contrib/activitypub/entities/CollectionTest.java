@@ -112,9 +112,7 @@ public class CollectionTest extends AbstractEntityTest
         collection.setItems(items);
 
         String json = this.readResource("collection/collection1.json");
-        Collection actual0 = this.parser.parse(json, Collection.class);
-        assertEquals(collection, actual0);
-        ActivityPubObject actual1 = this.parser.parse(json);
-        assertEquals(collection, actual1);
+        assertEquals(collection, this.parser.parse(json, Collection.class));
+        assertEquals(collection, this.parser.parse(json));
     }
 }

@@ -20,6 +20,7 @@
 package org.xwiki.contrib.activitypub.internal.json;
 
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
 
@@ -80,7 +81,8 @@ public class ActivityPubObjectDeserializer extends JsonDeserializer<ActivityPubO
                 return classInPackage;
             }
         }
-        return ActivityPubObject.class;
+        // TODO: validate that this fail fast strategy is relevant.
+        throw new RuntimeException(MessageFormat.format("Type [{0}] not found", type));
     }
 
     private Class<? extends ActivityPubObject> findClassInPackage(String packageName, String type)

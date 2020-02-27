@@ -1,0 +1,5 @@
+{
+  "@context" : "https://www.w3.org/ns/activitystreams",
+  "id" : "http://localhost:8080/xwiki/activitypub/Note/XWiki.Foo-note",
+  "type" : "Note"
+}

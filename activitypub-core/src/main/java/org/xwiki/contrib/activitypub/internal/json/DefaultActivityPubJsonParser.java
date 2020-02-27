@@ -26,7 +26,6 @@ import java.io.Reader;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
@@ -43,13 +42,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 @Singleton
 public class DefaultActivityPubJsonParser implements ActivityPubJsonParser
 {
-    private static final String ERROR_MSG = "Error while parsing request with type [%s].";
+    private static final String ERROR_MSG_KNOWN_TYPE = "Error while parsing request with type [%s].";
+    private static final String ERROR_MSG_UNKNOWN_TYPE = "Error while parsing request with unknown type.";
     @Inject
     private ObjectMapperConfiguration objectMapperConfiguration;
     
-    @Inject
-    private Logger logger;
-
     @Override
     public <T extends ActivityPubObject> T parse(String requestBody) throws ActivityPubException
     {
@@ -62,7 +59,9 @@ public class DefaultActivityPubJsonParser implements ActivityPubJsonParser
         try {
             return this.objectMapperConfiguration.getObjectMapper().readValue(requestBody, type);
         } catch (JsonProcessingException e) {
-            throw new ActivityPubException(String.format(ERROR_MSG, type), e);
+            throw new ActivityPubException(String.format(ERROR_MSG_KNOWN_TYPE, type), e);
+        } catch (RuntimeException e) {
+            throw new ActivityPubException(ERROR_MSG_UNKNOWN_TYPE, e);
         }
     }
 
@@ -78,7 +77,7 @@ public class DefaultActivityPubJsonParser implements ActivityPubJsonParser
         try {
             return this.objectMapperConfiguration.getObjectMapper().readValue(requestBodyReader, type);
         } catch (IOException e) {
-            throw new ActivityPubException(String.format(ERROR_MSG, type), e);
+            throw new ActivityPubException(String.format(ERROR_MSG_KNOWN_TYPE, type), e);
         }
     }
 
@@ -95,7 +94,7 @@ public class DefaultActivityPubJsonParser implements ActivityPubJsonParser
         try {
             return this.objectMapperConfiguration.getObjectMapper().readValue(requestBodyInputStream, type);
         } catch (IOException e) {
-            throw new ActivityPubException(String.format(ERROR_MSG, type), e);
+            throw new ActivityPubException(String.format(ERROR_MSG_KNOWN_TYPE, type), e);
         }
     }
 }

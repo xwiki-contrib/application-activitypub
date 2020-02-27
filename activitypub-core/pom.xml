@@ -32,7 +32,7 @@
   <name>XWiki ActivityPub - Core Library for ActivityPub</name>
   <packaging>jar</packaging>
   <properties>
-    <xwiki.jacoco.instructionRatio>0.6</xwiki.jacoco.instructionRatio>
+    <xwiki.jacoco.instructionRatio>0.7</xwiki.jacoco.instructionRatio>
   </properties>
   <dependencies>
     <dependency>

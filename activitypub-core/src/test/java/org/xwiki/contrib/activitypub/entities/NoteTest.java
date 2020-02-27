@@ -21,45 +21,43 @@ package org.xwiki.contrib.activitypub.entities;
 
 import java.net.URI;
 import java.util.Arrays;
-import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Test of {@link Outbox}.
+ * Test of {@link Note}.
  *
  * @since 1.0
  * @version $Id$
  */
-public class OutboxTest extends AbstractEntityTest
+public class NoteTest extends AbstractEntityTest
 {
     @Test
     void serialization() throws Exception
     {
-        Outbox outbox = new Outbox()
-                            .setId(new URI("http://localhost:8080/xwiki/activitypub/Outbox/XWiki.Foo-outbox"));
-        outbox.addItem(new Accept().setId(URI.create("http://test/create/1")));
-        outbox.addActivity(new Follow().setId(URI.create("http://test/follow/2")));
+        Note note = new Note()
+                            .setId(new URI("http://localhost:8080/xwiki/activitypub/Note/XWiki.Foo-note"));
 
-        String expectedSerialization = this.readResource("outbox/outbox1.json");
-        assertEquals(expectedSerialization, this.serializer.serialize(outbox));
+        String expectedSerialization = this.readResource("note/note1.json");
+        assertEquals(expectedSerialization, this.serializer.serialize(note));
     }
 
     @Test
     void parsing() throws Exception
     {
-        Outbox expectedOutbox = new Outbox()
-                                    .setId(new URI("http://localhost:8080/xwiki/activitypub/Outbox/XWiki.Foo-outbox"));
+        Note expectedNote = new Note()
+                                    .setId(new URI("http://localhost:8080/xwiki/activitypub/Note/XWiki.Foo-note"));
 
-        
-        ActivityPubObjectReference<AbstractActivity> items = new ActivityPubObjectReference<>();
-        items.setLink(URI.create("http://test/create/1"));
-        expectedOutbox.setOrderedItems(Arrays.asList(items));
 
-        String json = this.readResource("outbox/outbox1.json");
-        assertEquals(expectedOutbox, this.parser.parse(json, Outbox.class));
-        assertEquals(expectedOutbox, this.parser.parse(json));
+        ActivityPubObjectReference<AbstractActivity> a = new ActivityPubObjectReference<>();
+        a.setLink(URI.create("http://test/create/1"));
+
+        String json = this.readResource("note/note1.json");
+        Note actual0 = this.parser.parse(json, Note.class);
+        assertEquals(expectedNote, actual0);
+        ActivityPubObject actual1 = this.parser.parse(json);
+        assertEquals(expectedNote, actual1);
     }
 }
