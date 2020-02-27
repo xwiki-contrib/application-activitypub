@@ -1,0 +1,7 @@
+{
+  "@context" : "https://www.w3.org/ns/activitystreams",
+  "id" : "http://localhost:8080/xwiki/activitypub/Outbox/XWiki.Foo-outbox",
+  "orderedItems" : [ "http://test/create/1" ],
+  "totalItems" : 1,
+  "type" : "Outbox"
+}

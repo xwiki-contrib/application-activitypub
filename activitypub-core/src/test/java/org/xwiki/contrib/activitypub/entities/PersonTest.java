@@ -29,27 +29,33 @@ import org.xwiki.contrib.activitypub.ActivityPubException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Test of {@link Person}.
+ *
+ * @since 1.0
+ * @version $Id$
+ */
 public class PersonTest extends AbstractEntityTest
 {
     @Test
-    public void serializePerson1() throws URISyntaxException, IOException, ActivityPubException
+    void serializePerson1() throws URISyntaxException, IOException, ActivityPubException
     {
         Person person = new Person()
-            .setPreferredUsername("Foo bar")
-            .setId(new URI("http://www.xwiki.org/wiki/activitypub/Foo"))
-            .setName("XWiki.Foo");
+                            .setPreferredUsername("Foo bar")
+                            .setId(new URI("http://www.xwiki.org/wiki/activitypub/Foo"))
+                            .setName("XWiki.Foo");
         String expectedPerson = this.readResource("person/person1.json");
         String serializedPerson = this.serializer.serialize(person);
         assertEquals(expectedPerson, serializedPerson);
     }
 
     @Test
-    public void parsePerson1() throws FileNotFoundException, URISyntaxException, ActivityPubException
+    void parsePerson1() throws FileNotFoundException, URISyntaxException, ActivityPubException
     {
         Person person = new Person()
-            .setPreferredUsername("Foo bar")
-            .setId(new URI("http://www.xwiki.org/wiki/activitypub/Foo"))
-            .setName("XWiki.Foo");
+                            .setPreferredUsername("Foo bar")
+                            .setId(new URI("http://www.xwiki.org/wiki/activitypub/Foo"))
+                            .setName("XWiki.Foo");
 
         String personJson = this.readResource("person/person1.json");
         Person obtainedPerson = this.parser.parse(personJson, Person.class);
@@ -63,21 +69,21 @@ public class PersonTest extends AbstractEntityTest
     }
 
     @Test
-    public void parsePerson2() throws URISyntaxException, IOException, ActivityPubException
+    void parsePerson2() throws URISyntaxException, IOException, ActivityPubException
     {
         Person person = new Person()
-            .setPreferredUsername("alyssa")
-            .setInbox(new ActivityPubObjectReference<Inbox>()
-                .setLink(new URI("https://social.example/alyssa/inbox/")))
-            .setOutbox(new ActivityPubObjectReference<Outbox>()
-                .setLink(new URI("https://social.example/alyssa/outbox/")))
-            .setFollowers(new ActivityPubObjectReference<OrderedCollection<AbstractActor>>()
-                .setLink(new URI("https://social.example/alyssa/followers/")))
-            .setFollowing(new ActivityPubObjectReference<OrderedCollection<AbstractActor>>()
-                .setLink(new URI("https://social.example/alyssa/following/")))
-            .setId(new URI("https://social.example/alyssa/"))
-            .setName("Alyssa P. Hacker")
-            .setSummary("Lisp enthusiast hailing from MIT");
+                            .setPreferredUsername("alyssa")
+                            .setInbox(new ActivityPubObjectReference<Inbox>()
+                                          .setLink(new URI("https://social.example/alyssa/inbox/")))
+                            .setOutbox(new ActivityPubObjectReference<Outbox>()
+                                           .setLink(new URI("https://social.example/alyssa/outbox/")))
+                            .setFollowers(new ActivityPubObjectReference<OrderedCollection<AbstractActor>>()
+                                              .setLink(new URI("https://social.example/alyssa/followers/")))
+                            .setFollowing(new ActivityPubObjectReference<OrderedCollection<AbstractActor>>()
+                                              .setLink(new URI("https://social.example/alyssa/following/")))
+                            .setId(new URI("https://social.example/alyssa/"))
+                            .setName("Alyssa P. Hacker")
+                            .setSummary("Lisp enthusiast hailing from MIT");
 
         String personJson = this.readResource("person/person2.json");
         Person obtainedPerson = this.parser.parse(personJson, Person.class);

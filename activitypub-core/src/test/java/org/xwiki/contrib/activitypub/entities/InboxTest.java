@@ -28,23 +28,29 @@ import org.xwiki.contrib.activitypub.ActivityPubException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Test of {@link Inbox}.
+ *
+ * @since 1.0
+ * @version $Id$
+ */
 public class InboxTest extends AbstractEntityTest
 {
     @Test
-    public void serialization() throws URISyntaxException, IOException, ActivityPubException
+    void serialization() throws URISyntaxException, IOException, ActivityPubException
     {
         Inbox inbox = new Inbox()
-            .setId(new URI("http://localhost:8080/xwiki/activitypub/Inbox/XWiki.Foo-inbox"));
+                          .setId(new URI("http://localhost:8080/xwiki/activitypub/Inbox/XWiki.Foo-inbox"));
 
         String expectedSerialization = this.readResource("inbox/inbox1.json");
         assertEquals(expectedSerialization, this.serializer.serialize(inbox));
     }
 
     @Test
-    public void parsing() throws URISyntaxException, IOException, ActivityPubException
+    void parsing() throws URISyntaxException, IOException, ActivityPubException
     {
         Inbox expectedInbox = new Inbox()
-            .setId(new URI("http://localhost:8080/xwiki/activitypub/Inbox/XWiki.Foo-inbox"));
+                                  .setId(new URI("http://localhost:8080/xwiki/activitypub/Inbox/XWiki.Foo-inbox"));
 
         String json = this.readResource("inbox/inbox1.json");
         assertEquals(expectedInbox, this.parser.parse(json, Inbox.class));

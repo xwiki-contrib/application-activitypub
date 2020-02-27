@@ -47,9 +47,13 @@ import static org.mockito.Mockito.when;
 /**
  * Utility class to use the actual ObjectMapperConfiguration and Parser/Serializer components to perform
  * Serialization/Parsing of the entities.
+ *
+ *
+ * @since 1.0
+ * @version $Id$
  */
 @ComponentTest
-@ComponentList({ObjectMapperConfiguration.class, ActivityPubObjectReferenceSerializer.class})
+@ComponentList({ ObjectMapperConfiguration.class, ActivityPubObjectReferenceSerializer.class })
 public class AbstractEntityTest
 {
     @InjectMockComponents

@@ -30,10 +30,16 @@ import org.xwiki.contrib.activitypub.ActivityPubException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Test of {@link Accept}.
+ *
+ * @since 1.0
+ * @version $Id$
+ */
 public class AcceptTest extends AbstractEntityTest
 {
     @Test
-    public void serializationWithReferences() throws URISyntaxException, IOException, ActivityPubException
+    void serializationWithReferences() throws URISyntaxException, IOException, ActivityPubException
     {
         Accept accept = new Accept()
                             .setActor(
@@ -55,7 +61,7 @@ public class AcceptTest extends AbstractEntityTest
     }
 
     @Test
-    public void serializationWithObjects() throws URISyntaxException, IOException, ActivityPubException
+    void serializationWithObjects() throws URISyntaxException, IOException, ActivityPubException
     {
         Accept accept = new Accept()
                             .setActor(
@@ -77,7 +83,7 @@ public class AcceptTest extends AbstractEntityTest
     }
 
     @Test
-    public void parsing() throws FileNotFoundException, URISyntaxException, ActivityPubException
+    void parsing() throws FileNotFoundException, URISyntaxException, ActivityPubException
     {
         Accept expectedAccept = new Accept()
                                     .setActor(

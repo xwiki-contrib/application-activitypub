@@ -30,67 +30,77 @@ import org.xwiki.contrib.activitypub.ActivityPubException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Test of {@link Create}.
+ *
+ * @since 1.0
+ * @version $Id$
+ */
 public class CreateTest extends AbstractEntityTest
 {
     @Test
-    public void serializationWithReferences() throws URISyntaxException, IOException, ActivityPubException
+    void serializationWithReferences() throws URISyntaxException, IOException, ActivityPubException
     {
         Create create = new Create()
-            .setActor(
-                new ActivityPubObjectReference<AbstractActor>()
-                .setLink(new URI("https://social.example/alyssa/"))
-            )
-            .setObject(
-                new ActivityPubObjectReference<Note>()
-                    .setLink(new URI("https://social.example/alyssa/posts/49e2d03d-b53a-4c4c-a95c-94a6abf45a19"))
-            )
-            .setId(new URI("https://social.example/alyssa/posts/a29a6843-9feb-4c74-a7f7-081b9c9201d3"))
-            .setTo(Collections.singletonList(
-                new ActivityPubObjectReference<AbstractActor>()
-                    .setLink(new URI("https://chatty.example/ben/"))
-            ));
+                            .setActor(
+                                new ActivityPubObjectReference<AbstractActor>()
+                                    .setLink(new URI("https://social.example/alyssa/"))
+                            )
+                            .setObject(
+                                new ActivityPubObjectReference<Note>()
+                                    .setLink(new URI(
+                                        "https://social.example/alyssa/posts/49e2d03d-b53a-4c4c-a95c-94a6abf45a19"))
+                            )
+                            .setId(new URI("https://social.example/alyssa/posts/a29a6843-9feb-4c74-a7f7-081b9c9201d3"))
+                            .setTo(Collections.singletonList(
+                                new ActivityPubObjectReference<AbstractActor>()
+                                    .setLink(new URI("https://chatty.example/ben/"))
+                            ));
         String expectedJson = this.readResource("create/create1.json");
         assertEquals(expectedJson, this.serializer.serialize(create));
     }
 
     @Test
-    public void serializationWithObjects() throws URISyntaxException, IOException, ActivityPubException
+    void serializationWithObjects() throws URISyntaxException, IOException, ActivityPubException
     {
         Create create = new Create()
-            .setActor(
-                new Person()
-                    .setId(new URI("https://social.example/alyssa/"))
-            )
-            .setObject(
-                new Note()
-                    .setId(new URI("https://social.example/alyssa/posts/49e2d03d-b53a-4c4c-a95c-94a6abf45a19"))
-            )
-            .setId(new URI("https://social.example/alyssa/posts/a29a6843-9feb-4c74-a7f7-081b9c9201d3"))
-            .setTo(Collections.singletonList(
-                new ActivityPubObjectReference<AbstractActor>()
-                    .setLink(new URI("https://chatty.example/ben/"))
-            ));
+                            .setActor(
+                                new Person()
+                                    .setId(new URI("https://social.example/alyssa/"))
+                            )
+                            .setObject(
+                                new Note()
+                                    .setId(new URI(
+                                        "https://social.example/alyssa/posts/49e2d03d-b53a-4c4c-a95c-94a6abf45a19"))
+                            )
+                            .setId(new URI("https://social.example/alyssa/posts/a29a6843-9feb-4c74-a7f7-081b9c9201d3"))
+                            .setTo(Collections.singletonList(
+                                new ActivityPubObjectReference<AbstractActor>()
+                                    .setLink(new URI("https://chatty.example/ben/"))
+                            ));
         String expectedJson = this.readResource("create/create1.json");
         assertEquals(expectedJson, this.serializer.serialize(create));
     }
 
     @Test
-    public void parsing() throws FileNotFoundException, URISyntaxException, ActivityPubException
+    void parsing() throws FileNotFoundException, URISyntaxException, ActivityPubException
     {
         Create expectedCreate = new Create()
-            .setActor(
-                new ActivityPubObjectReference<AbstractActor>()
-                    .setLink(new URI("https://social.example/alyssa/"))
-            )
-            .setObject(
-                new ActivityPubObjectReference<Note>()
-                    .setLink(new URI("https://social.example/alyssa/posts/49e2d03d-b53a-4c4c-a95c-94a6abf45a19"))
-            )
-            .setId(new URI("https://social.example/alyssa/posts/a29a6843-9feb-4c74-a7f7-081b9c9201d3"))
-            .setTo(Collections.singletonList(
-                new ActivityPubObjectReference<AbstractActor>()
-                    .setLink(new URI("https://chatty.example/ben/"))
-            ));
+                                    .setActor(
+                                        new ActivityPubObjectReference<AbstractActor>()
+                                            .setLink(new URI("https://social.example/alyssa/"))
+                                    )
+                                    .setObject(
+                                        new ActivityPubObjectReference<Note>()
+                                            .setLink(new URI(
+                                                "https://social.example/alyssa/posts/49e2d03d-b53a-4c4c-a95c-94a6abf45a19"))
+                                    )
+                                    .setId(new URI(
+                                        "https://social.example/alyssa/posts/a29a6843-9feb-4c74-a7f7-081b9c9201d3"))
+                                    .setTo(Collections.singletonList(
+                                        new ActivityPubObjectReference<AbstractActor>()
+                                            .setLink(new URI("https://chatty.example/ben/"))
+                                    ));
         String json = this.readResource("create/create1.json");
         assertEquals(expectedCreate, this.parser.parse(json));
     }
