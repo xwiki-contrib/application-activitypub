@@ -22,17 +22,20 @@ package org.xwiki.contrib.activitypub.internal.activities;
 import java.io.IOException;
 import java.util.Collections;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
 
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
+import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.contrib.activitypub.entities.Inbox;
-import org.xwiki.contrib.activitypub.entities.OrderedCollection;
+import org.xwiki.contrib.activitypub.entities.Reject;
 
 /**
  * Specific handler for {@link Follow} activities.
@@ -43,6 +46,12 @@ import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 @Singleton
 public class FollowActivityHandler extends AbstractActivityHandler<Follow>
 {
+    @Inject
+    private ActivityHandler<Accept> acceptActivityHandler;
+
+    @Inject
+    private ActivityHandler<Reject> rejectActivityHandler;
+
     private void handleFollow(Follow follow, HttpServletResponse servletResponse)
         throws ActivityPubException, IOException
     {
@@ -55,6 +64,8 @@ public class FollowActivityHandler extends AbstractActivityHandler<Follow>
         } else {
             AbstractActor followedActor = (AbstractActor) followedObject;
             switch (this.activityPubConfiguration.getFollowPolicy()) {
+                // In case of ASK, we notify the user who receive the follow to perform an action on it
+                // and we answer with the same follow action.
                 case ASK:
                     Inbox actorInbox = this.getInbox(followedActor);
                     actorInbox.addPendingFollow(follow);
@@ -64,28 +75,32 @@ public class FollowActivityHandler extends AbstractActivityHandler<Follow>
                     this.answer(servletResponse, HttpServletResponse.SC_OK, follow);
                     break;
 
+                // In case of Accept, we create an Accept activity on behalf of the user who receives the follow
+                // and we directly handle this accept to answer.
                 case ACCEPT:
-                    follow.setAccepted(true);
-                    this.activityPubStorage.storeEntity(follow);
-                    OrderedCollection<AbstractActor> followers =
-                        this.activityPubObjectReferenceResolver.resolveReference(followedActor.getFollowers());
-                    followers.addItem(followingActor);
-                    this.activityPubStorage.storeEntity(followers);
-                    OrderedCollection<AbstractActor> followings =
-                        this.activityPubObjectReferenceResolver.resolveReference(followingActor.getFollowing());
-                    followings.addItem(followedActor);
-                    this.activityPubStorage.storeEntity(followings);
-                    this.notifier.notify(follow, Collections.singleton(this.actorHandler
-                        .getXWikiUserReference(followedActor)));
-                    this.answer(servletResponse, HttpServletResponse.SC_OK, follow);
+                    Accept accept = new Accept()
+                        .setActor(followedActor)
+                        .setObject(follow)
+                        .setTo(Collections.singletonList(followingActor.getReference()));
+                    this.activityPubStorage.storeEntity(accept);
+                    ActivityRequest<Accept> acceptActivityRequest = new ActivityRequest<>(followedActor, accept);
+                    this.acceptActivityHandler.handleOutboxRequest(acceptActivityRequest);
+                    this.answer(servletResponse, HttpServletResponse.SC_OK, accept);
                     break;
 
+                // In case of Reject, we create a Reject activity on behalf of the user who receives the follow
+                // and we directly handle the reject to answer.
                 default:
                 case REJECT:
-                    follow.setRejected(true);
-                    this.activityPubStorage.storeEntity(follow);
-                    this.answerError(servletResponse, HttpServletResponse.SC_UNAUTHORIZED,
-                        "Follow request are not accepted on this server.");
+                    Reject reject = new Reject()
+                        .setActor(followedActor)
+                        .setObject(follow)
+                        .setTo(Collections.singletonList(followingActor.getReference()));
+
+                    this.activityPubStorage.storeEntity(reject);
+                    ActivityRequest<Reject> rejectActivityRequest = new ActivityRequest<>(followedActor, reject);
+                    this.rejectActivityHandler.handleOutboxRequest(rejectActivityRequest);
+                    this.answer(servletResponse, HttpServletResponse.SC_OK, reject);
             }
         }
     }

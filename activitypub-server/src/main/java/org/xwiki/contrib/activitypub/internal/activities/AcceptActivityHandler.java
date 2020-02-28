@@ -25,6 +25,7 @@ import java.util.Collections;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.httpclient.HttpMethod;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
@@ -43,11 +44,37 @@ import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 @Singleton
 public class AcceptActivityHandler extends AbstractActivityHandler<Accept>
 {
+    private static final String ONLY_FOLLOW_IMPLEMENTED =
+        "Only follow activities can be accepted in the current implementation.";
+
     @Override
-    public void handleInboxRequest(ActivityRequest<Accept> activityRequest) throws IOException
+    public void handleInboxRequest(ActivityRequest<Accept> activityRequest) throws IOException, ActivityPubException
     {
-        this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_NOT_IMPLEMENTED,
-            "Only client to server is currently implemented.");
+        Accept accept = activityRequest.getActivity();
+        if (accept.getId() == null) {
+            this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_BAD_REQUEST,
+                "The ID of the activity must not be null.");
+        } else {
+            AbstractActor acceptingActor = this.activityPubObjectReferenceResolver.resolveReference(accept.getActor());
+            ActivityPubObject object = this.activityPubObjectReferenceResolver.resolveReference(accept.getObject());
+
+            if (object instanceof Follow) {
+                Follow follow = (Follow) object;
+                AbstractActor followingActor =
+                    this.activityPubObjectReferenceResolver.resolveReference(follow.getActor());
+                OrderedCollection<AbstractActor> followingActorfollowings =
+                    this.activityPubObjectReferenceResolver.resolveReference(followingActor.getFollowing());
+                followingActorfollowings.addItem(acceptingActor);
+                this.activityPubStorage.storeEntity(followingActorfollowings);
+
+                this.notifier.notify(accept,
+                    Collections.singleton(this.actorHandler.getXWikiUserReference(followingActor)));
+                this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, accept);
+            } else {
+                this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_NOT_IMPLEMENTED,
+                    ONLY_FOLLOW_IMPLEMENTED);
+            }
+        }
     }
 
     @Override
@@ -65,21 +92,23 @@ public class AcceptActivityHandler extends AbstractActivityHandler<Accept>
             AbstractActor followingActor = this.activityPubObjectReferenceResolver.resolveReference(follow.getActor());
             OrderedCollection<AbstractActor> acceptingActorFollowers =
                 this.activityPubObjectReferenceResolver.resolveReference(acceptingActor.getFollowers());
-            OrderedCollection<AbstractActor> followingActorFollowing =
-                this.activityPubObjectReferenceResolver.resolveReference(followingActor.getFollowing());
             acceptingActorFollowers.addItem(followingActor);
-            followingActorFollowing.addItem(acceptingActor);
-
             this.activityPubStorage.storeEntity(acceptingActorFollowers);
-            this.activityPubStorage.storeEntity(followingActorFollowing);
-            if (this.actorHandler.isLocalActor(followingActor)) {
-                this.notifier
-                    .notify(accept, Collections.singleton(this.actorHandler.getXWikiUserReference(followingActor)));
+
+            this.notifier.notify(accept,
+                Collections.singleton(this.actorHandler.getXWikiUserReference(acceptingActor)));
+            HttpMethod postMethod = this.activityPubClient.postInbox(followingActor, accept);
+            try {
+                this.activityPubClient.checkAnswer(postMethod);
+            } catch (ActivityPubException e) {
+                // FIXME: in that case is the final answer still a 200 OK?
+                this.logger.error("Error while posting the accept to the following user.", e);
             }
+
             this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, accept);
         } else {
             this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_NOT_IMPLEMENTED,
-                "Only follow activities can be accepted in the current implementation.");
+                ONLY_FOLLOW_IMPLEMENTED);
         }
     }
 }

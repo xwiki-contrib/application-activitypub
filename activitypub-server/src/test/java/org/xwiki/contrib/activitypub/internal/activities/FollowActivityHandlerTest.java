@@ -21,30 +21,29 @@ package org.xwiki.contrib.activitypub.internal.activities;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Collections;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
 import org.xwiki.contrib.activitypub.ActivityRequest;
-import org.xwiki.contrib.activitypub.entities.AbstractActor;
+import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.contrib.activitypub.entities.Inbox;
-import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Person;
+import org.xwiki.contrib.activitypub.entities.Reject;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.test.LogLevel;
 import org.xwiki.test.junit5.LogCaptureExtension;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
+import org.xwiki.test.junit5.mockito.MockComponent;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -60,6 +59,12 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
 {
     @InjectMockComponents
     private FollowActivityHandler handler;
+
+    @MockComponent
+    private ActivityHandler<Reject> rejectActivityHandler;
+
+    @MockComponent
+    private ActivityHandler<Accept> acceptActivityHandler;
 
     @RegisterExtension
     LogCaptureExtension logCapture = new LogCaptureExtension(LogLevel.ERROR);
@@ -118,8 +123,6 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
         verify(this.activityPubStorage).storeEntity(followedActorInbox);
         assertEquals(Collections.singletonList(follow), followedActorInbox.getPendingFollows());
         verify(this.notifier).notify(follow, Collections.singleton(followedUserRef));
-        assertFalse(follow.isAccepted());
-        assertFalse(follow.isRejected());
     }
 
     @Test
@@ -139,32 +142,27 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
         when(this.activityPubObjectReferenceResolver.resolveReference(followedActor.getInbox()))
             .thenReturn(followedActorInbox);
         when(this.activityPubConfiguration.getFollowPolicy()).thenReturn(ActivityPubConfiguration.FollowPolicy.REJECT);
+        Reject reject = new Reject()
+            .setActor(followedActor)
+            .setObject(follow)
+            .setTo(Collections.singletonList(followingActor.getReference()));
 
         this.handler.handleInboxRequest(
             new ActivityRequest<>(null, follow, this.servletRequest, this.servletResponse));
-        assertTrue(follow.isRejected());
-        verify(this.activityPubStorage).storeEntity(follow);
+        verify(this.activityPubStorage, never()).storeEntity(follow);
+        verify(this.activityPubStorage).storeEntity(reject);
+        verify(this.rejectActivityHandler).handleOutboxRequest(new ActivityRequest<>(followedActor, reject));
         verify(this.notifier, never()).notify(any(), any());
-        verifyResponse(401, "Follow request are not accepted on this server.");
+        verifyResponse(reject);
     }
 
     @Test
     public void handleInboxAccept() throws Exception
     {
-        OrderedCollection<AbstractActor> followings = new OrderedCollection<AbstractActor>().addItem(new Person());
-        OrderedCollection<AbstractActor> followers = new OrderedCollection<>();
-
         Person followingActor = new Person()
-            .setPreferredUsername("Following")
-            .setFollowing(new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(followings));
+            .setPreferredUsername("Following");
         Person followedActor = new Person()
-            .setPreferredUsername("Followed")
-            .setFollowers(new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(followers));
-
-        when(this.activityPubObjectReferenceResolver.resolveReference(followingActor.getFollowing()))
-            .thenReturn(followings);
-        when(this.activityPubObjectReferenceResolver.resolveReference(followedActor.getFollowers()))
-            .thenReturn(followers);
+            .setPreferredUsername("Followed");
 
         DocumentReference followedUserRef = new DocumentReference("xwiki", "XWiki", "Followed");
         when(this.actorHandler.getXWikiUserReference(followedActor)).thenReturn(followedUserRef);
@@ -180,25 +178,18 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
         when(this.activityPubObjectReferenceResolver.resolveReference(followedActor.getInbox()))
             .thenReturn(followedActorInbox);
         when(this.activityPubConfiguration.getFollowPolicy()).thenReturn(ActivityPubConfiguration.FollowPolicy.ACCEPT);
+        Accept accept = new Accept()
+            .setActor(followedActor)
+            .setObject(follow)
+            .setTo(Collections.singletonList(followingActor.getReference()));
 
         this.handler.handleInboxRequest(
             new ActivityRequest<>(null, follow, this.servletRequest, this.servletResponse));
-        assertTrue(follow.isAccepted());
-        verify(this.activityPubStorage).storeEntity(follow);
-        verify(this.activityPubStorage).storeEntity(followers);
-        verify(this.activityPubStorage).storeEntity(followings);
-
-        assertEquals(Arrays.asList(
-            new ActivityPubObjectReference<>().setObject(new Person()),
-            new ActivityPubObjectReference<>().setObject(followedActor)),
-            followings.getOrderedItems());
-
-        assertEquals(
-            Collections.singletonList(new ActivityPubObjectReference<>().setObject(followingActor)),
-            followers.getOrderedItems());
-
-        verify(this.notifier).notify(follow, Collections.singleton(followedUserRef));
-        verifyResponse(follow);
+        verify(this.activityPubStorage, never()).storeEntity(follow);
+        verify(this.activityPubStorage).storeEntity(accept);
+        verify(this.acceptActivityHandler).handleOutboxRequest(new ActivityRequest<>(followedActor, accept));
+        verify(this.notifier, never()).notify(any(), any());
+        verifyResponse(accept);
     }
 
     @Test
@@ -239,8 +230,6 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
         verify(this.activityPubStorage).storeEntity(followedActorInbox);
         assertEquals(Collections.singletonList(follow), followedActorInbox.getPendingFollows());
         verify(this.notifier).notify(follow, Collections.singleton(followedUserRef));
-        assertFalse(follow.isAccepted());
-        assertFalse(follow.isRejected());
     }
 
     @Test
@@ -260,32 +249,27 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
         when(this.activityPubObjectReferenceResolver.resolveReference(followedActor.getInbox()))
             .thenReturn(followedActorInbox);
         when(this.activityPubConfiguration.getFollowPolicy()).thenReturn(ActivityPubConfiguration.FollowPolicy.REJECT);
+        Reject reject = new Reject()
+            .setActor(followedActor)
+            .setObject(follow)
+            .setTo(Collections.singletonList(followingActor.getReference()));
 
         this.handler.handleOutboxRequest(
             new ActivityRequest<>(null, follow, this.servletRequest, this.servletResponse));
-        assertTrue(follow.isRejected());
-        verify(this.activityPubStorage).storeEntity(follow);
+        verify(this.activityPubStorage, never()).storeEntity(follow);
+        verify(this.activityPubStorage).storeEntity(reject);
+        verify(this.rejectActivityHandler).handleOutboxRequest(new ActivityRequest<>(followedActor, reject));
         verify(this.notifier, never()).notify(any(), any());
-        verifyResponse(401, "Follow request are not accepted on this server.");
+        verifyResponse(reject);
     }
 
     @Test
     public void handleOutboxAccept() throws Exception
     {
-        OrderedCollection<AbstractActor> followings = new OrderedCollection<AbstractActor>().addItem(new Person());
-        OrderedCollection<AbstractActor> followers = new OrderedCollection<>();
-
         Person followingActor = new Person()
-            .setPreferredUsername("Following")
-            .setFollowing(new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(followings));
+            .setPreferredUsername("Following");
         Person followedActor = new Person()
-            .setPreferredUsername("Followed")
-            .setFollowers(new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(followers));
-
-        when(this.activityPubObjectReferenceResolver.resolveReference(followingActor.getFollowing()))
-            .thenReturn(followings);
-        when(this.activityPubObjectReferenceResolver.resolveReference(followedActor.getFollowers()))
-            .thenReturn(followers);
+            .setPreferredUsername("Followed");
 
         DocumentReference followedUserRef = new DocumentReference("xwiki", "XWiki", "Followed");
         when(this.actorHandler.getXWikiUserReference(followedActor)).thenReturn(followedUserRef);
@@ -301,24 +285,17 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
         when(this.activityPubObjectReferenceResolver.resolveReference(followedActor.getInbox()))
             .thenReturn(followedActorInbox);
         when(this.activityPubConfiguration.getFollowPolicy()).thenReturn(ActivityPubConfiguration.FollowPolicy.ACCEPT);
+        Accept accept = new Accept()
+            .setActor(followedActor)
+            .setObject(follow)
+            .setTo(Collections.singletonList(followingActor.getReference()));
 
         this.handler.handleOutboxRequest(
             new ActivityRequest<>(null, follow, this.servletRequest, this.servletResponse));
-        assertTrue(follow.isAccepted());
-        verify(this.activityPubStorage).storeEntity(follow);
-        verify(this.activityPubStorage).storeEntity(followers);
-        verify(this.activityPubStorage).storeEntity(followings);
-
-        assertEquals(Arrays.asList(
-            new ActivityPubObjectReference<>().setObject(new Person()),
-            new ActivityPubObjectReference<>().setObject(followedActor)),
-            followings.getOrderedItems());
-
-        assertEquals(
-            Collections.singletonList(new ActivityPubObjectReference<>().setObject(followingActor)),
-            followers.getOrderedItems());
-
-        verify(this.notifier).notify(follow, Collections.singleton(followedUserRef));
-        verifyResponse(follow);
+        verify(this.activityPubStorage, never()).storeEntity(follow);
+        verify(this.activityPubStorage).storeEntity(accept);
+        verify(this.acceptActivityHandler).handleOutboxRequest(new ActivityRequest<>(followedActor, accept));
+        verify(this.notifier, never()).notify(any(), any());
+        verifyResponse(accept);
     }
 }

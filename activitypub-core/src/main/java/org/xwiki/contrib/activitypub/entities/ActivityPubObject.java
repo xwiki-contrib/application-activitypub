@@ -29,6 +29,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.xwiki.contrib.activitypub.internal.json.ActivityPubObjectDeserializer;
 import org.xwiki.stability.Unstable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
@@ -241,6 +242,16 @@ public class ActivityPubObject extends JSONLDObjects
     {
         this.url = url;
         return (T) this;
+    }
+
+    /**
+     * @return a reference for the current instance.
+     * @param <T> the concrete type of the current instance.
+     */
+    @JsonIgnore
+    public <T extends ActivityPubObject> ActivityPubObjectReference<T> getReference()
+    {
+        return new ActivityPubObjectReference<T>().setObject((T) this);
     }
 
     @Override

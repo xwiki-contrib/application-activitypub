@@ -211,11 +211,13 @@ public class DefaultActivityPubClientTest
         when(method.isRequestSent()).thenReturn(true);
         when(method.getName()).thenReturn("GET");
         when(method.getStatusCode()).thenReturn(404);
+        when(method.getResponseBodyAsString()).thenReturn("Document not found.");
         activityPubException = assertThrows(ActivityPubException.class, () -> {
             this.activityPubClient.checkAnswer(method);
         });
         assertEquals("Error when performing [GET] on [http://www.xwiki.org]: "
-            + "200 status code expected, got [404] instead", activityPubException.getMessage());
+            + "200 status code expected, got [404] instead with body: [Document not found.].",
+            activityPubException.getMessage());
 
         when(method.getStatusCode()).thenReturn(200);
         activityPubException = assertThrows(ActivityPubException.class, () -> {
@@ -223,7 +225,7 @@ public class DefaultActivityPubClientTest
         });
         assertEquals("Error when performing [GET] on [http://www.xwiki.org]: "
                 + "Content-Type header should return 'application/ld+json; "
-            + "profile=\"https://www.w3.org/ns/activitystreams\"' and got [null] instead",
+            + "profile=\"https://www.w3.org/ns/activitystreams\"' and got [null] instead.",
             activityPubException.getMessage());
 
         when(method.getResponseHeader("Content-Type")).thenReturn(new Header("Content-Type", CLIENT_CONTENT_TYPE));

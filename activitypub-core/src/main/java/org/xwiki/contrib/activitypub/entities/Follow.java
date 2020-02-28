@@ -33,38 +33,4 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 @JsonDeserialize(as = Follow.class)
 public class Follow extends AbstractActivity
 {
-    private boolean accepted;
-    private boolean rejected;
-
-    /**
-     * @return {@code true} if the follow request has been accepted.
-     */
-    public boolean isAccepted()
-    {
-        return this.accepted;
-    }
-
-    /**
-     * @param accepted set to {@code true} if the follow request has been accepted.
-     */
-    public void setAccepted(boolean accepted)
-    {
-        this.accepted = accepted;
-    }
-
-    /**
-     * @return {@code true} if the follow request has been rejected.
-     */
-    public boolean isRejected()
-    {
-        return this.rejected;
-    }
-
-    /**
-     * @param rejected set to {@code true} if the follow request has been rejected.
-     */
-    public void setRejected(boolean rejected)
-    {
-        this.rejected = rejected;
-    }
 }

@@ -26,7 +26,6 @@ import javax.inject.Singleton;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
-import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.contrib.activitypub.entities.Reject;
 
 /**

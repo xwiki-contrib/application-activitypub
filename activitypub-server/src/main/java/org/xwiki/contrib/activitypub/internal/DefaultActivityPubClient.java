@@ -135,9 +135,16 @@ public class DefaultActivityPubClient implements ActivityPubClient
         if (!method.isRequestSent()) {
             exceptionMessage = "The request has not been sent.";
         } else if (method.getStatusCode() != 200) {
-            exceptionMessage = String.format("200 status code expected, got [%s] instead", method.getStatusCode());
+            String responseBody = null;
+            try {
+                responseBody = method.getResponseBodyAsString();
+            } catch (IOException e) {
+                logger.error("Cannot retrieve response body of a request.", e);
+            }
+            exceptionMessage = String.format("200 status code expected, got [%s] instead with body: [%s].",
+                method.getStatusCode(), responseBody);
         } else if (!checkContentTypeHeader(method.getResponseHeader(CONTENT_TYPE_HEADER_NAME))) {
-            exceptionMessage = String.format("Content-Type header should return '%s' and got [%s] instead",
+            exceptionMessage = String.format("Content-Type header should return '%s' and got [%s] instead.",
                 CONTENT_TYPE, method.getResponseHeader(CONTENT_TYPE_HEADER_NAME));
         }
 
