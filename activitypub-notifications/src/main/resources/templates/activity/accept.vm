@@ -23,15 +23,18 @@
 #set ($mainIcon = "branch")
 #define ($content)
 <div class="notification-description">
-  #set ($actor = $services.activitypub.resolve($activity.actor))
-  #set ($username = $actor.preferredUsername)
-  <div class="activity-type">$activity.type</div>
-  <div class="activity-summary">$username wants to follow you.</div>
-  <div class="action">
-    <input type="hidden" name="follow-id" value="$activity.id" />
-    <input type="button" name="follow-answer" id="$activity.id" value="Accept" class="btn-primary" />
-    <input type="button" name="follow-answer" id="$activity.id" value="Reject" class="btn-primary" />
-  </div>
+    #set ($acceptActor = $services.activitypub.resolve($activity.actor))
+    #set($acceptActorReference = $services.activitypub.getXWikiUserReference($acceptActor))
+    #if ($xcontext.userReference.equals($acceptActorReference))
+        #set ($summary = "$actor.preferredUsername is now following you.")
+    #else
+        #set ($follow = $services.activitypub.resolve($activity.actor))
+        #set ($followedActor = $services.activitypub.resolve($follow.object))
+        #set ($summary = "$followedActor.preferredUsername accepted your follow request.")
+    #end
+    #set ($username = $actor.preferredUsername)
+  <div class="activity-type">Follow</div>
+  <div class="activity-summary">$summary</div>
   <div><small class="text-muted">$escapetool.xml($services.date.displayTimeAgo($event.date))</small></div>
 </div>
 #end

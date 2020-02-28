@@ -187,9 +187,8 @@ public class DefaultActorHandler implements ActorHandler
     @Override
     public EntityReference getXWikiUserReference(AbstractActor actor)
     {
-        // FIXME: We should add a check to ensure the actor belongs to the current instance
         String userName = actor.getPreferredUsername();
-        if (isExistingUser(userName)) {
+        if (isLocalActor(actor) && isExistingUser(userName)) {
             return resolveUser(userName);
         } else {
             return null;
@@ -216,7 +215,12 @@ public class DefaultActorHandler implements ActorHandler
     @Override
     public boolean isLocalActor(AbstractActor actor)
     {
-        return getXWikiUserReference(actor) != null;
+        if (actor.getId() != null) {
+            return this.activityPubStorage.belongsToCurrentInstance(actor.getId());
+        } else {
+            String userName = actor.getPreferredUsername();
+            return isExistingUser(userName);
+        }
     }
 
     @Override

@@ -36,6 +36,13 @@ import org.xwiki.stability.Unstable;
 public interface ActivityPubStorage
 {
     /**
+     * Check that the given URI is part of the current instance.
+     * @param id the URI to check.
+     * @return {@code true} if it belongs to the current instance.
+     */
+    boolean belongsToCurrentInstance(URI id);
+
+    /**
      * Store a given entity and return a UUID to retrieve it.
      * This method performs the following checks:
      *   1. if the entity already has an UUID, then we check that it's already stored in the current instance and we

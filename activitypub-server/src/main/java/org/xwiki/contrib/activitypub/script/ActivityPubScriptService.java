@@ -39,6 +39,7 @@ import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Follow;
+import org.xwiki.model.reference.EntityReference;
 import org.xwiki.script.service.ScriptService;
 
 import com.xpn.xwiki.XWikiContext;
@@ -136,5 +137,15 @@ public class ActivityPubScriptService implements ScriptService
     public <T extends ActivityPubObject> T resolve(ActivityPubObjectReference<T> reference) throws ActivityPubException
     {
         return this.activityPubObjectReferenceResolver.resolveReference(reference);
+    }
+
+    /**
+     * Retrieve and return the reference of the given actor or null if the actor doesn't belong to the current wiki.
+     * @param actor the actor for which to retrieve the reference.
+     * @return null if the actor doesn't belong to the current wiki, else it returns its EntityReference.
+     */
+    public EntityReference getXWikiUserReference(AbstractActor actor)
+    {
+        return this.actorHandler.getXWikiUserReference(actor);
     }
 }

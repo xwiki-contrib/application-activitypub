@@ -110,7 +110,8 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         return this.serverUrl;
     }
 
-    private boolean isIdFromCurrentInstance(URI id)
+    @Override
+    public boolean belongsToCurrentInstance(URI id)
     {
         // FIXME: This should definitely be computed in a better way
         try {
@@ -124,9 +125,9 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     @Override
     public String storeEntity(ActivityPubObject entity) throws ActivityPubException
     {
-        if (entity.getId() != null && isIdFromCurrentInstance(entity.getId())) {
+        if (entity.getId() != null && belongsToCurrentInstance(entity.getId())) {
             return this.storeEntity(entity.getId(), entity);
-        } else if (entity.getId() != null && !isIdFromCurrentInstance(entity.getId())) {
+        } else if (entity.getId() != null && !belongsToCurrentInstance(entity.getId())) {
             throw new ActivityPubException(
                 String.format("Entity [%s] won't be stored since it's not part of the current instance", entity.getId())
             );
