@@ -29,7 +29,7 @@
   </parent>
   <artifactId>activitypub-server</artifactId>
   <version>1.0-SNAPSHOT</version>
-  <name>XWiki ActivityPub - Server implementation for ActivityPub</name>
+  <name>XWiki ActivityPub - Server</name>
   <packaging>jar</packaging>
   <properties>
     <xwiki.jacoco.instructionRatio>0.83</xwiki.jacoco.instructionRatio>

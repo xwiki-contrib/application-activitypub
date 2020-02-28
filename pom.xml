@@ -29,7 +29,7 @@
   </parent>
   <artifactId>application-activitypub</artifactId>
   <version>1.0-SNAPSHOT</version>
-  <name>XWiki ActivityPub - Parent POM</name>
+  <name>XWiki ActivityPub - Parent</name>
   <packaging>pom</packaging>
   <developers>
     <developer>
