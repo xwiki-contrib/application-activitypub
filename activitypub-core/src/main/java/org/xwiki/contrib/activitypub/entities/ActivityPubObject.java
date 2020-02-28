@@ -28,6 +28,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.xwiki.contrib.activitypub.internal.json.ActivityPubObjectDeserializer;
 import org.xwiki.stability.Unstable;
+import org.xwiki.text.XWikiToStringBuilder;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -289,5 +290,18 @@ public class ActivityPubObject extends JSONLDObjects
             .append(to)
             .append(content)
             .append(attributedTo).build();
+    }
+
+    @Override
+    public String toString()
+    {
+        return new XWikiToStringBuilder(this)
+            .append("type", getType())
+            .append("id", getId())
+            .append("name", getName())
+            .append("published", getPublished())
+            .append("summary", getSummary())
+            .append("to", getTo())
+            .append("attributedTo", getAttributedTo()).build();
     }
 }

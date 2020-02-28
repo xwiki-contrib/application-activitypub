@@ -27,6 +27,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.httpclient.methods.PostMethod;
 import org.junit.jupiter.api.BeforeAll;
 import org.mockito.Mock;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
@@ -40,6 +41,7 @@ import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.test.junit5.mockito.MockComponent;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -81,9 +83,13 @@ public class AbstractHandlerTest
     @MockComponent
     protected ActivityPubConfiguration activityPubConfiguration;
 
-    protected void initMock() throws IOException
+    @Mock
+    protected PostMethod postMethod;
+
+    protected void initMock() throws IOException, ActivityPubException
     {
         when(this.servletResponse.getOutputStream()).thenReturn(this.responseOutput);
+        when(this.activityPubClient.postInbox(any(), any())).thenReturn(this.postMethod);
     }
 
     protected void verifyResponse(int code, String message) throws IOException

@@ -97,7 +97,7 @@ public class CollectionTest extends AbstractEntityTest
 
         String expectedSerialization = this.readResource("collection/collection1.json");
         String serialize = this.serializer.serialize(collection);
-        assertEquals(expectedSerialization, serialize);
+            assertEquals(expectedSerialization, serialize);
     }
 
     @Test

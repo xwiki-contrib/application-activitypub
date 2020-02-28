@@ -70,7 +70,7 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
     LogCaptureExtension logCapture = new LogCaptureExtension(LogLevel.ERROR);
 
     @BeforeEach
-    public void setup() throws IOException
+    public void setup() throws Exception
     {
         this.initMock();
     }

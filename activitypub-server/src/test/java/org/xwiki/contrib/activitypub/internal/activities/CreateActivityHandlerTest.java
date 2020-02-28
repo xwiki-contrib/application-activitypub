@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.httpclient.methods.PostMethod;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -46,6 +47,7 @@ import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -66,7 +68,7 @@ public class CreateActivityHandlerTest extends AbstractHandlerTest
     LogCaptureExtension logCapture = new LogCaptureExtension(LogLevel.ERROR);
 
     @BeforeEach
-    public void setup() throws IOException
+    public void setup() throws Exception
     {
         this.initMock();
     }
@@ -167,5 +169,6 @@ public class CreateActivityHandlerTest extends AbstractHandlerTest
         verify(this.activityPubClient, times(2)).checkAnswer(any());
         verify(this.activityPubClient).postInbox(follower1, activity);
         verify(this.activityPubClient).postInbox(follower2, activity);
+        verify(this.postMethod, times(2)).releaseConnection();
     }
 }

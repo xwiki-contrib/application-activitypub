@@ -1,6 +1,6 @@
 {
   "@context" : "https://www.w3.org/ns/activitystreams",
-  "items" : [ "http://test/accept/2", "http://test/follow/1" ],
+  "items" : [ "http://test/follow/1", "http://test/accept/2" ],
   "totalItems" : 2,
   "type" : "Collection"
 }
