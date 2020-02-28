@@ -103,6 +103,8 @@ public class AcceptActivityHandler extends AbstractActivityHandler<Accept>
             } catch (ActivityPubException e) {
                 // FIXME: in that case is the final answer still a 200 OK?
                 this.logger.error("Error while posting the accept to the following user.", e);
+            } finally {
+                postMethod.releaseConnection();
             }
 
             this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, accept);

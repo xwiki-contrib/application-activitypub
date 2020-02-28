@@ -88,6 +88,8 @@ public class CreateActivityHandler extends AbstractActivityHandler<Create>
                 } catch (ActivityPubException e) {
                     // FIXME: in that case is the final answer still a 200 OK?
                     this.logger.error("The sharing to followers didn't go well.", e);
+                } finally {
+                    postMethod.releaseConnection();
                 }
             }
         }

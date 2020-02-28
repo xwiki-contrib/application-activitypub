@@ -245,8 +245,12 @@ public class DefaultActorHandler implements ActorHandler
         try {
             URI uri = new URI(actorURL);
             HttpMethod httpMethod = this.activityPubClient.get(uri);
-            this.activityPubClient.checkAnswer(httpMethod);
-            return this.jsonParser.parse(httpMethod.getResponseBodyAsStream());
+            try {
+                this.activityPubClient.checkAnswer(httpMethod);
+                return this.jsonParser.parse(httpMethod.getResponseBodyAsStream());
+            } finally {
+                httpMethod.releaseConnection();
+            }
         } catch (ActivityPubException | URISyntaxException | IOException e) {
             if (fallback) {
                 String xWikiActorURL = this.resolveXWikiActorURL(actorURL);

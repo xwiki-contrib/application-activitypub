@@ -78,7 +78,7 @@ public class DefaultActivityPubClientTest
     @BeforeEach
     public void setup() throws URISyntaxException
     {
-        this.activityPubClient.setHttpClient(httpClient);
+        this.activityPubClient.setHttpClient(this.httpClient);
         this.uri = new URI(TEST_URL);
     }
 

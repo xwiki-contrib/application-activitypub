@@ -59,8 +59,12 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
         if (result == null) {
             try {
                 HttpMethod getMethod = this.activityPubClient.get(reference.getLink());
-                this.activityPubClient.checkAnswer(getMethod);
-                result = this.activityPubJsonParser.parse(getMethod.getResponseBodyAsString());
+                try {
+                    this.activityPubClient.checkAnswer(getMethod);
+                    result = this.activityPubJsonParser.parse(getMethod.getResponseBodyAsString());
+                } finally {
+                    getMethod.releaseConnection();
+                }
                 reference.setObject(result);
             } catch (IOException e) {
                 throw new ActivityPubException(

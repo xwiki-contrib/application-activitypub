@@ -28,6 +28,7 @@ import javax.inject.Singleton;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
@@ -39,9 +40,9 @@ import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
-import org.xwiki.contrib.activitypub.entities.AbstractActor;
 
 /**
  * Default implementation of the {@link ActivityPubClient}.
@@ -67,7 +68,7 @@ public class DefaultActivityPubClient implements ActivityPubClient
      */
     public DefaultActivityPubClient()
     {
-        this.httpClient = new HttpClient();
+        this.httpClient = new HttpClient(new MultiThreadedHttpConnectionManager());
     }
 
     /**

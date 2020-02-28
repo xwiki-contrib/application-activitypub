@@ -90,7 +90,11 @@ public class ActivityPubScriptService implements ScriptService
             Follow follow = new Follow().setActor(currentActor).setObject(remoteActor);
             this.activityPubStorage.storeEntity(follow);
             HttpMethod httpMethod = this.activityPubClient.postInbox(remoteActor, follow);
-            this.activityPubClient.checkAnswer(httpMethod);
+            try {
+                this.activityPubClient.checkAnswer(httpMethod);
+            } finally {
+                httpMethod.releaseConnection();
+            }
             result = true;
         } catch (ActivityPubException | IOException e) {
             this.logger.error("Error while trying to send a follow request to [{}].", actor, e);
