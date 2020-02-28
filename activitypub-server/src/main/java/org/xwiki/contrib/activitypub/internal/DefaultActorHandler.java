@@ -29,7 +29,6 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.httpclient.HttpMethod;
-import org.jsoup.Jsoup;
 import org.jsoup.helper.HttpConnection;
 import org.jsoup.nodes.Document;
 import org.xwiki.bridge.DocumentAccessBridge;
