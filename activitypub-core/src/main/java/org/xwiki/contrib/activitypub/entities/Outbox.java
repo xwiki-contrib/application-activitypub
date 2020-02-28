@@ -26,6 +26,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.xwiki.stability.Unstable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
@@ -64,6 +65,7 @@ public class Outbox extends OrderedCollection<AbstractActivity>
     /**
      * @return all the activities of the outbox.
      */
+    @JsonIgnore
     public java.util.Collection<AbstractActivity> getAllActivities()
     {
         return this.items.values();
