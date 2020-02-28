@@ -2,6 +2,7 @@ org.xwiki.contrib.activitypub.internal.ActivityPubResourceReferenceHandler
 org.xwiki.contrib.activitypub.internal.DefaultActorHandler
 org.xwiki.contrib.activitypub.internal.activities.AcceptActivityHandler
 org.xwiki.contrib.activitypub.internal.activities.FollowActivityHandler
+org.xwiki.contrib.activitypub.internal.activities.RejectActivityHandler
 org.xwiki.contrib.activitypub.internal.ActivityPubResourceReferenceResolver
 org.xwiki.contrib.activitypub.internal.ActivityPubResourceReferenceSerializer
 org.xwiki.contrib.activitypub.internal.DefaultActivityPubStorage
