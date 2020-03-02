@@ -53,9 +53,9 @@
     </repository>
   </distributionManagement>
   <scm>
-    <connection>scm:git:git://github.com/xwiki-contrib/activitypub.git</connection>
-    <developerConnection>scm:git:git@github.com:xwiki-contrib/activitypub.git</developerConnection>
-    <url>https://github.com/xwiki-contrib/activitypub/tree/master</url>
+    <connection>scm:git:git://github.com/xwiki-contrib/application-activitypub.git</connection>
+    <developerConnection>scm:git:git@github.com:xwiki-contrib/application-activitypub.git</developerConnection>
+    <url>https://github.com/xwiki-contrib/application-activitypub/tree/master</url>
   </scm>
   <properties>
     <xwiki.release.jira.skip>false</xwiki.release.jira.skip>
