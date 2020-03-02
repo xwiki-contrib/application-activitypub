@@ -19,16 +19,23 @@
 ## ---------------------------------------------------------------------------
 #template('notification/macros.vm')
 ## FIXME: Check how to use JSX there
-#set ($smallIcon = "down")
-#set ($mainIcon = "down")
+#set ($smallIcon = "branch")
+#set ($mainIcon = "branch")
 #define ($content)
 <div class="notification-description">
     #set ($rejectActor = $services.activitypub.resolve($activity.actor))
-    #set ($summary = "$rejectActor.preferredUsername rejected your follow request.")
+    #set($rejectActorReference = $services.activitypub.getXWikiUserReference($rejectActor))
+    #if ($xcontext.userReference.equals($rejectActorReference))
+        #set ($object = $services.activitypub.resolve($activity.object))
+        #set ($actor = $services.activitypub.resolve($object.actor))
+        #set ($summary = "$actor.preferredUsername follow request has been rejected.")
+    #else
+        #set ($summary = "$rejectActor.preferredUsername rejected your follow request.")
+    #end
     #set ($username = $actor.preferredUsername)
-  <div class="activity-type">Follow</div>
-  <div class="activity-summary">$summary</div>
-  <div><small class="text-muted">$escapetool.xml($services.date.displayTimeAgo($event.date))</small></div>
+    <div class="activity-type">Follow</div>
+    <div class="activity-summary">$summary</div>
+    <div><small class="text-muted">$escapetool.xml($services.date.displayTimeAgo($event.date))</small></div>
 </div>
 #end
 #set ($details = "")

@@ -26,11 +26,11 @@
     #set ($acceptActor = $services.activitypub.resolve($activity.actor))
     #set($acceptActorReference = $services.activitypub.getXWikiUserReference($acceptActor))
     #if ($xcontext.userReference.equals($acceptActorReference))
+        #set ($object = $services.activitypub.resolve($activity.object))
+        #set ($actor = $services.activitypub.resolve($object.actor))
         #set ($summary = "$actor.preferredUsername is now following you.")
     #else
-        #set ($follow = $services.activitypub.resolve($activity.actor))
-        #set ($followedActor = $services.activitypub.resolve($follow.object))
-        #set ($summary = "$followedActor.preferredUsername accepted your follow request.")
+        #set ($summary = "$acceptActor.preferredUsername accepted your follow request.")
     #end
     #set ($username = $actor.preferredUsername)
   <div class="activity-type">Follow</div>

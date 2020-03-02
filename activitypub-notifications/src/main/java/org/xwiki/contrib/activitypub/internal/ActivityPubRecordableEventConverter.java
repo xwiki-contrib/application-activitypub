@@ -33,7 +33,6 @@ import org.xwiki.contrib.activitypub.ActivityPubEvent;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
 import org.xwiki.contrib.activitypub.ActivityPubNotifier;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
-import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.eventstream.Event;
 import org.xwiki.eventstream.RecordableEvent;
 import org.xwiki.eventstream.RecordableEventConverter;
@@ -82,13 +81,12 @@ public class ActivityPubRecordableEventConverter implements RecordableEventConve
         convertedEvent.setParameters(parameters);
         convertedEvent.setType(ActivityPubNotifier.EVENT_TYPE);
 
-        // FIXME: this is a really ugly hack to be sure we have a user in the notif, else it's never taken into account
-        if (convertedEvent.getUser() == null) {
-            AbstractActor actor = this.objectReferenceResolver
-                .resolveReference(activityPubEvent.getActivity().getActor());
-            DocumentReference userReference = stringDocumentReferenceResolver.resolve(actor.getPreferredUsername());
-            convertedEvent.setUser(userReference);
-        }
+        /* 
+        FIXME: all notification related to activitypub event are attributed to a non existing user named "ActivityPub".
+        */
+        convertedEvent.setUser(new DocumentReference("xwiki", "XWiki", "ActivityPub"));
+        
+        
         return convertedEvent;
     }
 

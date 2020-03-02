@@ -158,7 +158,7 @@ public class AcceptActivityHandlerTest extends AbstractHandlerTest
         verifyResponse(accept);
         assertEquals(Collections.singletonList(followingPerson.getReference()), followers.getOrderedItems());
         verify(this.activityPubStorage).storeEntity(followers);
-        verify(this.notifier).notify(accept, Collections.singleton(followedRef));
+        verify(this.notifier).notify(accept, Collections.singleton(null));
         verify(this.activityPubClient).checkAnswer(any());
         verify(this.activityPubClient).postInbox(followingPerson, accept);
         verify(this.postMethod).releaseConnection();

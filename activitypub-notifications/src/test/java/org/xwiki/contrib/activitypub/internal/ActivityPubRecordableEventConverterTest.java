@@ -95,7 +95,7 @@ public class ActivityPubRecordableEventConverterTest
         assertNotNull(actual);
         assertEquals("Serialized AP", actual.getParameters().get(ACTIVITY_PARAMETER_KEY));
         assertEquals(ActivityPubNotifier.EVENT_TYPE, actual.getType());
-        assertEquals("jdoe", actual.getUser().getName());
+        assertEquals("ActivityPub", actual.getUser().getName());
     }
 
     @Test
@@ -119,7 +119,7 @@ public class ActivityPubRecordableEventConverterTest
         assertNotNull(actual);
         assertEquals("Serialized AP", actual.getParameters().get(ACTIVITY_PARAMETER_KEY));
         assertEquals(ActivityPubNotifier.EVENT_TYPE, actual.getType());
-        assertEquals("user", actual.getUser().getName());
+        assertEquals("ActivityPub", actual.getUser().getName());
     }
 
     @Test
