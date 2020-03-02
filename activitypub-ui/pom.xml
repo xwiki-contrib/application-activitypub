@@ -30,6 +30,7 @@
   <artifactId>activitypub-ui</artifactId>
   <version>1.1-SNAPSHOT</version>
   <name>XWiki ActivityPub - UI</name>
+  <description>A social application to allow XWiki to be part of the fediverse</description>
   <packaging>xar</packaging>
   <properties>
     <!-- Name to display by the Extension Manager -->
