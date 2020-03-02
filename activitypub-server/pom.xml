@@ -40,12 +40,12 @@
     <dependency>
       <groupId>org.xwiki.contrib</groupId>
       <artifactId>activitypub-core</artifactId>
-      <version>${activitypub.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.xwiki.contrib</groupId>
       <artifactId>activitypub-notifications</artifactId>
-      <version>${activitypub.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.xwiki.platform</groupId>

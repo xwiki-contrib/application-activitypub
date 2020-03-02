@@ -46,9 +46,14 @@
       <url>http://nexus.xwiki.org/nexus/service/local/staging/deploy/maven2/</url>
     </repository>
   </distributionManagement>
+  <scm>
+    <connection>scm:git:git://github.com/xwiki-contrib/activitypub.git</connection>
+    <developerConnection>scm:git:git@github.com:xwiki-contrib/activitypub.git</developerConnection>
+    <url>https://github.com/xwiki-contrib/activitypub/tree/master</url>
+  </scm>
   <properties>
-    <activitypub.version>1.0-SNAPSHOT</activitypub.version>
-    <jackson.version>2.10.2</jackson.version>
+    <xwiki.release.jira.skip>false</xwiki.release.jira.skip>
+    <xwiki.issueManagement.jira.id>XAP</xwiki.issueManagement.jira.id>
   </properties>
   <dependencies>
     <dependency>
