@@ -213,7 +213,7 @@ public class DefaultActorHandlerTest
     }
 
     @Test
-    public void getXWikiUserReference()
+    public void getXWikiUserReference() throws Exception
     {
         assertEquals(FOO_REFERENCE,
             this.actorHandler.getXWikiUserReference(new Person().setPreferredUsername("Foo")));

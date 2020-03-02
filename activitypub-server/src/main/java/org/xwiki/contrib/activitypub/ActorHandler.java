@@ -55,7 +55,7 @@ public interface ActorHandler
      * @param actor an ActivityPub actor for which to retrieve the reference.
      * @return an entity reference or null if the actor does not belong to the current wiki.
      */
-    EntityReference getXWikiUserReference(AbstractActor actor);
+    EntityReference getXWikiUserReference(AbstractActor actor) throws ActivityPubException;
 
     /**
      * Retrieve an actor based on the serialized user reference.

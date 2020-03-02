@@ -136,7 +136,13 @@ public class ActivityPubScriptService implements ScriptService
      */
     public <T extends ActivityPubObject> T resolve(ActivityPubObjectReference<T> reference) throws ActivityPubException
     {
-        return this.activityPubObjectReferenceResolver.resolveReference(reference);
+        try {
+            T ret = this.activityPubObjectReferenceResolver.resolveReference(reference);
+            return ret;
+        } catch (ActivityPubException e) {
+            this.logger.error("Error while trying to resolve a reference [{}]", reference, e);
+            return null;
+        }
     }
 
     /**
@@ -146,6 +152,11 @@ public class ActivityPubScriptService implements ScriptService
      */
     public EntityReference getXWikiUserReference(AbstractActor actor)
     {
-        return this.actorHandler.getXWikiUserReference(actor);
+        try {
+            return this.actorHandler.getXWikiUserReference(actor);
+        } catch (ActivityPubException e) {
+            this.logger.error("Error while trying to get an XWiki user from an actor [{}]", actor, e);
+            return null;
+        }
     }
 }

@@ -23,15 +23,8 @@
 #set ($mainIcon = "down")
 #define ($content)
 <div class="notification-description">
-    #set ($acceptActor = $services.activitypub.resolve($activity.actor))
-    #set($acceptActorReference = $services.activitypub.getXWikiUserReference($acceptActor))
-    #if ($xcontext.userReference.equals($acceptActorReference))
-        #set ($summary = "$actor.preferredUsername is not following you.")
-    #else
-        #set ($follow = $services.activitypub.resolve($activity.actor))
-        #set ($followedActor = $services.activitypub.resolve($follow.object))
-        #set ($summary = "$followedActor.preferredUsername rejected your follow request.")
-    #end
+    #set ($rejectActor = $services.activitypub.resolve($activity.actor))
+    #set ($summary = "$rejectActor.preferredUsername rejected your follow request.")
     #set ($username = $actor.preferredUsername)
   <div class="activity-type">Follow</div>
   <div class="activity-summary">$summary</div>

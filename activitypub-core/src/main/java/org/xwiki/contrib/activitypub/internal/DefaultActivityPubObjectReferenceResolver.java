@@ -52,6 +52,9 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
     public <T extends ActivityPubObject> T resolveReference(ActivityPubObjectReference<T> reference)
         throws ActivityPubException
     {
+        if (reference == null) {
+            throw new ActivityPubException("Cannot resolve null reference");
+        }
         T result = reference.getObject();
         if (!reference.isLink() && result == null) {
             throw new ActivityPubException("The reference property is null and does not have any ID to follow.");

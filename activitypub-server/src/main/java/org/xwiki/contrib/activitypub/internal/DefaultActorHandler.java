@@ -18,6 +18,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.xwiki.contrib.activitypub.internal;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -39,8 +40,8 @@ import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActorHandler;
-import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Outbox;
@@ -184,8 +185,11 @@ public class DefaultActorHandler implements ActorHandler
     }
 
     @Override
-    public EntityReference getXWikiUserReference(AbstractActor actor)
+    public EntityReference getXWikiUserReference(AbstractActor actor) throws ActivityPubException
     {
+        if (actor == null) {
+            throw new ActivityPubException("Cannot find user reference from actor, actor is null");
+        }
         String userName = actor.getPreferredUsername();
         if (isLocalActor(actor) && isExistingUser(userName)) {
             return resolveUser(userName);
