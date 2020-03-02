@@ -38,6 +38,12 @@
       <organization>XWiki SAS</organization>
       <organizationUrl>http://www.xwiki.com</organizationUrl>
     </developer>
+    <developer>
+      <id>mleduc</id>
+      <name>Manuel Leduc</name>
+      <organization>XWiki SAS</organization>
+      <organizationUrl>http://www.xwiki.com</organizationUrl>
+    </developer>
   </developers>
   <distributionManagement>
     <repository>
