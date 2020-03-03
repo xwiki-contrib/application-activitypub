@@ -21,6 +21,7 @@ package org.xwiki.contrib.activitypub.internal;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -31,6 +32,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.component.util.DefaultParameterizedType;
@@ -65,6 +67,9 @@ import org.xwiki.test.mockito.MockitoComponentManager;
 
 import com.xpn.xwiki.XWikiContext;
 
+import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -151,7 +156,7 @@ public class ActivityPubResourceReferenceHandlerTest
      * Check that a resource which cannot be found returned a 404.
      */
     @Test
-    public void handleNotStoredEntity() throws Exception
+    void handleNotStoredEntity() throws Exception
     {
         ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("create", "43");
         this.handler.handle(resourceReference, this.handlerChain);
@@ -161,7 +166,7 @@ public class ActivityPubResourceReferenceHandlerTest
     }
 
     @Test
-    public void handleNotStoredUnexistingActor() throws Exception
+    void handleNotStoredUnexistingActor() throws Exception
     {
         ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("actor", "Foo");
         this.handler.handle(resourceReference, this.handlerChain);
@@ -171,7 +176,7 @@ public class ActivityPubResourceReferenceHandlerTest
     }
 
     @Test
-    public void handleGetNotStoredExistingActor() throws Exception
+    void handleGetNotStoredExistingActor() throws Exception
     {
         ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("actor", "Foo");
         when(actorHandler.isExistingUser("Foo")).thenReturn(true);
@@ -184,7 +189,7 @@ public class ActivityPubResourceReferenceHandlerTest
     }
 
     @Test
-    public void handletGetStoredEntity() throws Exception
+    void handletGetStoredEntity() throws Exception
     {
         Create create = new Create().setName("Create 42");
         ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("create", "42");
@@ -196,7 +201,7 @@ public class ActivityPubResourceReferenceHandlerTest
     }
 
     @Test
-    public void handlePostOutsideBox() throws Exception
+    void handlePostOutsideBox() throws Exception
     {
         Create create = new Create().setName("Create 42");
         when(servletRequest.getMethod()).thenReturn("POST");
@@ -208,7 +213,7 @@ public class ActivityPubResourceReferenceHandlerTest
     }
 
     @Test
-    public void handlePostInUnattributedBox() throws Exception
+    void handlePostInUnattributedBox() throws Exception
     {
         Inbox inbox = new Inbox();
         when(servletRequest.getMethod()).thenReturn("POST");
@@ -221,7 +226,7 @@ public class ActivityPubResourceReferenceHandlerTest
     }
 
     @Test
-    public void handlePostInbox() throws Exception
+    void handlePostInbox() throws Exception
     {
         Person person = new Person().setPreferredUsername("Foo");
         ActivityPubObjectReference<AbstractActor> actorReference =
@@ -246,7 +251,7 @@ public class ActivityPubResourceReferenceHandlerTest
     }
 
     @Test
-    public void handlePostOutboxNotAuthorized() throws Exception
+    void handlePostOutboxNotAuthorized() throws Exception
     {
         Person person = new Person().setPreferredUsername("Foo");
         when(this.actorHandler.getXWikiUserReference(person))
@@ -274,7 +279,7 @@ public class ActivityPubResourceReferenceHandlerTest
     }
 
     @Test
-    public void handlePostOutboxAuthorized() throws Exception
+    void handlePostOutboxAuthorized() throws Exception
     {
         Person person = new Person().setPreferredUsername("Foo");
         DocumentReference fooUserReference = new DocumentReference("xwiki", "XWiki", "Foo");
@@ -299,5 +304,17 @@ public class ActivityPubResourceReferenceHandlerTest
         verify(activityHandler, times(1))
             .handleOutboxRequest(new ActivityRequest<>(person, create, servletRequest, servletResponse));
         verify(handlerChain, times(1)).handleNext(resourceReference);
+    }
+
+    @Test
+    void handleNetworkError() throws Exception
+    {
+        ActivityPubResourceReference reference = mock(ActivityPubResourceReference.class);
+        ActivityPubException ape = mock(ActivityPubException.class);
+        when(this.activityPubStorage.retrieveEntity(any())).thenThrow(ape);
+        this.handler.handle(reference, this.handlerChain);
+        verify(this.servletResponse).setStatus(SC_INTERNAL_SERVER_ERROR);
+        verify(this.servletResponse).setContentType("text/plain");
+        verify(ape).printStackTrace(nullable(PrintWriter.class));
     }
 }

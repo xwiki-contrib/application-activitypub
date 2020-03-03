@@ -19,7 +19,15 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
+import org.xwiki.configuration.ConfigurationSource;
 import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
+
+import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.FollowPolicy.ACCEPT;
+import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.FollowPolicy.ASK;
+import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.FollowPolicy.REJECT;
 
 /**
  * Default configuration: it always accept Follow request for now.
@@ -28,9 +36,21 @@ import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
  */
 public class DefaultActivityPubConfiguration implements ActivityPubConfiguration
 {
+    @Inject
+    @Named("activitypub")
+    private ConfigurationSource configuration;
+
     @Override
     public FollowPolicy getFollowPolicy()
     {
-        return FollowPolicy.ACCEPT;
+        String followPolicy = this.configuration.getProperty("followPolicy", "reject");
+        switch (followPolicy) {
+            case "accept":
+                return ACCEPT;
+            case "ask":
+                return ASK;
+            default:
+                return REJECT;
+        }
     }
 }
