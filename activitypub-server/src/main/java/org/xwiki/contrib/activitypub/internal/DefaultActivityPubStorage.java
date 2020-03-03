@@ -77,9 +77,6 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     private ResourceReferenceResolver<ExtendedURL> urlResolver;
 
     @Inject
-    private Provider<XWikiContext> contextProvider;
-
-    @Inject
     private ActivityPubJsonParser jsonParser;
 
     @Inject
@@ -91,7 +88,8 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     @Inject
     private Logger logger;
 
-    private URL serverUrl;
+    @Inject
+    private DefaultURLHandler urlHandler;
 
     /**
      * Default constructor.
@@ -101,21 +99,12 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         this.storage = new HashMap<>();
     }
 
-    private URL getServerUrl() throws MalformedURLException
-    {
-        if (this.serverUrl == null) {
-            XWikiContext context = this.contextProvider.get();
-            this.serverUrl = context.getURLFactory().getServerURL(context);
-        }
-        return this.serverUrl;
-    }
-
     @Override
     public boolean belongsToCurrentInstance(URI id)
     {
         // FIXME: This should definitely be computed in a better way
         try {
-            return id.toURL().toString().contains(getServerUrl().toString());
+            return id.toURL().toString().contains(this.urlHandler.getServerUrl().toString());
         } catch (MalformedURLException e) {
             logger.error("Error while comparing server URL and actor ID", e);
         }

@@ -40,6 +40,7 @@ import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Person;
+import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.security.authorization.AuthorizationManager;
 import org.xwiki.security.authorization.Right;
@@ -85,6 +86,9 @@ public class DocumentCreatedEventListenerTest
 
     @MockComponent
     private ActivityPubStorage activityPubStorage;
+
+    @MockComponent
+    private DefaultURLHandler urlHandler;
 
     @Mock
     private XWikiDocument document;
@@ -132,11 +136,13 @@ public class DocumentCreatedEventListenerTest
         when(this.objectReferenceResolver.resolveReference(this.person.getFollowers()))
             .thenReturn(new OrderedCollection<AbstractActor>().addItem(new Person()));
 
-        String documentUrl = "http://www.xwiki.org/xwiki/bin/view/Main";
+        String absoluteDocumentUrl = "http://www.xwiki.org/xwiki/bin/view/Main";
+        String relativeDocumentUrl = "/xwiki/bin/view/Main";
         String documentTile = "A document title";
         Date creationDate = new Date();
 
-        when(document.getURL("view", context)).thenReturn(documentUrl);
+        when(document.getURL("view", context)).thenReturn(relativeDocumentUrl);
+        when(urlHandler.getAbsoluteURI(new URI(relativeDocumentUrl))).thenReturn(new URI(absoluteDocumentUrl));
         when(document.getCreationDate()).thenReturn(creationDate);
         when(document.getTitle()).thenReturn(documentTile);
 
@@ -146,7 +152,7 @@ public class DocumentCreatedEventListenerTest
                 Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(person))
             )
             .setPublished(creationDate)
-            .setUrl(Collections.singletonList(new URI(documentUrl)));
+            .setUrl(Collections.singletonList(new URI(absoluteDocumentUrl)));
         Create create = new Create()
             .setActor(person)
             .setObject(apDoc)

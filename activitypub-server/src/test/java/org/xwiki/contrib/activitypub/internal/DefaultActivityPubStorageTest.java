@@ -19,17 +19,13 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
-import java.lang.reflect.Type;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Collections;
 
 import javax.inject.Named;
-import javax.inject.Provider;
 
 import org.junit.jupiter.api.Test;
-import org.xwiki.component.util.DefaultParameterizedType;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
@@ -50,9 +46,6 @@ import org.xwiki.test.junit5.mockito.MockComponent;
 import org.xwiki.test.mockito.MockitoComponentManager;
 import org.xwiki.url.ExtendedURL;
 
-import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.web.XWikiURLFactory;
-
 import liquibase.util.StringUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -61,7 +54,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
@@ -72,15 +64,7 @@ import static org.mockito.Mockito.when;
 @ComponentTest
 public class DefaultActivityPubStorageTest
 {
-    private static URL DEFAULT_URL;
-
-    static {
-        try {
-            DEFAULT_URL = new URL("http://www.xwiki.org");
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-    }
+    private static final String DEFAULT_URL = "http://www.xwiki.org";
 
     @InjectMockComponents
     private DefaultActivityPubStorage activityPubStorage;
@@ -101,15 +85,8 @@ public class DefaultActivityPubStorageTest
     @BeforeComponent
     public void setup(MockitoComponentManager componentManager) throws Exception
     {
-        Type providerContextType = new DefaultParameterizedType(null, Provider.class, XWikiContext.class);
-        Provider<XWikiContext> contextProvider = componentManager.registerMockComponent(providerContextType);
-        XWikiContext context = mock(XWikiContext.class);
-        when(contextProvider.get()).thenReturn(context);
-
-        XWikiURLFactory xWikiURLFactory = mock(XWikiURLFactory.class);
-        when(context.getURLFactory()).thenReturn(xWikiURLFactory);
-
-        when(xWikiURLFactory.getServerURL(context)).thenReturn(DEFAULT_URL);
+        DefaultURLHandler urlHandler = componentManager.registerMockComponent(DefaultURLHandler.class);
+        when(urlHandler.getServerUrl()).thenReturn(new URL(DEFAULT_URL));
     }
 
     @Test

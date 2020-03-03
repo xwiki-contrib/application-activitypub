@@ -12,3 +12,4 @@ org.xwiki.contrib.activitypub.script.ActivityPubScriptService
 org.xwiki.contrib.activitypub.internal.DefaultActivityPubClient
 org.xwiki.contrib.activitypub.internal.DefaultActivityPubConfiguration
 org.xwiki.contrib.activitypub.internal.ActivityPubConfigurationSource
+org.xwiki.contrib.activitypub.internal.DefaultURLHandler

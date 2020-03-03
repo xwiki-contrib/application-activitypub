@@ -20,6 +20,7 @@
 package org.xwiki.contrib.activitypub.internal.listeners;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -44,6 +45,7 @@ import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
+import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.Event;
@@ -80,6 +82,9 @@ public class DocumentCreatedEventListener extends AbstractEventListener
 
     @Inject
     private AuthorizationManager authorizationManager;
+
+    @Inject
+    private DefaultURLHandler urlHandler;
 
     @Inject
     private Logger logger;
@@ -123,9 +128,9 @@ public class DocumentCreatedEventListener extends AbstractEventListener
     }
 
     private Create getActivity(AbstractActor author, XWikiDocument xWikiDocument, XWikiContext context)
-        throws URISyntaxException, ActivityPubException
+        throws URISyntaxException, ActivityPubException, MalformedURLException
     {
-        URI documentUrl = new URI(xWikiDocument.getURL("view", context));
+        URI documentUrl = this.urlHandler.getAbsoluteURI(new URI(xWikiDocument.getURL("view", context)));
 
         Document document = new Document()
             .setName(xWikiDocument.getTitle())

@@ -20,11 +20,8 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import java.lang.reflect.Type;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-
-import javax.inject.Provider;
 
 import org.junit.jupiter.api.Test;
 import org.xwiki.component.util.DefaultParameterizedType;
@@ -36,12 +33,8 @@ import org.xwiki.test.mockito.MockitoComponentManager;
 import org.xwiki.url.ExtendedURL;
 import org.xwiki.url.URLNormalizer;
 
-import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.web.XWikiURLFactory;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
@@ -52,15 +45,7 @@ import static org.mockito.Mockito.when;
 @ComponentTest
 public class ActivityPubResourceReferenceSerializerTest
 {
-    private static URL DEFAULT_URL;
-
-    static {
-        try {
-            DEFAULT_URL = new URL("http://www.xwiki.org");
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-    }
+    private static final String DEFAULT_URL = "http://www.xwiki.org";
 
     @InjectMockComponents
     private ActivityPubResourceReferenceSerializer serializer;
@@ -68,15 +53,8 @@ public class ActivityPubResourceReferenceSerializerTest
     @BeforeComponent
     public void setup(MockitoComponentManager componentManager) throws Exception
     {
-        Type providerContextType = new DefaultParameterizedType(null, Provider.class, XWikiContext.class);
-        Provider<XWikiContext> contextProvider = componentManager.registerMockComponent(providerContextType);
-        XWikiContext context = mock(XWikiContext.class);
-        when(contextProvider.get()).thenReturn(context);
-
-        XWikiURLFactory xWikiURLFactory = mock(XWikiURLFactory.class);
-        when(context.getURLFactory()).thenReturn(xWikiURLFactory);
-
-        when(xWikiURLFactory.getServerURL(context)).thenReturn(DEFAULT_URL);
+        DefaultURLHandler urlHandler = componentManager.registerMockComponent(DefaultURLHandler.class);
+        when(urlHandler.getServerUrl()).thenReturn(new URL(DEFAULT_URL));
 
         Type urlNormalizerType = new DefaultParameterizedType(null, URLNormalizer.class, ExtendedURL.class);
         URLNormalizer<ExtendedURL> urlNormalizer =

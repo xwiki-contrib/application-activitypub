@@ -28,7 +28,6 @@ import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.http.client.utils.URIBuilder;
@@ -39,8 +38,6 @@ import org.xwiki.resource.SerializeResourceReferenceException;
 import org.xwiki.resource.UnsupportedResourceReferenceException;
 import org.xwiki.url.ExtendedURL;
 import org.xwiki.url.URLNormalizer;
-
-import com.xpn.xwiki.XWikiContext;
 
 /**
  * Serialize an {@link ActivityPubResourceReference} to an {@link URI}.
@@ -54,7 +51,7 @@ public class ActivityPubResourceReferenceSerializer implements
     ResourceReferenceSerializer<ActivityPubResourceReference, URI>
 {
     @Inject
-    private Provider<XWikiContext> contextProvider;
+    private DefaultURLHandler urlHandler;
 
     @Inject
     @Named("contextpath")
@@ -78,9 +75,8 @@ public class ActivityPubResourceReferenceSerializer implements
 
         // The following is a nasty hack, we should rely on URLURLNormarlizer once
         // https://jira.xwiki.org/browse/XWIKI-17023https://jira.xwiki.org/browse/XWIKI-17023 is fixed.
-        XWikiContext context = contextProvider.get();
         try {
-            URIBuilder uriBuilder = new URIBuilder(context.getURLFactory().getServerURL(context).toURI());
+            URIBuilder uriBuilder = new URIBuilder(this.urlHandler.getServerUrl().toURI());
             uriBuilder.setPathSegments(extendedURL.getSegments());
             for (Map.Entry<String, List<String>> parameter : extendedURL.getParameters().entrySet()) {
                 String paramKey = parameter.getKey();
