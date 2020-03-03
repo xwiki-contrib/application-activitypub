@@ -25,9 +25,8 @@ import javax.inject.Named;
 import org.xwiki.configuration.ConfigurationSource;
 import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
 
-import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.FollowPolicy.ACCEPT;
-import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.FollowPolicy.ASK;
 import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.FollowPolicy.REJECT;
+import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.FollowPolicy.valueOf;
 
 /**
  * Default configuration: it always accept Follow request for now.
@@ -44,13 +43,10 @@ public class DefaultActivityPubConfiguration implements ActivityPubConfiguration
     public FollowPolicy getFollowPolicy()
     {
         String followPolicy = this.configuration.getProperty("followPolicy", "reject");
-        switch (followPolicy) {
-            case "accept":
-                return ACCEPT;
-            case "ask":
-                return ASK;
-            default:
-                return REJECT;
+        try {
+            return valueOf(followPolicy.toUpperCase());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            return REJECT;
         }
     }
 }
