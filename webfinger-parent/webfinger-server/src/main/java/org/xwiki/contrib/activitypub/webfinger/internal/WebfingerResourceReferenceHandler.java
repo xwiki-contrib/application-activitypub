@@ -20,6 +20,8 @@
 package org.xwiki.contrib.activitypub.webfinger.internal;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,6 +40,7 @@ import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonSerializer;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerResourceReference;
 import org.xwiki.contrib.activitypub.webfinger.entities.LinkJRD;
 import org.xwiki.contrib.activitypub.webfinger.entities.WebfingerJRD;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.resource.AbstractResourceReferenceHandler;
 import org.xwiki.resource.ResourceReference;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
@@ -47,7 +50,7 @@ import org.xwiki.resource.ResourceType;
 /**
  *
  * Webfinger (https://tools.ietf.org/html/rfc7033) resource handler.
- * 
+ *
  *
  * @since 1.1
  * @version $Id$
@@ -60,6 +63,9 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
     private static final ResourceType TYPE = new ResourceType("webfinger");
 
     private static final String TEXTPLAIN_CONTENTTYPE = "text/plain";
+
+    @Inject
+    private DefaultWebfingerService webfingerService;
 
     @Inject
     private Container container;
@@ -98,23 +104,64 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
     private void proceed(WebfingerResourceReference reference, HttpServletRequest request,
         HttpServletResponse response) throws IOException, WebfingerException
     {
-        String[] referenceSplit = reference.getResource().split("@");
 
-        if (referenceSplit.length != 2) {
-            throw new WebfingerException();
+        try {
+
+            // any scheme can be used, cf https://tools.ietf.org/html/rfc7033#section-4.5
+            String resource = reference.getResource();
+            URI resourceURI = new URI("acct://" + resource);
+
+            String username = resourceURI.getUserInfo();
+
+            DocumentReference user = this.webfingerService.resolveUser(username);
+
+            if (!this.webfingerService.isExistingUser(user)) {
+                // TODO deal with non existing user query.
+                throw new WebfingerException();
+            }
+
+            URI uriL1 = this.webfingerService.resolveProfilePageUrl(username);
+
+             /*
+            Check if the request domain matches the domain of the server:
+            https://tools.ietf.org/html/rfc7033#section-4
+            "The host to which a WebFinger query is issued is significant.  If the
+            query target contains a "host" portion (Section 3.2.2 of RFC 3986),
+            then the host to which the WebFinger query is issued SHOULD be the
+            same as the "host" portion of the query target, unless the client
+            receives instructions through some out-of-band mechanism to send the
+            query to another host.  If the query target does not contain a "host"
+            portion, then the client chooses a host to which it directs the query
+            using additional information it has."
+             */
+            // FIXME: uriL1 port is set to -1 instead of 8080
+            if (!(uriL1.getPort() == resourceURI.getPort() && uriL1.getHost().equals(resourceURI.getHost()))) {
+                // TODO handle properly with relevant error code. 
+                throw new WebfingerException();
+            }
+
+            this.sendValidResponse(reference, response, user, uriL1);
+        } catch (URISyntaxException e) {
+            // TODO : handler resource format error.
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+    }
 
-        String username = referenceSplit[0];
-        String domain = referenceSplit[1];
-        String usernamePath = String.join("/", username.split("\\."));
+    private void sendValidResponse(WebfingerResourceReference reference, HttpServletResponse response,
+        DocumentReference user, URI uriL1) throws Exception
+    {
         response.setContentType("application/activity+json; charset=utf-8");
         response.addHeader("Access-Control-Allow-Origin", "*");
         LinkJRD link1 = new LinkJRD().setRel("http://webfinger.net/rel/profile-page").setType("text/html")
-                            .setHref(String.format("http://%s/xwiki/bin/view/%s", domain, usernamePath));
+                            .setHref(uriL1.toASCIIString());
+
+        String url = this.webfingerService.resolveActivityPubUserUrl(user);
+
         LinkJRD link2 = new LinkJRD().setRel("self").setType("application/activity+json")
-                            .setHref("http://" + domain + "/xwiki/activitypub/Person/" + username);
+                            .setHref(url);
         WebfingerJRD object =
-            new WebfingerJRD().setSubject("acc:" + reference.getResource()).setLinks(Arrays.asList(link1, link2));
+            new WebfingerJRD().setSubject("acct:" + reference.getResource()).setLinks(Arrays.asList(link1, link2));
         this.webfingerJsonSerializer.serialize(response.getOutputStream(), object);
     }
 

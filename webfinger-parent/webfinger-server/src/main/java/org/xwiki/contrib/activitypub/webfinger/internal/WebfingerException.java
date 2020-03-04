@@ -19,6 +19,12 @@
  */
 package org.xwiki.contrib.activitypub.webfinger.internal;
 
+/**
+ * Default exception for webfinger.
+ * 
+ * @since 1.1
+ *  @version $Id$
+ */
 public class WebfingerException extends Exception
 {
 }
