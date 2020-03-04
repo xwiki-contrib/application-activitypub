@@ -26,7 +26,7 @@ import org.xwiki.stability.Unstable;
 /**
  * The resource handled for webfinger requests..
  *
- * @since 1.0
+ * @since 1.1
  * @version $Id$
  */
 @Unstable
@@ -49,6 +49,10 @@ public class WebfingerResourceReference extends AbstractResourceReference
         this.resource = resource;
     }
 
+    /**
+     * 
+     * @return the webfinger resource parameter value.
+     */
     public String getResource()
     {
         return this.resource;

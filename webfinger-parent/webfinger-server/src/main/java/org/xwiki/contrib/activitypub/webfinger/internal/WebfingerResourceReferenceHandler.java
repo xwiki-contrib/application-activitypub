@@ -43,6 +43,13 @@ import org.xwiki.resource.ResourceReferenceHandlerChain;
 import org.xwiki.resource.ResourceReferenceHandlerException;
 import org.xwiki.resource.ResourceType;
 
+/**
+ * 
+ * Webfinger resource handler.
+ *
+ * @since 1.1
+ * @version $Id$
+ */
 @Component
 @Named("webfinger")
 @Singleton

@@ -36,6 +36,7 @@ import org.xwiki.url.internal.AbstractResourceReferenceResolver;
 /**
  * Resolve an {@link ExtendedURL} to an {@link WebfingerResourceReference}.
  *
+ * @since 1.1
  * @version $Id$
  */
 @Component

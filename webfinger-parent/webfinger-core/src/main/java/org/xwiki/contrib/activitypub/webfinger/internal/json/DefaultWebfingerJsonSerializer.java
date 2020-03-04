@@ -31,6 +31,12 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonSerializer;
 import org.xwiki.contrib.activitypub.webfinger.entities.WebfingerJRD;
 
+/**
+ * Defines the default serialization of {@link WebfingerJRD} to json.
+ *
+ *  @version $Id$
+ *  @since 1.1
+ */
 @Component
 @Singleton
 public class DefaultWebfingerJsonSerializer implements WebfingerJsonSerializer

@@ -34,6 +34,11 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.ACCEPT_SINGL
 
 /**
  * FIXME: Duplicate of ObjectMapperConfiguration in activitypub-core
+ *
+ * Provides a default json object mapper configuration.
+ *
+ * @version $Id$
+ * @since 1.1
  */
 @Component(roles = ObjectMapperConfiguration.class)
 @Singleton
@@ -49,6 +54,10 @@ public class ObjectMapperConfiguration implements Initializable
                                 .enable(SerializationFeature.INDENT_OUTPUT);
     }
 
+    /**
+     *
+     * @return the default object mapper.
+     */
     public ObjectMapper getObjectMapper()
     {
         return this.objectMapper;

@@ -29,14 +29,26 @@ import org.xwiki.stability.Unstable;
 /**
  * Define serializing operations for ActivityPub.
  *
- * @since 1.0
+ * @since 1.1
  * @version $Id$
  */
 @Unstable
 @Role
 public interface WebfingerJsonSerializer
 {
+    /**
+     * Serialize a {@link WebfingerJRD} to a {@link String}.
+     * @param object the {@link WebfingerJRD} to serialize. 
+     * @return a string representing the serialization of the object to json.
+     * @throws IOException in case of issue occurring during the serialization.
+     */
     String serialize(WebfingerJRD object) throws IOException;
 
+    /**
+     * Serialize a {@link WebfingerJRD} to a {@link String}.
+     * @param stream the stream where to output the serialized object.
+     * @param object the {@link WebfingerJRD} to serialize.
+     * @throws IOException in case of issue occurring during the serialization.
+     */
     void serialize(OutputStream stream, WebfingerJRD object) throws IOException;
 }

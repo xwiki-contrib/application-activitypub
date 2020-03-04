@@ -21,16 +21,30 @@ package org.xwiki.contrib.activitypub.webfinger.entities;
 
 import org.xwiki.stability.Unstable;
 
+/**
+ * The representation of a webfinger object. Cf https://tools.ietf.org/html/rfc7033
+ * 
+ * @version $Id$
+ * @since 1.1
+ */
 @Unstable
 public class WebfingerJRD extends JSONLDObjects
 {
     private String subject;
 
+    /**
+     * 
+     * @return the webfinger subject.
+     */
     public String getSubject()
     {
         return this.subject;
     }
 
+    /**
+     * 
+     * @param subject the webfinger subject.
+     */
     public void setSubject(String subject)
     {
         this.subject = subject;

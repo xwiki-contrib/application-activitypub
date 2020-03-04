@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * An artificial type to put the right JSON-LD context property everywhere.
  *
  * @version $Id$
- * @since 1.0
+ * @since 1.1
  */
 @Unstable
 public class JSONLDObjects
