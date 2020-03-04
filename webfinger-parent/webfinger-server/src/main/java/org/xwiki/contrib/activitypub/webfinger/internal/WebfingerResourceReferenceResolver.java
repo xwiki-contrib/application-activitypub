@@ -53,8 +53,12 @@ public class WebfingerResourceReferenceResolver extends AbstractResourceReferenc
         Map<String, Object> parameters) throws CreateResourceReferenceException, UnsupportedResourceReferenceException
     {
 
+        /*
+         * TODO Add support for the rel parameter.
+         */
+
         if (!representation.getParameters().containsKey(RESOURCE_KEY)) {
-            return this.error(representation);
+            this.error(representation);
         }
 
         List<String> resources = representation.getParameters().get(RESOURCE_KEY);
@@ -68,7 +72,12 @@ public class WebfingerResourceReferenceResolver extends AbstractResourceReferenc
         return ret;
     }
 
-    private WebfingerResourceReference error(ExtendedURL representation) throws CreateResourceReferenceException
+    /**
+     * FIXME: must conform to https://tools.ietf.org/html/rfc2616#section-10.4.1.
+     * @param representation the received URL.
+     * @throws CreateResourceReferenceException the resolution error.
+     */
+    private void error(ExtendedURL representation) throws CreateResourceReferenceException
     {
         throw new CreateResourceReferenceException(
             String.format(ERROR_MESSAGE_TEMPLATE, representation.toString()));

@@ -23,18 +23,15 @@ import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.phase.Initializable;
-import org.xwiki.component.phase.InitializationException;
 
-import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static com.fasterxml.jackson.databind.DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY;
+import static com.fasterxml.jackson.databind.MapperFeature.SORT_PROPERTIES_ALPHABETICALLY;
+import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
 
 /**
- * FIXME: Duplicate of ObjectMapperConfiguration in activitypub-core
- *
  * Provides a default json object mapper configuration.
  *
  * @version $Id$
@@ -46,12 +43,14 @@ public class ObjectMapperConfiguration implements Initializable
 {
     private ObjectMapper objectMapper;
 
-    @Override public void initialize() throws InitializationException
+    @Override
+    public void initialize()
     {
-        this.objectMapper = new ObjectMapper().setSerializationInclusion(NON_NULL)
+        this.objectMapper = new ObjectMapper()
+                                .setSerializationInclusion(NON_EMPTY)
                                 .enable(ACCEPT_SINGLE_VALUE_AS_ARRAY)
-                                .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
-                                .enable(SerializationFeature.INDENT_OUTPUT);
+                                .enable(SORT_PROPERTIES_ALPHABETICALLY)
+                                .enable(INDENT_OUTPUT);
     }
 
     /**

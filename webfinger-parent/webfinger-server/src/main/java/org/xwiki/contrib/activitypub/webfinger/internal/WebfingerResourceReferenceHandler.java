@@ -36,6 +36,7 @@ import org.xwiki.container.servlet.ServletRequest;
 import org.xwiki.container.servlet.ServletResponse;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonSerializer;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerResourceReference;
+import org.xwiki.contrib.activitypub.webfinger.entities.LinkJRD;
 import org.xwiki.contrib.activitypub.webfinger.entities.WebfingerJRD;
 import org.xwiki.resource.AbstractResourceReferenceHandler;
 import org.xwiki.resource.ResourceReference;
@@ -44,8 +45,9 @@ import org.xwiki.resource.ResourceReferenceHandlerException;
 import org.xwiki.resource.ResourceType;
 
 /**
+ *
+ * Webfinger (https://tools.ietf.org/html/rfc7033) resource handler.
  * 
- * Webfinger resource handler.
  *
  * @since 1.1
  * @version $Id$
@@ -82,9 +84,8 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
         HttpServletRequest request = ((ServletRequest) this.container.getRequest()).getHttpServletRequest();
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
         try {
-            // TODO do some web magic
-            this.proceed(reference, request, response);
-        } catch (IOException e) {
+            this.proceed(resourceReference, request, response);
+        } catch (IOException | WebfingerException e) {
             try {
                 this.handleException(response, e);
             } catch (IOException ex) {
@@ -94,21 +95,30 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
         }
     }
 
-    private void proceed(ResourceReference reference, HttpServletRequest request,
-        HttpServletResponse response) throws IOException
+    private void proceed(WebfingerResourceReference reference, HttpServletRequest request,
+        HttpServletResponse response) throws IOException, WebfingerException
     {
+        String[] referenceSplit = reference.getResource().split("@");
+
+        if (referenceSplit.length != 2) {
+            throw new WebfingerException();
+        }
+
+        String username = referenceSplit[0];
+        String domain = referenceSplit[1];
+        String usernamePath = String.join("/", username.split("\\."));
         response.setContentType("application/activity+json; charset=utf-8");
-        // try (OutputStreamWriter os = new OutputStreamWriter(response.getOutputStream())) {
-        //     os.write("{ \"\"}");
-        // }
-        WebfingerJRD object = new WebfingerJRD();
-        object.setSubject("acc:mleduc@mastodon.fr");
-        webfingerJsonSerializer.serialize(response.getOutputStream(), object);
+        response.addHeader("Access-Control-Allow-Origin", "*");
+        LinkJRD link1 = new LinkJRD().setRel("http://webfinger.net/rel/profile-page").setType("text/html")
+                            .setHref(String.format("http://%s/xwiki/bin/view/%s", domain, usernamePath));
+        LinkJRD link2 = new LinkJRD().setRel("self").setType("application/activity+json")
+                            .setHref("http://" + domain + "/xwiki/activitypub/Person/" + username);
+        WebfingerJRD object =
+            new WebfingerJRD().setSubject("acc:" + reference.getResource()).setLinks(Arrays.asList(link1, link2));
+        this.webfingerJsonSerializer.serialize(response.getOutputStream(), object);
     }
 
     /**
-     *
-     * FIXME: duplicated from {@link ActivityPubResourceReferenceHandler}
      *
      * Utility method to send an error message in case of exception.
      * @param response the servlet response to use

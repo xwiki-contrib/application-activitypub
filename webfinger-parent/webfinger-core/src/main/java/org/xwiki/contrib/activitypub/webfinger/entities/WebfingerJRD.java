@@ -19,21 +19,29 @@
  */
 package org.xwiki.contrib.activitypub.webfinger.entities;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.xwiki.stability.Unstable;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * The representation of a webfinger object. Cf https://tools.ietf.org/html/rfc7033
- * 
+ *
  * @version $Id$
  * @since 1.1
  */
 @Unstable
-public class WebfingerJRD extends JSONLDObjects
+public class WebfingerJRD
 {
     private String subject;
 
+    private List<LinkJRD> links = new ArrayList<>();
+
     /**
-     * 
+     *
      * @return the webfinger subject.
      */
     public String getSubject()
@@ -42,11 +50,43 @@ public class WebfingerJRD extends JSONLDObjects
     }
 
     /**
-     * 
+     *
      * @param subject the webfinger subject.
+     * @return self to allow chained method calls (fluent API).
      */
-    public void setSubject(String subject)
+    public WebfingerJRD setSubject(String subject)
     {
         this.subject = subject;
+        return this;
+    }
+
+    /**
+     * Cf https://tools.ietf.org/html/rfc7033#page-12.
+     * @return get the webfinger links.
+     */
+    public List<LinkJRD> getLinks()
+    {
+        return this.links;
+    }
+
+    /**
+     * Cf https://tools.ietf.org/html/rfc7033#page-12.
+     * @param links the webfinger links.
+     * @return self to allow chained method calls (fluent API).
+     */
+    public WebfingerJRD setLinks(List<LinkJRD> links)
+    {
+        this.links = links;
+        return this;
+    }
+
+    /**
+     *
+     * @return the list of href of the links.
+     */
+    @JsonProperty
+    public List<String> getAliases()
+    {
+        return this.links.stream().map(LinkJRD::getHref).collect(Collectors.toList());
     }
 }
