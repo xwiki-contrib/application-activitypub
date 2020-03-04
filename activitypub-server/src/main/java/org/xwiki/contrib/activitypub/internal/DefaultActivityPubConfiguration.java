@@ -44,7 +44,7 @@ public class DefaultActivityPubConfiguration implements ActivityPubConfiguration
     {
         String followPolicy = this.configuration.getProperty("followPolicy", "reject");
         try {
-            return valueOf(followPolicy.toUpperCase());
+            return valueOf(followPolicy.toUpperCase().trim());
         } catch (IllegalArgumentException | NullPointerException e) {
             return REJECT;
         }
