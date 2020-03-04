@@ -1,0 +1,2 @@
+org.xwiki.contrib.activitypub.webfinger.internal.json.DefaultWebfingerJsonSerializer
+org.xwiki.contrib.activitypub.webfinger.internal.json.ObjectMapperConfiguration

@@ -85,5 +85,6 @@
     <module>activitypub-server</module>
     <module>activitypub-notifications</module>
     <module>activitypub-ui</module>
+    <module>webfinger-parent</module>
   </modules>
 </project>

@@ -1,0 +1,2 @@
+org.xwiki.contrib.activitypub.webfinger.internal.WebfingerResourceReferenceHandler
+org.xwiki.contrib.activitypub.webfinger.internal.WebfingerResourceReferenceResolver
