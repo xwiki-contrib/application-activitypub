@@ -22,8 +22,10 @@ package org.xwiki.contrib.activitypub.webfinger.internal;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -38,6 +40,7 @@ import org.xwiki.container.servlet.ServletRequest;
 import org.xwiki.container.servlet.ServletResponse;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonSerializer;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerResourceReference;
+import org.xwiki.contrib.activitypub.webfinger.WebfingerService;
 import org.xwiki.contrib.activitypub.webfinger.entities.LinkJRD;
 import org.xwiki.contrib.activitypub.webfinger.entities.WebfingerJRD;
 import org.xwiki.model.reference.DocumentReference;
@@ -64,8 +67,10 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
 
     private static final String TEXTPLAIN_CONTENTTYPE = "text/plain";
 
+    private static final String REL_PARAM_KEY = "rel";
+
     @Inject
-    private DefaultWebfingerService webfingerService;
+    private WebfingerService webfingerService;
 
     @Inject
     private Container container;
@@ -120,7 +125,7 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
                 throw new WebfingerException();
             }
 
-            URI uriL1 = this.webfingerService.resolveProfilePageUrl(username);
+            URI apUserURI = this.webfingerService.resolveActivityPubUserUrl(username);
 
              /*
             Check if the request domain matches the domain of the server:
@@ -134,13 +139,14 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
             portion, then the client chooses a host to which it directs the query
             using additional information it has."
              */
-            // FIXME: uriL1 port is set to -1 instead of 8080
-            if (!(uriL1.getPort() == resourceURI.getPort() && uriL1.getHost().equals(resourceURI.getHost()))) {
+            if (!(apUserURI.getPort() == resourceURI.getPort() && Objects.equals(apUserURI.getHost(),
+                resourceURI.getHost())))
+            {
                 // TODO handle properly with relevant error code. 
                 throw new WebfingerException();
             }
 
-            this.sendValidResponse(reference, response, user, uriL1);
+            this.sendValidResponse(reference, response, user, apUserURI);
         } catch (URISyntaxException e) {
             // TODO : handler resource format error.
         } catch (Exception e) {
@@ -152,17 +158,44 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
         DocumentReference user, URI uriL1) throws Exception
     {
         response.setContentType("application/activity+json; charset=utf-8");
-        response.addHeader("Access-Control-Allow-Origin", "*");
-        LinkJRD link1 = new LinkJRD().setRel("http://webfinger.net/rel/profile-page").setType("text/html")
-                            .setHref(uriL1.toASCIIString());
 
-        String url = this.webfingerService.resolveActivityPubUserUrl(user);
+        String xWikiUserURI = this.webfingerService.resolveXWikiUserUrl(user);
+        LinkJRD link1 = new LinkJRD().setRel("http://webfinger.net/rel/profile-page").setType("text/html")
+                            .setHref(xWikiUserURI);
 
         LinkJRD link2 = new LinkJRD().setRel("self").setType("application/activity+json")
-                            .setHref(url);
+                            .setHref(uriL1.toASCIIString());
+
+        List<LinkJRD> links =
+            this.filterLinks(reference.getParameters().get(REL_PARAM_KEY), new LinkJRD[]{ link1, link2 });
+
         WebfingerJRD object =
-            new WebfingerJRD().setSubject("acct:" + reference.getResource()).setLinks(Arrays.asList(link1, link2));
+            new WebfingerJRD().setSubject("acct:" + reference.getResource()).setLinks(links);
         this.webfingerJsonSerializer.serialize(response.getOutputStream(), object);
+    }
+
+    /**
+     * Filter the included links according to the rel parameter.
+     * @param relParameter the list of rel passed as parameter.
+     * @param links The link of possibly included links.
+     * @return The filtered list of rel link to include.
+     */
+    private List<LinkJRD> filterLinks(List<String> relParameter, LinkJRD[] links)
+    {
+        List<LinkJRD> ret;
+        if (relParameter != null) {
+            // if at least one rel parameter exists, only the requested rel are included.
+            ret = new ArrayList<>();
+            for (LinkJRD link : links) {
+                if (relParameter.contains(link.getRel())) {
+                    ret.add(link);
+                }
+            }
+        } else {
+            // if no rel parameter is passed, all the ret are included.
+            ret = Arrays.asList(links);
+        }
+        return ret;
     }
 
     /**

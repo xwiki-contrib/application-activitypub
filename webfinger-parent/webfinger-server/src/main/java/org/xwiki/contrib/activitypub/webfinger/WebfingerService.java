@@ -66,7 +66,7 @@ public interface WebfingerService
      * @throws SerializeResourceReferenceException in case pf serialization error
      * @throws UnsupportedResourceReferenceException in case of unsupported resource
      */
-    URI resolveProfilePageUrl(String username) throws SerializeResourceReferenceException,
+    URI resolveActivityPubUserUrl(String username) throws SerializeResourceReferenceException,
                                                           UnsupportedResourceReferenceException;
 
     /**
@@ -75,5 +75,5 @@ public interface WebfingerService
      * @return the url of the activitypub resource of the user
      * @throws Exception in case of error.
      */
-    String resolveActivityPubUserUrl(DocumentReference user) throws Exception;
+    String resolveXWikiUserUrl(DocumentReference user) throws Exception;
 }

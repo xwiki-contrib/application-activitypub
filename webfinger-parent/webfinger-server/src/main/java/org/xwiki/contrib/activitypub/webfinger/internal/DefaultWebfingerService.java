@@ -24,6 +24,7 @@ import java.net.URI;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
+import javax.inject.Singleton;
 
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
@@ -47,6 +48,7 @@ import com.xpn.xwiki.user.api.XWikiUser;
  * @version $Id$
  */
 @Component
+@Singleton
 public class DefaultWebfingerService implements WebfingerService
 {
     @Inject
@@ -83,7 +85,7 @@ public class DefaultWebfingerService implements WebfingerService
     }
 
     @Override
-    public URI resolveProfilePageUrl(String username) throws SerializeResourceReferenceException,
+    public URI resolveActivityPubUserUrl(String username) throws SerializeResourceReferenceException,
                                                                  UnsupportedResourceReferenceException
     {
         ActivityPubResourceReference aprr = new ActivityPubResourceReference("Person", username);
@@ -91,9 +93,9 @@ public class DefaultWebfingerService implements WebfingerService
     }
 
     @Override
-    public String resolveActivityPubUserUrl(DocumentReference user) throws Exception
+    public String resolveXWikiUserUrl(DocumentReference user) throws Exception
     {
         return ((XWikiDocument) this.documentAccess.getDocumentInstance(user))
-                   .getExternalURL("activitypub", this.contextProvider.get());
+                   .getExternalURL("view", this.contextProvider.get());
     }
 }
