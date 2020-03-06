@@ -1,0 +1,13 @@
+{
+  "aliases" : [ "http://link1.txt", "http://link2.txt" ],
+  "links" : [ {
+    "href" : "http://link1.txt",
+    "rel" : "http://link1rel.tst",
+    "type" : "self"
+  }, {
+    "href" : "http://link2.txt",
+    "rel" : "http://link2rel.tst",
+    "type" : "self"
+  } ],
+  "subject" : "acct:test@xwiki.tst"
+}

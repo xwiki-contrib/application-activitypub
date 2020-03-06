@@ -19,9 +19,6 @@
  */
 package org.xwiki.contrib.activitypub.webfinger.entities;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Cf https://tools.ietf.org/html/rfc7033#section-4.4.4.
  *
@@ -35,10 +32,6 @@ public class LinkJRD
     private String type;
 
     private String href;
-
-    private Map<String, String> titles = new HashMap<>();
-
-    private Map<String, String> properties = new HashMap<>();
 
     /**
      * Cf https://tools.ietf.org/html/rfc7033#section-4.4.4.1.
@@ -97,46 +90,6 @@ public class LinkJRD
     public LinkJRD setHref(String href)
     {
         this.href = href;
-        return this;
-    }
-
-    /**
-     * Cf https://tools.ietf.org/html/rfc7033#section-4.4.4.4.
-     * @return the titles.
-     */
-    public Map<String, String> getTitles()
-    {
-        return this.titles;
-    }
-
-    /**
-     * Cf https://tools.ietf.org/html/rfc7033#section-4.4.4.4.
-     * @param titles the titles.
-     * @return self to allow chained method calls (fluent API).
-     */
-    public LinkJRD setTitles(Map<String, String> titles)
-    {
-        this.titles = titles;
-        return this;
-    }
-
-    /**
-     * Cf https://tools.ietf.org/html/rfc7033#section-4.4.4.5.
-     * @return the properties.
-     */
-    public Map<String, String> getProperties()
-    {
-        return this.properties;
-    }
-
-    /**
-     * Cf https://tools.ietf.org/html/rfc7033#section-4.4.4.5.
-     * @param properties the properties.
-     * @return self to allow chained method calls (fluent API).
-     */
-    public LinkJRD setProperties(Map<String, String> properties)
-    {
-        this.properties = properties;
         return this;
     }
 }
