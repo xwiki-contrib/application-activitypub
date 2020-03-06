@@ -19,6 +19,10 @@
  */
 package org.xwiki.contrib.activitypub.webfinger.entities;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.xwiki.text.XWikiToStringBuilder;
+
 /**
  * Cf https://tools.ietf.org/html/rfc7033#section-4.4.4.
  *
@@ -91,5 +95,44 @@ public class LinkJRD
     {
         this.href = href;
         return this;
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || this.getClass() != o.getClass()) {
+            return false;
+        }
+
+        LinkJRD linkJRD = (LinkJRD) o;
+
+        return new EqualsBuilder()
+                   .append(this.rel, linkJRD.rel)
+                   .append(this.type, linkJRD.type)
+                   .append(this.href, linkJRD.href)
+                   .isEquals();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder(17, 37)
+                   .append(this.rel)
+                   .append(this.type)
+                   .append(this.href)
+                   .toHashCode();
+    }
+
+    @Override public String toString()
+    {
+        return new XWikiToStringBuilder(this)
+                   .append("rel", this.getRel())
+                   .append("type", this.getType())
+                   .append("href", this.getHref())
+                   .build();
     }
 }

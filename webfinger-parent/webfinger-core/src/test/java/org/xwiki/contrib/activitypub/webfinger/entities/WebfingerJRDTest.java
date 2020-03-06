@@ -62,7 +62,7 @@ class WebfingerJRDTest
         Assertions.assertEquals(excepted, actual);
     }
 
-    protected String readResource(String entityPath) throws FileNotFoundException
+    private String readResource(String entityPath) throws FileNotFoundException
     {
         File newPath = new File(new File("./src/test/resources"), entityPath);
         BufferedReader bufferedReader = new BufferedReader(new FileReader(newPath));

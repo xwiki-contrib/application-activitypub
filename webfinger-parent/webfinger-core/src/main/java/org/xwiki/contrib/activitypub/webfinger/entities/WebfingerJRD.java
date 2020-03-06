@@ -23,7 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.xwiki.stability.Unstable;
+import org.xwiki.text.XWikiToStringBuilder;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -88,5 +91,42 @@ public class WebfingerJRD
     public List<String> getAliases()
     {
         return this.links.stream().map(LinkJRD::getHref).collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || this.getClass() != o.getClass()) {
+            return false;
+        }
+
+        WebfingerJRD that = (WebfingerJRD) o;
+
+        return new EqualsBuilder()
+                   .append(this.subject, that.subject)
+                   .append(this.links, that.links)
+                   .isEquals();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder(17, 37)
+                   .append(this.subject)
+                   .append(this.links)
+                   .toHashCode();
+    }
+
+    @Override
+    public String toString()
+    {
+        return new XWikiToStringBuilder(this)
+                   .append("subject", this.getSubject())
+                   .append("links", this.getLinks())
+                   .build();
     }
 }

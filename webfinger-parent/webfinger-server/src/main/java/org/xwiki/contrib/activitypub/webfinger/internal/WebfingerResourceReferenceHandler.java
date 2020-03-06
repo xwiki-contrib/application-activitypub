@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -51,6 +50,7 @@ import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.resource.AbstractResourceReferenceHandler;
 import org.xwiki.resource.ResourceReference;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
+import org.xwiki.resource.ResourceReferenceHandlerException;
 import org.xwiki.resource.ResourceType;
 import org.xwiki.resource.SerializeResourceReferenceException;
 import org.xwiki.resource.UnsupportedResourceReferenceException;
@@ -78,8 +78,6 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
 
     private static final String ACCT_PARAM_KEY = "acct:";
 
-    private static final Pattern ACCT_PATTERN = Pattern.compile("^" + ACCT_PARAM_KEY);
-
     @Inject
     private WebfingerService webfingerService;
 
@@ -100,10 +98,15 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
 
     @Override
     public void handle(ResourceReference reference, ResourceReferenceHandlerChain chain)
+        throws ResourceReferenceHandlerException
     {
         WebfingerResourceReference resourceReference = (WebfingerResourceReference) reference;
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
         this.proceed(resourceReference, response);
+
+        // Be a good citizen, continue the chain, in case some lower-priority Handler has something to do for this
+        // Resource Reference.
+        chain.handleNext(reference);
     }
 
     private void proceed(WebfingerResourceReference reference, HttpServletResponse response)
@@ -192,7 +195,7 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
         // any scheme can be used, cf https://tools.ietf.org/html/rfc7033#section-4.5
         URI resourceURI;
         if (resource.startsWith(ACCT_PARAM_KEY)) {
-            String trimed = ACCT_PATTERN.matcher(resource).replaceAll("");
+            String trimed = resource.replaceAll("^" + ACCT_PARAM_KEY, "");
             resourceURI = new URI(ACCT_PARAM_KEY + "//" + trimed);
         } else {
             resourceURI = new URI(resource);
@@ -231,7 +234,7 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
     private List<LinkJRD> filterLinks(List<String> relParameter, LinkJRD... links)
     {
         List<LinkJRD> ret;
-        if (relParameter != null) {
+        if (relParameter != null && !relParameter.isEmpty()) {
             // if at least one rel parameter exists, only the requested rel are included.
             ret = new ArrayList<>();
             for (LinkJRD link : links) {
