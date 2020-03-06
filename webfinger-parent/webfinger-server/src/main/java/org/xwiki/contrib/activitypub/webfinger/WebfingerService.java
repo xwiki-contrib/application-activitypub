@@ -67,13 +67,12 @@ public interface WebfingerService
      * @throws UnsupportedResourceReferenceException in case of unsupported resource
      */
     URI resolveActivityPubUserUrl(String username) throws SerializeResourceReferenceException,
-                                                          UnsupportedResourceReferenceException;
+                                                              UnsupportedResourceReferenceException;
 
     /**
      * Resolve the activitypub resource of the user. 
      * @param user the user document reference.
      * @return the url of the activitypub resource of the user
-     * @throws Exception in case of error.
      */
-    String resolveXWikiUserUrl(DocumentReference user) throws Exception;
+    String resolveXWikiUserUrl(DocumentReference user) throws WebfingerException;
 }

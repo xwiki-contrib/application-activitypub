@@ -37,24 +37,11 @@ public class WebfingerResourceReference extends AbstractResourceReference
      */
     public static final ResourceType TYPE = new ResourceType("webfinger");
 
-    private final String resource;
-
     /**
      * Default constructor.
-     * @param resource the user resource to resolve.
      */
-    public WebfingerResourceReference(String resource)
+    public WebfingerResourceReference()
     {
         this.setType(TYPE);
-        this.resource = resource;
-    }
-
-    /**
-     * 
-     * @return the webfinger resource parameter value.
-     */
-    public String getResource()
-    {
-        return this.resource;
     }
 }

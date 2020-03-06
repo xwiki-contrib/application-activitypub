@@ -29,6 +29,7 @@ import javax.inject.Singleton;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
+import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerService;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
@@ -86,16 +87,20 @@ public class DefaultWebfingerService implements WebfingerService
 
     @Override
     public URI resolveActivityPubUserUrl(String username) throws SerializeResourceReferenceException,
-                                                                 UnsupportedResourceReferenceException
+                                                                     UnsupportedResourceReferenceException
     {
         ActivityPubResourceReference aprr = new ActivityPubResourceReference("Person", username);
         return this.serializer.serialize(aprr);
     }
 
     @Override
-    public String resolveXWikiUserUrl(DocumentReference user) throws Exception
+    public String resolveXWikiUserUrl(DocumentReference user) throws WebfingerException
     {
-        return ((XWikiDocument) this.documentAccess.getDocumentInstance(user))
-                   .getExternalURL("view", this.contextProvider.get());
+        try {
+            return ((XWikiDocument) this.documentAccess.getDocumentInstance(user))
+                       .getExternalURL("view", this.contextProvider.get());
+        } catch (Exception e) {
+            throw new WebfingerException(e);
+        }
     }
 }

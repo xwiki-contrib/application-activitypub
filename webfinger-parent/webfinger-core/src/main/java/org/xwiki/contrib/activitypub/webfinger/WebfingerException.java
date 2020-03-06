@@ -17,14 +17,55 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.webfinger.internal;
+package org.xwiki.contrib.activitypub.webfinger;
 
 /**
  * Default exception for webfinger.
- * 
+ *
  * @since 1.1
  *  @version $Id$
  */
 public class WebfingerException extends Exception
 {
+    private final int errorCode;
+
+    private final Throwable cause;
+
+    /**
+     * Handling of a business error.
+     * @param errorCode http error code to be returned to the client.
+     */
+    public WebfingerException(int errorCode)
+    {
+        this.errorCode = errorCode;
+        this.cause = null;
+    }
+
+    /**
+     * Handling of a technical error.
+     * @param cause The cause of the error
+     */
+    public WebfingerException(Throwable cause)
+    {
+        this.cause = cause;
+        this.errorCode = 500;
+    }
+
+    /**
+     *
+     * @return the error code.
+     */
+    public int getErrorCode()
+    {
+        return this.errorCode;
+    }
+
+    /**
+     *
+     * @return the cause of the exception.
+     */
+    public Throwable getCause()
+    {
+        return this.cause;
+    }
 }
