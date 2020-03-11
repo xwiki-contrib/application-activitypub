@@ -29,8 +29,6 @@ public class WebfingerException extends Exception
 {
     private final int errorCode;
 
-    private final Throwable cause;
-
     /**
      * Handling of a business error.
      * @param errorCode http error code to be returned to the client.
@@ -38,7 +36,17 @@ public class WebfingerException extends Exception
     public WebfingerException(int errorCode)
     {
         this.errorCode = errorCode;
-        this.cause = null;
+    }
+
+    /**
+     * Handling of a technical error.
+     * @param message The detailed message of the exception.
+     * @param cause The cause of the error
+     */
+    public WebfingerException(String message, Throwable cause)
+    {
+        super(message, cause);
+        this.errorCode = 500;
     }
 
     /**
@@ -47,7 +55,7 @@ public class WebfingerException extends Exception
      */
     public WebfingerException(Throwable cause)
     {
-        this.cause = cause;
+        super(cause);
         this.errorCode = 500;
     }
 
@@ -58,14 +66,5 @@ public class WebfingerException extends Exception
     public int getErrorCode()
     {
         return this.errorCode;
-    }
-
-    /**
-     *
-     * @return the cause of the exception.
-     */
-    public Throwable getCause()
-    {
-        return this.cause;
     }
 }

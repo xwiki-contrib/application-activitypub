@@ -27,7 +27,7 @@ import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 import org.xwiki.stability.Unstable;
 
 /**
- * Define serializing operations for ActivityPub.
+ * Define serializing operations for Webfinger.
  *
  * @since 1.1
  * @version $Id$
