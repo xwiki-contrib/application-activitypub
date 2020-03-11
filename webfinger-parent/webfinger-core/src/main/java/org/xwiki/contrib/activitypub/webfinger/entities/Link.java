@@ -24,12 +24,16 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.xwiki.text.XWikiToStringBuilder;
 
 /**
- * Cf https://tools.ietf.org/html/rfc7033#section-4.4.4.
+ *
+ * A JSON Resource Descriptor link object.
+ *
+ * @see <a href="https://tools.ietf.org/html/rfc7033#section-4.4">The JSON Resource Descriptor (JRD)</a>
+ * @see <a href="https://tools.ietf.org/html/rfc7033#section-4.4.4">JRD's Links specifications</a>
  *
  * @version $Id$
  * @since 1.1
  */
-public class LinkJRD
+public class Link
 {
     private String rel;
 
@@ -38,7 +42,9 @@ public class LinkJRD
     private String href;
 
     /**
-     * Cf https://tools.ietf.org/html/rfc7033#section-4.4.4.1.
+     * Get the link rel value.
+     *
+     * @see <a href="https://tools.ietf.org/html/rfc7033#section-4.4.4.1.">Specifications of the Link's ref value</a>
      * @return the rel value.
      */
     public String getRel()
@@ -47,18 +53,20 @@ public class LinkJRD
     }
 
     /**
-     * Cf https://tools.ietf.org/html/rfc7033#section-4.4.4.1.
+     * Set the link rel value.
+     * @see <a href="https://tools.ietf.org/html/rfc7033#section-4.4.4.1.">Specifications of the Link's rel value</a>
      * @param rel the rel value.
      * @return self to allow chained method calls (fluent API).
      */
-    public LinkJRD setRel(String rel)
+    public Link setRel(String rel)
     {
         this.rel = rel;
         return this;
     }
 
     /**
-     * Cf https://tools.ietf.org/html/rfc7033#section-4.4.4.2.
+     * Get the link type value.
+     * @see  <a href="https://tools.ietf.org/html/rfc7033#section-4.4.4.2.">Specifications of the Link's type value</a>
      * @return the type.
      */
     public String getType()
@@ -67,18 +75,20 @@ public class LinkJRD
     }
 
     /**
-     * Cf https://tools.ietf.org/html/rfc7033#section-4.4.4.2.
+     * Set the link type value.
+     * @see <a href="https://tools.ietf.org/html/rfc7033#section-4.4.4.2.">Specifications of the Link's type value</a>
      * @param type the type.
      * @return self to allow chained method calls (fluent API).
      */
-    public LinkJRD setType(String type)
+    public Link setType(String type)
     {
         this.type = type;
         return this;
     }
 
     /**
-     * Cf https://tools.ietf.org/html/rfc7033#section-4.4.4.3.
+     * Get the link href value.
+     * @see <a href="https://tools.ietf.org/html/rfc7033#section-4.4.4.3.">Specification of the Link's href value</a>
      * @return the href.
      */
     public String getHref()
@@ -87,11 +97,12 @@ public class LinkJRD
     }
 
     /**
-     * Cf https://tools.ietf.org/html/rfc7033#section-4.4.4.3.
+     * Set the link href value.
+     * @see <a href="https://tools.ietf.org/html/rfc7033#section-4.4.4.3.">Specification of the Link's href value</a>
      * @param href the href.
      * @return self to allow chained method calls (fluent API).
      */
-    public LinkJRD setHref(String href)
+    public Link setHref(String href)
     {
         this.href = href;
         return this;
@@ -108,12 +119,12 @@ public class LinkJRD
             return false;
         }
 
-        LinkJRD linkJRD = (LinkJRD) o;
+        Link link = (Link) o;
 
         return new EqualsBuilder()
-                   .append(this.rel, linkJRD.rel)
-                   .append(this.type, linkJRD.type)
-                   .append(this.href, linkJRD.href)
+                   .append(this.rel, link.rel)
+                   .append(this.type, link.type)
+                   .append(this.href, link.href)
                    .isEquals();
     }
 
@@ -127,7 +138,8 @@ public class LinkJRD
                    .toHashCode();
     }
 
-    @Override public String toString()
+    @Override
+    public String toString()
     {
         return new XWikiToStringBuilder(this)
                    .append("rel", this.getRel())

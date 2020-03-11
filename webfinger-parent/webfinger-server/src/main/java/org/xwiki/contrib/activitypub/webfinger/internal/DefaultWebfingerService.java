@@ -33,6 +33,7 @@ import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerService;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
+import org.xwiki.model.reference.EntityReference;
 import org.xwiki.resource.ResourceReferenceSerializer;
 import org.xwiki.resource.SerializeResourceReferenceException;
 import org.xwiki.resource.UnsupportedResourceReferenceException;
@@ -66,22 +67,23 @@ public class DefaultWebfingerService implements WebfingerService
     private DocumentAccessBridge documentAccess;
 
     @Override
-    public DocumentReference resolveUser(String username)
+    public EntityReference resolveUser(String username)
     {
         return this.stringDocumentReferenceResolver.resolve(username);
     }
 
     @Override
-    public boolean isExistingUser(DocumentReference documentReference)
+    public boolean isExistingUser(EntityReference documentReference)
     {
-        XWikiUser xWikiUser = new XWikiUser(documentReference);
+        // FIXME usafe.
+        XWikiUser xWikiUser = new XWikiUser((DocumentReference) documentReference);
         return xWikiUser.exists(this.contextProvider.get());
     }
 
     @Override
     public boolean isExistingUser(String username)
     {
-        DocumentReference userReference = this.resolveUser(username);
+        EntityReference userReference = this.resolveUser(username);
         return this.isExistingUser(userReference);
     }
 
@@ -94,7 +96,7 @@ public class DefaultWebfingerService implements WebfingerService
     }
 
     @Override
-    public String resolveXWikiUserUrl(DocumentReference user) throws WebfingerException
+    public String resolveXWikiUserUrl(EntityReference user) throws WebfingerException
     {
         try {
             return ((XWikiDocument) this.documentAccess.getDocumentInstance(user))

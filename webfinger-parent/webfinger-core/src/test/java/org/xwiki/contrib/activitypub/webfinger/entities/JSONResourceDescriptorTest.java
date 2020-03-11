@@ -36,14 +36,14 @@ import org.xwiki.test.junit5.mockito.InjectMockComponents;
 
 /**
  *
- * Test of {@link WebfingerJRD} serialization.
+ * Test of {@link JSONResourceDescriptor} serialization.
  *
  * @since 1.1
  * @version $Id$
  */
 @ComponentTest
 @ComponentList({ ObjectMapperConfiguration.class })
-class WebfingerJRDTest
+class JSONResourceDescriptorTest
 {
     @InjectMockComponents
     private DefaultWebfingerJsonSerializer serializer;
@@ -52,9 +52,9 @@ class WebfingerJRDTest
     void serialize() throws Exception
     {
 
-        LinkJRD l1 = new LinkJRD().setRel("http://link1rel.tst").setHref("http://link1.txt").setType("self");
-        LinkJRD l2 = new LinkJRD().setRel("http://link2rel.tst").setHref("http://link2.txt").setType("self");
-        WebfingerJRD webfinger = new WebfingerJRD()
+        Link l1 = new Link().setRel("http://link1rel.tst").setHref("http://link1.txt").setType("self");
+        Link l2 = new Link().setRel("http://link2rel.tst").setHref("http://link2.txt").setType("self");
+        JSONResourceDescriptor webfinger = new JSONResourceDescriptor()
                                      .setSubject("acct:test@xwiki.tst")
                                      .setLinks(Arrays.asList(l1, l2));
         String actual = this.serializer.serialize(webfinger);

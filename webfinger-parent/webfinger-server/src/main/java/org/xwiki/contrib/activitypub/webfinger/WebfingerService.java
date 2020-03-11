@@ -22,7 +22,7 @@ package org.xwiki.contrib.activitypub.webfinger;
 import java.net.URI;
 
 import org.xwiki.component.annotation.Role;
-import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.EntityReference;
 import org.xwiki.resource.SerializeResourceReferenceException;
 import org.xwiki.resource.UnsupportedResourceReferenceException;
 import org.xwiki.stability.Unstable;
@@ -38,19 +38,19 @@ import org.xwiki.stability.Unstable;
 public interface WebfingerService
 {
     /**
-     * Converts an username to a {@link DocumentReference}.
+     * Converts an username to an {@link EntityReference}.
      *
      * @param username the username.
      * @return the document reference.
      */
-    DocumentReference resolveUser(String username);
+    EntityReference resolveUser(String username);
 
     /**
      * Checks if a document correspond to an user of the wiki.
      * @param documentReference the document reference.
      * @return true if the document reference corresponds to a user of the wiki.
      */
-    boolean isExistingUser(DocumentReference documentReference);
+    boolean isExistingUser(EntityReference documentReference);
 
     /**
      * Checks if the username correspond to an existing user of the wiki.
@@ -74,5 +74,5 @@ public interface WebfingerService
      * @param user the user document reference.
      * @return the url of the activitypub resource of the user
      */
-    String resolveXWikiUserUrl(DocumentReference user) throws WebfingerException;
+    String resolveXWikiUserUrl(EntityReference user) throws WebfingerException;
 }

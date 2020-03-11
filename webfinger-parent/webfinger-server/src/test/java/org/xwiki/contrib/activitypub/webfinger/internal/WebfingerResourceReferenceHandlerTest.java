@@ -36,8 +36,8 @@ import org.xwiki.container.servlet.ServletResponse;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonSerializer;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerResourceReference;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerService;
-import org.xwiki.contrib.activitypub.webfinger.entities.LinkJRD;
-import org.xwiki.contrib.activitypub.webfinger.entities.WebfingerJRD;
+import org.xwiki.contrib.activitypub.webfinger.entities.Link;
+import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.resource.ResourceReference;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
@@ -172,14 +172,14 @@ public class WebfingerResourceReferenceHandlerTest
         this.handler.handle(reference, chain);
         verify(this.httpServletResponse, times(0)).setStatus(anyInt());
         verify(this.httpServletResponse).setContentType("application/activity+json; charset=utf-8");
-        LinkJRD link1 =
-            new LinkJRD().setRel("http://webfinger.net/rel/profile-page").setType("text/html").setHref(null);
-        LinkJRD link2 = new LinkJRD().setRel("self").setType("application/activity+json").setHref("https://xwiki.tst");
-        WebfingerJRD expectedWebfingerJRD = new WebfingerJRD()
+        Link link1 =
+            new Link().setRel("http://webfinger.net/rel/profile-page").setType("text/html").setHref(null);
+        Link link2 = new Link().setRel("self").setType("application/activity+json").setHref("https://xwiki.tst");
+        JSONResourceDescriptor expectedJSONResourceDescriptor = new JSONResourceDescriptor()
                                                 .setSubject("acct:acct:XWiki.Admin@xwiki.tst")
                                                 .setLinks(asList(link1, link2));
         verify(this.webfingerJsonSerializer)
-            .serialize(ArgumentMatchers.nullable(OutputStream.class), eq(expectedWebfingerJRD));
+            .serialize(ArgumentMatchers.nullable(OutputStream.class), eq(expectedJSONResourceDescriptor));
         verify(chain).handleNext(reference);
     }
 
@@ -198,12 +198,12 @@ public class WebfingerResourceReferenceHandlerTest
         this.handler.handle(reference, chain);
         verify(this.httpServletResponse, times(0)).setStatus(anyInt());
         verify(this.httpServletResponse).setContentType("application/activity+json; charset=utf-8");
-        LinkJRD link = new LinkJRD().setRel("self").setType("application/activity+json").setHref("https://xwiki.tst");
-        WebfingerJRD expectedWebfingerJRD = new WebfingerJRD()
+        Link link = new Link().setRel("self").setType("application/activity+json").setHref("https://xwiki.tst");
+        JSONResourceDescriptor expectedJSONResourceDescriptor = new JSONResourceDescriptor()
                                                 .setSubject("acct:acct:XWiki.Admin@xwiki.tst")
                                                 .setLinks(singletonList(link));
         verify(this.webfingerJsonSerializer)
-            .serialize(ArgumentMatchers.nullable(OutputStream.class), eq(expectedWebfingerJRD));
+            .serialize(ArgumentMatchers.nullable(OutputStream.class), eq(expectedJSONResourceDescriptor));
         verify(chain).handleNext(reference);
     }
 
@@ -222,12 +222,12 @@ public class WebfingerResourceReferenceHandlerTest
         this.handler.handle(reference, chain);
         verify(this.httpServletResponse, times(0)).setStatus(anyInt());
         verify(this.httpServletResponse).setContentType("application/activity+json; charset=utf-8");
-        LinkJRD link = new LinkJRD().setRel("http://webfinger.net/rel/profile-page").setType("text/html").setHref(null);
-        WebfingerJRD expectedWebfingerJRD = new WebfingerJRD()
+        Link link = new Link().setRel("http://webfinger.net/rel/profile-page").setType("text/html").setHref(null);
+        JSONResourceDescriptor expectedJSONResourceDescriptor = new JSONResourceDescriptor()
                                                 .setSubject("acct:acct:XWiki.Admin@xwiki.tst")
                                                 .setLinks(singletonList(link));
         verify(this.webfingerJsonSerializer)
-            .serialize(ArgumentMatchers.nullable(OutputStream.class), eq(expectedWebfingerJRD));
+            .serialize(ArgumentMatchers.nullable(OutputStream.class), eq(expectedJSONResourceDescriptor));
         verify(chain).handleNext(reference);
     }
 

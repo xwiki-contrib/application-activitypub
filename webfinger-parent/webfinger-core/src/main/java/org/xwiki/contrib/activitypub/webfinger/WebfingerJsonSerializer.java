@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.xwiki.component.annotation.Role;
-import org.xwiki.contrib.activitypub.webfinger.entities.WebfingerJRD;
+import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 import org.xwiki.stability.Unstable;
 
 /**
@@ -37,18 +37,18 @@ import org.xwiki.stability.Unstable;
 public interface WebfingerJsonSerializer
 {
     /**
-     * Serialize a {@link WebfingerJRD} to a {@link String}.
-     * @param object the {@link WebfingerJRD} to serialize. 
+     * Serialize a {@link JSONResourceDescriptor} to a {@link String}.
+     * @param object the {@link JSONResourceDescriptor} to serialize. 
      * @return a string representing the serialization of the object to json.
      * @throws IOException in case of issue occurring during the serialization.
      */
-    String serialize(WebfingerJRD object) throws IOException;
+    String serialize(JSONResourceDescriptor object) throws IOException;
 
     /**
-     * Serialize a {@link WebfingerJRD} to a {@link String}.
+     * Serialize a {@link JSONResourceDescriptor} to a {@link String}.
      * @param stream the stream where to output the serialized object.
-     * @param object the {@link WebfingerJRD} to serialize.
+     * @param object the {@link JSONResourceDescriptor} to serialize.
      * @throws IOException in case of issue occurring during the serialization.
      */
-    void serialize(OutputStream stream, WebfingerJRD object) throws IOException;
+    void serialize(OutputStream stream, JSONResourceDescriptor object) throws IOException;
 }

@@ -31,21 +31,25 @@ import org.xwiki.text.XWikiToStringBuilder;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * The representation of a webfinger object. Cf https://tools.ietf.org/html/rfc7033
+ *
+ * A JSON Resource Descriptor object.
+ *
+ * @see <a href="https://tools.ietf.org/html/rfc7033#section-4.4">JSON Resource Descriptor (JRD) specifications</a>
  *
  * @version $Id$
  * @since 1.1
  */
 @Unstable
-public class WebfingerJRD
+public class JSONResourceDescriptor
 {
     private String subject;
 
-    private List<LinkJRD> links = new ArrayList<>();
+    private List<Link> links = new ArrayList<>();
 
     /**
-     *
-     * @return the webfinger subject.
+     * Get the JRD subject value.
+     * @see <a href="https://tools.ietf.org/html/rfc7033#section-4.4.1">Specifications of the JRD's subject</a>
+     * @return the subject.
      */
     public String getSubject()
     {
@@ -53,31 +57,34 @@ public class WebfingerJRD
     }
 
     /**
-     *
+     * Set the JRD's subject value.
+     * @see <a href="https://tools.ietf.org/html/rfc7033#section-4.4.1">Specifications of the JRD's subject</a>
      * @param subject the webfinger subject.
      * @return self to allow chained method calls (fluent API).
      */
-    public WebfingerJRD setSubject(String subject)
+    public JSONResourceDescriptor setSubject(String subject)
     {
         this.subject = subject;
         return this;
     }
 
     /**
-     * Cf https://tools.ietf.org/html/rfc7033#page-12.
+     * Get the JRD's link values.
+     * @see <a href="https://tools.ietf.org/html/rfc7033#section-4.4.4">Specifications of the JRD's links</a>
      * @return get the webfinger links.
      */
-    public List<LinkJRD> getLinks()
+    public List<Link> getLinks()
     {
         return this.links;
     }
 
     /**
-     * Cf https://tools.ietf.org/html/rfc7033#page-12.
+     * Set the JRD's link values.
+     * @see <a href="https://tools.ietf.org/html/rfc7033#section-4.4.4">Specifications of the JRD's links</a>
      * @param links the webfinger links.
      * @return self to allow chained method calls (fluent API).
      */
-    public WebfingerJRD setLinks(List<LinkJRD> links)
+    public JSONResourceDescriptor setLinks(List<Link> links)
     {
         this.links = links;
         return this;
@@ -90,7 +97,7 @@ public class WebfingerJRD
     @JsonProperty
     public List<String> getAliases()
     {
-        return this.links.stream().map(LinkJRD::getHref).collect(Collectors.toList());
+        return this.links.stream().map(Link::getHref).collect(Collectors.toList());
     }
 
     @Override
@@ -104,7 +111,7 @@ public class WebfingerJRD
             return false;
         }
 
-        WebfingerJRD that = (WebfingerJRD) o;
+        JSONResourceDescriptor that = (JSONResourceDescriptor) o;
 
         return new EqualsBuilder()
                    .append(this.subject, that.subject)

@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerResourceReference;
-import org.xwiki.contrib.activitypub.webfinger.entities.WebfingerJRD;
 import org.xwiki.resource.ResourceType;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;

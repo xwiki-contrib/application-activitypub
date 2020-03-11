@@ -23,7 +23,7 @@ package org.xwiki.contrib.activitypub.webfinger;
  * Default exception for webfinger.
  *
  * @since 1.1
- *  @version $Id$
+ * @version $Id$
  */
 public class WebfingerException extends Exception
 {

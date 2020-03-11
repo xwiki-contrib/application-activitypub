@@ -44,9 +44,9 @@ import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonSerializer;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerResourceReference;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerService;
-import org.xwiki.contrib.activitypub.webfinger.entities.LinkJRD;
-import org.xwiki.contrib.activitypub.webfinger.entities.WebfingerJRD;
-import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
+import org.xwiki.contrib.activitypub.webfinger.entities.Link;
+import org.xwiki.model.reference.EntityReference;
 import org.xwiki.resource.AbstractResourceReferenceHandler;
 import org.xwiki.resource.ResourceReference;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
@@ -57,8 +57,9 @@ import org.xwiki.resource.UnsupportedResourceReferenceException;
 
 /**
  *
- * Webfinger (https://tools.ietf.org/html/rfc7033) resource handler.
+ * Webfinger resource handler.
  *
+ * @see <a href="https://tools.ietf.org/html/rfc7033">Webfinger RFC</a>
  *
  * @since 1.1
  * @version $Id$
@@ -120,7 +121,7 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
             URI resourceURI = this.convertResourceToURI(resource);
 
             String username = resourceURI.getUserInfo();
-            DocumentReference user = this.webfingerService.resolveUser(username);
+            EntityReference user = this.webfingerService.resolveUser(username);
 
             /*
              * https://tools.ietf.org/html/rfc7033#section-4.2
@@ -193,35 +194,35 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
     private URI convertResourceToURI(String resource) throws URISyntaxException
     {
         // any scheme can be used, cf https://tools.ietf.org/html/rfc7033#section-4.5
-        URI resourceURI;
+        String cleanedResource;
         if (resource.startsWith(ACCT_PARAM_KEY)) {
-            String trimed = resource.replaceAll("^" + ACCT_PARAM_KEY, "");
-            resourceURI = new URI(ACCT_PARAM_KEY + "//" + trimed);
+            cleanedResource = resource.replaceAll("^" + ACCT_PARAM_KEY, "");
         } else {
-            resourceURI = new URI(resource);
+            cleanedResource = resource;
         }
-        return resourceURI;
+        return new URI(ACCT_PARAM_KEY + "//" + cleanedResource);
     }
 
-    private void sendValidResponse(HttpServletResponse response, DocumentReference user, URI apUserURI, String resource,
+    private void sendValidResponse(HttpServletResponse response, EntityReference user, URI apUserURI, String resource,
         List<String> rels) throws IOException, WebfingerException
     {
         response.setContentType("application/activity+json; charset=utf-8");
 
         String xWikiUserURI = this.webfingerService.resolveXWikiUserUrl(user);
-        LinkJRD xWikiUserLink = new LinkJRD()
-                                    .setRel("http://webfinger.net/rel/profile-page")
-                                    .setType("text/html")
-                                    .setHref(xWikiUserURI);
+        Link xWikiUserLink = new Link()
+                                 .setRel("http://webfinger.net/rel/profile-page")
+                                 .setType("text/html")
+                                 .setHref(xWikiUserURI);
 
-        LinkJRD apUserLink = new LinkJRD()
-                                 .setRel("self")
-                                 .setType("application/activity+json")
-                                 .setHref(apUserURI.toASCIIString());
+        Link apUserLink = new Link()
+                              .setRel("self")
+                              .setType("application/activity+json")
+                              .setHref(apUserURI.toASCIIString());
 
-        List<LinkJRD> links = this.filterLinks(rels, xWikiUserLink, apUserLink);
+        List<Link> links = this.filterLinks(rels, xWikiUserLink, apUserLink);
 
-        WebfingerJRD object = new WebfingerJRD().setSubject(ACCT_PARAM_KEY + resource).setLinks(links);
+        JSONResourceDescriptor object =
+            new JSONResourceDescriptor().setSubject(ACCT_PARAM_KEY + resource).setLinks(links);
         this.webfingerJsonSerializer.serialize(response.getOutputStream(), object);
     }
 
@@ -231,13 +232,13 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
      * @param links The link of possibly included links.
      * @return The filtered list of rel link to include.
      */
-    private List<LinkJRD> filterLinks(List<String> relParameter, LinkJRD... links)
+    private List<Link> filterLinks(List<String> relParameter, Link... links)
     {
-        List<LinkJRD> ret;
+        List<Link> ret;
         if (relParameter != null && !relParameter.isEmpty()) {
             // if at least one rel parameter exists, only the requested rel are included.
             ret = new ArrayList<>();
-            for (LinkJRD link : links) {
+            for (Link link : links) {
                 if (relParameter.contains(link.getRel())) {
                     ret.add(link);
                 }

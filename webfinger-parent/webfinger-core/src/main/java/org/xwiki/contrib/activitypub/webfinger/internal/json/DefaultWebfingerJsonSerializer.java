@@ -29,10 +29,10 @@ import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonSerializer;
-import org.xwiki.contrib.activitypub.webfinger.entities.WebfingerJRD;
+import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 
 /**
- * Defines the default serialization of {@link WebfingerJRD} to json.
+ * Defines the default serialization of {@link JSONResourceDescriptor} to json.
  *
  *  @version $Id$
  *  @since 1.1
@@ -45,7 +45,7 @@ public class DefaultWebfingerJsonSerializer implements WebfingerJsonSerializer
     private ObjectMapperConfiguration objectMapperConfiguration;
 
     @Override
-    public String serialize(WebfingerJRD object) throws IOException
+    public String serialize(JSONResourceDescriptor object) throws IOException
     {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         this.serialize(byteArrayOutputStream, object);
@@ -53,7 +53,7 @@ public class DefaultWebfingerJsonSerializer implements WebfingerJsonSerializer
     }
 
     @Override
-    public void serialize(OutputStream stream, WebfingerJRD object) throws IOException
+    public void serialize(OutputStream stream, JSONResourceDescriptor object) throws IOException
     {
         this.objectMapperConfiguration.getObjectMapper().writeValue(stream, object);
     }
