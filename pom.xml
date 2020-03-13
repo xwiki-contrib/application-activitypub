@@ -61,6 +61,12 @@
   <properties>
     <xwiki.release.jira.skip>false</xwiki.release.jira.skip>
     <xwiki.issueManagement.jira.id>XAP</xwiki.issueManagement.jira.id>
+    <!-- FIXME: the following properties should be removed after the release of XWiki 12.2 and the release of parents
+    to 12.2 -->
+    <commons.version>12.2-SNAPSHOT</commons.version>
+    <platform.version>12.2-SNAPSHOT</platform.version>
+    <mockito.version>3.3.0</mockito.version>
+    <xwiki.enforcer.skip>true</xwiki.enforcer.skip>
   </properties>
   <dependencies>
     <dependency>
@@ -80,6 +86,7 @@
     </dependency>
   </dependencies>
   <modules>
+    <module>activitypub-commons</module>
     <module>activitypub-core</module>
     <module>activitypub-server</module>
     <module>activitypub-notifications</module>
@@ -203,6 +210,30 @@
                     "old": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===java.net.URI===) @ org.xwiki.contrib.activitypub.entities.Outbox",
                     "new": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===java.util.List<java.net.URI>===) @ org.xwiki.contrib.activitypub.entities.Outbox",
                     "justification": "The @context field must be a collection and not a single element."
+                  },
+                  {
+                    "code": "java.method.parameterTypeParameterChanged",
+                    "old": "parameter <T extends org.xwiki.contrib.activitypub.entities.AbstractActivity> void org.xwiki.contrib.activitypub.ActivityPubNotifier::notify(T, ===java.util.Set<org.xwiki.model.reference.EntityReference>===)",
+                    "new": "parameter <T extends org.xwiki.contrib.activitypub.entities.AbstractActivity> void org.xwiki.contrib.activitypub.ActivityPubNotifier::notify(T, ===java.util.Set<org.xwiki.user.UserReference>===)",
+                    "justification": "We now use the new UserReference since this parameter is really to target users."
+                  },
+                  {
+                    "code": "java.method.parameterTypeChanged",
+                    "old": "parameter org.xwiki.contrib.activitypub.entities.AbstractActor org.xwiki.contrib.activitypub.ActorHandler::getActor(===org.xwiki.model.reference.EntityReference===) throws org.xwiki.contrib.activitypub.ActivityPubException",
+                    "new": "parameter org.xwiki.contrib.activitypub.entities.AbstractActor org.xwiki.contrib.activitypub.ActorHandler::getActor(===org.xwiki.user.UserReference===) throws org.xwiki.contrib.activitypub.ActivityPubException",
+                    "justification": "UserReference is the right new type to rely on users."
+                  },
+                  {
+                    "code": "java.method.returnTypeChanged",
+                    "old": "method org.xwiki.model.reference.EntityReference org.xwiki.contrib.activitypub.ActorHandler::getXWikiUserReference(org.xwiki.contrib.activitypub.entities.AbstractActor) throws org.xwiki.contrib.activitypub.ActivityPubException",
+                    "new": "method org.xwiki.user.UserReference org.xwiki.contrib.activitypub.ActorHandler::getXWikiUserReference(org.xwiki.contrib.activitypub.entities.AbstractActor) throws org.xwiki.contrib.activitypub.ActivityPubException",
+                    "justification": "UserReference is the right new type to rely on users."
+                  },
+                  {
+                    "code": "java.method.returnTypeChanged",
+                    "old": "method org.xwiki.model.reference.EntityReference org.xwiki.contrib.activitypub.script.ActivityPubScriptService::getXWikiUserReference(org.xwiki.contrib.activitypub.entities.AbstractActor)",
+                    "new": "method org.xwiki.user.UserReference org.xwiki.contrib.activitypub.script.ActivityPubScriptService::getXWikiUserReference(org.xwiki.contrib.activitypub.entities.AbstractActor)",
+                    "justification": "UserReference is the right new type to rely on users."
                   }
                 ]
               }

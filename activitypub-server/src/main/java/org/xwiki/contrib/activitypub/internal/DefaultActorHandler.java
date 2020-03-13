@@ -25,19 +25,16 @@ import java.net.URISyntaxException;
 import java.util.Collections;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.httpclient.HttpMethod;
 import org.jsoup.helper.HttpConnection;
 import org.jsoup.nodes.Document;
-import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
-import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
+import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
@@ -46,15 +43,9 @@ import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
-import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.DocumentReferenceResolver;
-import org.xwiki.model.reference.EntityReference;
-import org.xwiki.model.reference.LocalDocumentReference;
-
-import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.doc.XWikiDocument;
-import com.xpn.xwiki.objects.BaseObject;
-import com.xpn.xwiki.user.api.XWikiUser;
+import org.xwiki.resource.ResourceReferenceSerializer;
+import org.xwiki.user.User;
+import org.xwiki.user.UserReference;
 
 /**
  * Link an ActivityPub actor to an XWiki User and retrieves the inbox/outbox of users.
@@ -65,30 +56,23 @@ import com.xpn.xwiki.user.api.XWikiUser;
 @Singleton
 public class DefaultActorHandler implements ActorHandler
 {
-    private static final LocalDocumentReference USER_CLASS_REFERENCE =
-        new LocalDocumentReference("XWiki", "XWikiUsers");
-
-    @Inject
-    private DocumentAccessBridge documentAccess;
-
     @Inject
     private ActivityPubStorage activityPubStorage;
-
-    @Inject
-    private ActivityPubObjectReferenceResolver activityPubObjectReferenceResolver;
-
-    @Inject
-    private Provider<XWikiContext> contextProvider;
 
     @Inject
     private ActivityPubClient activityPubClient;
 
     @Inject
-    @Named("current")
-    private DocumentReferenceResolver<String> stringDocumentReferenceResolver;
+    private XWikiUserBridge xWikiUserBridge;
 
     @Inject
     private ActivityPubJsonParser jsonParser;
+
+    @Inject
+    private DefaultURLHandler defaultURLHandler;
+
+    @Inject
+    private ResourceReferenceSerializer<ActivityPubResourceReference, URI> resourceReferenceSerializer;
 
     private HttpConnection jsoupConnection;
 
@@ -112,44 +96,25 @@ public class DefaultActorHandler implements ActorHandler
     @Override
     public AbstractActor getCurrentActor() throws ActivityPubException
     {
-        DocumentReference userReference = this.contextProvider.get().getUserReference();
-        if (userReference == null) {
-            throw new ActivityPubException("The context does not have any user reference, "
-                + "the request might be anonymous.");
-        } else {
-            return getActor(userReference);
-        }
+        return getActor(UserReference.CURRENT_USER_REFERENCE);
     }
 
     @Override
-    public AbstractActor getActor(EntityReference entityReference) throws ActivityPubException
+    public AbstractActor getActor(UserReference userReference) throws ActivityPubException
     {
-        // TODO: introduce cache mechanism
-        XWikiDocument document;
-        try {
-            document = (XWikiDocument) this.documentAccess.getDocumentInstance(entityReference);
-        } catch (Exception e) {
-            throw new ActivityPubException(
-                String.format("Error while loading user document with reference [%s]", entityReference), e);
-        }
-        if (document == null) {
-            throw new ActivityPubException(
-                String.format("Cannot load document with reference [%s]", entityReference));
-        }
-        BaseObject userXObject = document.getXObject(USER_CLASS_REFERENCE);
-        if (userXObject != null) {
-            XWikiUser xWikiUser = new XWikiUser(new DocumentReference(entityReference));
-            String login = xWikiUser.getFullName();
+        User user = this.xWikiUserBridge.resolveUser(userReference);
+
+        if (user != null) {
+            String login = this.xWikiUserBridge.getUserLogin(user);
             AbstractActor actor = this.activityPubStorage.retrieveEntity(login);
             if (actor == null) {
-                String fullname = String.format("%s %s",
-                    userXObject.getStringValue("first_name"), userXObject.getStringValue("last_name"));
+                String fullname = String.format("%s %s", user.getFirstName(), user.getLastName());
                 actor = createActor(fullname, login);
             }
             return actor;
         } else {
             throw new ActivityPubException(
-                String.format("Cannot find any user in document [%s]", document.getDocumentReference()));
+                String.format("Cannot find any user with reference [%s]", userReference));
         }
     }
 
@@ -185,34 +150,23 @@ public class DefaultActorHandler implements ActorHandler
     }
 
     @Override
-    public EntityReference getXWikiUserReference(AbstractActor actor) throws ActivityPubException
+    public UserReference getXWikiUserReference(AbstractActor actor) throws ActivityPubException
     {
         if (actor == null) {
             throw new ActivityPubException("Cannot find user reference from actor, actor is null");
         }
         String userName = actor.getPreferredUsername();
         if (isLocalActor(actor) && isExistingUser(userName)) {
-            return resolveUser(userName);
+            return this.xWikiUserBridge.resolveUser(userName);
         } else {
             return null;
         }
     }
 
-    private DocumentReference resolveUser(String username)
-    {
-        String serializedRef = username;
-        if (!username.contains(".")) {
-            serializedRef = String.format("XWiki.%s", username);
-        }
-
-        return this.stringDocumentReferenceResolver.resolve(serializedRef);
-    }
-
     @Override
-    public boolean isExistingUser(String serializedUserReference)
+    public boolean isExistingUser(String username)
     {
-        XWikiUser xWikiUser = new XWikiUser(resolveUser(serializedUserReference));
-        return xWikiUser.exists(this.contextProvider.get());
+        return this.xWikiUserBridge.isExistingUser(username);
     }
 
     @Override
@@ -227,9 +181,9 @@ public class DefaultActorHandler implements ActorHandler
     }
 
     @Override
-    public AbstractActor getLocalActor(String serializedUserReference) throws ActivityPubException
+    public AbstractActor getLocalActor(String username) throws ActivityPubException
     {
-        return this.getActor(resolveUser(serializedUserReference));
+        return this.getActor(this.xWikiUserBridge.resolveUser(username));
     }
 
     @Override
@@ -281,9 +235,10 @@ public class DefaultActorHandler implements ActorHandler
         try {
             Document doc = getJsoupConnection().url(xWikiActorURL).get();
             String userName = doc.selectFirst("html").attr("data-xwiki-document");
-            URI uri = new URI(xWikiActorURL);
-            return String.format("%s://%s/xwiki/activitypub/Person/%s", uri.getScheme(), uri.getAuthority(), userName);
-        } catch (IOException | URISyntaxException e) {
+            ActivityPubResourceReference userResourceReference = new ActivityPubResourceReference("person", userName);
+            URI serializedUser = this.resourceReferenceSerializer.serialize(userResourceReference);
+            return this.defaultURLHandler.getAbsoluteURI(serializedUser).toASCIIString();
+        } catch (Exception e) {
             throw new ActivityPubException(
                 String.format("Error when trying to resolve the XWiki actor from [%s]", xWikiActorURL), e);
         }

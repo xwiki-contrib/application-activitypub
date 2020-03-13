@@ -23,8 +23,8 @@ import java.util.Set;
 
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
-import org.xwiki.model.reference.EntityReference;
 import org.xwiki.stability.Unstable;
+import org.xwiki.user.UserReference;
 
 /**
  * External API to send an ActivityPub notification.
@@ -48,5 +48,5 @@ public interface ActivityPubNotifier
      * @param targets the target users of the notification.
      * @param <T> the real type of the activity
      */
-    <T extends AbstractActivity> void notify(T activity, Set<EntityReference> targets);
+    <T extends AbstractActivity> void notify(T activity, Set<UserReference> targets);
 }

@@ -64,12 +64,14 @@ import org.xwiki.test.junit5.mockito.InjectComponentManager;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
 import org.xwiki.test.mockito.MockitoComponentManager;
+import org.xwiki.user.UserReference;
 
 import com.xpn.xwiki.XWikiContext;
 
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.description;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -101,6 +103,9 @@ public class ActivityPubResourceReferenceHandlerTest
 
     @MockComponent
     private ActivityPubObjectReferenceResolver objectReferenceResolver;
+
+    @MockComponent
+    private XWikiUserBridge xWikiUserBridge;
 
     @InjectComponentManager
     private MockitoComponentManager componentManager;
@@ -254,8 +259,9 @@ public class ActivityPubResourceReferenceHandlerTest
     void handlePostOutboxNotAuthorized() throws Exception
     {
         Person person = new Person().setPreferredUsername("Foo");
-        when(this.actorHandler.getXWikiUserReference(person))
-            .thenReturn(new DocumentReference("xwiki", "XWiki", "Foo"));
+        UserReference fooUser = mock(UserReference.class);
+        when(this.actorHandler.getXWikiUserReference(person)).thenReturn(fooUser);
+        when(fooUser.toString()).thenReturn("FooUser");
         ActivityPubObjectReference<AbstractActor> actorReference =
             new ActivityPubObjectReference<AbstractActor>().setObject(person);
         when(this.objectReferenceResolver.resolveReference(actorReference)).thenReturn(person);
@@ -274,7 +280,7 @@ public class ActivityPubResourceReferenceHandlerTest
 
         verify(activityHandler, never())
             .handleOutboxRequest(new ActivityRequest<>(person, create, servletRequest, servletResponse));
-        verifyResponse(403, "The session user [null] cannot post to [xwiki:XWiki.Foo] outbox.");
+        verifyResponse(403, "The session user [null] cannot post to [FooUser] outbox.");
         verify(handlerChain, times(1)).handleNext(resourceReference);
     }
 
@@ -282,9 +288,12 @@ public class ActivityPubResourceReferenceHandlerTest
     void handlePostOutboxAuthorized() throws Exception
     {
         Person person = new Person().setPreferredUsername("Foo");
-        DocumentReference fooUserReference = new DocumentReference("xwiki", "XWiki", "Foo");
+        UserReference fooUserReference = mock(UserReference.class);
         when(this.actorHandler.getXWikiUserReference(person)).thenReturn(fooUserReference);
-        when(this.xWikiContext.getUserReference()).thenReturn(fooUserReference);
+
+        DocumentReference userDocumentReference = mock(DocumentReference.class);
+        when(this.xWikiUserBridge.resolveDocumentReference(userDocumentReference)).thenReturn(fooUserReference);
+        when(this.xWikiContext.getUserReference()).thenReturn(userDocumentReference);
         ActivityPubObjectReference<AbstractActor> actorReference =
             new ActivityPubObjectReference<AbstractActor>().setObject(person);
         when(this.objectReferenceResolver.resolveReference(actorReference)).thenReturn(person);

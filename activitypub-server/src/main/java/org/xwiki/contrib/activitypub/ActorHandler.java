@@ -21,8 +21,8 @@ package org.xwiki.contrib.activitypub;
 
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
-import org.xwiki.model.reference.EntityReference;
 import org.xwiki.stability.Unstable;
+import org.xwiki.user.UserReference;
 
 /**
  * Handles the mapping between XWiki Users and ActivityPub actors.
@@ -42,29 +42,29 @@ public interface ActorHandler
     AbstractActor getCurrentActor() throws ActivityPubException;
 
     /**
-     * Retrieve or create an ActivityPub actor corresponding to the given reference.
+     * Retrieve or create an ActivityPub actor corresponding to the given user reference.
      *
-     * @param entityReference the reference to an XWiki User.
+     * @param userReference the reference to an XWiki User.
      * @return an actor corresponding to the given EntityReference or null if the reference is not linked an XWiki User.
      * @throws ActivityPubException in case of error when loading the document pointed by the reference.
      */
-    AbstractActor getActor(EntityReference entityReference) throws ActivityPubException;
+    AbstractActor getActor(UserReference userReference) throws ActivityPubException;
 
     /**
      * Retrieve the XWiki User reference related to the given actor.
      * @param actor an ActivityPub actor for which to retrieve the reference.
      * @return an entity reference or null if the actor does not belong to the current wiki.
      */
-    EntityReference getXWikiUserReference(AbstractActor actor) throws ActivityPubException;
+    UserReference getXWikiUserReference(AbstractActor actor) throws ActivityPubException;
 
     /**
      * Retrieve an actor based on the serialized user reference.
-     * This method internally calls {@link #getActor(EntityReference)} but resolve first the given reference.
-     * @param serializedUserReference a serialized reference to an XWiki User.
+     * This method internally calls {@link #getActor(UserReference)} but resolve first the given login.
+     * @param login the name of an user.
      * @return an actor corresponding to the given reference or null if the reference is not linked to an XWiki User.
      * @throws ActivityPubException in case of error when loading the document pointed by the reference.
      */
-    AbstractActor getLocalActor(String serializedUserReference) throws ActivityPubException;
+    AbstractActor getLocalActor(String login) throws ActivityPubException;
 
     /**
      * Retrieve a remote actor based on its serialized URL.
@@ -77,10 +77,10 @@ public interface ActorHandler
 
     /**
      * Verify if an user with the given serialized reference exist.
-     * @param serializedUserReference a serialized reference to an user.
+     * @param login the name of an user.
      * @return {@code true} if the user exists.
      */
-    boolean isExistingUser(String serializedUserReference);
+    boolean isExistingUser(String login);
 
     /**
      * Check if the given actor belongs to the current instance.

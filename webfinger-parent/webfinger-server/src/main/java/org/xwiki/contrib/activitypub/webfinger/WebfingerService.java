@@ -22,10 +22,8 @@ package org.xwiki.contrib.activitypub.webfinger;
 import java.net.URI;
 
 import org.xwiki.component.annotation.Role;
-import org.xwiki.model.reference.EntityReference;
-import org.xwiki.resource.SerializeResourceReferenceException;
-import org.xwiki.resource.UnsupportedResourceReferenceException;
 import org.xwiki.stability.Unstable;
+import org.xwiki.user.UserReference;
 
 /**
  *
@@ -38,41 +36,17 @@ import org.xwiki.stability.Unstable;
 public interface WebfingerService
 {
     /**
-     * Converts an username to an {@link EntityReference}.
-     *
-     * @param username the username.
-     * @return the document reference.
-     */
-    EntityReference resolveUser(String username);
-
-    /**
-     * Checks if a document correspond to an user of the wiki.
-     * @param documentReference the document reference.
-     * @return true if the document reference corresponds to a user of the wiki.
-     */
-    boolean isExistingUser(EntityReference documentReference);
-
-    /**
-     * Checks if the username correspond to an existing user of the wiki.
-     * @param username the username.
-     * @return true if the username correspond to an user of the wiki.
-     */
-    boolean isExistingUser(String username);
-
-    /**
      * Resolve to user of the profile page of the user.
      * @param username The username of the user.
      * @return the resolve {@link URI} of the username.
-     * @throws SerializeResourceReferenceException in case pf serialization error
-     * @throws UnsupportedResourceReferenceException in case of unsupported resource
+     * @throws WebfingerException in case of serialization error
      */
-    URI resolveActivityPubUserUrl(String username) throws SerializeResourceReferenceException,
-                                                              UnsupportedResourceReferenceException;
+    URI resolveActivityPubUserUrl(String username) throws WebfingerException;
 
     /**
      * Resolve the activitypub resource of the user. 
-     * @param user the user document reference.
+     * @param user the user reference.
      * @return the url of the activitypub resource of the user
      */
-    String resolveXWikiUserUrl(EntityReference user) throws WebfingerException;
+    String resolveXWikiUserUrl(UserReference user) throws WebfingerException;
 }

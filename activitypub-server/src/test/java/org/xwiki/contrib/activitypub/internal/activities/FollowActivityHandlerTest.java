@@ -42,9 +42,11 @@ import org.xwiki.test.junit5.LogCaptureExtension;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
+import org.xwiki.user.UserReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -102,7 +104,7 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
     {
         Person followingActor = new Person().setPreferredUsername("Following");
         Person followedActor = new Person().setPreferredUsername("Followed");
-        DocumentReference followedUserRef = new DocumentReference("xwiki", "XWiki", "Followed");
+        UserReference followedUserRef = mock(UserReference.class);
         when(this.actorHandler.getXWikiUserReference(followedActor)).thenReturn(followedUserRef);
         Follow follow = new Follow()
             .setObject(followedActor)
@@ -164,7 +166,7 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
         Person followedActor = new Person()
             .setPreferredUsername("Followed");
 
-        DocumentReference followedUserRef = new DocumentReference("xwiki", "XWiki", "Followed");
+        UserReference followedUserRef = mock(UserReference.class);
         when(this.actorHandler.getXWikiUserReference(followedActor)).thenReturn(followedUserRef);
         Follow follow = new Follow()
             .setObject(followedActor)
@@ -209,7 +211,7 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
     {
         Person followingActor = new Person().setPreferredUsername("Following");
         Person followedActor = new Person().setPreferredUsername("Followed");
-        DocumentReference followedUserRef = new DocumentReference("xwiki", "XWiki", "Followed");
+        UserReference followedUserRef = mock(UserReference.class);
         when(this.actorHandler.getXWikiUserReference(followedActor)).thenReturn(followedUserRef);
         Follow follow = new Follow()
             .setObject(followedActor)
@@ -271,7 +273,7 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
         Person followedActor = new Person()
             .setPreferredUsername("Followed");
 
-        DocumentReference followedUserRef = new DocumentReference("xwiki", "XWiki", "Followed");
+        UserReference followedUserRef = mock(UserReference.class);
         when(this.actorHandler.getXWikiUserReference(followedActor)).thenReturn(followedUserRef);
         Follow follow = new Follow()
             .setObject(followedActor)

@@ -31,10 +31,12 @@ public class WebfingerException extends Exception
 
     /**
      * Handling of a business error.
+     * @param message the detailed message of the exception.
      * @param errorCode http error code to be returned to the client.
      */
-    public WebfingerException(int errorCode)
+    public WebfingerException(String message, int errorCode)
     {
+        super(message);
         this.errorCode = errorCode;
     }
 

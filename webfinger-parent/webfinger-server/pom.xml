@@ -38,6 +38,11 @@
   <dependencies>
     <dependency>
       <groupId>org.xwiki.contrib</groupId>
+      <artifactId>activitypub-commons</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.xwiki.contrib</groupId>
       <artifactId>webfinger-core</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -81,4 +86,25 @@
       <version>${project.version}</version>
     </dependency>
   </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <!-- Apply the Checkstyle configurations defined in the top level pom.xml file -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <executions>
+          <execution>
+            <!-- Specify the "default" execution id so that the "blocker" one is always executed -->
+            <id>default</id>
+            <configuration>
+              <excludes>
+                <!-- Fan-Out complexity: 21 on 20 max -->
+                **/WebfingerResourceReferenceHandler.java
+              </excludes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

@@ -63,6 +63,7 @@ import org.xwiki.resource.ResourceReferenceHandlerChain;
 import org.xwiki.resource.ResourceReferenceHandlerException;
 import org.xwiki.resource.ResourceType;
 import org.xwiki.resource.annotations.Authenticate;
+import org.xwiki.user.UserReference;
 
 import com.xpn.xwiki.XWikiContext;
 
@@ -117,6 +118,9 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
 
     @Inject
     private ActivityPubObjectReferenceResolver objectReferenceResolver;
+
+    @Inject
+    private XWikiUserBridge xWikiUserBridge;
 
     @Override
     public List<ResourceType> getSupportedResourceReferences()
@@ -209,8 +213,9 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
             handler.handleInboxRequest(activityRequest);
         } else {
             // Perform some authorization checks
-            DocumentReference sessionUserReference = this.contextProvider.get().getUserReference();
-            EntityReference xWikiUserReference = this.actorHandler.getXWikiUserReference(actor);
+            UserReference sessionUserReference =
+                this.xWikiUserBridge.resolveDocumentReference(this.contextProvider.get().getUserReference());
+            UserReference xWikiUserReference = this.actorHandler.getXWikiUserReference(actor);
             if (xWikiUserReference != null && xWikiUserReference.equals(sessionUserReference)) {
                 handler.handleOutboxRequest(activityRequest);
             } else {

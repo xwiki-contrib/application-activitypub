@@ -19,6 +19,7 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
+import java.util.Collections;
 import java.util.HashSet;
 
 import org.junit.jupiter.api.Test;
@@ -26,15 +27,17 @@ import org.mockito.ArgumentMatchers;
 import org.xwiki.contrib.activitypub.ActivityPubEvent;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.Accept;
-import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.EntityReference;
 import org.xwiki.observation.ObservationManager;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
+import org.xwiki.user.UserReference;
+import org.xwiki.user.UserReferenceSerializer;
 
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Test of {@link DefaultActivityPubNotifier}.
@@ -51,6 +54,9 @@ public class DefaultActivityPubNotifierTest
     @MockComponent
     private ObservationManager observationManager;
 
+    @MockComponent
+    private UserReferenceSerializer<String> userReferenceSerializer;
+
     @Test
     void notifyNoTargets()
     {
@@ -65,12 +71,15 @@ public class DefaultActivityPubNotifierTest
     @Test
     void notifyOneTarget()
     {
-        final HashSet<EntityReference> targets = new HashSet<>();
-        targets.add(new DocumentReference("xwiki", "XWiki", "test"));
-        this.defaultActivityPubNotifier.notify(new Accept(), targets);
+        UserReference userReference = mock(UserReference.class);
+        when(userReferenceSerializer.serialize(userReference)).thenReturn("Foobar");
+        this.defaultActivityPubNotifier.notify(new Accept(), Collections.singleton(userReference));
         verify(this.observationManager)
-            .notify(ArgumentMatchers.argThat(
-                (ActivityPubEvent<? extends AbstractActivity> activityPubEvent) -> activityPubEvent.getTarget().size() == 1),
+            .notify(
+                ArgumentMatchers
+                    .argThat((ActivityPubEvent<? extends AbstractActivity> activityPubEvent) ->
+                        activityPubEvent.getTarget().size() == 1
+                            && activityPubEvent.getTarget().contains("Foobar")),
                 eq("org.xwiki.contrib:activitypub-notifications"), eq("Accept"));
     }
 }

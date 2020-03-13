@@ -41,18 +41,21 @@ import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
+import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.security.authorization.AuthorizationManager;
 import org.xwiki.security.authorization.Right;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
+import org.xwiki.user.UserReference;
 
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.user.api.XWikiRightService;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -90,6 +93,9 @@ public class DocumentCreatedEventListenerTest
     @MockComponent
     private DefaultURLHandler urlHandler;
 
+    @MockComponent
+    private XWikiUserBridge xWikiUserBridge;
+
     @Mock
     private XWikiDocument document;
 
@@ -104,7 +110,11 @@ public class DocumentCreatedEventListenerTest
         this.person = new Person()
             .setPreferredUsername("Foobar")
             .setFollowers(new ActivityPubObjectReference<>());
-        when(this.actorHandler.getActor(this.document.getAuthorReference())).thenReturn(person);
+
+        UserReference userReference = mock(UserReference.class);
+        when(this.xWikiUserBridge.resolveDocumentReference(this.document.getAuthorReference()))
+            .thenReturn(userReference);
+        when(this.actorHandler.getActor(userReference)).thenReturn(person);
     }
 
     @Test

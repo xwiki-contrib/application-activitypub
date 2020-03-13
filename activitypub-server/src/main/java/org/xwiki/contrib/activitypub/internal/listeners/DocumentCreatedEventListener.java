@@ -46,11 +46,13 @@ import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
+import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.Event;
 import org.xwiki.security.authorization.AuthorizationManager;
 import org.xwiki.security.authorization.Right;
+import org.xwiki.user.UserReference;
 
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -92,6 +94,9 @@ public class DocumentCreatedEventListener extends AbstractEventListener
     @Inject
     private ActivityHandler<Create> createActivityHandler;
 
+    @Inject
+    private XWikiUserBridge xWikiUserBridge;
+
     /**
      * Default constructor.
      */
@@ -108,7 +113,9 @@ public class DocumentCreatedEventListener extends AbstractEventListener
         XWikiContext context = (XWikiContext) data;
 
         try {
-            AbstractActor author = this.actorHandler.getActor(document.getAuthorReference());
+            UserReference authorReference =
+                this.xWikiUserBridge.resolveDocumentReference(document.getAuthorReference());
+            AbstractActor author = this.actorHandler.getActor(authorReference);
             OrderedCollection<AbstractActor> followers =
                 this.objectReferenceResolver.resolveReference(author.getFollowers());
 

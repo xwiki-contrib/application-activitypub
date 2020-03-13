@@ -29,9 +29,9 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubNotifier;
 import org.xwiki.contrib.activitypub.ActivityPubEvent;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
-import org.xwiki.model.reference.EntityReference;
-import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.observation.ObservationManager;
+import org.xwiki.user.UserReference;
+import org.xwiki.user.UserReferenceSerializer;
 
 /**
  * Default implementation of the notifier: basically it creates an {@link ActivityPubEvent} and send it to the
@@ -44,23 +44,23 @@ import org.xwiki.observation.ObservationManager;
 public class DefaultActivityPubNotifier implements ActivityPubNotifier
 {
     @Inject
-    private EntityReferenceSerializer<String> entityReferenceSerializer;
+    private UserReferenceSerializer<String> userReferenceSerializer;
 
     @Inject
     private ObservationManager observationManager;
 
     @Override
-    public <T extends AbstractActivity> void notify(T activity, Set<EntityReference> targets)
+    public <T extends AbstractActivity> void notify(T activity, Set<UserReference> targets)
     {
         ActivityPubEvent<T> event = new ActivityPubEvent<T>(activity, this.serializeTargets(targets));
         this.observationManager.notify(event, "org.xwiki.contrib:activitypub-notifications", activity.getType());
     }
 
-    private Set<String> serializeTargets(Set<EntityReference> targets)
+    private Set<String> serializeTargets(Set<UserReference> targets)
     {
         Set<String> result = new HashSet<>();
-        for (EntityReference target : targets) {
-            result.add(this.entityReferenceSerializer.serialize(target));
+        for (UserReference target : targets) {
+            result.add(this.userReferenceSerializer.serialize(target));
         }
         return result;
     }

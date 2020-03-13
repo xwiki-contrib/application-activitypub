@@ -43,6 +43,7 @@ import org.xwiki.test.LogLevel;
 import org.xwiki.test.junit5.LogCaptureExtension;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
+import org.xwiki.user.UserReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -88,7 +89,7 @@ public class CreateActivityHandlerTest extends AbstractHandlerTest
     public void handleInbox() throws Exception
     {
         Create activity = new Create().setId(new URI("http://www.xwiki.org"));
-        DocumentReference userReference = new DocumentReference("xwiki", "XWiki", "Foo");
+        UserReference userReference = mock(UserReference.class);
         Person actor = new Person()
             .setPreferredUsername("XWiki.Foo")
             .setInbox(new ActivityPubObjectReference<Inbox>());
@@ -109,7 +110,7 @@ public class CreateActivityHandlerTest extends AbstractHandlerTest
     public void handleOutboxNoFollowersNoId() throws Exception
     {
         Create activity = new Create();
-        DocumentReference userReference = new DocumentReference("xwiki", "XWiki", "Foo");
+        UserReference userReference = mock(UserReference.class);
         Person actor = new Person()
             .setPreferredUsername("XWiki.Foo")
             .setOutbox(new ActivityPubObjectReference<Outbox>());
@@ -136,7 +137,7 @@ public class CreateActivityHandlerTest extends AbstractHandlerTest
     public void handleOutbox() throws Exception
     {
         Create activity = new Create().setId(new URI("http://www.xwiki.org"));
-        DocumentReference userReference = new DocumentReference("xwiki", "XWiki", "Foo");
+        UserReference userReference = mock(UserReference.class);
         Person follower1 = new Person().setPreferredUsername("Bar");
         ActivityPubObjectReference<AbstractActor> follower1Ref = new ActivityPubObjectReference<AbstractActor>()
             .setObject(follower1);

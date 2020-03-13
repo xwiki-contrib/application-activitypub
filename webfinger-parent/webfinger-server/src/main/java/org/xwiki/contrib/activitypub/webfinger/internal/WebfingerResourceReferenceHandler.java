@@ -40,20 +40,19 @@ import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.container.Container;
 import org.xwiki.container.servlet.ServletResponse;
+import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonSerializer;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerResourceReference;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerService;
 import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 import org.xwiki.contrib.activitypub.webfinger.entities.Link;
-import org.xwiki.model.reference.EntityReference;
 import org.xwiki.resource.AbstractResourceReferenceHandler;
 import org.xwiki.resource.ResourceReference;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
 import org.xwiki.resource.ResourceReferenceHandlerException;
 import org.xwiki.resource.ResourceType;
-import org.xwiki.resource.SerializeResourceReferenceException;
-import org.xwiki.resource.UnsupportedResourceReferenceException;
+import org.xwiki.user.UserReference;
 
 /**
  *
@@ -81,6 +80,9 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
 
     @Inject
     private WebfingerService webfingerService;
+
+    @Inject
+    private XWikiUserBridge xWikiUserBridge;
 
     @Inject
     private Container container;
@@ -121,17 +123,17 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
             URI resourceURI = this.convertResourceToURI(resource);
 
             String username = resourceURI.getUserInfo();
-            EntityReference user = this.webfingerService.resolveUser(username);
 
             /*
              * https://tools.ietf.org/html/rfc7033#section-4.2
              * If the "resource" parameter is a value for which the server has no information, the server MUST indicate
              * that it was unable to match the request as per Section 10.4.5 of RFC 2616.
              */
-            if (!this.webfingerService.isExistingUser(user)) {
-                throw new WebfingerException(404);
+            if (!this.xWikiUserBridge.isExistingUser(username)) {
+                throw new WebfingerException(String.format("There's no known user with username [%s].", username), 404);
             }
 
+            UserReference userReference = this.xWikiUserBridge.resolveUser(username);
             URI apUserURI = this.webfingerService.resolveActivityPubUserUrl(username);
 
             /*
@@ -146,14 +148,13 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
             if (!(apUserURI.getPort() == resourceURI.getPort() && Objects.equals(apUserURI.getHost(),
                 resourceURI.getHost())))
             {
-                throw new WebfingerException(404);
+                throw new WebfingerException("No user found for the given domain", 404);
             }
 
-            this.sendValidResponse(response, user, apUserURI, resource, rels);
+            this.sendValidResponse(response, userReference, apUserURI, resource, rels);
         } catch (WebfingerException e) {
             this.handleException(response, e);
-        } catch (URISyntaxException | UnsupportedResourceReferenceException | SerializeResourceReferenceException
-                     | IOException e) {
+        } catch (URISyntaxException | IOException e) {
             this.handleError(response, 500, e.getMessage());
         }
     }
@@ -171,7 +172,7 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
          * it was unable to match the request as per Section 10.4.5 of RFC 2616.
          */
         if (reference.getParameterValues(RESOURCE_PARAM_KEY).size() != 1) {
-            throw new WebfingerException(400);
+            throw new WebfingerException("Missing resource parameter.", 400);
         }
 
         // checks is unexpected parameters exist
@@ -203,7 +204,7 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
         return new URI(ACCT_PARAM_KEY + "//" + cleanedResource);
     }
 
-    private void sendValidResponse(HttpServletResponse response, EntityReference user, URI apUserURI, String resource,
+    private void sendValidResponse(HttpServletResponse response, UserReference user, URI apUserURI, String resource,
         List<String> rels) throws IOException, WebfingerException
     {
         response.setContentType("application/activity+json; charset=utf-8");
@@ -259,12 +260,7 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
     private void handleException(HttpServletResponse response, WebfingerException e)
     {
         int errorCode = e.getErrorCode();
-        String message;
-        if (e.getCause() != null) {
-            message = e.getCause().getMessage();
-        } else {
-            message = null;
-        }
+        String message = e.getMessage();
         this.handleError(response, errorCode, message);
     }
 

@@ -23,24 +23,18 @@ import java.net.URI;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
+import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
+import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerService;
-import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
-import org.xwiki.model.reference.EntityReference;
 import org.xwiki.resource.ResourceReferenceSerializer;
-import org.xwiki.resource.SerializeResourceReferenceException;
-import org.xwiki.resource.UnsupportedResourceReferenceException;
-
-import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.doc.XWikiDocument;
-import com.xpn.xwiki.user.api.XWikiUser;
+import org.xwiki.user.User;
+import org.xwiki.user.UserReference;
 
 /**
  *
@@ -58,51 +52,34 @@ public class DefaultWebfingerService implements WebfingerService
     private DocumentReferenceResolver<String> stringDocumentReferenceResolver;
 
     @Inject
-    private Provider<XWikiContext> contextProvider;
+    private XWikiUserBridge xWikiUserBridge;
+
+    @Inject
+    private DefaultURLHandler defaultURLHandler;
 
     @Inject
     private ResourceReferenceSerializer<ActivityPubResourceReference, URI> serializer;
 
-    @Inject
-    private DocumentAccessBridge documentAccess;
-
     @Override
-    public EntityReference resolveUser(String username)
-    {
-        return this.stringDocumentReferenceResolver.resolve(username);
-    }
-
-    @Override
-    public boolean isExistingUser(EntityReference documentReference)
-    {
-        // FIXME usafe.
-        XWikiUser xWikiUser = new XWikiUser((DocumentReference) documentReference);
-        return xWikiUser.exists(this.contextProvider.get());
-    }
-
-    @Override
-    public boolean isExistingUser(String username)
-    {
-        EntityReference userReference = this.resolveUser(username);
-        return this.isExistingUser(userReference);
-    }
-
-    @Override
-    public URI resolveActivityPubUserUrl(String username) throws SerializeResourceReferenceException,
-                                                                     UnsupportedResourceReferenceException
+    public URI resolveActivityPubUserUrl(String username) throws WebfingerException
     {
         ActivityPubResourceReference aprr = new ActivityPubResourceReference("Person", username);
-        return this.serializer.serialize(aprr);
+        try {
+            return this.defaultURLHandler.getAbsoluteURI(this.serializer.serialize(aprr));
+        } catch (Exception e) {
+            throw new WebfingerException(String.format("Error while serializing reference for user [%s]", username), e);
+        }
     }
 
     @Override
-    public String resolveXWikiUserUrl(EntityReference user) throws WebfingerException
+    public String resolveXWikiUserUrl(UserReference userReference) throws WebfingerException
     {
         try {
-            return ((XWikiDocument) this.documentAccess.getDocumentInstance(user))
-                       .getExternalURL("view", this.contextProvider.get());
+            User user = this.xWikiUserBridge.resolveUser(userReference);
+            return this.xWikiUserBridge.getUserProfileURL(user);
         } catch (Exception e) {
-            throw new WebfingerException(e);
+            throw new WebfingerException(String.format("Error while getting profile URL for user [%s]", userReference),
+                e);
         }
     }
 }

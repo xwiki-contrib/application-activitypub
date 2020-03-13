@@ -41,9 +41,11 @@ import org.xwiki.test.LogLevel;
 import org.xwiki.test.junit5.LogCaptureExtension;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
+import org.xwiki.user.UserReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -97,7 +99,7 @@ public class AcceptActivityHandlerTest extends AbstractHandlerTest
             .setPreferredUsername("Followed");
 
         OrderedCollection<AbstractActor> following = new OrderedCollection<>().setName("following");
-        DocumentReference followingRef = new DocumentReference("xwiki", "XWiki", "Following");
+        UserReference followingRef = mock(UserReference.class);
         Person followingPerson = new Person()
             .setPreferredUsername("Following")
             .setFollowing(following.getReference());
@@ -130,7 +132,7 @@ public class AcceptActivityHandlerTest extends AbstractHandlerTest
     public void handleOutbox() throws Exception
     {
         OrderedCollection<AbstractActor> followers = new OrderedCollection<>().setName("followers");
-        DocumentReference followedRef = new DocumentReference("xwiki", "XWiki", "Followed");
+        UserReference followedRef = mock(UserReference.class);
         Person followedPerson = new Person()
             .setPreferredUsername("Followed")
             .setFollowers(followers.getReference());
