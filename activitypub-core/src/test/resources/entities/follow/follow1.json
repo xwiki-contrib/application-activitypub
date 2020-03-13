@@ -1,5 +1,5 @@
 {
-  "@context" : "https://www.w3.org/ns/activitystreams",
+  "@context" : [ "https://www.w3.org/ns/activitystreams" ],
   "actor" : "https://social.example/alyssa/",
   "attributedTo" : [ "http://test/person/1" ],
   "content" : "test content",

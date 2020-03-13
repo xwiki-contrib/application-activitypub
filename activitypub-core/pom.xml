@@ -20,7 +20,8 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.xwiki.contrib</groupId>
@@ -61,4 +62,34 @@
       <artifactId>commons-httpclient</artifactId>
     </dependency>
   </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.revapi</groupId>
+        <artifactId>revapi-maven-plugin</artifactId>
+        <configuration>
+          <analysisConfiguration><![CDATA[
+            {
+              "revapi": {
+                "ignore": [
+                  {
+                    "code": "java.method.returnTypeChanged",
+                    "old": "method java.net.URI org.xwiki.contrib.activitypub.entities.JSONLDObjects::getContext()",
+                    "new": "method java.util.List<java.net.URI> org.xwiki.contrib.activitypub.entities.JSONLDObjects::getContext()",
+                    "justification": "The @context field must be a collection and not a single element."
+                  },
+                  {
+                    "code": "java.method.parameterTypeChanged",
+                    "old": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===java.net.URI===)",
+                    "new": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===java.util.List<java.net.URI>===)",
+                    "justification": "The @context field must be a collection and not a single element."
+                  }
+                ]
+              }
+            }
+          ]]></analysisConfiguration>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

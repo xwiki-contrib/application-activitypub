@@ -64,6 +64,22 @@ public class FollowTest extends AbstractEntityTest
         assertEquals(expectedFollow, this.parser.parse(json));
     }
 
+    @Test
+    void parsingNextcloud() throws Exception
+    {
+        String json = this.readResource("follow/nextcloud.json");
+        ActivityPubObjectReference<AbstractActor> apr = new ActivityPubObjectReference<AbstractActor>()
+                                                            .setLink(new URI(
+                                                                "http://nextcloud.home/apps/social/@admin"));
+        ActivityPubObjectReference<ActivityPubObject> object =
+            new ActivityPubObjectReference<>().setLink(new URI("http://xwiki.home/xwiki/activitypub/Person/XWiki.Admin"));
+        ActivityPubObject follow = new Follow()
+                                       .setActor(apr)
+                                       .setObject(object)
+                                       .setId(new URI("http://nextcloud.home/fe4c8b2e-415a-4e68-b769-718e01ba71f7"));
+        assertEquals(follow, this.parser.parse(json));
+    }
+
     /**
      * Init a standard follow object.
      * @return the initialized follow object.
