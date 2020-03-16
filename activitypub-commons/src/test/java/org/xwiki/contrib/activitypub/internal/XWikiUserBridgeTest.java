@@ -1,0 +1,159 @@
+/*
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
+package org.xwiki.contrib.activitypub.internal;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.xwiki.bridge.DocumentAccessBridge;
+import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.DocumentReferenceResolver;
+import org.xwiki.test.junit5.mockito.ComponentTest;
+import org.xwiki.test.junit5.mockito.InjectMockComponents;
+import org.xwiki.test.junit5.mockito.MockComponent;
+import org.xwiki.user.User;
+import org.xwiki.user.UserManager;
+import org.xwiki.user.UserReference;
+import org.xwiki.user.UserReferenceResolver;
+import org.xwiki.user.UserReferenceSerializer;
+import org.xwiki.user.UserResolver;
+
+import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.doc.XWikiDocument;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+/**
+ * Tests for {@link XWikiUserBridge}.
+ *
+ * @version $Id$
+ */
+@ComponentTest
+public class XWikiUserBridgeTest
+{
+    @InjectMockComponents
+    private XWikiUserBridge xWikiUserBridge;
+
+    @MockComponent
+    private UserManager userManager;
+
+    @MockComponent
+    private UserResolver<UserReference> userResolver;
+
+    @MockComponent
+    private UserReferenceSerializer<String> userReferenceSerializer;
+
+    @MockComponent
+    private UserReferenceResolver<String> userReferenceResolver;
+
+    @MockComponent
+    private DocumentReferenceResolver<String> documentReferenceResolver;
+
+    @MockComponent
+    private UserReferenceResolver<DocumentReference> userFromDocumentReferenceResolver;
+
+    @MockComponent
+    private Provider<XWikiContext> contextProvider;
+
+    @MockComponent
+    private DocumentAccessBridge documentAccess;
+
+    @Mock
+    private UserReference userReference;
+
+    @Mock
+    private User user;
+
+    @BeforeEach
+    public void beforeEach()
+    {
+        when(user.getUserReference()).thenReturn(userReference);
+    }
+
+    @Test
+    public void isExistingUser()
+    {
+        when(this.userReferenceResolver.resolve("foo")).thenReturn(userReference);
+        when(this.userManager.exists(userReference)).thenReturn(true);
+        assertTrue(this.xWikiUserBridge.isExistingUser("foo"));
+
+        when(this.userManager.exists(userReference)).thenReturn(false);
+        assertFalse(this.xWikiUserBridge.isExistingUser("foo"));
+    }
+
+    @Test
+    public void getUserLogin()
+    {
+        when(this.userReferenceSerializer.serialize(userReference)).thenReturn("Foo");
+
+        assertEquals("Foo", this.xWikiUserBridge.getUserLogin(user));
+    }
+
+    @Test
+    public void resolveUserReference()
+    {
+        when(this.userReferenceResolver.resolve("foo")).thenReturn(userReference);
+        assertSame(this.userReference, this.xWikiUserBridge.resolveUser("foo"));
+    }
+
+    @Test
+    public void resolveUser()
+    {
+        when(this.userManager.exists(userReference)).thenReturn(false);
+        assertNull(this.xWikiUserBridge.resolveUser(this.userReference));
+
+        when(this.userManager.exists(userReference)).thenReturn(true);
+        when(this.userResolver.resolve(userReference)).thenReturn(user);
+        assertSame(user, this.xWikiUserBridge.resolveUser(userReference));
+    }
+
+    @Test
+    public void resolveDocumentReference()
+    {
+        DocumentReference documentReference = new DocumentReference("xwiki", "XWiki", "Foo");
+        when(this.userFromDocumentReferenceResolver.resolve(documentReference)).thenReturn(this.userReference);
+        assertSame(this.userReference, this.xWikiUserBridge.resolveDocumentReference(documentReference));
+    }
+
+    @Test
+    public void getUserProfileURL() throws Exception
+    {
+        when(this.userReferenceSerializer.serialize(userReference)).thenReturn("foo");
+        DocumentReference documentReference = new DocumentReference("xwiki", "XWiki", "Foo");
+        when(this.documentReferenceResolver.resolve("foo")).thenReturn(documentReference);
+
+        XWikiContext xWikiContext = mock(XWikiContext.class);
+        XWikiDocument xWikiDocument = mock(XWikiDocument.class);
+
+        when(this.contextProvider.get()).thenReturn(xWikiContext);
+        when(this.documentAccess.getDocumentInstance(documentReference)).thenReturn(xWikiDocument);
+        when(xWikiDocument.getExternalURL("view", xWikiContext)).thenReturn("http://foo");
+        assertEquals("http://foo", this.xWikiUserBridge.getUserProfileURL(user));
+    }
+}

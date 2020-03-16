@@ -44,6 +44,7 @@ import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.resource.ResourceReferenceSerializer;
+import org.xwiki.user.CurrentUserReference;
 import org.xwiki.user.User;
 import org.xwiki.user.UserReference;
 
@@ -96,7 +97,7 @@ public class DefaultActorHandler implements ActorHandler
     @Override
     public AbstractActor getCurrentActor() throws ActivityPubException
     {
-        return getActor(UserReference.CURRENT_USER_REFERENCE);
+        return getActor(CurrentUserReference.INSTANCE);
     }
 
     @Override
