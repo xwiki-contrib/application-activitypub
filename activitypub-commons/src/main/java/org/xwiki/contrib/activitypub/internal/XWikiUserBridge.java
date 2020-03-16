@@ -20,6 +20,7 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
@@ -63,6 +64,7 @@ public class XWikiUserBridge
     private DocumentReferenceResolver<String> documentReferenceResolver;
 
     @Inject
+    @Named("document")
     private UserReferenceResolver<DocumentReference> userFromDocumentReferenceResolver;
 
     @Inject

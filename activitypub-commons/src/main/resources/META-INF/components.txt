@@ -1,0 +1,2 @@
+org.xwiki.contrib.activitypub.internal.XWikiUserBridge
+org.xwiki.contrib.activitypub.internal.DefaultURLHandler
