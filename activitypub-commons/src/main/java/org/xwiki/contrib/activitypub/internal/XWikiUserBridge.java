@@ -28,12 +28,12 @@ import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
-import org.xwiki.user.User;
 import org.xwiki.user.UserManager;
+import org.xwiki.user.UserProperties;
+import org.xwiki.user.UserPropertiesResolver;
 import org.xwiki.user.UserReference;
 import org.xwiki.user.UserReferenceResolver;
 import org.xwiki.user.UserReferenceSerializer;
-import org.xwiki.user.UserResolver;
 
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -52,7 +52,7 @@ public class XWikiUserBridge
     private UserManager userManager;
 
     @Inject
-    private UserResolver<UserReference> userResolver;
+    private UserPropertiesResolver userPropertiesResolver;
 
     @Inject
     private UserReferenceSerializer<String> userReferenceSerializer;
@@ -82,18 +82,29 @@ public class XWikiUserBridge
     public boolean isExistingUser(String username)
     {
         UserReference userReference = this.userReferenceResolver.resolve(username);
+        return this.isExistingUser(userReference);
+    }
+
+    /**
+     * Check if there's an existing user with the given reference.
+     *
+     * @param userReference the reference of an user to check.
+     * @return {@code true} if an user exists.
+     */
+    public boolean isExistingUser(UserReference userReference)
+    {
         return this.userManager.exists(userReference);
     }
 
     /**
      * Retrieve a username associated to the given user.
      *
-     * @param user the user for which to retrieve a username.
+     * @param userReference the user for which to retrieve a username.
      * @return a username.
      */
-    public String getUserLogin(User user)
+    public String getUserLogin(UserReference userReference)
     {
-        return this.userReferenceSerializer.serialize(user.getUserReference());
+        return this.userReferenceSerializer.serialize(userReference);
     }
 
     /**
@@ -111,12 +122,12 @@ public class XWikiUserBridge
      * Retrieve the actual user associated to the given reference.
      *
      * @param reference the reference of an user.
-     * @return the actual user associated to the given reference or null if the user does not exist.
+     * @return the user properties associated to the given reference or null if the user does not exist.
      */
-    public User resolveUser(UserReference reference)
+    public UserProperties resolveUser(UserReference reference)
     {
         if (this.userManager.exists(reference)) {
-            return this.userResolver.resolve(reference);
+            return this.userPropertiesResolver.resolve(reference);
         } else {
             return null;
         }
@@ -136,14 +147,12 @@ public class XWikiUserBridge
     /**
      * Retrieve the URL to the profile of an user.
      *
-     * @param user the user for which to retrieve the profile URL.
+     * @param userReference the user for which to retrieve the profile URL.
      * @return an absolute URL as a string.
      * @throws Exception in case of error when retrieving the URL.
      */
-    public String getUserProfileURL(User user) throws Exception
+    public String getUserProfileURL(UserReference userReference) throws Exception
     {
-        UserReference userReference = user.getUserReference();
-
         // FIXME: this is a hack which only works with DocumentUserReference.
         String serializedReference = this.userReferenceSerializer.serialize(userReference);
         DocumentReference documentReference = this.documentReferenceResolver.resolve(serializedReference);

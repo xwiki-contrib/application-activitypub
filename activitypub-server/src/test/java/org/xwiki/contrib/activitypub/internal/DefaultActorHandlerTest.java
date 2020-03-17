@@ -53,10 +53,9 @@ import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
 import org.xwiki.test.mockito.MockitoComponentManager;
-import org.xwiki.user.User;
+import org.xwiki.user.UserProperties;
 import org.xwiki.user.UserReference;
 
-import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.web.Utils;
 
@@ -66,11 +65,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -83,10 +79,6 @@ public class DefaultActorHandlerTest
 {
     @InjectMockComponents
     private DefaultActorHandler actorHandler;
-
-    private XWikiContext context;
-
-    private XWiki wiki;
 
     @MockComponent
     private DocumentAccessBridge documentAccessBridge;
@@ -117,19 +109,6 @@ public class DefaultActorHandlerTest
     @Mock
     private UserReference barUserReference;
 
-    @BeforeComponent
-    public void setup(MockitoComponentManager componentManager) throws Exception
-    {
-        Type providerContextType = new DefaultParameterizedType(null, Provider.class, XWikiContext.class);
-        Provider<XWikiContext> contextProvider = componentManager.registerMockComponent(providerContextType);
-        this.context = mock(XWikiContext.class);
-        when(contextProvider.get()).thenReturn(context);
-        Utils.setComponentManager(componentManager);
-        componentManager.registerComponent(ComponentManager.class, "context", componentManager);
-        this.wiki = mock(XWiki.class);
-        when(context.getWiki()).thenReturn(this.wiki);
-    }
-
     @BeforeEach
     public void setup() throws Exception
     {
@@ -138,15 +117,17 @@ public class DefaultActorHandlerTest
         when(this.xWikiUserBridge.resolveUser("Foo")).thenReturn(this.fooUserReference);
         when(this.xWikiUserBridge.isExistingUser("XWiki.Foo")).thenReturn(true);
         when(this.xWikiUserBridge.isExistingUser("Foo")).thenReturn(true);
-        User fooUser = mock(User.class);
+        when(this.xWikiUserBridge.isExistingUser(this.fooUserReference)).thenReturn(true);
+        UserProperties fooUser = mock(UserProperties.class);
         when(this.xWikiUserBridge.resolveUser(this.fooUserReference)).thenReturn(fooUser);
         when(fooUser.getFirstName()).thenReturn("Foo");
         when(fooUser.getLastName()).thenReturn("Foo");
-        when(this.xWikiUserBridge.getUserLogin(fooUser)).thenReturn("XWiki.Foo");
+        when(this.xWikiUserBridge.getUserLogin(this.fooUserReference)).thenReturn("XWiki.Foo");
 
         // Bar does not exist.
         when(this.xWikiUserBridge.resolveUser("XWiki.Bar")).thenReturn(this.barUserReference);
         when(this.xWikiUserBridge.isExistingUser("XWiki.Bar")).thenReturn(false);
+        when(this.xWikiUserBridge.isExistingUser(barUserReference)).thenReturn(false);
         when(this.xWikiUserBridge.resolveUser("Bar")).thenReturn(this.barUserReference);
         when(this.xWikiUserBridge.isExistingUser("Bar")).thenReturn(false);
 

@@ -33,7 +33,6 @@ import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerService;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.resource.ResourceReferenceSerializer;
-import org.xwiki.user.User;
 import org.xwiki.user.UserReference;
 
 /**
@@ -75,8 +74,7 @@ public class DefaultWebfingerService implements WebfingerService
     public String resolveXWikiUserUrl(UserReference userReference) throws WebfingerException
     {
         try {
-            User user = this.xWikiUserBridge.resolveUser(userReference);
-            return this.xWikiUserBridge.getUserProfileURL(user);
+            return this.xWikiUserBridge.getUserProfileURL(userReference);
         } catch (Exception e) {
             throw new WebfingerException(String.format("Error while getting profile URL for user [%s]", userReference),
                 e);

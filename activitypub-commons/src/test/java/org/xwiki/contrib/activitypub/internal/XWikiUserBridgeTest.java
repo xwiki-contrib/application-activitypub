@@ -19,10 +19,9 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
-import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.xwiki.bridge.DocumentAccessBridge;
@@ -31,12 +30,12 @@ import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
-import org.xwiki.user.User;
 import org.xwiki.user.UserManager;
+import org.xwiki.user.UserProperties;
+import org.xwiki.user.UserPropertiesResolver;
 import org.xwiki.user.UserReference;
 import org.xwiki.user.UserReferenceResolver;
 import org.xwiki.user.UserReferenceSerializer;
-import org.xwiki.user.UserResolver;
 
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -64,7 +63,7 @@ public class XWikiUserBridgeTest
     private UserManager userManager;
 
     @MockComponent
-    private UserResolver<UserReference> userResolver;
+    private UserPropertiesResolver userPropertiesResolver;
 
     @MockComponent
     private UserReferenceSerializer<String> userReferenceSerializer;
@@ -76,6 +75,7 @@ public class XWikiUserBridgeTest
     private DocumentReferenceResolver<String> documentReferenceResolver;
 
     @MockComponent
+    @Named("document")
     private UserReferenceResolver<DocumentReference> userFromDocumentReferenceResolver;
 
     @MockComponent
@@ -87,24 +87,17 @@ public class XWikiUserBridgeTest
     @Mock
     private UserReference userReference;
 
-    @Mock
-    private User user;
-
-    @BeforeEach
-    public void beforeEach()
-    {
-        when(user.getUserReference()).thenReturn(userReference);
-    }
-
     @Test
     public void isExistingUser()
     {
         when(this.userReferenceResolver.resolve("foo")).thenReturn(userReference);
         when(this.userManager.exists(userReference)).thenReturn(true);
         assertTrue(this.xWikiUserBridge.isExistingUser("foo"));
+        assertTrue(this.xWikiUserBridge.isExistingUser(userReference));
 
         when(this.userManager.exists(userReference)).thenReturn(false);
         assertFalse(this.xWikiUserBridge.isExistingUser("foo"));
+        assertFalse(this.xWikiUserBridge.isExistingUser(userReference));
     }
 
     @Test
@@ -112,7 +105,7 @@ public class XWikiUserBridgeTest
     {
         when(this.userReferenceSerializer.serialize(userReference)).thenReturn("Foo");
 
-        assertEquals("Foo", this.xWikiUserBridge.getUserLogin(user));
+        assertEquals("Foo", this.xWikiUserBridge.getUserLogin(userReference));
     }
 
     @Test
@@ -129,8 +122,9 @@ public class XWikiUserBridgeTest
         assertNull(this.xWikiUserBridge.resolveUser(this.userReference));
 
         when(this.userManager.exists(userReference)).thenReturn(true);
-        when(this.userResolver.resolve(userReference)).thenReturn(user);
-        assertSame(user, this.xWikiUserBridge.resolveUser(userReference));
+        UserProperties userProperties = mock(UserProperties.class);
+        when(this.userPropertiesResolver.resolve(userReference)).thenReturn(userProperties);
+        assertSame(userProperties, this.xWikiUserBridge.resolveUser(userReference));
     }
 
     @Test
@@ -154,6 +148,6 @@ public class XWikiUserBridgeTest
         when(this.contextProvider.get()).thenReturn(xWikiContext);
         when(this.documentAccess.getDocumentInstance(documentReference)).thenReturn(xWikiDocument);
         when(xWikiDocument.getExternalURL("view", xWikiContext)).thenReturn("http://foo");
-        assertEquals("http://foo", this.xWikiUserBridge.getUserProfileURL(user));
+        assertEquals("http://foo", this.xWikiUserBridge.getUserProfileURL(userReference));
     }
 }

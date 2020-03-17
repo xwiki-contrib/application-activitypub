@@ -45,7 +45,7 @@ import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.resource.ResourceReferenceSerializer;
 import org.xwiki.user.CurrentUserReference;
-import org.xwiki.user.User;
+import org.xwiki.user.UserProperties;
 import org.xwiki.user.UserReference;
 
 /**
@@ -103,13 +103,12 @@ public class DefaultActorHandler implements ActorHandler
     @Override
     public AbstractActor getActor(UserReference userReference) throws ActivityPubException
     {
-        User user = this.xWikiUserBridge.resolveUser(userReference);
-
-        if (user != null) {
-            String login = this.xWikiUserBridge.getUserLogin(user);
+        if (this.xWikiUserBridge.isExistingUser(userReference)) {
+            String login = this.xWikiUserBridge.getUserLogin(userReference);
             AbstractActor actor = this.activityPubStorage.retrieveEntity(login);
             if (actor == null) {
-                String fullname = String.format("%s %s", user.getFirstName(), user.getLastName());
+                UserProperties userProperties = this.xWikiUserBridge.resolveUser(userReference);
+                String fullname = String.format("%s %s", userProperties.getFirstName(), userProperties.getLastName());
                 actor = createActor(fullname, login);
             }
             return actor;

@@ -27,6 +27,7 @@ import java.util.List;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentMatchers;
@@ -40,10 +41,8 @@ import org.xwiki.contrib.activitypub.webfinger.WebfingerResourceReference;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerService;
 import org.xwiki.contrib.activitypub.webfinger.entities.Link;
 import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
-import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.resource.ResourceReference;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
-import org.xwiki.resource.SerializeResourceReferenceException;
 import org.xwiki.test.LogLevel;
 import org.xwiki.test.annotation.BeforeComponent;
 import org.xwiki.test.junit5.LogCaptureExtension;
@@ -52,7 +51,6 @@ import org.xwiki.test.junit5.mockito.InjectComponentManager;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
 import org.xwiki.test.mockito.MockitoComponentManager;
-import org.xwiki.user.UserReference;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -107,6 +105,12 @@ public class WebfingerResourceReferenceHandlerTest
         when(this.httpServletResponse.getOutputStream()).thenReturn(mock(ServletOutputStream.class));
     }
 
+    @BeforeEach
+    public void beforeEach()
+    {
+        when(this.xWikiUserBridge.isExistingUser(any(String.class))).thenReturn(true);
+    }
+
     @Test
     void handleResourceEmpty() throws Exception
     {
@@ -135,10 +139,10 @@ public class WebfingerResourceReferenceHandlerTest
     {
         ResourceReference reference = mock(WebfingerResourceReference.class);
         String invalidResource = "aaa";
+        when(this.xWikiUserBridge.isExistingUser((String)null)).thenReturn(true);
         when(reference.getParameterValues("resource")).thenReturn(singletonList(invalidResource));
         when(reference.getParameterValue("resource")).thenReturn(invalidResource);
         ResourceReferenceHandlerChain chain = mock(ResourceReferenceHandlerChain.class);
-        when(this.xWikiUserBridge.isExistingUser(any())).thenReturn(true);
         WebfingerException expt = mock(WebfingerException.class);
         when(expt.getMessage()).thenReturn("error message");
         when(expt.getErrorCode()).thenReturn(500);
@@ -157,7 +161,6 @@ public class WebfingerResourceReferenceHandlerTest
         when(reference.getParameterValues("resource")).thenReturn(singletonList(invalidResource));
         when(reference.getParameterValue("resource")).thenReturn(invalidResource);
         ResourceReferenceHandlerChain chain = mock(ResourceReferenceHandlerChain.class);
-        when(this.xWikiUserBridge.isExistingUser(any())).thenReturn(true);
         URI uri = new URI("acct://host1.net");
         when(this.webfingerService.resolveActivityPubUserUrl(null)).thenReturn(uri);
         this.handler.handle(reference, chain);
@@ -174,7 +177,6 @@ public class WebfingerResourceReferenceHandlerTest
         when(reference.getParameterValue("resource")).thenReturn(invalidResource);
         when(reference.getParameterValues("rel")).thenReturn(null);
         ResourceReferenceHandlerChain chain = mock(ResourceReferenceHandlerChain.class);
-        when(this.xWikiUserBridge.isExistingUser(any())).thenReturn(true);
         URI uri = new URI("https://xwiki.tst");
         when(this.webfingerService.resolveActivityPubUserUrl("XWiki.Admin")).thenReturn(uri);
         this.handler.handle(reference, chain);
@@ -200,7 +202,6 @@ public class WebfingerResourceReferenceHandlerTest
         when(reference.getParameterValue("resource")).thenReturn(invalidResource);
         when(reference.getParameterValues("rel")).thenReturn(singletonList("self"));
         ResourceReferenceHandlerChain chain = mock(ResourceReferenceHandlerChain.class);
-        when(this.xWikiUserBridge.isExistingUser(any())).thenReturn(true);
         URI uri = new URI("https://xwiki.tst");
         when(this.webfingerService.resolveActivityPubUserUrl("XWiki.Admin")).thenReturn(uri);
         this.handler.handle(reference, chain);
@@ -224,7 +225,6 @@ public class WebfingerResourceReferenceHandlerTest
         when(reference.getParameterValue("resource")).thenReturn(invalidResource);
         when(reference.getParameterValues("rel")).thenReturn(singletonList("http://webfinger.net/rel/profile-page"));
         ResourceReferenceHandlerChain chain = mock(ResourceReferenceHandlerChain.class);
-        when(this.xWikiUserBridge.isExistingUser(any())).thenReturn(true);
         URI uri = new URI("https://xwiki.tst");
         when(this.webfingerService.resolveActivityPubUserUrl("XWiki.Admin")).thenReturn(uri);
         this.handler.handle(reference, chain);
@@ -251,7 +251,6 @@ public class WebfingerResourceReferenceHandlerTest
         when(reference.getParameterValue("resource")).thenReturn(invalidResource);
         when(reference.getParameterValues("rel")).thenReturn(singletonList("http://webfinger.net/rel/profile-page"));
         ResourceReferenceHandlerChain chain = mock(ResourceReferenceHandlerChain.class);
-        when(this.xWikiUserBridge.isExistingUser(any())).thenReturn(true);
         URI uri = new URI("https://xwiki.tst");
         when(this.webfingerService.resolveActivityPubUserUrl("XWiki.Admin")).thenReturn(uri);
         this.handler.handle(reference, chain);
