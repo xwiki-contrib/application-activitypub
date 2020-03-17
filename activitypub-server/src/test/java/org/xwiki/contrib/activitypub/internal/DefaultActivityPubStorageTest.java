@@ -19,13 +19,20 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.inject.Named;
 
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrInputDocument;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
@@ -39,6 +46,7 @@ import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.resource.ResourceReferenceResolver;
 import org.xwiki.resource.ResourceType;
+import org.xwiki.search.solr.internal.api.SolrInstance;
 import org.xwiki.test.annotation.BeforeComponent;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
@@ -54,6 +62,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -80,6 +90,10 @@ public class DefaultActivityPubStorageTest
 
     @MockComponent
     @Named("activitypub")
+    private SolrInstance solrInstance;
+
+    @MockComponent
+    @Named("activitypub")
     private ResourceReferenceResolver<ExtendedURL> urlResolver;
 
     @BeforeComponent
@@ -89,8 +103,29 @@ public class DefaultActivityPubStorageTest
         when(urlHandler.getServerUrl()).thenReturn(new URL(DEFAULT_URL));
     }
 
+    private void verifySolrPutAndPrepareGet(String uid, String content) throws IOException, SolrServerException
+    {
+        this.verifySolrPutAndPrepareGet(uid, content, 1);
+    }
+
+    private void verifySolrPutAndPrepareGet(String uid, String content, int timeNumber) throws IOException, SolrServerException
+    {
+        ArgumentCaptor<SolrInputDocument> argumentCaptor =
+            ArgumentCaptor.forClass(SolrInputDocument.class);
+        verify(this.solrInstance, times(timeNumber)).add(argumentCaptor.capture());
+        assertEquals(uid, argumentCaptor.getValue().getFieldValue("id"));
+        assertEquals(content, argumentCaptor.getValue().getFieldValue("content"));
+        verify(this.solrInstance, times(timeNumber)).commit();
+
+        Map<String, Object> fields = new HashMap<>();
+        fields.put("id", uid);
+        fields.put("content", content);
+        SolrDocument solrDocument = new SolrDocument(fields);
+        when(this.solrInstance.get(uid)).thenReturn(solrDocument);
+    }
+
     @Test
-    public void storeAndRetrieveEntityWithUID() throws ActivityPubException
+    public void storeAndRetrieveEntityWithUID() throws Exception
     {
         ActivityPubException activityPubException = assertThrows(ActivityPubException.class, () -> {
             this.activityPubStorage.storeEntity("", new ActivityPubObject());
@@ -113,10 +148,12 @@ public class DefaultActivityPubStorageTest
         when(this.jsonParser.parse("{foo}")).thenReturn(object1);
         when(this.jsonParser.parse("{foobar}")).thenReturn(object2);
 
-        assertTrue(this.activityPubStorage.storeEntity("foo", object1));
+        assertFalse(this.activityPubStorage.storeEntity("foo", object1));
+        verifySolrPutAndPrepareGet("foo", "{foo}");
         assertSame(object1, this.activityPubStorage.retrieveEntity("foo"));
 
-        assertFalse(this.activityPubStorage.storeEntity("foo", object2));
+        assertTrue(this.activityPubStorage.storeEntity("foo", object2));
+        verifySolrPutAndPrepareGet("foo", "{foobar}", 2);
         assertSame(object2, this.activityPubStorage.retrieveEntity("foo"));
     }
 
@@ -130,6 +167,7 @@ public class DefaultActivityPubStorageTest
 
         String uid = this.activityPubStorage.storeEntity(object1);
         assertFalse(StringUtils.isEmpty(uid));
+        verifySolrPutAndPrepareGet(uid, "{foo}");
         assertSame(object1, this.activityPubStorage.retrieveEntity(uid));
     }
 
@@ -141,8 +179,10 @@ public class DefaultActivityPubStorageTest
         ActivityPubObject object2 = new ActivityPubObject()
             .setName("foobar")
             .setId(object2URL.toURI());
-        when(this.jsonSerializer.serialize(object2)).thenReturn("{foobar}");
-        when(this.jsonParser.parse("{foobar}")).thenReturn(object2);
+        String uid = "42";
+        String content = "{foobar}";
+        when(this.jsonSerializer.serialize(object2)).thenReturn(content);
+        when(this.jsonParser.parse(content)).thenReturn(object2);
         ExtendedURL object2ExtendedURL = new ExtendedURL(object2URL, "xwiki/activitypub");
         when(this.urlResolver.resolve(object2ExtendedURL, new ResourceType("activitypub"), Collections.emptyMap()))
             .thenReturn(new ActivityPubResourceReference("object", "42"));
@@ -155,19 +195,23 @@ public class DefaultActivityPubStorageTest
             activityPubException.getMessage());
 
         // ID match server URL
-        assertEquals("42", this.activityPubStorage.storeEntity(object2));
-        assertSame(object2, this.activityPubStorage.retrieveEntity("42"));
+        assertEquals(uid, this.activityPubStorage.storeEntity(object2));
+        verifySolrPutAndPrepareGet(uid, content);
+        assertSame(object2, this.activityPubStorage.retrieveEntity(uid));
     }
 
     @Test
     public void storeActor() throws Exception
     {
         // Test store of an Actor
-        AbstractActor actor = new Person().setPreferredUsername("FooBar");
-        when(this.jsonSerializer.serialize(actor)).thenReturn("{user:FooBar}");
-        when(this.jsonParser.parse("{user:FooBar}")).thenReturn(actor);
+        String uid = "FooBar";
+        String content = "{user:FooBar}";
+        AbstractActor actor = new Person().setPreferredUsername(uid);
+        when(this.jsonSerializer.serialize(actor)).thenReturn(content);
+        when(this.jsonParser.parse(content)).thenReturn(actor);
 
-        assertEquals("FooBar", this.activityPubStorage.storeEntity(actor));
+        assertEquals(uid, this.activityPubStorage.storeEntity(actor));
+        verifySolrPutAndPrepareGet(uid, content);
         assertSame(actor, this.activityPubStorage.retrieveEntity("FooBar"));
     }
 
@@ -181,16 +225,19 @@ public class DefaultActivityPubStorageTest
 
         assertEquals("Cannot store an inbox without owner.", activityPubException.getMessage());
 
+        String uid = "FooBar-inbox";
+        String content = "{inbox:FooBar}";
         Person actor = new Person().setPreferredUsername("FooBar");
         ActivityPubObjectReference<AbstractActor> objectReference =
             new ActivityPubObjectReference<AbstractActor>().setObject(actor);
         when(this.resolver.resolveReference(objectReference)).thenReturn(actor);
         Inbox inbox = new Inbox().setAttributedTo(Collections.singletonList(objectReference));
-        when(this.jsonSerializer.serialize(inbox)).thenReturn("{inbox:FooBar}");
-        when(this.jsonParser.parse("{inbox:FooBar}")).thenReturn(inbox);
+        when(this.jsonSerializer.serialize(inbox)).thenReturn(content);
+        when(this.jsonParser.parse(content)).thenReturn(inbox);
 
-        assertEquals("FooBar-inbox", this.activityPubStorage.storeEntity(inbox));
-        assertSame(inbox, this.activityPubStorage.retrieveEntity("FooBar-inbox"));
+        assertEquals(uid, this.activityPubStorage.storeEntity(inbox));
+        verifySolrPutAndPrepareGet(uid, content);
+        assertSame(inbox, this.activityPubStorage.retrieveEntity(uid));
 
         // Test store of an Outbox
         activityPubException = assertThrows(ActivityPubException.class, () -> {
@@ -198,10 +245,13 @@ public class DefaultActivityPubStorageTest
         });
         assertEquals("Cannot store an outbox without owner.", activityPubException.getMessage());
 
+        uid = "FooBar-outbox";
+        content = "{outbox:FooBar}";
         Outbox outbox = new Outbox().setAttributedTo(Collections.singletonList(objectReference));
-        when(this.jsonSerializer.serialize(outbox)).thenReturn("{outbox:FooBar}");
-        when(this.jsonParser.parse("{outbox:FooBar}")).thenReturn(outbox);
-        assertEquals("FooBar-outbox", this.activityPubStorage.storeEntity(outbox));
-        assertSame(outbox, this.activityPubStorage.retrieveEntity("FooBar-outbox"));
+        when(this.jsonSerializer.serialize(outbox)).thenReturn(content);
+        when(this.jsonParser.parse(content)).thenReturn(outbox);
+        assertEquals(uid, this.activityPubStorage.storeEntity(outbox));
+        verifySolrPutAndPrepareGet(uid, content, 2);
+        assertSame(outbox, this.activityPubStorage.retrieveEntity(uid));
     }
 }
