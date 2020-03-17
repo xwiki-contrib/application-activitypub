@@ -43,6 +43,7 @@ public abstract class AbstractActor extends ActivityPubObject
     private ActivityPubObjectReference<Outbox> outbox;
     private ActivityPubObjectReference<OrderedCollection<AbstractActor>> followers;
     private ActivityPubObjectReference<OrderedCollection<AbstractActor>> following;
+    private PublicKey publicKey;
 
     /**
      * @return the username of the actor.
@@ -149,6 +150,26 @@ public abstract class AbstractActor extends ActivityPubObject
         return (T) this;
     }
 
+    /**
+     * 
+     * @return the actor's public key.
+     */
+    public PublicKey getPublicKey()
+    {
+        return this.publicKey;
+    }
+
+    /**
+     * Set the public key of the actor.
+     * @param publicKey A public key.
+     * @return the current actor object.
+     */
+    public AbstractActor setPublicKey(PublicKey publicKey)
+    {
+        this.publicKey = publicKey;
+        return this;
+    }
+
     @Override
     public String toString()
     {
@@ -156,6 +177,7 @@ public abstract class AbstractActor extends ActivityPubObject
             .append("id", getId())
             .append("name", getName())
             .append("preferredUsername", getPreferredUsername())
+            .append("publicKey", getPublicKey())
             .build();
     }
 
@@ -176,7 +198,8 @@ public abstract class AbstractActor extends ActivityPubObject
             .append(inbox, object.inbox)
             .append(outbox, object.outbox)
             .append(followers, object.followers)
-            .append(following, object.following).build();
+            .append(following, object.following)
+            .append(publicKey, object.publicKey).build();
     }
 
     @Override
@@ -188,6 +211,7 @@ public abstract class AbstractActor extends ActivityPubObject
             .append(inbox)
             .append(outbox)
             .append(followers)
-            .append(following).build();
+            .append(following)
+            .append(publicKey).build();
     }
 }

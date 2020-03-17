@@ -96,7 +96,7 @@ public class DefaultActivityPubClientTest
     @Test
     public void post() throws Exception
     {
-        Create create = new Create();
+        Create create = new Create().setActor(new Person());
         when(this.activityPubJsonSerializer.serialize(create)).thenReturn("{activity:create}");
 
         HttpMethod httpMethod = this.activityPubClient.post(this.uri, create);
@@ -109,7 +109,7 @@ public class DefaultActivityPubClientTest
         StringRequestEntity retrievedRequestEntity = (StringRequestEntity) postMethod.getRequestEntity();
         assertEquals("{activity:create}", retrievedRequestEntity.getContent());
         assertEquals("UTF-8", retrievedRequestEntity.getCharset());
-        assertEquals(CLIENT_CONTENT_TYPE +"; charset=UTF-8", retrievedRequestEntity.getContentType());
+        assertEquals(CLIENT_CONTENT_TYPE + "; charset=UTF-8", retrievedRequestEntity.getContentType());
     }
 
     @Test
@@ -117,7 +117,7 @@ public class DefaultActivityPubClientTest
     {
         Inbox inbox = new Inbox().setId(this.uri);
         Person person = new Person().setInbox(new ActivityPubObjectReference<Inbox>().setObject(inbox));
-        Create create = new Create();
+        Create create = new Create().setActor(new Person());
         when(this.activityPubJsonSerializer.serialize(create)).thenReturn("{activity:create}");
 
         HttpMethod httpMethod = this.activityPubClient.postInbox(person, create);
@@ -130,14 +130,14 @@ public class DefaultActivityPubClientTest
         StringRequestEntity retrievedRequestEntity = (StringRequestEntity) postMethod.getRequestEntity();
         assertEquals("{activity:create}", retrievedRequestEntity.getContent());
         assertEquals("UTF-8", retrievedRequestEntity.getCharset());
-        assertEquals(CLIENT_CONTENT_TYPE +"; charset=UTF-8", retrievedRequestEntity.getContentType());
+        assertEquals(CLIENT_CONTENT_TYPE + "; charset=UTF-8", retrievedRequestEntity.getContentType());
     }
 
     @Test
     public void postInboxRef() throws Exception
     {
         Person person = new Person().setInbox(new ActivityPubObjectReference<Inbox>().setLink(this.uri));
-        Create create = new Create();
+        Create create = new Create().setActor(new Person());
         when(this.activityPubJsonSerializer.serialize(create)).thenReturn("{activity:create}");
 
         HttpMethod httpMethod = this.activityPubClient.postInbox(person, create);
@@ -150,7 +150,7 @@ public class DefaultActivityPubClientTest
         StringRequestEntity retrievedRequestEntity = (StringRequestEntity) postMethod.getRequestEntity();
         assertEquals("{activity:create}", retrievedRequestEntity.getContent());
         assertEquals("UTF-8", retrievedRequestEntity.getCharset());
-        assertEquals(CLIENT_CONTENT_TYPE +"; charset=UTF-8", retrievedRequestEntity.getContentType());
+        assertEquals(CLIENT_CONTENT_TYPE + "; charset=UTF-8", retrievedRequestEntity.getContentType());
     }
 
     @Test
@@ -158,7 +158,7 @@ public class DefaultActivityPubClientTest
     {
         Outbox outbox = new Outbox().setId(this.uri);
         Person person = new Person().setOutbox(new ActivityPubObjectReference<Outbox>().setObject(outbox));
-        Create create = new Create();
+        Create create = new Create().setActor(new Person());
         when(this.activityPubJsonSerializer.serialize(create)).thenReturn("{activity:create}");
 
         HttpMethod httpMethod = this.activityPubClient.postOutbox(person, create);
@@ -171,14 +171,14 @@ public class DefaultActivityPubClientTest
         StringRequestEntity retrievedRequestEntity = (StringRequestEntity) postMethod.getRequestEntity();
         assertEquals("{activity:create}", retrievedRequestEntity.getContent());
         assertEquals("UTF-8", retrievedRequestEntity.getCharset());
-        assertEquals(CLIENT_CONTENT_TYPE +"; charset=UTF-8", retrievedRequestEntity.getContentType());
+        assertEquals(CLIENT_CONTENT_TYPE + "; charset=UTF-8", retrievedRequestEntity.getContentType());
     }
 
     @Test
     public void postOutboxRef() throws Exception
     {
         Person person = new Person().setOutbox(new ActivityPubObjectReference<Outbox>().setLink(this.uri));
-        Create create = new Create();
+        Create create = new Create().setActor(new Person());
         when(this.activityPubJsonSerializer.serialize(create)).thenReturn("{activity:create}");
 
         HttpMethod httpMethod = this.activityPubClient.postOutbox(person, create);
@@ -191,7 +191,7 @@ public class DefaultActivityPubClientTest
         StringRequestEntity retrievedRequestEntity = (StringRequestEntity) postMethod.getRequestEntity();
         assertEquals("{activity:create}", retrievedRequestEntity.getContent());
         assertEquals("UTF-8", retrievedRequestEntity.getCharset());
-        assertEquals(CLIENT_CONTENT_TYPE +"; charset=UTF-8", retrievedRequestEntity.getContentType());
+        assertEquals(CLIENT_CONTENT_TYPE + "; charset=UTF-8", retrievedRequestEntity.getContentType());
     }
 
     @Test
@@ -216,7 +216,7 @@ public class DefaultActivityPubClientTest
             this.activityPubClient.checkAnswer(method);
         });
         assertEquals("Error when performing [GET] on [http://www.xwiki.org]: "
-            + "200 status code expected, got [404] instead with body: [Document not found.].",
+                         + "200 status code expected, got [404] instead with body: [Document not found.].",
             activityPubException.getMessage());
 
         when(method.getStatusCode()).thenReturn(200);
@@ -224,8 +224,8 @@ public class DefaultActivityPubClientTest
             this.activityPubClient.checkAnswer(method);
         });
         assertEquals("Error when performing [GET] on [http://www.xwiki.org]: "
-                + "Content-Type header should return 'application/ld+json; "
-            + "profile=\"https://www.w3.org/ns/activitystreams\"' and got [null] instead.",
+                         + "Content-Type header should return 'application/ld+json; "
+                         + "profile=\"https://www.w3.org/ns/activitystreams\"' and got [null] instead.",
             activityPubException.getMessage());
 
         when(method.getResponseHeader("Content-Type")).thenReturn(new Header("Content-Type", CLIENT_CONTENT_TYPE));

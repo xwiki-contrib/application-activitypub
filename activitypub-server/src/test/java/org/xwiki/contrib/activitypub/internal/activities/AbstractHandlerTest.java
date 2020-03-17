@@ -102,7 +102,7 @@ public class AbstractHandlerTest
     protected void verifyResponse(ActivityPubObject entity) throws IOException, ActivityPubException
     {
         verify(this.servletResponse, times(1)).setStatus(200);
-        verify(this.servletResponse, times(1)).setContentType(ActivityPubClient.CONTENT_TYPE);
+        verify(this.servletResponse, times(1)).setContentType(ActivityPubClient.CONTENT_TYPE_STRICT);
         verify(this.servletResponse, times(1)).setCharacterEncoding(StandardCharsets.UTF_8.toString());
         verify(this.activityPubJsonSerializer, times(1)).serialize(this.responseOutput, entity);
     }

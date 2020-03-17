@@ -268,7 +268,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         throws IOException, ActivityPubException
     {
         response.setStatus(HttpServletResponse.SC_OK);
-        response.setContentType(ActivityPubClient.CONTENT_TYPE);
+        response.setContentType(ActivityPubClient.CONTENT_TYPE_STRICT);
         response.setCharacterEncoding(StandardCharsets.UTF_8.toString());
 
         // FIXME: This should be more complicated, we'd need to check authorization etc.

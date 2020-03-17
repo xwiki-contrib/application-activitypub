@@ -19,12 +19,9 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
-import java.lang.reflect.Type;
 import java.net.URI;
+import java.security.PublicKey;
 import java.util.Collections;
-
-import javax.inject.Named;
-import javax.inject.Provider;
 
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.jsoup.helper.HttpConnection;
@@ -33,31 +30,22 @@ import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.xwiki.bridge.DocumentAccessBridge;
-import org.xwiki.component.manager.ComponentManager;
-import org.xwiki.component.util.DefaultParameterizedType;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
+import org.xwiki.contrib.activitypub.SignatureService;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
-import org.xwiki.model.reference.DocumentReferenceResolver;
-import org.xwiki.model.reference.EntityReferenceSerializer;
-import org.xwiki.test.annotation.BeforeComponent;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
-import org.xwiki.test.mockito.MockitoComponentManager;
 import org.xwiki.user.UserProperties;
 import org.xwiki.user.UserReference;
-
-import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.web.Utils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -81,18 +69,7 @@ public class DefaultActorHandlerTest
     private DefaultActorHandler actorHandler;
 
     @MockComponent
-    private DocumentAccessBridge documentAccessBridge;
-
-    @MockComponent
-    @Named("local")
-    private EntityReferenceSerializer<String> localEntityReferenceSerializer;
-
-    @MockComponent
     private ActivityPubStorage activityPubStorage;
-
-    @MockComponent
-    @Named("current")
-    private DocumentReferenceResolver<String> stringDocumentReferenceResolver;
 
     @MockComponent
     private ActivityPubClient activityPubClient;
@@ -102,6 +79,9 @@ public class DefaultActorHandlerTest
 
     @MockComponent
     private XWikiUserBridge xWikiUserBridge;
+
+    @MockComponent
+    private SignatureService signatureService;
 
     @Mock
     private UserReference fooUserReference;
@@ -127,10 +107,9 @@ public class DefaultActorHandlerTest
         // Bar does not exist.
         when(this.xWikiUserBridge.resolveUser("XWiki.Bar")).thenReturn(this.barUserReference);
         when(this.xWikiUserBridge.isExistingUser("XWiki.Bar")).thenReturn(false);
-        when(this.xWikiUserBridge.isExistingUser(barUserReference)).thenReturn(false);
+        when(this.xWikiUserBridge.isExistingUser(this.barUserReference)).thenReturn(false);
         when(this.xWikiUserBridge.resolveUser("Bar")).thenReturn(this.barUserReference);
         when(this.xWikiUserBridge.isExistingUser("Bar")).thenReturn(false);
-
     }
 
     @Test
@@ -145,8 +124,17 @@ public class DefaultActorHandlerTest
     @Test
     public void getActorWithExistingUser() throws Exception
     {
+        PublicKey pubKey = mock(PublicKey.class);
+        when(pubKey.getEncoded()).thenReturn(new byte[]{});
+        when(this.signatureService.initKey("XWiki.Foo")).thenReturn(pubKey);
+        org.xwiki.contrib.activitypub.entities.PublicKey publicKey =
+            new org.xwiki.contrib.activitypub.entities.PublicKey().setPublicKeyPem("-----BEGIN PUBLIC KEY-----\n"
+                                                                                       + "\n"
+                                                                                       + "-----END PUBLIC KEY-----\n")
+                .setId("null#main-key");
         AbstractActor expectedActor = new Person();
         expectedActor.setPreferredUsername("XWiki.Foo")
+            .setPublicKey(publicKey)
             .setInbox(new ActivityPubObjectReference<Inbox>().setObject(
                 new Inbox().setAttributedTo(Collections.singletonList(
                     new ActivityPubObjectReference<AbstractActor>().setObject(expectedActor)))))
@@ -207,8 +195,18 @@ public class DefaultActorHandlerTest
     @Test
     public void getLocalActor() throws ActivityPubException
     {
+        PublicKey pubKey = mock(PublicKey.class);
+        when(pubKey.getEncoded()).thenReturn(new byte[]{});
+        when(this.signatureService.initKey("XWiki.Foo")).thenReturn(pubKey);
+        org.xwiki.contrib.activitypub.entities.PublicKey publicKey =
+            new org.xwiki.contrib.activitypub.entities.PublicKey().setPublicKeyPem("-----BEGIN PUBLIC KEY-----\n"
+                                                                                       + "\n"
+                                                                                       + "-----END PUBLIC KEY-----\n")
+                .setId("null#main-key");
+
         AbstractActor expectedActor = new Person();
         expectedActor.setPreferredUsername("XWiki.Foo")
+            .setPublicKey(publicKey)
             .setInbox(new ActivityPubObjectReference<Inbox>().setObject(
                 new Inbox().setAttributedTo(Collections.singletonList(
                     new ActivityPubObjectReference<AbstractActor>().setObject(expectedActor)))))

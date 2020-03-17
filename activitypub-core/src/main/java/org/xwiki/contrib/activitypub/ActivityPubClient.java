@@ -39,10 +39,33 @@ import org.xwiki.stability.Unstable;
 public interface ActivityPubClient
 {
     /**
+     * Main accepted content-type value for server to server interactions.
+     *
+     * {@see https://www.w3.org/TR/activitypub/#server-to-server-interactions}
+     */
+    String CONTENT_TYPE_STRICT = "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"";
+    /**
+     * Another accepted alias for the content-type value for server to server interations.
+     *
+     * {@see https://www.w3.org/TR/activitypub/#server-to-server-interactions}}
+     */
+    String CONTENT_TYPE_STRICT_ALIAS = "application/activity+json";
+    /**
      * The content type that should be used in headers for ActivityPub.
      */
-    String CONTENT_TYPE =
-        "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"";
+    String[] CONTENT_TYPES = new String[]{ CONTENT_TYPE_STRICT, CONTENT_TYPE_STRICT_ALIAS };
+    /**
+     * Content type eventually accepted but a warning is raised.
+     */
+    String CONTENT_TYPE_JSON_ACCEPTED = "application/json";
+    /**
+     * Content type eventually accepted but a warning is raised.
+     */
+    String CONTENT_TYPE_HTML_ACCEPTED = "text/html";
+    /**
+     * List of accepted content type, but that should not be according to ActivityPub specifications. 
+     */
+    String[] CONTENT_TYPES_ACCEPTED = new String[]{ CONTENT_TYPE_HTML_ACCEPTED, CONTENT_TYPE_JSON_ACCEPTED };
 
     /**
      * Post an activity in the actor inbox.

@@ -107,7 +107,7 @@ public abstract class AbstractActivityHandler<T extends AbstractActivity> implem
     {
         if (response != null) {
             response.setStatus(statusCode);
-            response.setContentType(ActivityPubClient.CONTENT_TYPE);
+            response.setContentType(ActivityPubClient.CONTENT_TYPE_STRICT);
             response.setCharacterEncoding("UTF-8");
             this.activityPubJsonSerializer.serialize(response.getOutputStream(), activity);
         }

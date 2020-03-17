@@ -39,6 +39,7 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
+import org.xwiki.contrib.activitypub.SignatureService;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
@@ -63,6 +64,9 @@ public class DefaultActivityPubClient implements ActivityPubClient
     @Inject
     private Logger logger;
 
+    @Inject
+    private SignatureService signature;
+
     /**
      * Default constructor.
      */
@@ -83,7 +87,7 @@ public class DefaultActivityPubClient implements ActivityPubClient
     @Override
     public HttpMethod postInbox(AbstractActor actor, AbstractActivity activity) throws ActivityPubException, IOException
     {
-        return post(getURIFromObjectReference(actor.getInbox()), activity);
+        return this.post(this.getURIFromObjectReference(actor.getInbox()), activity);
     }
 
     // FIXME: Credentials must be provided to post in an outbox.
@@ -92,7 +96,7 @@ public class DefaultActivityPubClient implements ActivityPubClient
     public HttpMethod postOutbox(AbstractActor actor, AbstractActivity activity)
         throws ActivityPubException, IOException
     {
-        return post(getURIFromObjectReference(actor.getOutbox()), activity);
+        return this.post(this.getURIFromObjectReference(actor.getOutbox()), activity);
     }
 
     private URI getURIFromObjectReference(ActivityPubObjectReference<? extends ActivityPubObject> objectReference)
@@ -108,9 +112,11 @@ public class DefaultActivityPubClient implements ActivityPubClient
     public HttpMethod post(URI uri, AbstractActivity activity) throws ActivityPubException, IOException
     {
         RequestEntity bodyRequest =
-            new StringRequestEntity(this.activityPubJsonSerializer.serialize(activity), CONTENT_TYPE, "UTF-8");
+            new StringRequestEntity(this.activityPubJsonSerializer.serialize(activity), CONTENT_TYPE_STRICT, "UTF-8");
         PostMethod postMethod = new PostMethod(uri.toASCIIString());
         postMethod.setRequestEntity(bodyRequest);
+        this.signature
+            .generateSignature(postMethod, uri, activity.getActor().getLink(), activity.getActor().getObject());
         this.httpClient.executeMethod(postMethod);
         return postMethod;
     }
@@ -119,14 +125,34 @@ public class DefaultActivityPubClient implements ActivityPubClient
     public HttpMethod get(URI uri) throws IOException
     {
         GetMethod getMethod = new GetMethod(uri.toASCIIString());
-        getMethod.addRequestHeader("Accept", CONTENT_TYPE);
+        getMethod.addRequestHeader("Accept", CONTENT_TYPE_STRICT);
         this.httpClient.executeMethod(getMethod);
         return getMethod;
     }
 
     private boolean checkContentTypeHeader(Header contentTypeHeader)
     {
-        return  (contentTypeHeader != null && contentTypeHeader.getValue().contains(CONTENT_TYPE));
+        if (contentTypeHeader == null) {
+            return false;
+        }
+
+        for (String acceptedHeader : CONTENT_TYPES) {
+            if (contentTypeHeader.getValue().startsWith(acceptedHeader)) {
+                return true;
+            }
+        }
+
+        for (String acceptedHeader : CONTENT_TYPES_ACCEPTED) {
+            if (contentTypeHeader.getValue().startsWith(acceptedHeader)) {
+                this.logger
+                    .warn("Content-Type header '{}' accepted, but it does not conform to ActivityPub specification.",
+                        contentTypeHeader.getValue());
+                return true;
+            }
+        }
+
+        return false;
+        // return (contentTypeHeader != null && Arrays.asList(CONTENT_TYPES).contains(contentTypeHeader.getValue()));
     }
 
     @Override
@@ -140,13 +166,13 @@ public class DefaultActivityPubClient implements ActivityPubClient
             try {
                 responseBody = method.getResponseBodyAsString();
             } catch (IOException e) {
-                logger.error("Cannot retrieve response body of a request.", e);
+                this.logger.error("Cannot retrieve response body of a request.", e);
             }
             exceptionMessage = String.format("200 status code expected, got [%s] instead with body: [%s].",
                 method.getStatusCode(), responseBody);
-        } else if (!checkContentTypeHeader(method.getResponseHeader(CONTENT_TYPE_HEADER_NAME))) {
+        } else if (!this.checkContentTypeHeader(method.getResponseHeader(CONTENT_TYPE_HEADER_NAME))) {
             exceptionMessage = String.format("Content-Type header should return '%s' and got [%s] instead.",
-                CONTENT_TYPE, method.getResponseHeader(CONTENT_TYPE_HEADER_NAME));
+                CONTENT_TYPE_STRICT, method.getResponseHeader(CONTENT_TYPE_HEADER_NAME));
         }
 
         if (exceptionMessage != null) {
@@ -155,7 +181,7 @@ public class DefaultActivityPubClient implements ActivityPubClient
                 baseMessage = String.format("Error when performing [%s] on [%s]: ",
                     method.getName(), method.getURI());
             } catch (URIException e) {
-                logger.error("Cannot retrieve URI from HttpMethod.", e);
+                this.logger.error("Cannot retrieve URI from HttpMethod.", e);
             }
             throw new ActivityPubException(baseMessage + exceptionMessage);
         }

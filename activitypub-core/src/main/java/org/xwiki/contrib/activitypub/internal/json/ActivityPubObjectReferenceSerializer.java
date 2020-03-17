@@ -30,10 +30,10 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
-import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.resource.ResourceReferenceSerializer;
 import org.xwiki.resource.SerializeResourceReferenceException;
 import org.xwiki.resource.UnsupportedResourceReferenceException;
@@ -79,22 +79,28 @@ public class ActivityPubObjectReferenceSerializer extends JsonSerializer<Activit
         if (objectReference.isLink()) {
             jsonGenerator.writeString(objectReference.getLink().toASCIIString());
         } else {
-            ActivityPubObject object = objectReference.getObject();
-
-            // the ID wasn't null, but for some reason it wasn't a link, we kept it as an object in the serialization.
-            if (object.getId() != null) {
-                jsonGenerator.writeString(object.getId().toString());
-            // it doesn't have an ID: we need to store it and we serialize it as a link to avoid big JSON answers.
+            if (objectReference.isExpand()) {
+                jsonGenerator.writeObject(objectReference.getObject());
             } else {
-                try {
-                    String uuid = getActivityPubStorage().storeEntity(object);
-                    ActivityPubResourceReference resourceReference =
-                        new ActivityPubResourceReference(object.getType(), uuid);
-                    URI uri = this.activityPubResourceReferenceSerializer.serialize(resourceReference);
-                    jsonGenerator.writeString(uri.toString());
-                } catch (SerializeResourceReferenceException | UnsupportedResourceReferenceException
-                    | ActivityPubException | ComponentLookupException e) {
-                    throw new IOException(String.format("Error when serializing [%s]", object.toString()), e);
+                ActivityPubObject object = objectReference.getObject();
+
+                // the ID wasn't null, but for some reason it wasn't a link, we kept it as an object in the 
+                // serialization.
+                if (object.getId() != null) {
+                    jsonGenerator.writeString(object.getId().toString());
+                    // it doesn't have an ID: we need to store it and we serialize it as a link to avoid big JSON 
+                    // answers.
+                } else {
+                    try {
+                        String uuid = this.getActivityPubStorage().storeEntity(object);
+                        ActivityPubResourceReference resourceReference =
+                            new ActivityPubResourceReference(object.getType(), uuid);
+                        URI uri = this.activityPubResourceReferenceSerializer.serialize(resourceReference);
+                        jsonGenerator.writeString(uri.toString());
+                    } catch (SerializeResourceReferenceException | UnsupportedResourceReferenceException
+                                 | ActivityPubException | ComponentLookupException e) {
+                        throw new IOException(String.format("Error when serializing [%s]", object.toString()), e);
+                    }
                 }
             }
         }

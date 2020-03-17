@@ -22,6 +22,7 @@ package org.xwiki.contrib.activitypub.internal;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Base64;
 import java.util.Collections;
 
 import javax.inject.Inject;
@@ -37,12 +38,14 @@ import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActorHandler;
+import org.xwiki.contrib.activitypub.SignatureService;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
+import org.xwiki.contrib.activitypub.entities.PublicKey;
 import org.xwiki.resource.ResourceReferenceSerializer;
 import org.xwiki.user.CurrentUserReference;
 import org.xwiki.user.UserProperties;
@@ -71,6 +74,9 @@ public class DefaultActorHandler implements ActorHandler
 
     @Inject
     private DefaultURLHandler defaultURLHandler;
+
+    @Inject
+    private SignatureService signatureService;
 
     @Inject
     private ResourceReferenceSerializer<ActivityPubResourceReference, URI> resourceReferenceSerializer;
@@ -144,9 +150,27 @@ public class DefaultActorHandler implements ActorHandler
         this.activityPubStorage.storeEntity(followers);
         actor.setFollowers(new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(followers));
 
+        PublicKey publicKey = this.initPublicKey(login);
+        actor.setPublicKey(publicKey);
+
         this.activityPubStorage.storeEntity(actor);
 
         return actor;
+    }
+
+    private PublicKey initPublicKey(String login) throws ActivityPubException
+    {
+        String pkId;
+        try {
+            pkId = this.xWikiUserBridge.getUserProfileURL(this.xWikiUserBridge.resolveUser(login));
+        } catch (Exception e) {
+            throw new ActivityPubException("Error while resolving user profile URL", e);
+        }
+        java.security.PublicKey pubKey = this.signatureService.initKey(login);
+
+        return new PublicKey().setId(pkId + "#main-key").setOwner(pkId)
+                   .setPublicKeyPem(String.format("-----BEGIN PUBLIC KEY-----\n%s\n-----END PUBLIC KEY-----\n",
+                       Base64.getEncoder().encodeToString(pubKey.getEncoded())));
     }
 
     @Override

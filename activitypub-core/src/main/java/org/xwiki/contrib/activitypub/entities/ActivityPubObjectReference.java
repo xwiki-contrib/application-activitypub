@@ -45,6 +45,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 public class ActivityPubObjectReference<T extends ActivityPubObject>
 {
     private boolean isLink;
+    private boolean isExpand;
     private URI link;
     private T object;
 
@@ -96,6 +97,36 @@ public class ActivityPubObjectReference<T extends ActivityPubObject>
     {
         this.link = link;
         this.isLink = true;
+        return this;
+    }
+
+    /**
+     * 
+     * @param link the link to the object.
+     */
+    public void setLink(boolean link)
+    {
+        this.isLink = link;
+    }
+
+    /**
+     * 
+     * @return the expand status of the object.
+     */
+    public boolean isExpand()
+    {
+        return this.isExpand;
+    }
+
+    /**
+     * Set the expand status. If the expand status is true, the object will always be serialized to its object form
+     * and not as a link.
+     * @param expand the expand status.
+     * @return the current ActivityPub object.
+     */
+    public ActivityPubObjectReference<T> setExpand(boolean expand)
+    {
+        this.isExpand = expand;
         return this;
     }
 

@@ -97,6 +97,7 @@ public class AcceptActivityHandler extends AbstractActivityHandler<Accept>
 
             this.notifier.notify(accept,
                 Collections.singleton(this.actorHandler.getXWikiUserReference(followingActor)));
+            accept.getObject().setExpand(true);
             HttpMethod postMethod = this.activityPubClient.postInbox(followingActor, accept);
             try {
                 this.activityPubClient.checkAnswer(postMethod);

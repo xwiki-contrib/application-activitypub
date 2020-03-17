@@ -22,7 +22,6 @@ package org.xwiki.contrib.activitypub.webfinger.internal;
 import java.net.URI;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
@@ -31,7 +30,6 @@ import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerService;
-import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.resource.ResourceReferenceSerializer;
 import org.xwiki.user.UserReference;
 
@@ -47,10 +45,6 @@ import org.xwiki.user.UserReference;
 public class DefaultWebfingerService implements WebfingerService
 {
     @Inject
-    @Named("current")
-    private DocumentReferenceResolver<String> stringDocumentReferenceResolver;
-
-    @Inject
     private XWikiUserBridge xWikiUserBridge;
 
     @Inject
@@ -62,7 +56,8 @@ public class DefaultWebfingerService implements WebfingerService
     @Override
     public URI resolveActivityPubUserUrl(String username) throws WebfingerException
     {
-        ActivityPubResourceReference aprr = new ActivityPubResourceReference("Person", username);
+        // FIXME: deal more cleanly with the username prefix.
+        ActivityPubResourceReference aprr = new ActivityPubResourceReference("Person", "xwiki:" + username);
         try {
             return this.defaultURLHandler.getAbsoluteURI(this.serializer.serialize(aprr));
         } catch (Exception e) {

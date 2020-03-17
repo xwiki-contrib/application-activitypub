@@ -3,5 +3,10 @@
   "id" : "http://www.xwiki.org/wiki/activitypub/Foo",
   "name" : "XWiki.Foo",
   "preferredUsername" : "Foo bar",
+  "publicKey" : {
+    "id" : "pkid",
+    "owner" : "pkowner",
+    "publicKeyPem" : "pkpem"
+  },
   "type" : "Person"
 }

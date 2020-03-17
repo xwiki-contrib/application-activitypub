@@ -41,6 +41,7 @@ public class PersonTest extends AbstractEntityTest
     void serializePerson1() throws URISyntaxException, IOException, ActivityPubException
     {
         Person person = new Person()
+                            .setPublicKey(new PublicKey().setId("pkid").setOwner("pkowner").setPublicKeyPem("pkpem"))
                             .setPreferredUsername("Foo bar")
                             .setId(new URI("http://www.xwiki.org/wiki/activitypub/Foo"))
                             .setName("XWiki.Foo");
@@ -53,6 +54,7 @@ public class PersonTest extends AbstractEntityTest
     void parsePerson1() throws FileNotFoundException, URISyntaxException, ActivityPubException
     {
         Person person = new Person()
+                            .setPublicKey(new PublicKey().setId("pkid").setOwner("pkowner").setPublicKeyPem("pkpem"))
                             .setPreferredUsername("Foo bar")
                             .setId(new URI("http://www.xwiki.org/wiki/activitypub/Foo"))
                             .setName("XWiki.Foo");

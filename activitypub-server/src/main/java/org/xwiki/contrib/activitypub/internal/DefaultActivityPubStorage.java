@@ -21,7 +21,6 @@ package org.xwiki.contrib.activitypub.internal;
 
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +28,6 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
@@ -42,8 +40,8 @@ import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
-import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
+import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.resource.CreateResourceReferenceException;
 import org.xwiki.resource.ResourceReferenceResolver;
@@ -52,8 +50,6 @@ import org.xwiki.resource.ResourceType;
 import org.xwiki.resource.SerializeResourceReferenceException;
 import org.xwiki.resource.UnsupportedResourceReferenceException;
 import org.xwiki.url.ExtendedURL;
-
-import com.xpn.xwiki.XWikiContext;
 
 /**
  * Default implementation of {@link ActivityPubStorage}.
@@ -66,7 +62,9 @@ import com.xpn.xwiki.XWikiContext;
 public class DefaultActivityPubStorage implements ActivityPubStorage
 {
     private static final String INBOX_SUFFIX_ID = "inbox";
+
     private static final String OUTBOX_SUFFIX_ID = "outbox";
+
     private final Map<String, String> storage;
 
     @Inject
@@ -161,8 +159,10 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
             // FIXME: the prefix should be at the very least dynamically computed.
             //  But maybe we should use a URI resolver.
             ExtendedURL extendedURL = new ExtendedURL(uri.toURL(), "xwiki/activitypub");
-            ActivityPubResourceReference resourceReference = (ActivityPubResourceReference) this.urlResolver.
-                resolve(extendedURL, new ResourceType("activitypub"), Collections.emptyMap());
+            ActivityPubResourceReference resourceReference = (ActivityPubResourceReference)
+                                                                 this.urlResolver.resolve(extendedURL,
+                                                                     new ResourceType("activitypub"),
+                                                                     Collections.emptyMap());
             this.storeEntity(resourceReference.getUuid(), entity);
             return resourceReference.getUuid();
         } catch (MalformedURLException | CreateResourceReferenceException | UnsupportedResourceReferenceException e) {
