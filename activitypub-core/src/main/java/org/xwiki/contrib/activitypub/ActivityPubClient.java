@@ -41,13 +41,13 @@ public interface ActivityPubClient
     /**
      * Main accepted content-type value for server to server interactions.
      *
-     * {@see https://www.w3.org/TR/activitypub/#server-to-server-interactions}
+     * @see <a href="https://www.w3.org/TR/activitypub/#server-to-server-interactions">W3C ActivityPub specificationq</a>
      */
     String CONTENT_TYPE_STRICT = "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"";
     /**
      * Another accepted alias for the content-type value for server to server interations.
      *
-     * {@see https://www.w3.org/TR/activitypub/#server-to-server-interactions}}
+     * @see <a href="https://www.w3.org/TR/activitypub/#server-to-server-interactions">W3C ActivityPub specificationq</a>
      */
     String CONTENT_TYPE_STRICT_ALIAS = "application/activity+json";
     /**
@@ -73,6 +73,7 @@ public interface ActivityPubClient
      * @param activity the activity to post.
      * @return an {@link HttpMethod} which contains the answer.
      * @throws ActivityPubException in case of error during the post or the activity serialization.
+     * @throws IOException in case of error during the post or the activity serialization.
      */
     HttpMethod postInbox(AbstractActor actor, AbstractActivity activity) throws ActivityPubException, IOException;
 
@@ -82,6 +83,7 @@ public interface ActivityPubClient
      * @param activity the activity to post.
      * @return an {@link HttpMethod} which contains the answer.
      * @throws ActivityPubException in case of error during the post or the activity serialization.
+     * @throws IOException in case of error during the post or the activity serialization.
      */
     HttpMethod postOutbox(AbstractActor actor, AbstractActivity activity) throws ActivityPubException, IOException;
 
@@ -91,6 +93,7 @@ public interface ActivityPubClient
      * @param activity the activity to post.
      * @return an {@link HttpMethod} which contains the answer.
      * @throws ActivityPubException in case of error during the post or the activity serialization.
+     * @throws IOException in case of error during the post or the activity serialization.
      */
     HttpMethod post(URI uri, AbstractActivity activity) throws ActivityPubException, IOException;
 
