@@ -42,6 +42,7 @@ import org.apache.lucene.util.Version;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.request.schema.SchemaRequest;
+import org.apache.solr.client.solrj.response.schema.SchemaResponse;
 import org.apache.solr.core.CoreContainer;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.phase.Disposable;
@@ -62,6 +63,9 @@ import org.xwiki.search.solr.internal.api.SolrConfiguration;
 @Singleton
 public class APSolrInstance extends AbstractSolrInstance implements Disposable
 {
+    private static final String NAME = "name";
+    private static final String CONTENT = "content";
+
     /**
      * Solr instance type for this implementation.
      */
@@ -107,17 +111,31 @@ public class APSolrInstance extends AbstractSolrInstance implements Disposable
             String coreName = this.container.getCores().iterator().next().getName();
             this.server = new EmbeddedSolrServer(container, coreName);
 
-            Map<String, Object> fieldAttributes = new HashMap<>();
-            fieldAttributes.put("name", "content");
-            fieldAttributes.put("type", "string");
-            SchemaRequest.AddField addField = new SchemaRequest.AddField(fieldAttributes);
-            this.server.request(addField);
+            SchemaResponse.FieldsResponse response = new SchemaRequest.Fields().process(this.server);
+            if (!schemaAlreadyExists(response)) {
+                Map<String, Object> fieldAttributes = new HashMap<>();
+                fieldAttributes.put(NAME, CONTENT);
+                fieldAttributes.put("type", "string");
+                new SchemaRequest.AddField(fieldAttributes).process(this.server);
+            }
 
             this.logger.info("Started embedded Solr server.");
         } catch (Exception e) {
             throw new InitializationException(String
                 .format("Failed to initialize the Solr embedded server with home directory set to [%s]", solrHome), e);
         }
+    }
+
+    private boolean schemaAlreadyExists(SchemaResponse.FieldsResponse response)
+    {
+        if (response != null) {
+            for (Map<String, Object> field : response.getFields()) {
+                if (CONTENT.equals(field.get(NAME))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private CoreContainer createCoreContainer(String solrHome) throws SolrServerException
