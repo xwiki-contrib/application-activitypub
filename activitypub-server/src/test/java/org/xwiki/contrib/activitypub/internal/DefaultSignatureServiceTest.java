@@ -63,4 +63,20 @@ class DefaultSignatureServiceTest
                 + "signature=\"[^\"]+\",algorithm=\"rsa-sha256\""));
         inOrder.verify(postMethod).addRequestHeader(eq("Date"), anyString());
     }
+
+    @Test
+    void generateSignatureWithoutInit() throws Exception
+    {
+        HttpMethod postMethod = mock(HttpMethod.class);
+        URI targetURI = URI.create("http://targeturi/");
+        URI actorURI = URI.create("http://actoruri/");
+        AbstractActor actor = mock(AbstractActor.class);
+        when(actor.getPreferredUsername()).thenReturn("tmp");
+        this.actorHandler.generateSignature(postMethod, targetURI, actorURI, actor);
+        InOrder inOrder = inOrder(postMethod, postMethod);
+        inOrder.verify(postMethod).addRequestHeader(eq("Signature"), matches(
+            "keyId=\"http:\\/\\/actoruri\\/\",headers=\"\\(request-target\\) host date\","
+                + "signature=\"[^\"]+\",algorithm=\"rsa-sha256\""));
+        inOrder.verify(postMethod).addRequestHeader(eq("Date"), anyString());
+    }
 }

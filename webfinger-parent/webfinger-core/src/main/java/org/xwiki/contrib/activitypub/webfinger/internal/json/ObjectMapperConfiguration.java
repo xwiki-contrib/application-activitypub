@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static com.fasterxml.jackson.databind.DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY;
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.MapperFeature.SORT_PROPERTIES_ALPHABETICALLY;
 import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
 
@@ -50,7 +51,8 @@ public class ObjectMapperConfiguration implements Initializable
                                 .setSerializationInclusion(NON_EMPTY)
                                 .enable(ACCEPT_SINGLE_VALUE_AS_ARRAY)
                                 .enable(SORT_PROPERTIES_ALPHABETICALLY)
-                                .enable(INDENT_OUTPUT);
+                                .enable(INDENT_OUTPUT)
+                                .enable(FAIL_ON_UNKNOWN_PROPERTIES);
     }
 
     /**

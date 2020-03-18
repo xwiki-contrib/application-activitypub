@@ -20,7 +20,6 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import java.net.URI;
-import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -50,7 +49,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * Default implementation of the signature service.
- * 
+ *
  * @version $Id$
  * @since 1.1
  */
@@ -81,29 +80,25 @@ public class DefaultSignatureService implements SignatureService
     public void generateSignature(HttpMethod postMethod, URI targetURI, URI actorURI, AbstractActor actor)
         throws ActivityPubException
     {
-        try {
-            Calendar calendar = Calendar.getInstance();
-            SimpleDateFormat dateFormat = new SimpleDateFormat(
-                "EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
-            dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat dateFormat = new SimpleDateFormat(
+            "EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 
-            String date = dateFormat.format(calendar.getTime());
-            String uriPath = targetURI.getPath();
-            String host = targetURI.getHost();
-            String signatureStr = "(request-target): post " + uriPath + "\nhost: " + host + "\ndate: " + date;
+        String date = dateFormat.format(calendar.getTime());
+        String uriPath = targetURI.getPath();
+        String host = targetURI.getHost();
+        String signatureStr = String.format("(request-target): post %s\nhost: %s\ndate: %s", uriPath, host, date);
 
-            byte[] bytess = this.sign(actor.getPreferredUsername(), signatureStr);
-            String signatureB64 =
-                Base64.getEncoder().encodeToString(
-                    bytess);
-            String actorAPURL = actorURI.toASCIIString();
-            postMethod.addRequestHeader("Signature",
-                "keyId=\"" + actorAPURL + "\",headers=\"(request-target) host date\",signature=\"" + signatureB64
-                    + "\",algorithm=\"rsa-sha256\"");
-            postMethod.addRequestHeader("Date", date);
-        } catch (GeneralSecurityException e) {
-            throw new ActivityPubException("Error during request signature", e);
-        }
+        byte[] bytess = this.sign(actor.getPreferredUsername(), signatureStr);
+        String signatureB64 =
+            Base64.getEncoder().encodeToString(
+                bytess);
+        String actorAPURL = actorURI.toASCIIString();
+        postMethod.addRequestHeader("Signature", String.format(
+            "keyId=\"%s\",headers=\"(request-target) host date\",signature=\"%s\",algorithm=\"rsa-sha256\"", actorAPURL,
+            signatureB64));
+        postMethod.addRequestHeader("Date", date);
     }
 
     private void storeKeyPair(String userId, PublicKey pubk, PrivateKey privk)
@@ -112,19 +107,29 @@ public class DefaultSignatureService implements SignatureService
         this.privKeyStore.put(userId, privk);
     }
 
-    private PrivateKey getPrivKey(String actorId)
+    private PrivateKey getPrivKey(String actorId) throws ActivityPubException
     {
-        return this.privKeyStore.get(actorId);
+        PrivateKey privateKey = this.privKeyStore.get(actorId);
+        if (privateKey == null) {
+            this.initKey(actorId);
+            return this.privKeyStore.get(actorId);
+        }
+        return privateKey;
     }
 
     private byte[] sign(String actorId, String signedString)
-        throws NoSuchAlgorithmException, InvalidKeyException, SignatureException
+        throws ActivityPubException
     {
-        Signature sign = Signature.getInstance("SHA256withRSA");
-        PrivateKey key = this.getPrivKey(actorId);
-        sign.initSign(key);
-        sign.update(signedString.getBytes(UTF_8));
-        return sign.sign();
+        try {
+            Signature sign = Signature.getInstance("SHA256withRSA");
+            PrivateKey key = this.getPrivKey(actorId);
+            sign.initSign(key);
+            sign.update(signedString.getBytes(UTF_8));
+            return sign.sign();
+        } catch (NoSuchAlgorithmException | ActivityPubException | InvalidKeyException | SignatureException e) {
+            throw new ActivityPubException(String.format("Error while signing [%s] for [%s]", signedString, actorId),
+                e);
+        }
     }
 
     @Override
