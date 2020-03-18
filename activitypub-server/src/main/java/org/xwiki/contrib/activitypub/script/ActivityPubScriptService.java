@@ -20,18 +20,21 @@
 package org.xwiki.contrib.activitypub.script;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
-import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActorHandler;
@@ -39,10 +42,9 @@ import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Follow;
+import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.script.service.ScriptService;
 import org.xwiki.user.UserReference;
-
-import com.xpn.xwiki.XWikiContext;
 
 /**
  * Script service for ActivityPub.
@@ -54,17 +56,16 @@ import com.xpn.xwiki.XWikiContext;
 @Named("activitypub")
 public class ActivityPubScriptService implements ScriptService
 {
+    private static final String GET_CURRENT_ACTOR_ERR_MSG = "Failed to retrieve the current actor. Cause [{}].";
+
+    private static final String GET_CURRENT_ACTOR_UNEXPECTED8ERR_MSG =
+        "Failed to retrieve the current actor. Unexpected Cause [{}].";
+
     @Inject
     private ActivityPubClient activityPubClient;
 
     @Inject
     private ActorHandler actorHandler;
-
-    @Inject
-    private Provider<XWikiContext> contextProvider;
-
-    @Inject
-    private ActivityPubJsonParser jsonParser;
 
     @Inject
     private ActivityPubStorage activityPubStorage;
@@ -158,5 +159,54 @@ public class ActivityPubScriptService implements ScriptService
             this.logger.error("Error while trying to get an XWiki user from an actor [{}]", actor, e);
             return null;
         }
+    }
+
+    /**
+     *
+     * @return the list of actor followed by the current user.
+     */
+    public List<AbstractActor> following()
+    {
+        try {
+            AbstractActor currentActor = this.actorHandler.getCurrentActor();
+            OrderedCollection<AbstractActor> activityPubObjectReferences =
+                this.activityPubObjectReferenceResolver.resolveReference(currentActor.getFollowing());
+            return activityPubObjectReferences.getOrderedItems().stream().map(this::resolveActor)
+                       .filter(Objects::nonNull).collect(Collectors.toList());
+        } catch (ActivityPubException e) {
+            this.logger.warn(GET_CURRENT_ACTOR_ERR_MSG, ExceptionUtils.getRootCauseMessage(e));
+        } catch (Exception e) {
+            this.logger.warn(GET_CURRENT_ACTOR_UNEXPECTED8ERR_MSG, ExceptionUtils.getRootCauseMessage(e));
+        }
+        return Collections.emptyList();
+    }
+
+    private AbstractActor resolveActor(ActivityPubObjectReference<AbstractActor> it)
+    {
+        try {
+            return this.activityPubObjectReferenceResolver.resolveReference(it);
+        } catch (ActivityPubException e) {
+            return null;
+        }
+    }
+
+    /**
+     *
+     * @return the list of actors following the current user.
+     */
+    public List<AbstractActor> followers()
+    {
+        try {
+            AbstractActor currentActor = this.actorHandler.getCurrentActor();
+            OrderedCollection<AbstractActor> activityPubObjectReferences =
+                this.activityPubObjectReferenceResolver.resolveReference(currentActor.getFollowers());
+            return activityPubObjectReferences.getOrderedItems().stream().map(this::resolveActor)
+                       .filter(Objects::nonNull).collect(Collectors.toList());
+        } catch (ActivityPubException e) {
+            this.logger.warn(GET_CURRENT_ACTOR_ERR_MSG, ExceptionUtils.getRootCauseMessage(e));
+        } catch (Exception e) {
+            this.logger.warn(GET_CURRENT_ACTOR_UNEXPECTED8ERR_MSG, ExceptionUtils.getRootCauseMessage(e));
+        }
+        return Collections.emptyList();
     }
 }

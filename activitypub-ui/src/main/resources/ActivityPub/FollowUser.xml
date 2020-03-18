@@ -63,6 +63,34 @@
       $services.localization.render('activitypub.follow.followNotRequested')
   #end
 #end
+&lt;div&gt;
+  &lt;div&gt;
+    &lt;h1&gt;Following&lt;/h1&gt;
+#set ($following = $services.activitypub.following())
+#if ($following.empty)
+  &lt;p&gt;Start following users!&lt;/p&gt;
+#else
+    &lt;ul&gt;
+  #foreach ($actor in $following)
+      &lt;li&gt;$actor.preferredUsername&lt;/li&gt;
+  #end
+    &lt;/ul&gt;
+#end
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;h1&gt;Followers&lt;/h1&gt;
+    #set ($followers = $services.activitypub.followers())
+    #if ($followers.empty)
+    &lt;p&gt;Nobody is following you!&lt;/p&gt;
+    #else
+    &lt;ul&gt;
+      #foreach ($actor in $followers)
+      &lt;li&gt;$actor.preferredUsername&lt;/li&gt;
+      #end
+    &lt;/ul&gt;
+    #end
+  &lt;/div&gt;
+&lt;/div&gt;
 {{/html}}
 {{/velocity}}
 </content>
