@@ -63,9 +63,6 @@ import org.xwiki.search.solr.internal.api.SolrConfiguration;
 @Singleton
 public class APSolrInstance extends AbstractSolrInstance implements Disposable
 {
-    private static final String NAME = "name";
-    private static final String CONTENT = "content";
-
     /**
      * Solr instance type for this implementation.
      */
@@ -75,6 +72,9 @@ public class APSolrInstance extends AbstractSolrInstance implements Disposable
      * Default directory name for Solr's configuration and index files.
      */
     public static final String DEFAULT_SOLR_DIRECTORY_NAME = "activitypub-db";
+
+    private static final String NAME = "name";
+    private static final String CONTENT = "content";
 
     /**
      * Solr configuration.
