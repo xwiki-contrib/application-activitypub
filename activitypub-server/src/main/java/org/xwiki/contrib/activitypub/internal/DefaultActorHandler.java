@@ -36,7 +36,6 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
-import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.SignatureService;
@@ -51,7 +50,6 @@ import org.xwiki.contrib.activitypub.webfinger.WebfingerClient;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 import org.xwiki.contrib.activitypub.webfinger.entities.Link;
-import org.xwiki.resource.ResourceReferenceSerializer;
 import org.xwiki.user.CurrentUserReference;
 import org.xwiki.user.UserProperties;
 import org.xwiki.user.UserReference;
@@ -78,13 +76,7 @@ public class DefaultActorHandler implements ActorHandler
     private ActivityPubJsonParser jsonParser;
 
     @Inject
-    private DefaultURLHandler defaultURLHandler;
-
-    @Inject
     private SignatureService signatureService;
-
-    @Inject
-    private ResourceReferenceSerializer<ActivityPubResourceReference, URI> resourceReferenceSerializer;
 
     @Inject
     private WebfingerClient webfingerClient;
@@ -287,9 +279,8 @@ public class DefaultActorHandler implements ActorHandler
         try {
             Document doc = getJsoupConnection().url(xWikiActorURL).get();
             String userName = doc.selectFirst("html").attr("data-xwiki-document");
-            ActivityPubResourceReference userResourceReference = new ActivityPubResourceReference("person", userName);
-            URI serializedUser = this.resourceReferenceSerializer.serialize(userResourceReference);
-            return this.defaultURLHandler.getAbsoluteURI(serializedUser).toASCIIString();
+            URI uri = new URI(xWikiActorURL);
+            return String.format("%s://%s/xwiki/activitypub/Person/%s", uri.getScheme(), uri.getAuthority(), userName);
         } catch (Exception e) {
             throw new ActivityPubException(
                 String.format("Error when trying to resolve the XWiki actor from [%s]", xWikiActorURL), e);
