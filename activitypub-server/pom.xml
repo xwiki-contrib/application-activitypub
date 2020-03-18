@@ -32,8 +32,7 @@
   <name>XWiki ActivityPub - Server</name>
   <packaging>jar</packaging>
   <properties>
-    <!-- FIXME: Put back the ratio to 0.83 after deleting APSolrInstance. -->
-    <xwiki.jacoco.instructionRatio>0.72</xwiki.jacoco.instructionRatio>
+    <xwiki.jacoco.instructionRatio>0.80</xwiki.jacoco.instructionRatio>
     <!-- The server should only be installed at farm level so it can handle the URLs -->
     <xwiki.extension.namespaces>{root}</xwiki.extension.namespaces>
   </properties>

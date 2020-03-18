@@ -1,0 +1,77 @@
+/*
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
+package org.xwiki.contrib.activitypub.internal;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.inject.Named;
+
+import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.request.schema.SchemaRequest;
+import org.apache.solr.client.solrj.response.schema.SchemaResponse;
+import org.xwiki.component.annotation.Component;
+import org.xwiki.search.solr.SolrCoreInitializer;
+import org.xwiki.search.solr.SolrException;
+
+@Component
+@Named("activitypub")
+public class ActivityPubSolrInitializer implements SolrCoreInitializer
+{
+    private static final String NAME = "name";
+    private static final String CONTENT = "content";
+
+    @Override
+    public String getCoreName()
+    {
+        return "activitypub";
+    }
+
+    @Override
+    public void initialize(SolrClient client) throws SolrException
+    {
+        try {
+            SchemaResponse.FieldsResponse response = new SchemaRequest.Fields().process(client);
+            if (!schemaAlreadyExists(response)) {
+                Map<String, Object> fieldAttributes = new HashMap<>();
+                fieldAttributes.put(NAME, CONTENT);
+                fieldAttributes.put("type", "string");
+                new SchemaRequest.AddField(fieldAttributes).process(client);
+            }
+        } catch (SolrServerException | IOException e)
+        {
+            throw new SolrException("Error when initializing activitypub Solr schema", e);
+        }
+    }
+
+    private boolean schemaAlreadyExists(SchemaResponse.FieldsResponse response)
+    {
+        if (response != null) {
+            for (Map<String, Object> field : response.getFields()) {
+                if (CONTENT.equals(field.get(NAME))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+}

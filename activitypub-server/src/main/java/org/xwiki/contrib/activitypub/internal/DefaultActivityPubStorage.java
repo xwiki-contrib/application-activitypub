@@ -30,6 +30,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
@@ -51,6 +52,8 @@ import org.xwiki.resource.ResourceReferenceSerializer;
 import org.xwiki.resource.ResourceType;
 import org.xwiki.resource.SerializeResourceReferenceException;
 import org.xwiki.resource.UnsupportedResourceReferenceException;
+import org.xwiki.search.solr.Solr;
+import org.xwiki.search.solr.SolrException;
 import org.xwiki.search.solr.internal.api.SolrInstance;
 import org.xwiki.url.ExtendedURL;
 
@@ -91,8 +94,12 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     private DefaultURLHandler urlHandler;
 
     @Inject
-    @Named("activitypub")
-    private SolrInstance solrInstance;
+    private Solr solr;
+
+    private SolrClient getSolrClient() throws SolrException
+    {
+        return this.solr.getClient("activitypub");
+    }
 
     @Override
     public boolean belongsToCurrentInstance(URI id)
@@ -145,10 +152,10 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
             SolrInputDocument inputDocument = new SolrInputDocument();
             inputDocument.addField("id", uuid);
             inputDocument.addField("content", this.jsonSerializer.serialize(entity));
-            this.solrInstance.add(inputDocument);
-            this.solrInstance.commit();
+            this.getSolrClient().add(inputDocument);
+            this.getSolrClient().commit();
             return uuid;
-        } catch (SerializeResourceReferenceException | UnsupportedResourceReferenceException
+        } catch (SolrException | SerializeResourceReferenceException | UnsupportedResourceReferenceException
             | SolrServerException | IOException e) {
             throw new ActivityPubException(String.format("Error while storing [%s].", resourceReference), e);
         }
@@ -182,12 +189,12 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         inputDocument.addField("id", uid);
         inputDocument.addField("content", this.jsonSerializer.serialize(entity));
         try {
-            SolrDocument solrDocument = this.solrInstance.get(uid);
+            SolrDocument solrDocument = this.getSolrClient().getById(uid);
             boolean result = solrDocument != null && !solrDocument.isEmpty();
-            this.solrInstance.add(inputDocument);
-            this.solrInstance.commit();
+            this.getSolrClient().add(inputDocument);
+            this.getSolrClient().commit();
             return result;
-        } catch (SolrServerException | IOException e) {
+        } catch (SolrServerException | IOException | SolrException e) {
             throw new ActivityPubException(
                 String.format("Error when trying to save the entity of id [%s]", uid), e);
         }
@@ -197,13 +204,13 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     public <T extends ActivityPubObject> T retrieveEntity(String uuid) throws ActivityPubException
     {
         try {
-            SolrDocument solrDocument = this.solrInstance.get(uuid);
+            SolrDocument solrDocument = this.getSolrClient().getById(uuid);
             if (solrDocument == null || solrDocument.isEmpty()) {
                 return null;
             } else {
                 return (T) this.jsonParser.parse((String) solrDocument.getFieldValue("content"));
             }
-        } catch (IOException | SolrServerException e) {
+        } catch (IOException | SolrServerException | SolrException e) {
             throw new ActivityPubException(
                 String.format("Error when trying to retrieve the entity of id [%s]", uuid), e);
         }

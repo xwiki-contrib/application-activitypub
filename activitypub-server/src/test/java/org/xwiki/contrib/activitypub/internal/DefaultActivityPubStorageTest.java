@@ -28,11 +28,14 @@ import java.util.Map;
 
 import javax.inject.Named;
 
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
@@ -46,6 +49,8 @@ import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.resource.ResourceReferenceResolver;
 import org.xwiki.resource.ResourceType;
+import org.xwiki.search.solr.Solr;
+import org.xwiki.search.solr.SolrException;
 import org.xwiki.search.solr.internal.api.SolrInstance;
 import org.xwiki.test.annotation.BeforeComponent;
 import org.xwiki.test.junit5.mockito.ComponentTest;
@@ -89,8 +94,10 @@ public class DefaultActivityPubStorageTest
     private ActivityPubObjectReferenceResolver resolver;
 
     @MockComponent
-    @Named("activitypub")
-    private SolrInstance solrInstance;
+    private Solr solrInstance;
+
+    @Mock
+    private SolrClient solrClient;
 
     @MockComponent
     @Named("activitypub")
@@ -103,6 +110,12 @@ public class DefaultActivityPubStorageTest
         when(urlHandler.getServerUrl()).thenReturn(new URL(DEFAULT_URL));
     }
 
+    @BeforeEach
+    public void beforeEach() throws SolrException
+    {
+        when(this.solrInstance.getClient("activitypub")).thenReturn(solrClient);
+    }
+
     private void verifySolrPutAndPrepareGet(String uid, String content) throws IOException, SolrServerException
     {
         this.verifySolrPutAndPrepareGet(uid, content, 1);
@@ -112,16 +125,16 @@ public class DefaultActivityPubStorageTest
     {
         ArgumentCaptor<SolrInputDocument> argumentCaptor =
             ArgumentCaptor.forClass(SolrInputDocument.class);
-        verify(this.solrInstance, times(timeNumber)).add(argumentCaptor.capture());
+        verify(this.solrClient, times(timeNumber)).add(argumentCaptor.capture());
         assertEquals(uid, argumentCaptor.getValue().getFieldValue("id"));
         assertEquals(content, argumentCaptor.getValue().getFieldValue("content"));
-        verify(this.solrInstance, times(timeNumber)).commit();
+        verify(this.solrClient, times(timeNumber)).commit();
 
         Map<String, Object> fields = new HashMap<>();
         fields.put("id", uid);
         fields.put("content", content);
         SolrDocument solrDocument = new SolrDocument(fields);
-        when(this.solrInstance.get(uid)).thenReturn(solrDocument);
+        when(this.solrClient.getById(uid)).thenReturn(solrDocument);
     }
 
     @Test

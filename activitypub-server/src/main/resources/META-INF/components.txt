@@ -14,4 +14,4 @@ org.xwiki.contrib.activitypub.internal.DefaultActivityPubConfiguration
 org.xwiki.contrib.activitypub.internal.ActivityPubConfigurationSource
 org.xwiki.contrib.activitypub.internal.DefaultURLHandler
 org.xwiki.contrib.activitypub.internal.DefaultSignatureService
-org.xwiki.contrib.activitypub.internal.APSolrInstance
+org.xwiki.contrib.activitypub.internal.ActivityPubSolrInitializer
