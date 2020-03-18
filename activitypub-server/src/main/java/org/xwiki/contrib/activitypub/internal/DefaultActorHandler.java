@@ -24,6 +24,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.Objects;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -46,6 +47,10 @@ import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.PublicKey;
+import org.xwiki.contrib.activitypub.webfinger.WebfingerClient;
+import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
+import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
+import org.xwiki.contrib.activitypub.webfinger.entities.Link;
 import org.xwiki.resource.ResourceReferenceSerializer;
 import org.xwiki.user.CurrentUserReference;
 import org.xwiki.user.UserProperties;
@@ -80,6 +85,9 @@ public class DefaultActorHandler implements ActorHandler
 
     @Inject
     private ResourceReferenceSerializer<ActivityPubResourceReference, URI> resourceReferenceSerializer;
+
+    @Inject
+    private WebfingerClient webfingerClient;
 
     private HttpConnection jsoupConnection;
 
@@ -213,7 +221,27 @@ public class DefaultActorHandler implements ActorHandler
     @Override
     public AbstractActor getRemoteActor(String actorURL) throws ActivityPubException
     {
-        return getRemoteActor(actorURL, true);
+        AbstractActor ret;
+        if (actorURL.contains("@")) {
+            ret = this.getWebfingerActor(actorURL);
+        } else {
+
+            ret = this.getRemoteActor(actorURL, true);
+        }
+        return ret;
+    }
+
+    private AbstractActor getWebfingerActor(String actorURL) throws ActivityPubException
+    {
+        try {
+            JSONResourceDescriptor jrd = this.webfingerClient.get(actorURL);
+            String href =
+                jrd.getLinks().stream().filter(it -> Objects.equals(it.getRel(), "self")).findFirst().map(Link::getHref)
+                    .orElse(null);
+            return this.getRemoteActor(href, false);
+        } catch (WebfingerException e) {
+            throw new ActivityPubException(String.format("Error while querying the webfinger actor [%s]", actorURL), e);
+        }
     }
 
     /**

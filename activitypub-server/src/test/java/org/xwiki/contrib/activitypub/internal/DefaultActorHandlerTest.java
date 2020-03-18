@@ -21,8 +21,10 @@ package org.xwiki.contrib.activitypub.internal;
 
 import java.net.URI;
 import java.security.PublicKey;
+import java.util.Arrays;
 import java.util.Collections;
 
+import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.jsoup.helper.HttpConnection;
 import org.jsoup.nodes.Document;
@@ -41,6 +43,9 @@ import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
+import org.xwiki.contrib.activitypub.webfinger.WebfingerClient;
+import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
+import org.xwiki.contrib.activitypub.webfinger.entities.Link;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
@@ -53,8 +58,11 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -82,6 +90,9 @@ public class DefaultActorHandlerTest
 
     @MockComponent
     private SignatureService signatureService;
+
+    @MockComponent
+    private WebfingerClient webfingerClient;
 
     @Mock
     private UserReference fooUserReference;
@@ -242,6 +253,19 @@ public class DefaultActorHandlerTest
         when(this.activityPubClient.get(new URI(remoteActorUrl))).thenReturn(getMethod);
         when(this.jsonParser.parse(getMethod.getResponseBodyAsStream())).thenReturn(person);
         assertSame(person, this.actorHandler.getRemoteActor(remoteActorUrl));
+    }
+
+    @Test
+    public void getRemoteActorWebfinger() throws Exception
+    {
+        JSONResourceDescriptor jrd = mock(JSONResourceDescriptor.class);
+        when(jrd.getLinks())
+            .thenReturn(Arrays.asList(new Link().setRel("self").setHref("http://server.com/user/test")));
+        when(this.activityPubClient.get(any())).thenReturn(mock(HttpMethod.class));
+        when(this.webfingerClient.get("test@server.com")).thenReturn(jrd);
+        this.actorHandler.getRemoteActor("test@server.com");
+        verify(this.webfingerClient).get(eq("test@server.com"));
+        verify(this.activityPubClient).get(new URI("http://server.com/user/test"));
     }
 
     @Test

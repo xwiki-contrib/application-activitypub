@@ -73,6 +73,16 @@
       <version>${platform.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.xwiki.contrib</groupId>
+      <artifactId>webfinger-server</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+        <dependency>
+          <groupId>org.xwiki.platform</groupId>
+          <artifactId>xwiki-platform-crypto-script</artifactId>
+          <version>${platform.version}</version>
+        </dependency>
+    <dependency>
       <groupId>org.xwiki.platform</groupId>
       <artifactId>xwiki-platform-search-solr-api</artifactId>
       <version>${platform.version}</version>
