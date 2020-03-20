@@ -60,7 +60,7 @@ public class ActivityPubObjectDeserializer extends JsonDeserializer<ActivityPubO
         throws IOException, JsonProcessingException
     {
         ObjectMapper mapper = (ObjectMapper) jsonParser.getCodec();
-        ObjectNode root = (ObjectNode) mapper.readTree(jsonParser);
+        ObjectNode root = mapper.readTree(jsonParser);
 
         JsonNode type = root.get("type");
         Class<? extends ActivityPubObject> instanceClass;

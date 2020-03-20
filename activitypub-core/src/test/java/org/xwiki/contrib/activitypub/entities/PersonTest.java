@@ -25,7 +25,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.test.LogLevel;
+import org.xwiki.test.junit5.LogCaptureExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -37,6 +40,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 public class PersonTest extends AbstractEntityTest
 {
+    @RegisterExtension
+    LogCaptureExtension logCapture = new LogCaptureExtension(LogLevel.INFO);
+
     @Test
     void serializePerson1() throws URISyntaxException, IOException, ActivityPubException
     {
@@ -96,5 +102,24 @@ public class PersonTest extends AbstractEntityTest
 
         obtainedPerson = this.parser.parse(personJson);
         assertEquals(person, obtainedPerson);
+    }
+
+    @Test
+    void parsePersonMastodon() throws Exception
+    {
+        String personJson = this.readResource("person/mastodon.json");
+        Person obtainedPerson = this.parser.parse(personJson, Person.class);
+        assertEquals(2, obtainedPerson.getContext().size());
+        assertEquals(URI.create("https://www.w3.org/ns/activitystreams"), obtainedPerson.getContext().get(0));
+        assertEquals(URI.create("https://w3id.org/security/v1"), obtainedPerson.getContext().get(1));
+        assertEquals(1, this.logCapture.size());
+        assertEquals("The JsonNode [{\"manuallyApprovesFollowers\":\"as:manuallyApprovesFollowers\"," 
+                         + "\"toot\":\"http://joinmastodon.org/ns#\"," 
+                         + "\"featured\":{\"@id\":\"toot:featured\",\"@type\":\"@id\"}," 
+                         + "\"alsoKnownAs\":{\"@id\":\"as:alsoKnownAs\",\"@type\":\"@id\"}," 
+                         + "\"movedTo\":{\"@id\":\"as:movedTo\",\"@type\":\"@id\"}," 
+                         + "\"schema\":\"http://schema.org#\",\"PropertyValue\":\"schema:PropertyValue\"," 
+                         + "\"value\":\"schema:value\",\"IdentityProof\":\"toot:IdentityProof\"," 
+                         + "\"discoverable\":\"toot:discoverable\"}] has been ignored.", this.logCapture.getMessage(0));
     }
 }

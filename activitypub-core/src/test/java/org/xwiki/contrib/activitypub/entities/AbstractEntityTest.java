@@ -33,6 +33,7 @@ import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.internal.json.ActivityPubObjectReferenceSerializer;
 import org.xwiki.contrib.activitypub.internal.json.DefaultActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.internal.json.DefaultActivityPubJsonSerializer;
+import org.xwiki.contrib.activitypub.internal.json.JSONLDContextDeserializer;
 import org.xwiki.contrib.activitypub.internal.json.ObjectMapperConfiguration;
 import org.xwiki.resource.ResourceReferenceSerializer;
 import org.xwiki.test.annotation.BeforeComponent;
@@ -53,7 +54,8 @@ import static org.mockito.Mockito.when;
  * @version $Id$
  */
 @ComponentTest
-@ComponentList({ ObjectMapperConfiguration.class, ActivityPubObjectReferenceSerializer.class })
+@ComponentList({ ObjectMapperConfiguration.class, ActivityPubObjectReferenceSerializer.class,
+    JSONLDContextDeserializer.class })
 public class AbstractEntityTest
 {
     @InjectMockComponents

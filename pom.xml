@@ -239,6 +239,60 @@
                     "code": "java.field.removedWithConstant",
                     "old": "field org.xwiki.contrib.activitypub.ActivityPubClient.CONTENT_TYPE",
                     "justification": "The management if content type have been extended and ActivityPub now support more than one content type. The CONTENT_TYPE field have been replaced by CONTENT_TYPE accordingly."
+                  },
+                  {
+                    "code": "java.method.parameterTypeChanged",
+                    "old": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===java.net.URI===)",
+                    "new": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===org.xwiki.contrib.activitypub.entities.JSONLDContext===)",
+                    "justification": "JSON-LD Contexts are now represented by a dedicated class."
+                 },
+                 {
+                    "code": "java.method.parameterTypeChanged",
+                    "old": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===java.net.URI===) @ org.xwiki.contrib.activitypub.entities.AbstractActivity",
+                    "new": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===org.xwiki.contrib.activitypub.entities.JSONLDContext===) @ org.xwiki.contrib.activitypub.entities.AbstractActivity",
+                    "justification": "JSON-LD Contexts are now represented by a dedicated class."
+                  },
+                  {
+                    "code": "java.method.parameterTypeChanged",
+                    "old": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===java.net.URI===) @ org.xwiki.contrib.activitypub.entities.AbstractActor",
+                    "new": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===org.xwiki.contrib.activitypub.entities.JSONLDContext===) @ org.xwiki.contrib.activitypub.entities.AbstractActor",
+                    "justification": "JSON-LD Contexts are now represented by a dedicated class."
+                  },
+                  {
+                    "code": "java.method.parameterTypeChanged",
+                    "old": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===java.net.URI===) @ org.xwiki.contrib.activitypub.entities.AbstractCollection<I extends org.xwiki.contrib.activitypub.entities.ActivityPubObject>",
+                    "new": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===org.xwiki.contrib.activitypub.entities.JSONLDContext===) @ org.xwiki.contrib.activitypub.entities.AbstractCollection<I extends org.xwiki.contrib.activitypub.entities.ActivityPubObject>",
+                    "justification": "JSON-LD Contexts are now represented by a dedicated class."
+                  },
+                  {
+                    "code": "java.method.parameterTypeChanged",
+                    "old": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===java.net.URI===) @ org.xwiki.contrib.activitypub.entities.ActivityPubObject",
+                    "new": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===org.xwiki.contrib.activitypub.entities.JSONLDContext===) @ org.xwiki.contrib.activitypub.entities.ActivityPubObject",
+                    "justification": "JSON-LD Contexts are now represented by a dedicated class."
+                  },
+                  {
+                    "code": "java.method.parameterTypeChanged",
+                    "old": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===java.net.URI===) @ org.xwiki.contrib.activitypub.entities.Follow",
+                    "new": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===org.xwiki.contrib.activitypub.entities.JSONLDContext===) @ org.xwiki.contrib.activitypub.entities.Follow",
+                    "justification": "JSON-LD Contexts are now represented by a dedicated class."
+                  },
+                  {
+                    "code": "java.method.parameterTypeChanged",
+                    "old": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===java.net.URI===) @ org.xwiki.contrib.activitypub.entities.Inbox",
+                    "new": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===org.xwiki.contrib.activitypub.entities.JSONLDContext===) @ org.xwiki.contrib.activitypub.entities.Inbox",
+                    "justification": "JSON-LD Contexts are now represented by a dedicated class."
+                  },
+                  {
+                    "code": "java.method.parameterTypeChanged",
+                    "old": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===java.net.URI===) @ org.xwiki.contrib.activitypub.entities.OrderedCollection<T extends org.xwiki.contrib.activitypub.entities.ActivityPubObject>",
+                    "new": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===org.xwiki.contrib.activitypub.entities.JSONLDContext===) @ org.xwiki.contrib.activitypub.entities.OrderedCollection<T extends org.xwiki.contrib.activitypub.entities.ActivityPubObject>",
+                    "justification": "JSON-LD Contexts are now represented by a dedicated class."
+                  },
+                  {
+                    "code": "java.method.parameterTypeChanged",
+                    "old": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===java.net.URI===) @ org.xwiki.contrib.activitypub.entities.Outbox",
+                    "new": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===org.xwiki.contrib.activitypub.entities.JSONLDContext===) @ org.xwiki.contrib.activitypub.entities.Outbox",
+                    "justification": "JSON-LD Contexts are now represented by a dedicated class."
                   }
                 ]
               }

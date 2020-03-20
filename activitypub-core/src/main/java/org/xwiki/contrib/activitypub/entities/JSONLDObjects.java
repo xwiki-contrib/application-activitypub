@@ -21,7 +21,6 @@ package org.xwiki.contrib.activitypub.entities;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -42,7 +41,7 @@ public class JSONLDObjects
     private static final String ACTIVITY_STREAM_CONTEXT = "https://www.w3.org/ns/activitystreams";
 
     @JsonProperty("@context")
-    private List<URI> context;
+    private JSONLDContext context;
 
     /**
      * Default constructor: by default the ActivityStream context is set.
@@ -50,7 +49,7 @@ public class JSONLDObjects
     public JSONLDObjects()
     {
         try {
-            this.context = Arrays.asList(new URI(ACTIVITY_STREAM_CONTEXT));
+            this.context = new JSONLDContext(new URI(ACTIVITY_STREAM_CONTEXT));
         } catch (URISyntaxException e) {
             // Should never happen
             e.printStackTrace();
@@ -68,7 +67,7 @@ public class JSONLDObjects
     /**
      * @param context the current context.
      */
-    public void setContext(List<URI> context)
+    public void setContext(JSONLDContext context)
     {
         this.context = context;
     }
