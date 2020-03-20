@@ -130,7 +130,9 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
     @Test
     public void handleInboxReject() throws Exception
     {
-        Person followingActor = new Person().setPreferredUsername("Following");
+        Person followingActor = new Person()
+            .setPreferredUsername("Following")
+            .setId(new URI("http://foo"));
         Person followedActor = new Person().setPreferredUsername("Followed");
         Follow follow = new Follow()
             .setObject(followedActor)
@@ -147,7 +149,7 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
         Reject reject = new Reject()
             .setActor(followedActor)
             .setObject(follow)
-            .setTo(Collections.singletonList(followingActor.getReference()));
+            .setTo(Collections.singletonList(followingActor.getProxyActor()));
 
         this.handler.handleInboxRequest(
             new ActivityRequest<>(null, follow, this.servletRequest, this.servletResponse));
@@ -162,7 +164,8 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
     public void handleInboxAccept() throws Exception
     {
         Person followingActor = new Person()
-            .setPreferredUsername("Following");
+            .setPreferredUsername("Following")
+            .setId(new URI("http://foo"));
         Person followedActor = new Person()
             .setPreferredUsername("Followed");
 
@@ -183,7 +186,7 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
         Accept accept = new Accept()
             .setActor(followedActor)
             .setObject(follow)
-            .setTo(Collections.singletonList(followingActor.getReference()));
+            .setTo(Collections.singletonList(followingActor.getProxyActor()));
 
         this.handler.handleInboxRequest(
             new ActivityRequest<>(null, follow, this.servletRequest, this.servletResponse));
@@ -237,7 +240,9 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
     @Test
     public void handleOutboxReject() throws Exception
     {
-        Person followingActor = new Person().setPreferredUsername("Following");
+        Person followingActor = new Person()
+            .setPreferredUsername("Following")
+            .setId(new URI("http://foo"));
         Person followedActor = new Person().setPreferredUsername("Followed");
         Follow follow = new Follow()
             .setObject(followedActor)
@@ -254,7 +259,7 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
         Reject reject = new Reject()
             .setActor(followedActor)
             .setObject(follow)
-            .setTo(Collections.singletonList(followingActor.getReference()));
+            .setTo(Collections.singletonList(followingActor.getProxyActor()));
 
         this.handler.handleOutboxRequest(
             new ActivityRequest<>(null, follow, this.servletRequest, this.servletResponse));
@@ -269,7 +274,8 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
     public void handleOutboxAccept() throws Exception
     {
         Person followingActor = new Person()
-            .setPreferredUsername("Following");
+            .setPreferredUsername("Following")
+            .setId(new URI("http://foo"));
         Person followedActor = new Person()
             .setPreferredUsername("Followed");
 
@@ -290,7 +296,7 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
         Accept accept = new Accept()
             .setActor(followedActor)
             .setObject(follow)
-            .setTo(Collections.singletonList(followingActor.getReference()));
+            .setTo(Collections.singletonList(followingActor.getProxyActor()));
 
         this.handler.handleOutboxRequest(
             new ActivityRequest<>(null, follow, this.servletRequest, this.servletResponse));

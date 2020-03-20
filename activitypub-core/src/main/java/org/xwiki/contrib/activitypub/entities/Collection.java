@@ -76,6 +76,12 @@ public class Collection<T extends ActivityPubObject> extends AbstractCollection<
         return this.items.size();
     }
 
+    @Override
+    public java.util.Collection<ActivityPubObjectReference<T>> getAllItems()
+    {
+        return getItems();
+    }
+
     /**
      * Wrap the item in an {@link ActivityPubObjectReference} before storing it.
      * {@inheritDoc}

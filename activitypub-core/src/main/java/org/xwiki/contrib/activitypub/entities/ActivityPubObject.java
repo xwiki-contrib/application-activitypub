@@ -52,7 +52,7 @@ public class ActivityPubObject extends JSONLDObjects
     private String name;
     private Date published;
     private String summary;
-    private List<ActivityPubObjectReference<AbstractActor>> to;
+    private List<ProxyActor> to;
     private String content;
     private List<ActivityPubObjectReference<AbstractActor>> attributedTo;
     private List<URI> url;
@@ -186,7 +186,7 @@ public class ActivityPubObject extends JSONLDObjects
      * @return the references of the actors the object is targeted to.
      * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-to">ActivityStream definition</a>
      */
-    public List<ActivityPubObjectReference<AbstractActor>> getTo()
+    public List<ProxyActor> getTo()
     {
         return to;
     }
@@ -197,7 +197,7 @@ public class ActivityPubObject extends JSONLDObjects
      * @return the current object for fluent API.
      * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-to">ActivityStream definition</a>
      */
-    public <T extends ActivityPubObject> T setTo(List<ActivityPubObjectReference<AbstractActor>> to)
+    public <T extends ActivityPubObject> T setTo(List<ProxyActor> to)
     {
         this.to = to;
         return (T) this;

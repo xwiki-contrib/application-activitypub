@@ -24,6 +24,8 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.xwiki.stability.Unstable;
 import org.xwiki.text.XWikiToStringBuilder;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * Abstract type to represent an ActivityStream Actor.
  * Note that we actually reused both definition from ActivityStream and ActivityPub to define this entity since here
@@ -213,5 +215,15 @@ public abstract class AbstractActor extends ActivityPubObject
             .append(followers)
             .append(following)
             .append(publicKey).build();
+    }
+
+    /**
+     * @return the proxy actor for the current actor.
+     * @since 1.1
+     */
+    @JsonIgnore
+    public ProxyActor getProxyActor()
+    {
+        return new ProxyActor(this.getReference().getLink());
     }
 }

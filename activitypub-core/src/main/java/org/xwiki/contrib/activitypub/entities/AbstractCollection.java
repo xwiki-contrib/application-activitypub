@@ -44,6 +44,13 @@ public abstract class AbstractCollection<I extends ActivityPubObject>
     public abstract int getTotalItems();
 
     /**
+     * @return all elements in this collection.
+     * @since 1.1
+     */
+    @JsonIgnore
+    public abstract java.util.Collection<ActivityPubObjectReference<I>> getAllItems();
+
+    /**
      * Put the item in the collection.
      * It depends on the implementation of the collection to chose where to put it.
      * @param item the item to add.
@@ -59,5 +66,17 @@ public abstract class AbstractCollection<I extends ActivityPubObject>
     public boolean isEmpty()
     {
         return getTotalItems() == 0;
+    }
+
+    /**
+     * This is a helper method which should only be used for {@link AbstractCollection<AbstractActor>}.
+     *
+     * @return the proxy actor for the current collection.
+     * @since 1.1
+     */
+    @JsonIgnore
+    public ProxyActor getProxyActor()
+    {
+        return new ProxyActor(this.getReference().getLink());
     }
 }

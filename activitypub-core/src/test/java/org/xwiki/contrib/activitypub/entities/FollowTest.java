@@ -102,8 +102,7 @@ public class FollowTest extends AbstractEntityTest
                    )
                    .setId(new URI("https://social.example/alyssa/posts/a29a6843-9feb-4c74-a7f7-081b9c9201d3"))
                    .setTo(Collections.singletonList(
-                       new ActivityPubObjectReference<AbstractActor>()
-                           .setLink(new URI("https://chatty.example/ben/"))
+                       new ProxyActor(new URI("https://chatty.example/ben/"))
                    ))
                    .setContent("test content")
                    .setPublished(cal.getTime())

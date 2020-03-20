@@ -293,6 +293,23 @@
                     "old": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===java.net.URI===) @ org.xwiki.contrib.activitypub.entities.Outbox",
                     "new": "parameter void org.xwiki.contrib.activitypub.entities.JSONLDObjects::setContext(===org.xwiki.contrib.activitypub.entities.JSONLDContext===) @ org.xwiki.contrib.activitypub.entities.Outbox",
                     "justification": "JSON-LD Contexts are now represented by a dedicated class."
+                  },
+                  {
+                    "code": "java.method.abstractMethodAdded",
+                    "new": "method java.util.Collection<org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference<I>> org.xwiki.contrib.activitypub.entities.AbstractCollection<I extends org.xwiki.contrib.activitypub.entities.ActivityPubObject>::getAllItems()",
+                    "justification": "This abstract method was missing in the first revision."
+                  },
+                  {
+                    "code": "java.method.returnTypeTypeParametersChanged",
+                    "old": "method java.util.List<org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference<org.xwiki.contrib.activitypub.entities.AbstractActor>> org.xwiki.contrib.activitypub.entities.ActivityPubObject::getTo()",
+                    "new": "method java.util.List<org.xwiki.contrib.activitypub.entities.ProxyActor> org.xwiki.contrib.activitypub.entities.ActivityPubObject::getTo()",
+                    "justification": "ProxyActor have been introduced in order to fix an issue with the \"to\" attribute. See https://jira.xwiki.org/browse/XAP-17 for details."
+                  },
+                  {
+                    "code": "java.method.parameterTypeParameterChanged",
+                    "old": "parameter <T extends org.xwiki.contrib.activitypub.entities.ActivityPubObject> T org.xwiki.contrib.activitypub.entities.ActivityPubObject::setTo(===java.util.List<org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference<org.xwiki.contrib.activitypub.entities.AbstractActor>>===)",
+                    "new": "parameter <T extends org.xwiki.contrib.activitypub.entities.ActivityPubObject> T org.xwiki.contrib.activitypub.entities.ActivityPubObject::setTo(===java.util.List<org.xwiki.contrib.activitypub.entities.ProxyActor>===)",
+                    "justification": "ProxyActor have been introduced in order to fix an issue with the \"to\" attribute. See https://jira.xwiki.org/browse/XAP-17 for details."
                   }
                 ]
               }

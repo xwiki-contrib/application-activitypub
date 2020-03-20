@@ -1,0 +1,5 @@
+{
+  "@context" : [ "https://www.w3.org/ns/activitystreams" ],
+  "to" : [ "https://another.example/bob/followers", "https://www.w3.org/ns/activitystreams#Public", "https://social.example/alyssa/" ],
+  "type" : "Note"
+}

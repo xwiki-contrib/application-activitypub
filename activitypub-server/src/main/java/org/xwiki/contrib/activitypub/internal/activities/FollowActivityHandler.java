@@ -81,7 +81,7 @@ public class FollowActivityHandler extends AbstractActivityHandler<Follow>
                     Accept accept = new Accept()
                         .setActor(followedActor)
                         .setObject(follow)
-                        .setTo(Collections.singletonList(followingActor.getReference()));
+                        .setTo(Collections.singletonList(followingActor.getProxyActor()));
                     this.activityPubStorage.storeEntity(accept);
                     ActivityRequest<Accept> acceptActivityRequest = new ActivityRequest<>(followedActor, accept);
                     this.acceptActivityHandler.handleOutboxRequest(acceptActivityRequest);
@@ -95,7 +95,7 @@ public class FollowActivityHandler extends AbstractActivityHandler<Follow>
                     Reject reject = new Reject()
                         .setActor(followedActor)
                         .setObject(follow)
-                        .setTo(Collections.singletonList(followingActor.getReference()));
+                        .setTo(Collections.singletonList(followingActor.getProxyActor()));
 
                     this.activityPubStorage.storeEntity(reject);
                     ActivityRequest<Reject> rejectActivityRequest = new ActivityRequest<>(followedActor, reject);

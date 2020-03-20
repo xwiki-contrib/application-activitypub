@@ -20,6 +20,7 @@
 package org.xwiki.contrib.activitypub.entities;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -76,6 +77,12 @@ public class OrderedCollection<T extends ActivityPubObject> extends AbstractColl
     public int getTotalItems()
     {
         return this.orderedItems.size();
+    }
+
+    @Override
+    public Collection<ActivityPubObjectReference<T>> getAllItems()
+    {
+        return getOrderedItems();
     }
 
     /**
