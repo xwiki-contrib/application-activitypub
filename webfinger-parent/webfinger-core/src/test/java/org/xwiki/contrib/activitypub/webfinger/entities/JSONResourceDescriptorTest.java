@@ -75,6 +75,15 @@ class JSONResourceDescriptorTest
     }
 
     @Test
+    void parseStringValidUnknownField() throws Exception
+    {
+        JSONResourceDescriptor actual = this.parser.parse(this.readResource("webfinger_unknown_field.json"));
+        assertEquals(new JSONResourceDescriptor().setSubject("acct:test@xwiki.tst").setLinks(Arrays.asList(
+            new Link().setHref("http://link1.txt").setRel("http://link1rel.tst").setType("self"),
+            new Link().setHref("http://link2.txt").setRel("http://link2rel.tst").setType("self"))), actual);
+    }
+
+    @Test
     void parseStringInvalid() throws Exception
     {
         WebfingerException expt = assertThrows(WebfingerException.class, () -> this.parser.parse("{"));

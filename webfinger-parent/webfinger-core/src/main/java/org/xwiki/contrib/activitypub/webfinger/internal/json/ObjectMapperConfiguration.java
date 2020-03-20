@@ -52,7 +52,7 @@ public class ObjectMapperConfiguration implements Initializable
                                 .enable(ACCEPT_SINGLE_VALUE_AS_ARRAY)
                                 .enable(SORT_PROPERTIES_ALPHABETICALLY)
                                 .enable(INDENT_OUTPUT)
-                                .enable(FAIL_ON_UNKNOWN_PROPERTIES);
+                                .disable(FAIL_ON_UNKNOWN_PROPERTIES);
     }
 
     /**
