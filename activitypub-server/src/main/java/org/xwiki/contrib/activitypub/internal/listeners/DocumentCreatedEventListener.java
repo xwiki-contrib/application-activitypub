@@ -45,6 +45,7 @@ import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
+import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.model.reference.DocumentReference;
@@ -154,6 +155,7 @@ public class DocumentCreatedEventListener extends AbstractEventListener
             .setActor(author)
             .setObject(document)
             .setName(String.format("Creation of document [%s]", xWikiDocument.getTitle()))
+            .setTo(Collections.singletonList(new ProxyActor(author.getFollowers().getLink())))
             .setPublished(xWikiDocument.getCreationDate());
     }
 }

@@ -70,7 +70,7 @@ public abstract class AbstractActivity extends ActivityPubObject
      */
     public <T extends AbstractActivity> T setActor(AbstractActor actor)
     {
-        return this.setActor(new ActivityPubObjectReference<AbstractActor>().setObject(actor));
+        return this.setActor(actor.getReference());
     }
 
     /**
@@ -105,7 +105,7 @@ public abstract class AbstractActivity extends ActivityPubObject
      */
     public <T extends AbstractActivity> T setObject(ActivityPubObject object)
     {
-        return this.setObject(new ActivityPubObjectReference<>().setObject(object));
+        return this.setObject(object.getReference());
     }
 
     @Override

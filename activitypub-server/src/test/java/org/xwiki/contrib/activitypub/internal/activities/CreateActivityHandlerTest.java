@@ -38,6 +38,7 @@ import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
+import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.test.LogLevel;
 import org.xwiki.test.junit5.LogCaptureExtension;
@@ -136,7 +137,6 @@ public class CreateActivityHandlerTest extends AbstractHandlerTest
     @Test
     public void handleOutbox() throws Exception
     {
-        Create activity = new Create().setId(new URI("http://www.xwiki.org"));
         UserReference userReference = mock(UserReference.class);
         Person follower1 = new Person().setPreferredUsername("Bar");
         ActivityPubObjectReference<AbstractActor> follower1Ref = new ActivityPubObjectReference<AbstractActor>()
@@ -148,9 +148,15 @@ public class CreateActivityHandlerTest extends AbstractHandlerTest
         when(this.activityPubObjectReferenceResolver.resolveReference(follower2Ref)).thenReturn(follower2);
         OrderedCollection<AbstractActor> followers = new OrderedCollection<AbstractActor>().setOrderedItems(
             Arrays.asList(follower1Ref, follower2Ref)
-        );
+        ).setId(new URI("http://foo/followers"));
+        ProxyActor followersProxyActor = followers.getProxyActor();
+        Create activity = new Create()
+            .setId(new URI("http://www.xwiki.org"))
+            .setTo(Collections.singletonList(followersProxyActor));
+        when(this.activityPubObjectReferenceResolver.resolveReference(followersProxyActor)).thenReturn(followers);
         ActivityPubObjectReference<OrderedCollection<AbstractActor>> followersRef =
             new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(followers);
+
         when(this.activityPubObjectReferenceResolver.resolveReference(followersRef)).thenReturn(followers);
         Person actor = new Person()
             .setPreferredUsername("XWiki.Foo")

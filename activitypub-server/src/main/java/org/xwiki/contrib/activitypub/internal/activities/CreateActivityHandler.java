@@ -20,7 +20,9 @@
 package org.xwiki.contrib.activitypub.internal.activities;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
@@ -33,8 +35,8 @@ import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Inbox;
-import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Outbox;
+import org.xwiki.contrib.activitypub.entities.ProxyActor;
 
 /**
  * Specific handler for {@link Create} activities.
@@ -75,11 +77,18 @@ public class CreateActivityHandler extends AbstractActivityHandler<Create>
         Outbox outbox = this.getOutbox(actor);
         outbox.addActivity(create);
         this.activityPubStorage.storeEntity(outbox);
-        OrderedCollection<AbstractActor> orderedCollection =
-            this.activityPubObjectReferenceResolver.resolveReference(actor.getFollowers());
 
-        if (orderedCollection != null && orderedCollection.getTotalItems() > 0) {
-            for (ActivityPubObjectReference<AbstractActor> actorReference : orderedCollection) {
+        List<ProxyActor> target = create.getTo();
+
+        if (target != null && !target.isEmpty()) {
+            List<ActivityPubObjectReference<AbstractActor>> targetActors = new ArrayList<>();
+
+            // FIXME: we should check if Public actor is called here.
+            for (ProxyActor proxyActor : target) {
+                targetActors.addAll(proxyActor.resolveActors(this.activityPubObjectReferenceResolver));
+            }
+
+            for (ActivityPubObjectReference<AbstractActor> actorReference : targetActors) {
                 AbstractActor targetActor = this.activityPubObjectReferenceResolver.resolveReference(actorReference);
                 HttpMethod postMethod = this.activityPubClient.postInbox(targetActor, create);
 

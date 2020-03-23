@@ -40,6 +40,7 @@ import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Person;
+import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.model.reference.DocumentReference;
@@ -105,11 +106,13 @@ public class DocumentCreatedEventListenerTest
     private Person person;
 
     @BeforeEach
-    public void setup() throws ActivityPubException
+    public void setup() throws Exception
     {
         this.person = new Person()
             .setPreferredUsername("Foobar")
-            .setFollowers(new ActivityPubObjectReference<>());
+            .setFollowers(
+                new ActivityPubObjectReference<OrderedCollection<AbstractActor>>()
+                .setLink(new URI("http://foobar/followers")));
 
         UserReference userReference = mock(UserReference.class);
         when(this.xWikiUserBridge.resolveDocumentReference(this.document.getAuthorReference()))
@@ -143,8 +146,11 @@ public class DocumentCreatedEventListenerTest
     {
         when(this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, this.document.getDocumentReference()))
             .thenReturn(true);
-        when(this.objectReferenceResolver.resolveReference(this.person.getFollowers()))
-            .thenReturn(new OrderedCollection<AbstractActor>().addItem(new Person()));
+        when(this.objectReferenceResolver.resolveReference(this.person.getFollowers())).thenReturn(
+            new OrderedCollection<AbstractActor>()
+                .addItem(new Person())
+                .setId(new URI("http://followers"))
+        );
 
         String absoluteDocumentUrl = "http://www.xwiki.org/xwiki/bin/view/Main";
         String relativeDocumentUrl = "/xwiki/bin/view/Main";
@@ -167,7 +173,8 @@ public class DocumentCreatedEventListenerTest
             .setActor(person)
             .setObject(apDoc)
             .setName("Creation of document [A document title]")
-            .setPublished(creationDate);
+            .setPublished(creationDate)
+            .setTo(Collections.singletonList(new ProxyActor(person.getFollowers().getLink())));
         ActivityRequest<Create> activityRequest = new ActivityRequest<>(person, create);
         this.listener.onEvent(new DocumentCreatedEvent(), document, context);
 

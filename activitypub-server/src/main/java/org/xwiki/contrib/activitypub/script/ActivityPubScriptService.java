@@ -20,7 +20,9 @@
 package org.xwiki.contrib.activitypub.script;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -33,16 +35,21 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
+import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
+import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Follow;
+import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
+import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.script.service.ScriptService;
 import org.xwiki.user.UserReference;
 
@@ -72,6 +79,9 @@ public class ActivityPubScriptService implements ScriptService
 
     @Inject
     private ActivityPubObjectReferenceResolver activityPubObjectReferenceResolver;
+
+    @Inject
+    private ActivityHandler<Create> createActivityHandler;
 
     @Inject
     private Logger logger;
@@ -158,6 +168,54 @@ public class ActivityPubScriptService implements ScriptService
         } catch (ActivityPubException e) {
             this.logger.error("Error while trying to get an XWiki user from an actor [{}]", actor, e);
             return null;
+        }
+    }
+
+    /**
+     * Publish the given content as a note to be send to the adressed target.
+     * The given targets can take different values:
+     *   - followers: means that the note will be sent to the followers
+     *   - an URI qualifying an actor: means that the note will be sent to that actor
+     * If the list of targets is empty or null, it means the note will be private only.
+     * @param targets the list of targets for the note (see below for information about accepted values)
+     * @param content the actual concent of the note
+     */
+    public void publishNote(List<String> targets, String content)
+    {
+        try {
+            AbstractActor currentActor = this.actorHandler.getCurrentActor();
+            Note note = new Note()
+                .setAttributedTo(Collections.singletonList(currentActor.getReference()))
+                .setContent(content);
+            if (targets != null && !targets.isEmpty()) {
+                List<ProxyActor> to = new ArrayList<>();
+                for (String target : targets) {
+                    if ("followers".equals(target)) {
+                        to.add(new ProxyActor(currentActor.getFollowers().getLink()));
+                    } else if ("public".equals(target)) {
+                        to.add(ProxyActor.getPublicActor());
+                    } else {
+                        // FIXME: we should check if target is an URI or not
+                        AbstractActor remoteActor = this.actorHandler.getRemoteActor(target);
+                        to.add(remoteActor.getProxyActor());
+                    }
+                }
+                note.setTo(to);
+            }
+            this.activityPubStorage.storeEntity(note);
+
+            Create create = new Create()
+                .setActor(currentActor)
+                .setObject(note)
+                .setAttributedTo(note.getAttributedTo())
+                .setTo(note.getTo())
+                .setPublished(new Date());
+            this.activityPubStorage.storeEntity(create);
+
+            this.createActivityHandler.handleOutboxRequest(new ActivityRequest<>(currentActor, create));
+        } catch (IOException | ActivityPubException e)
+        {
+            this.logger.error("Error while posting a note.");
         }
     }
 
