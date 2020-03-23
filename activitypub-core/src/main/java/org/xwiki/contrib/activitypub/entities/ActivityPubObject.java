@@ -40,7 +40,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * getters/setters .
  * Only {@link #getType()} and {@link #setType(String)} are a bit special since they don't rely on stored information.
  *
- * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-object">ActivityStream Object definition</a>.
+ * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-object">ActivityStream Object definition</a>
  * @version $Id$
  * @since 1.0
  */

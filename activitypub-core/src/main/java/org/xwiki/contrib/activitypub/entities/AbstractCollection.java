@@ -69,7 +69,7 @@ public abstract class AbstractCollection<I extends ActivityPubObject>
     }
 
     /**
-     * This is a helper method which should only be used for {@link AbstractCollection<AbstractActor>}.
+     * This is a helper method which should only be used for {@link AbstractCollection} taking an {@link AbstractActor}.
      *
      * @return the proxy actor for the current collection.
      * @since 1.1

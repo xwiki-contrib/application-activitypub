@@ -81,7 +81,7 @@ public class ProxyActor extends ActivityPubObjectReference<ActivityPubObject>
 
     /**
      * @return {@code true} if this is a public actor.
-     * @see <a href="https://www.w3.org/TR/activitypub/#public-addressing>information about the public actor</a>
+     * @see <a href="https://www.w3.org/TR/activitypub/#public-addressing">information about the public actor</a>
      */
     public boolean isPublic()
     {
