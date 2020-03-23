@@ -20,12 +20,11 @@
 package org.xwiki.contrib.activitypub;
 
 import java.net.URI;
-import java.security.PublicKey;
 
 import org.apache.commons.httpclient.HttpMethod;
 import org.xwiki.component.annotation.Role;
-import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.stability.Unstable;
+import org.xwiki.user.UserReference;
 
 /**
  * Deal with the concerns related to the management, storage and use of asymetric keys.
@@ -43,17 +42,22 @@ public interface SignatureService
      * @param postMethod The post method to sign. 
      * @param targetURI The URI where the request is send.
      * @param actorURI The URI of the ActivityPub actor the sign the request.
-     * @param actor The actor that sign the request.
+     * @param user User object.
      * @throws ActivityPubException In case of error when signing the request.
      */
-    void generateSignature(HttpMethod postMethod, URI targetURI, URI actorURI, AbstractActor actor)
+    void generateSignature(HttpMethod postMethod, URI targetURI, URI actorURI, UserReference user)
         throws ActivityPubException;
 
+    // /**
+    //  * Initialize the keys of an actor.
+    //  * @param user user object.
+    //  * @throws ActivityPubException In case of error when initializing the keys.
+    //  */
+    // void initKeys(UserReference user) throws ActivityPubException;
+
     /**
-     * Initialize the keys of an actor.
-     * @param actorId The id of the actor.
+     * @param user user object.
      * @return The public key of the actor.
-     * @throws ActivityPubException In case of error when initializing the keys.
      */
-    PublicKey initKey(String actorId) throws ActivityPubException;
+    String getPublicKeyPEM(UserReference user) throws ActivityPubException;
 }

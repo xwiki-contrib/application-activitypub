@@ -153,10 +153,20 @@ public class XWikiUserBridge
      */
     public String getUserProfileURL(UserReference userReference) throws Exception
     {
+        DocumentReference documentReference = this.getDocumentReference(userReference);
+        return ((XWikiDocument) this.documentAccess.getDocumentInstance(documentReference))
+                   .getExternalURL("view", this.contextProvider.get());
+    }
+
+    /**
+     * Convert a {@link UserReference} into a {@link DocumentReference}.
+     * @param userReference The user reference.
+     * @return The resolved document reference.
+     */
+    public DocumentReference getDocumentReference(UserReference userReference)
+    {
         // FIXME: this is a hack which only works with DocumentUserReference.
         String serializedReference = this.userReferenceSerializer.serialize(userReference);
-        DocumentReference documentReference = this.documentReferenceResolver.resolve(serializedReference);
-        return ((XWikiDocument) this.documentAccess.getDocumentInstance(documentReference))
-            .getExternalURL("view", this.contextProvider.get());
+        return this.documentReferenceResolver.resolve(serializedReference);
     }
 }

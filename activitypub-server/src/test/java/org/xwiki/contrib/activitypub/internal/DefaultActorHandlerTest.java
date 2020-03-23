@@ -135,13 +135,9 @@ public class DefaultActorHandlerTest
     @Test
     public void getActorWithExistingUser() throws Exception
     {
-        PublicKey pubKey = mock(PublicKey.class);
-        when(pubKey.getEncoded()).thenReturn(new byte[]{});
-        when(this.signatureService.initKey("XWiki.Foo")).thenReturn(pubKey);
+        when(this.signatureService.getPublicKeyPEM(any())).thenReturn("...");
         org.xwiki.contrib.activitypub.entities.PublicKey publicKey =
-            new org.xwiki.contrib.activitypub.entities.PublicKey().setPublicKeyPem("-----BEGIN PUBLIC KEY-----\n"
-                                                                                       + "\n"
-                                                                                       + "-----END PUBLIC KEY-----\n")
+            new org.xwiki.contrib.activitypub.entities.PublicKey().setPublicKeyPem("...")
                 .setId("null#main-key");
         AbstractActor expectedActor = new Person();
         expectedActor.setPreferredUsername("XWiki.Foo")
@@ -206,13 +202,9 @@ public class DefaultActorHandlerTest
     @Test
     public void getLocalActor() throws ActivityPubException
     {
-        PublicKey pubKey = mock(PublicKey.class);
-        when(pubKey.getEncoded()).thenReturn(new byte[]{});
-        when(this.signatureService.initKey("XWiki.Foo")).thenReturn(pubKey);
+        when(this.signatureService.getPublicKeyPEM(any())).thenReturn("...");
         org.xwiki.contrib.activitypub.entities.PublicKey publicKey =
-            new org.xwiki.contrib.activitypub.entities.PublicKey().setPublicKeyPem("-----BEGIN PUBLIC KEY-----\n"
-                                                                                       + "\n"
-                                                                                       + "-----END PUBLIC KEY-----\n")
+            new org.xwiki.contrib.activitypub.entities.PublicKey().setPublicKeyPem("...")
                 .setId("null#main-key");
 
         AbstractActor expectedActor = new Person();

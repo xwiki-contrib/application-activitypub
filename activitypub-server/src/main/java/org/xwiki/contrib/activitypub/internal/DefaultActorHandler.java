@@ -22,7 +22,6 @@ package org.xwiki.contrib.activitypub.internal;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.Objects;
 
@@ -166,11 +165,10 @@ public class DefaultActorHandler implements ActorHandler
         } catch (Exception e) {
             throw new ActivityPubException("Error while resolving user profile URL", e);
         }
-        java.security.PublicKey pubKey = this.signatureService.initKey(login);
+        UserReference user = this.xWikiUserBridge.resolveUser(login);
+        String pubKey = this.signatureService.getPublicKeyPEM(user);
 
-        return new PublicKey().setId(pkId + "#main-key").setOwner(pkId)
-                   .setPublicKeyPem(String.format("-----BEGIN PUBLIC KEY-----\n%s\n-----END PUBLIC KEY-----\n",
-                       Base64.getEncoder().encodeToString(pubKey.getEncoded())));
+        return new PublicKey().setId(pkId + "#main-key").setOwner(pkId).setPublicKeyPem(pubKey);
     }
 
     @Override
@@ -213,10 +211,13 @@ public class DefaultActorHandler implements ActorHandler
     @Override
     public AbstractActor getRemoteActor(String actorURL) throws ActivityPubException
     {
-        AbstractActor ret;
+        AbstractActor ret = null;
         if (actorURL.contains("@")) {
             ret = this.getWebfingerActor(actorURL);
-        } else {
+        }
+
+        // if the webfinger resolution did not succeeded, try the next resolution
+        if (ret == null) {
 
             ret = this.getRemoteActor(actorURL, true);
         }

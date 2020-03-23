@@ -44,6 +44,7 @@ import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
+import org.xwiki.user.UserReference;
 
 /**
  * Default implementation of the {@link ActivityPubClient}.
@@ -66,6 +67,9 @@ public class DefaultActivityPubClient implements ActivityPubClient
 
     @Inject
     private SignatureService signature;
+
+    @Inject
+    private XWikiUserBridge userBridge;
 
     /**
      * Default constructor.
@@ -115,8 +119,8 @@ public class DefaultActivityPubClient implements ActivityPubClient
             new StringRequestEntity(this.activityPubJsonSerializer.serialize(activity), CONTENT_TYPE_STRICT, "UTF-8");
         PostMethod postMethod = new PostMethod(uri.toASCIIString());
         postMethod.setRequestEntity(bodyRequest);
-        this.signature
-            .generateSignature(postMethod, uri, activity.getActor().getLink(), activity.getActor().getObject());
+        UserReference user = this.userBridge.resolveUser(activity.getActor().getObject().getPreferredUsername());
+        this.signature.generateSignature(postMethod, uri, activity.getActor().getLink(), user);
         this.httpClient.executeMethod(postMethod);
         return postMethod;
     }

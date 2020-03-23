@@ -5,6 +5,7 @@ org.xwiki.contrib.activitypub.internal.activities.FollowActivityHandler
 org.xwiki.contrib.activitypub.internal.activities.RejectActivityHandler
 org.xwiki.contrib.activitypub.internal.ActivityPubResourceReferenceResolver
 org.xwiki.contrib.activitypub.internal.ActivityPubResourceReferenceSerializer
+org.xwiki.contrib.activitypub.internal.DefaultCryptoService
 org.xwiki.contrib.activitypub.internal.DefaultActivityPubStorage
 org.xwiki.contrib.activitypub.internal.listeners.DocumentCreatedEventListener
 org.xwiki.contrib.activitypub.internal.activities.CreateActivityHandler

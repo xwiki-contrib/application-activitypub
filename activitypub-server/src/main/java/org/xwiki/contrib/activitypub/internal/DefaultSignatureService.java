@@ -19,33 +19,34 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
+import java.io.IOException;
 import java.net.URI;
-import java.security.InvalidKeyException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.SecureRandom;
-import java.security.Signature;
-import java.security.SignatureException;
+import java.security.GeneralSecurityException;
 import java.text.SimpleDateFormat;
 import java.util.Base64;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.TimeZone;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.commons.httpclient.HttpMethod;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.contrib.activitypub.CryptoService;
 import org.xwiki.contrib.activitypub.SignatureService;
-import org.xwiki.contrib.activitypub.entities.AbstractActor;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
+import org.xwiki.crypto.pkix.CertifyingSigner;
+import org.xwiki.crypto.pkix.params.CertifiedKeyPair;
+import org.xwiki.crypto.signer.CMSSignedDataGenerator;
+import org.xwiki.crypto.signer.SignerFactory;
+import org.xwiki.crypto.signer.param.CMSSignedDataGeneratorParameters;
+import org.xwiki.crypto.store.KeyStore;
+import org.xwiki.crypto.store.KeyStoreException;
+import org.xwiki.crypto.store.WikiStoreReference;
+import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.user.UserReference;
 
 /**
  * Default implementation of the signature service.
@@ -57,27 +58,25 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @Singleton
 public class DefaultSignatureService implements SignatureService
 {
-    /**
-     * Store the public keys of the actors.
-     */
-    private Map<String, PublicKey> pubKeyStore;
+    @Inject
+    @Named("X509wiki")
+    private KeyStore x509WikiKeyStore;
 
-    /**
-     * Store the private keys of the actors.
-     */
-    private Map<String, PrivateKey> privKeyStore;
+    @Inject
+    private CMSSignedDataGenerator cmsSignedDataGenerator;
 
-    /**
-     *  Default constructor of {@link DefaultSignatureService}.
-     */
-    public DefaultSignatureService()
-    {
-        this.pubKeyStore = new HashMap<>();
-        this.privKeyStore = new HashMap<>();
-    }
+    @Inject
+    @Named("SHA1withRSAEncryption")
+    private SignerFactory signerFactory;
+
+    @Inject
+    private XWikiUserBridge userBridge;
+
+    @Inject
+    private CryptoService cryptoService;
 
     @Override
-    public void generateSignature(HttpMethod postMethod, URI targetURI, URI actorURI, AbstractActor actor)
+    public void generateSignature(HttpMethod postMethod, URI targetURI, URI actorURI, UserReference user)
         throws ActivityPubException
     {
         Calendar calendar = Calendar.getInstance();
@@ -90,10 +89,8 @@ public class DefaultSignatureService implements SignatureService
         String host = targetURI.getHost();
         String signatureStr = String.format("(request-target): post %s\nhost: %s\ndate: %s", uriPath, host, date);
 
-        byte[] bytess = this.sign(actor.getPreferredUsername(), signatureStr);
-        String signatureB64 =
-            Base64.getEncoder().encodeToString(
-                bytess);
+        byte[] bytess = this.sign(user, signatureStr);
+        String signatureB64 = Base64.getEncoder().encodeToString(bytess);
         String actorAPURL = actorURI.toASCIIString();
         postMethod.addRequestHeader("Signature", String.format(
             "keyId=\"%s\",headers=\"(request-target) host date\",signature=\"%s\",algorithm=\"rsa-sha256\"", actorAPURL,
@@ -101,52 +98,56 @@ public class DefaultSignatureService implements SignatureService
         postMethod.addRequestHeader("Date", date);
     }
 
-    private void storeKeyPair(String userId, PublicKey pubk, PrivateKey privk)
-    {
-        this.pubKeyStore.put(userId, pubk);
-        this.privKeyStore.put(userId, privk);
-    }
-
-    private PrivateKey getPrivKey(String actorId) throws ActivityPubException
-    {
-        PrivateKey privateKey = this.privKeyStore.get(actorId);
-        if (privateKey == null) {
-            this.initKey(actorId);
-            return this.privKeyStore.get(actorId);
-        }
-        return privateKey;
-    }
-
-    private byte[] sign(String actorId, String signedString)
-        throws ActivityPubException
+    private CertifiedKeyPair getCertifiedKeyPair(UserReference user) throws ActivityPubException
     {
         try {
-            Signature sign = Signature.getInstance("SHA256withRSA");
-            PrivateKey key = this.getPrivKey(actorId);
-            sign.initSign(key);
-            sign.update(signedString.getBytes(UTF_8));
-            return sign.sign();
-        } catch (NoSuchAlgorithmException | ActivityPubException | InvalidKeyException | SignatureException e) {
-            throw new ActivityPubException(String.format("Error while signing [%s] for [%s]", signedString, actorId),
+            DocumentReference dr = this.userBridge.getDocumentReference(user);
+            CertifiedKeyPair stored = this.x509WikiKeyStore.retrieve(new WikiStoreReference(dr));
+
+            if (stored != null) {
+                return stored;
+            }
+
+            return this.initKeys(dr);
+        } catch (KeyStoreException e) {
+            throw new ActivityPubException(String.format("Error while retrieving the private key for user [%s]", user),
                 e);
         }
     }
 
-    @Override
-    public PublicKey initKey(String actorId) throws ActivityPubException
+    private byte[] sign(UserReference user, String signedString)
+        throws ActivityPubException
     {
-        PublicKey pubKey;
         try {
-            KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-            generator.initialize(1024, new SecureRandom());
+            CertifiedKeyPair keyPair = this.getCertifiedKeyPair(user);
+            CMSSignedDataGeneratorParameters parameters = new CMSSignedDataGeneratorParameters().addSigner(
+                CertifyingSigner.getInstance(true, keyPair, this.signerFactory));
 
-            KeyPair pair = generator.generateKeyPair();
-            pubKey = pair.getPublic();
-            PrivateKey privKey = pair.getPrivate();
-            this.storeKeyPair(actorId, pubKey, privKey);
-        } catch (NoSuchAlgorithmException e) {
-            throw new ActivityPubException("Error while generating the user key pair ", e);
+            return this.cmsSignedDataGenerator.generate(signedString.getBytes(), parameters, false);
+        } catch (GeneralSecurityException e) {
+            throw new ActivityPubException("Error while signing [" + signedString + "]", e);
         }
-        return pubKey;
+    }
+
+    private CertifiedKeyPair initKeys(DocumentReference user) throws ActivityPubException
+    {
+        AsymmetricKeyPair keys = this.keyPairGenerator.generate();
+        try {
+            CertifiedKeyPair ret = this.cryptoService.generateCertifiedKeyPair();
+            this.x509WikiKeyStore.store(new WikiStoreReference(user), ret);
+            return ret;
+        } catch (KeyStoreException e) {
+            throw new ActivityPubException(
+                String.format("Error while initializing the cryptographic keys for [%s]", user), e);
+        }
+    }
+
+    @Override
+    public String getPublicKeyPEM(UserReference user) throws ActivityPubException
+    {
+        byte[] encoded = this.getCertifiedKeyPair(user).getPublicKey().getEncoded();
+
+        return String.format("-----BEGIN PUBLIC KEY-----\n%s\n-----END PUBLIC KEY-----\n",
+            Base64.getEncoder().encodeToString(encoded));
     }
 }
