@@ -20,22 +20,14 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import java.net.URI;
-import java.util.EnumSet;
-
-import javax.inject.Named;
-import javax.inject.Provider;
 
 import org.apache.commons.httpclient.HttpMethod;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 import org.xwiki.contrib.activitypub.CryptoService;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
-import org.xwiki.crypto.KeyPairGenerator;
-import org.xwiki.crypto.pkix.CertificateGeneratorFactory;
-import org.xwiki.crypto.pkix.X509ExtensionBuilder;
 import org.xwiki.crypto.pkix.params.CertifiedKeyPair;
 import org.xwiki.crypto.signer.CMSSignedDataGenerator;
-import org.xwiki.crypto.signer.SignerFactory;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;

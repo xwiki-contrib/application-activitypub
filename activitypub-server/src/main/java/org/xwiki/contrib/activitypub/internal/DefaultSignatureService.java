@@ -19,7 +19,6 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
-import java.io.IOException;
 import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.text.SimpleDateFormat;
@@ -131,7 +130,6 @@ public class DefaultSignatureService implements SignatureService
 
     private CertifiedKeyPair initKeys(DocumentReference user) throws ActivityPubException
     {
-        AsymmetricKeyPair keys = this.keyPairGenerator.generate();
         try {
             CertifiedKeyPair ret = this.cryptoService.generateCertifiedKeyPair();
             this.x509WikiKeyStore.store(new WikiStoreReference(user), ret);
