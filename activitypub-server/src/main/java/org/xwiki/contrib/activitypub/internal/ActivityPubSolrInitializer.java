@@ -46,7 +46,9 @@ import org.xwiki.search.solr.SolrException;
 public class ActivityPubSolrInitializer implements SolrCoreInitializer
 {
     private static final String NAME = "name";
+    private static final String TYPE = "type";
     private static final String CONTENT = "content";
+    private static final String STRING_TYPE = "string";
 
     @Override
     public String getCoreName()
@@ -60,15 +62,21 @@ public class ActivityPubSolrInitializer implements SolrCoreInitializer
         try {
             SchemaResponse.FieldsResponse response = new SchemaRequest.Fields().process(client);
             if (!schemaAlreadyExists(response)) {
-                Map<String, Object> fieldAttributes = new HashMap<>();
-                fieldAttributes.put(NAME, CONTENT);
-                fieldAttributes.put("type", "string");
-                new SchemaRequest.AddField(fieldAttributes).process(client);
+                createField(client, CONTENT, STRING_TYPE);
+                createField(client, TYPE, STRING_TYPE);
             }
         } catch (SolrServerException | IOException e)
         {
             throw new SolrException("Error when initializing activitypub Solr schema", e);
         }
+    }
+
+    private void createField(SolrClient client, String name, String type) throws IOException, SolrServerException
+    {
+        Map<String, Object> fieldAttributes = new HashMap<>();
+        fieldAttributes.put(NAME, name);
+        fieldAttributes.put(TYPE, type);
+        new SchemaRequest.AddField(fieldAttributes).process(client);
     }
 
     private boolean schemaAlreadyExists(SchemaResponse.FieldsResponse response)

@@ -151,6 +151,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
             entity.setId(this.serializer.serialize(resourceReference));
             SolrInputDocument inputDocument = new SolrInputDocument();
             inputDocument.addField("id", uuid);
+            inputDocument.addField("type", entity.getType());
             inputDocument.addField("content", this.jsonSerializer.serialize(entity));
             this.getSolrClient().add(inputDocument);
             this.getSolrClient().commit();
@@ -187,6 +188,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         }
         SolrInputDocument inputDocument = new SolrInputDocument();
         inputDocument.addField("id", uid);
+        inputDocument.addField("type", entity.getType());
         inputDocument.addField("content", this.jsonSerializer.serialize(entity));
         try {
             SolrDocument solrDocument = this.getSolrClient().getById(uid);
