@@ -1,0 +1,113 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.4" reference="ActivityPub.MessageUser" locale="">
+  <web>ActivityPub</web>
+  <name>MessageUser</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>MessageUser</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>false</hidden>
+  <content>{{velocity}}
+#set ($defaultValues = [
+  "public",
+  "followers"
+])
+
+#macro (apPicker_displayOptions $selectedValues)
+  #foreach ($defaultValue in $defaultValues)
+    &lt;option value="$!escapetool.xml($defaultValue)"#if ($selectedValues.contains($defaultValue)) selected="selected"#end
+      &gt;$!escapetool.xml($defaultValue)&lt;/option&gt;
+  #end
+#end
+
+#macro (apTargetPicker_import)
+  #picker_import
+  #set ($discard = $xwiki.jsfx.use('uicomponents/suggest/xwiki.selectize.js', true))
+  #set ($discard = $xwiki.jsfx.use('uicomponents/suggest/suggestPropertyValues.js',
+  {'forceSkinAction': true, 'language': $xcontext.locale}))
+#end
+
+#macro (activityPubUserPicker $parameters)
+  #apTargetPicker_import
+  #if ("$!parameters" == "")
+    #set ($parameters = {
+      'name': 'messageTarget',
+      'multiple': 'multiple',
+      'data-freeText': 'allowed',
+      'data-xwiki-selectize': {
+         'create': true
+      }
+    })
+  #end
+  #set ($discard = $parameters.put('class', "$!parameters.get('class') xwiki-selectize suggest-apusers"))
+  #if (!$parameters.containsKey('placeholder'))
+    #set ($parameters.placeholder = $services.localization.render('activitypub.message.target.placeholder'))
+  #end
+  #suggestInput($parameters 'apPicker_displayOptions')
+#end
+{{/velocity}}
+
+
+{{velocity}}
+{{html clean="false"}}
+&lt;form method="post" action="${xwiki.getURL('ActivityPub.MessageUser', 'view')}" class='xform'&gt;
+  &lt;div class="hidden"&gt;
+    &lt;input type='hidden' name='form_token' value="$!{services.csrf.getToken()}" /&gt;
+  &lt;/div&gt;
+  &lt;dl&gt;
+    &lt;dt&gt;
+      &lt;label for="messageTarget"&gt;$services.localization.render('activitypub.message.target.label')&lt;/label&gt;
+      &lt;span class='xHint'&gt;$services.localization.render('activitypub.message.target.hint')&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      #activityPubUserPicker("")
+    &lt;/dd&gt;
+  &lt;/dl&gt;
+  &lt;dl&gt;
+    &lt;dt&gt;
+      &lt;label for="messageContent"&gt;$services.localization.render('activitypub.message.content.label')&lt;/label&gt;
+      &lt;span class='xHint'&gt;$services.localization.render('activitypub.message.content.hint')&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;textarea name="messageContent" id="messageContent" class="form-control"&gt;&lt;/textarea&gt;
+    &lt;/dd&gt;
+  &lt;/dl&gt;
+  &lt;div class='buttonwrapper'&gt;
+    &lt;input value="$services.localization.render('activitypub.message.button')" class='button' type='submit'/&gt;
+  &lt;/div&gt;
+&lt;/form&gt;
+#if ("$!request.messageTarget" != "" &amp;&amp; $services.csrf.isTokenValid($request.form_token))
+    #set ($discard = $services.activitypub.publishNote($$request.messageTarget, $request.messageContent))
+#end
+{{/html}}
+{{/velocity}}</content>
+</xwikidoc>
