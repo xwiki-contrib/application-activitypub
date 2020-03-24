@@ -51,16 +51,23 @@ import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.script.service.ScriptService;
+import org.xwiki.stability.Unstable;
+import org.xwiki.text.StringUtils;
+import org.xwiki.user.CurrentUserReference;
+import org.xwiki.user.GuestUserReference;
 import org.xwiki.user.UserReference;
+import org.xwiki.user.UserReferenceResolver;
 
 /**
  * Script service for ActivityPub.
  *
  * @version $Id$
+ * @since 1.0
  */
 @Component
 @Singleton
 @Named("activitypub")
+@Unstable
 public class ActivityPubScriptService implements ScriptService
 {
     private static final String GET_CURRENT_ACTOR_ERR_MSG = "Failed to retrieve the current actor. Cause [{}].";
@@ -84,20 +91,68 @@ public class ActivityPubScriptService implements ScriptService
     private ActivityHandler<Create> createActivityHandler;
 
     @Inject
+    private UserReferenceResolver<CurrentUserReference> userReferenceResolver;
+
+    @Inject
     private Logger logger;
+
+    private void checkAuthentication() throws ActivityPubException
+    {
+        UserReference userReference = this.userReferenceResolver.resolve(null);
+        if (userReference == GuestUserReference.INSTANCE) {
+            throw new ActivityPubException("You need to be authenticated to use this method.");
+        }
+    }
+
+    /**
+     * Retrieve an ActivityPub actor to be used in the methods of the script service.
+     * It follows this strategy for resolving the given string:
+     *   - if the string is null or blank, it resolves it by getting the current logged-in user actor. It will throw an
+     *   {@link ActivityPubException} if no one is logged-in.
+     *   - if the string starts with {@code http} or {@code @}, the actor will be resolved as a remote ActivityPub actor
+     *   using {@link ActorHandler#getRemoteActor(String)}.
+     *   - in all other cases, the actor will be resolved as a local actor using
+     *   {@link ActorHandler#getLocalActor(String)}.
+     * The method returns null if no actor is found.
+     * @param actor the string to resolved following the strategy described above.
+     * @return an ActivityPub actor or null.
+     * @since 1.1
+     */
+    @Unstable
+    public AbstractActor getActor(String actor)
+    {
+        AbstractActor result = null;
+        try {
+            if (StringUtils.isBlank(actor)) {
+                checkAuthentication();
+                result = this.actorHandler.getCurrentActor();
+            } else {
+                String trimmedActor = actor.trim();
+                if (trimmedActor.startsWith("http://") || trimmedActor.startsWith("@")) {
+                    result = this.actorHandler.getRemoteActor(trimmedActor);
+                } else {
+                    result = this.actorHandler.getLocalActor(trimmedActor);
+                }
+            }
+        } catch (ActivityPubException e) {
+            this.logger.error("Error while trying to get the actor [{}].", actor, e);
+        }
+        return result;
+    }
+
+
 
     /**
      * Send a Follow request to the given actor.
-     * @param actor URL to the actor to follow.
+     * @param remoteActor the actor to follow.
      * @return {@code true} iff the request has been sent properly.
      */
-    // FIXME: this should only be used when authenticated
-    public boolean follow(String actor)
+    public boolean follow(AbstractActor remoteActor)
     {
         boolean result = false;
 
         try {
-            AbstractActor remoteActor = this.actorHandler.getRemoteActor(actor);
+            checkAuthentication();
             AbstractActor currentActor = this.actorHandler.getCurrentActor();
             Follow follow = new Follow().setActor(currentActor).setObject(remoteActor);
             this.activityPubStorage.storeEntity(follow);
@@ -109,34 +164,11 @@ public class ActivityPubScriptService implements ScriptService
             }
             result = true;
         } catch (ActivityPubException | IOException e) {
-            this.logger.error("Error while trying to send a follow request to [{}].", actor, e);
+            this.logger.error("Error while trying to send a follow request to [{}].", remoteActor, e);
         }
 
         return result;
     }
-
-// This is not supported in 1.0
-//    /**
-//     * Send an Accept request to a received Follow.
-//     * @param follow the follow activity to accept.
-//     * @return {@code true} iff the request has been sent properly.
-//     */
-//    // FIXME: we should check that the current actor and followed actor is the same.
-//    public boolean acceptFollow(Follow follow)
-//    {
-//        boolean result = false;
-//        try {
-//            AbstractActor currentActor = this.actorHandler.getCurrentActor();
-//            Accept accept = new Accept().setActor(currentActor).setObject(follow);
-//            this.activityPubStorage.storeEntity(accept);
-//            HttpMethod httpMethod = this.activityPubClient.postOutbox(currentActor, accept);
-//            this.activityPubClient.checkAnswer(httpMethod);
-//            result = true;
-//        } catch (ActivityPubException | IOException e) {
-//            this.logger.error("Error while trying to send the accept follow request [{}]", follow, e);
-//        }
-//        return result;
-//    }
 
     /**
      * Resolve and returns the given {@link ActivityPubObjectReference}.
@@ -183,6 +215,7 @@ public class ActivityPubScriptService implements ScriptService
     public void publishNote(List<String> targets, String content)
     {
         try {
+            checkAuthentication();
             AbstractActor currentActor = this.actorHandler.getCurrentActor();
             Note note = new Note()
                 .setAttributedTo(Collections.singletonList(currentActor.getReference()))
@@ -195,9 +228,10 @@ public class ActivityPubScriptService implements ScriptService
                     } else if ("public".equals(target)) {
                         to.add(ProxyActor.getPublicActor());
                     } else {
-                        // FIXME: we should check if target is an URI or not
-                        AbstractActor remoteActor = this.actorHandler.getRemoteActor(target);
-                        to.add(remoteActor.getProxyActor());
+                        AbstractActor remoteActor = this.getActor(target);
+                        if (remoteActor != null) {
+                            to.add(remoteActor.getProxyActor());
+                        }
                     }
                 }
                 note.setTo(to);

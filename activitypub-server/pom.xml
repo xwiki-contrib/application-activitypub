@@ -122,7 +122,10 @@
                 **/ActivityPubResourceReferenceHandler.java,
 
                 <!-- Fan-Out complexity: 21 on 20 max -->
-                **/DocumentCreatedEventListener.java
+                **/DocumentCreatedEventListener.java,
+
+                <!-- Fan-Out complexity: 21 on 20 max -->
+                **/ActivityPubScriptService.java
               </excludes>
             </configuration>
           </execution>

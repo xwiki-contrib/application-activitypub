@@ -20,7 +20,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.3" reference="ActivityPub.FollowUser" locale="">
+<xwikidoc version="1.4" reference="ActivityPub.FollowUser" locale="">
   <web>ActivityPub</web>
   <name>FollowUser</name>
   <language/>
@@ -38,7 +38,7 @@
   <hidden>false</hidden>
   <content>{{velocity}}
 {{html clean="false"}}
-&lt;form method="post" id="authenticationSecurityConfigForm" action="${xwiki.getURL('ActivityPub.FollowUser', 'view')}" class='xform'&gt;
+&lt;form method="post" action="${xwiki.getURL('ActivityPub.FollowUser', 'view')}" class='xform'&gt;
   &lt;div class="hidden"&gt;
     &lt;input type='hidden' name='form_token' value="$!{services.csrf.getToken()}" /&gt;
   &lt;/div&gt;
@@ -55,13 +55,19 @@
     &lt;input value="$services.localization.render('activitypub.follow.button')" class='button' type='submit'&gt;
   &lt;/div&gt;
 &lt;/form&gt;
-#if ($services.csrf.isTokenValid($request.form_token) &amp;&amp; "$!request.followInput" != "")
-  #set ($followWorked = $services.activitypub.follow($request.followInput))
-  #if ($followWorked)
-      $services.localization.render('activitypub.follow.followRequested')
+#if ("$!request.followInput" != "" &amp;&amp; $services.csrf.isTokenValid($request.form_token))
+  #set ($actor = $services.activitypub.getActor($request.followInput))
+  #if ("$!actor" != '')
+    #set ($followWorked = $services.activitypub.follow($actor))
+    #if ($followWorked)
+        $services.localization.render('activitypub.follow.followRequested')
+    #else
+        $services.localization.render('activitypub.follow.followNotRequested')
+    #end
   #else
-      $services.localization.render('activitypub.follow.followNotRequested')
+    $services.localization.render('activitypub.follow.actornotfound', [$request.followInput])
   #end
+  
 #end
 &lt;div&gt;
   &lt;div&gt;

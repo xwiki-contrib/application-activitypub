@@ -96,10 +96,9 @@ class ActivityPubScriptServiceTest
         ActivityPubObjectReference targetActorReference = mock(ActivityPubObjectReference.class);
         when(targetActor.getReference()).thenReturn(targetActorReference);
         when(actorHandler.getRemoteActor("test")).thenReturn(targetActor);
-        
+
         when(this.activityPubClient.postInbox(any(), any())).thenReturn(mock(HttpMethod.class));
-        assertTrue(this.scriptService.follow("test"));
-        verify(this.actorHandler).getRemoteActor(eq("test"));
+        assertTrue(this.scriptService.follow(actor));
     }
 
     @Test
@@ -186,10 +185,10 @@ class ActivityPubScriptServiceTest
         AbstractActor targetActor = mock(AbstractActor.class);
         ProxyActor targetProxyActor = mock(ProxyActor.class);
         when(targetActor.getProxyActor()).thenReturn(targetProxyActor);
-        when(actorHandler.getRemoteActor("targetActor")).thenReturn(targetActor);
+        when(actorHandler.getRemoteActor("@targetActor")).thenReturn(targetActor);
 
         String noteContent = "some content";
-        this.scriptService.publishNote(Arrays.asList("followers", "targetActor"), noteContent);
+        this.scriptService.publishNote(Arrays.asList("followers", "@targetActor"), noteContent);
 
         Note note = new Note()
             .setContent(noteContent)

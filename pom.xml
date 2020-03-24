@@ -310,6 +310,12 @@
                     "old": "parameter <T extends org.xwiki.contrib.activitypub.entities.ActivityPubObject> T org.xwiki.contrib.activitypub.entities.ActivityPubObject::setTo(===java.util.List<org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference<org.xwiki.contrib.activitypub.entities.AbstractActor>>===)",
                     "new": "parameter <T extends org.xwiki.contrib.activitypub.entities.ActivityPubObject> T org.xwiki.contrib.activitypub.entities.ActivityPubObject::setTo(===java.util.List<org.xwiki.contrib.activitypub.entities.ProxyActor>===)",
                     "justification": "ProxyActor have been introduced in order to fix an issue with the \"to\" attribute. See https://jira.xwiki.org/browse/XAP-17 for details."
+                  },
+                  {
+                    "code": "java.method.parameterTypeChanged",
+                    "old": "parameter boolean org.xwiki.contrib.activitypub.script.ActivityPubScriptService::follow(===java.lang.String===)",
+                    "new": "parameter boolean org.xwiki.contrib.activitypub.script.ActivityPubScriptService::follow(===org.xwiki.contrib.activitypub.entities.AbstractActor===)",
+                    "justification": "Improve the Unstable script service."
                   }
                 ]
               }
