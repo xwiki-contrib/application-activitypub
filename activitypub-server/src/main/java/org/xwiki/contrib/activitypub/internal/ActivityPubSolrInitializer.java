@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.inject.Named;
+import javax.inject.Singleton;
 
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -33,8 +34,15 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.search.solr.SolrCoreInitializer;
 import org.xwiki.search.solr.SolrException;
 
+/**
+ * Initialize the ActivityPub Solr core to persist the data.
+ *
+ * @version $Id$
+ * @since 1.1
+ */
 @Component
 @Named("activitypub")
+@Singleton
 public class ActivityPubSolrInitializer implements SolrCoreInitializer
 {
     private static final String NAME = "name";
