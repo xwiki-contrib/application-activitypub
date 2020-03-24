@@ -24,8 +24,7 @@
 #define ($content)
 <div class="notification-description">
     #set ($rejectActor = $services.activitypub.resolve($activity.actor))
-    #set($rejectActorReference = $services.activitypub.getXWikiUserReference($rejectActor))
-    #if ($xcontext.userReference.equals($rejectActorReference))
+    #if ($services.activitypub.isCurrentUser($acceptActor))
         #set ($object = $services.activitypub.resolve($activity.object))
         #set ($actor = $services.activitypub.resolve($object.actor))
         #set ($summary = "$actor.preferredUsername follow request has been rejected.")

@@ -230,12 +230,6 @@
                     "justification": "UserReference is the right new type to rely on users."
                   },
                   {
-                    "code": "java.method.returnTypeChanged",
-                    "old": "method org.xwiki.model.reference.EntityReference org.xwiki.contrib.activitypub.script.ActivityPubScriptService::getXWikiUserReference(org.xwiki.contrib.activitypub.entities.AbstractActor)",
-                    "new": "method org.xwiki.user.UserReference org.xwiki.contrib.activitypub.script.ActivityPubScriptService::getXWikiUserReference(org.xwiki.contrib.activitypub.entities.AbstractActor)",
-                    "justification": "UserReference is the right new type to rely on users."
-                  },
-                  {
                     "code": "java.field.removedWithConstant",
                     "old": "field org.xwiki.contrib.activitypub.ActivityPubClient.CONTENT_TYPE",
                     "justification": "The management if content type have been extended and ActivityPub now support more than one content type. The CONTENT_TYPE field have been replaced by CONTENT_TYPE accordingly."
@@ -316,6 +310,11 @@
                     "old": "parameter boolean org.xwiki.contrib.activitypub.script.ActivityPubScriptService::follow(===java.lang.String===)",
                     "new": "parameter boolean org.xwiki.contrib.activitypub.script.ActivityPubScriptService::follow(===org.xwiki.contrib.activitypub.entities.AbstractActor===)",
                     "justification": "Improve the Unstable script service."
+                  },
+                  {
+                    "code": "java.method.removed",
+                    "old": "method org.xwiki.model.reference.EntityReference org.xwiki.contrib.activitypub.script.ActivityPubScriptService::getXWikiUserReference(org.xwiki.contrib.activitypub.entities.AbstractActor)",
+                    "justification": "That method was too technical and shouldn't be needed anymore."
                   }
                 ]
               }

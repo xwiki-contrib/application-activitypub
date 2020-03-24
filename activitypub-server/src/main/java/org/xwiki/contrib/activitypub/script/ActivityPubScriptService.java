@@ -140,7 +140,23 @@ public class ActivityPubScriptService implements ScriptService
         return result;
     }
 
-
+    /**
+     * Verify if the given actor is the current user.
+     * @param actor the retrieved actor to check.
+     * @return {@code true} if the given actor is the current logged user.
+     * @since 1.1
+     */
+    @Unstable
+    public boolean isCurrentUser(AbstractActor actor)
+    {
+        UserReference userReference = this.userReferenceResolver.resolve(null);
+        try {
+            return userReference.equals(this.actorHandler.getXWikiUserReference(actor));
+        } catch (ActivityPubException e) {
+            logger.error("Error while getting user reference for actor [{}]", actor, e);
+            return false;
+        }
+    }
 
     /**
      * Send a Follow request to the given actor.
@@ -184,21 +200,6 @@ public class ActivityPubScriptService implements ScriptService
             return ret;
         } catch (ActivityPubException e) {
             this.logger.error("Error while trying to resolve a reference [{}]", reference, e);
-            return null;
-        }
-    }
-
-    /**
-     * Retrieve and return the reference of the given actor or null if the actor doesn't belong to the current wiki.
-     * @param actor the actor for which to retrieve the reference.
-     * @return null if the actor doesn't belong to the current wiki, else it returns its EntityReference.
-     */
-    public UserReference getXWikiUserReference(AbstractActor actor)
-    {
-        try {
-            return this.actorHandler.getXWikiUserReference(actor);
-        } catch (ActivityPubException e) {
-            this.logger.error("Error while trying to get an XWiki user from an actor [{}]", actor, e);
             return null;
         }
     }

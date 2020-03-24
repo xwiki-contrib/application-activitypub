@@ -24,8 +24,7 @@
 #define ($content)
 <div class="notification-description">
     #set ($acceptActor = $services.activitypub.resolve($activity.actor))
-    #set($acceptActorReference = $services.activitypub.getXWikiUserReference($acceptActor))
-    #if ($xcontext.userReference.equals($acceptActorReference))
+    #if ($services.activitypub.isCurrentUser($acceptActor))
         #set ($object = $services.activitypub.resolve($activity.object))
         #set ($actor = $services.activitypub.resolve($object.actor))
         #set ($summary = "$actor.preferredUsername is now following you.")

@@ -24,14 +24,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import javax.inject.Inject;
-
 import org.apache.commons.httpclient.HttpMethod;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
+import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActivityRequest;
@@ -46,13 +44,16 @@ import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
+import org.xwiki.user.CurrentUserReference;
+import org.xwiki.user.UserReference;
+import org.xwiki.user.UserReferenceResolver;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -84,6 +85,9 @@ class ActivityPubScriptServiceTest
     @MockComponent
     private ActivityPubObjectReferenceResolver activityPubObjectReferenceResolver;
 
+    @MockComponent
+    private UserReferenceResolver<CurrentUserReference> userReferenceResolver;
+
     @Test
     void follow() throws Exception
     {
@@ -102,18 +106,6 @@ class ActivityPubScriptServiceTest
     }
 
     @Test
-    void resolve() throws Exception
-    {
-        this.scriptService.resolve(new ActivityPubObjectReference<>());
-    }
-
-    @Test
-    void getXWikiUserReference() throws Exception
-    {
-        this.scriptService.getXWikiUserReference(mock(AbstractActor.class));
-    }
-
-    @Test
     void following() throws Exception
     {
         AbstractActor aa = mock(AbstractActor.class);
@@ -123,7 +115,7 @@ class ActivityPubScriptServiceTest
         when(this.activityPubObjectReferenceResolver.resolveReference(apor)).thenReturn(mock(
             OrderedCollection.class));
         List<AbstractActor> res = this.scriptService.following();
-        Assertions.assertTrue(res.isEmpty());
+        assertTrue(res.isEmpty());
     }
 
     @Test
@@ -136,7 +128,7 @@ class ActivityPubScriptServiceTest
         when(this.activityPubObjectReferenceResolver.resolveReference(apor)).thenReturn(mock(
             OrderedCollection.class));
         List<AbstractActor> res = this.scriptService.followers();
-        Assertions.assertTrue(res.isEmpty());
+        assertTrue(res.isEmpty());
     }
 
     @Test
@@ -210,5 +202,19 @@ class ActivityPubScriptServiceTest
         assertEquals(note.getTo(), create.getTo());
         assertNotNull(create.getPublished());
         verify(this.createActivityHandler).handleOutboxRequest(new ActivityRequest<>(actor, create));
+    }
+
+    @Test
+    public void isCurrentUser() throws ActivityPubException
+    {
+        AbstractActor actor = mock(AbstractActor.class);
+        UserReference userReference = mock(UserReference.class);
+
+        when(this.userReferenceResolver.resolve(null)).thenReturn(userReference);
+        when(this.actorHandler.getXWikiUserReference(actor)).thenReturn(userReference);
+        assertTrue(this.scriptService.isCurrentUser(actor));
+
+        when(this.userReferenceResolver.resolve(null)).thenReturn(mock(UserReference.class));
+        assertFalse(this.scriptService.isCurrentUser(actor));
     }
 }
