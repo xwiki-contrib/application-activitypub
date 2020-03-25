@@ -125,6 +125,8 @@
     </property>
     <property>
       <code>require(['jquery', 'xwiki-meta'], function($, xm) {
+  const followUserDoc = new XWiki.Document(XWiki.Model.resolve('ActivityPub.FollowUser', XWiki.EntityType.DOCUMENT));
+  const followingDoc = new XWiki.Document(XWiki.Model.resolve('ActivityPub.ListFollowing', XWiki.EntityType.DOCUMENT));
   function displayMessage(message) {
     const messageP = $('#messageBox')
     if(messageP.length === 0) {
@@ -134,8 +136,13 @@
     }
   }
 
+  function updateFollowing() {
+    $.get(followingDoc.getURL("get"), function(res) {
+      $('#linkActors&gt;:first-child').replaceWith(res);
+    });
+  }
+
   $(document).ready(function() {
-    const followUserDoc = new XWiki.Document(XWiki.Model.resolve('ActivityPub.FollowUser', XWiki.EntityType.DOCUMENT));
     $('#followForm').submit(function(event) {
       event.preventDefault();
 
@@ -144,8 +151,11 @@
         'followInput': $('#followInput').val()
       };
       $.post(followUserDoc.getURL("view") + '?outputSyntax=plain', data, function(data) {
-        $('#followInput').val('');
+        if(data.success) {
+          $('#followInput').val('');
+        }
         displayMessage(data.message);
+        updateFollowing();
       })
     });
   });
@@ -288,9 +298,9 @@
       <content>{{velocity}}
 
 #set ($isMyProfile = $services.model.resolveDocument($xcontext.user) == $doc.documentReference)
-{{html clean='false'}}
-#if ($isMyProfile)
 
+#if ($isMyProfile)
+{{html clean='false'}}
 #set ($discard = $xwiki.jsx.use('ActivityPub.UserDashboard'))
 
 &lt;form id="followForm" class='xform'&gt;
@@ -316,42 +326,24 @@
   #end
 #end
 &lt;div&gt;
-  &lt;div&gt;
-    &lt;h1&gt;Following&lt;/h1&gt;
-#set ($following = $services.activitypub.following())
-#if ($following.empty)
-  &lt;p&gt;Start following users!&lt;/p&gt;
-#else
-    &lt;ul&gt;
-  #foreach ($actor in $following)
-      &lt;li&gt;$actor.preferredUsername&lt;/li&gt;
-  #end
-    &lt;/ul&gt;
-#end
-  &lt;/div&gt;
-  &lt;div&gt;
-    &lt;h1&gt;Followers&lt;/h1&gt;
-    #set ($followers = $services.activitypub.followers())
-    #if ($followers.empty)
-    &lt;p&gt;Nobody is following you!&lt;/p&gt;
-    #else
-    &lt;ul&gt;
-      #foreach ($actor in $followers)
-      &lt;li&gt;$actor.preferredUsername&lt;/li&gt;
-      #end
-    &lt;/ul&gt;
-    #end
-  &lt;/div&gt;
+  {{/html}}
+{{html clean="false" wiki="true"}}
+&lt;div id="linkActors"&gt;
+  {{include reference="ActivityPub.ListFollowing" /}}
+  {{include reference="ActivityPub.ListFollowers" /}}
 &lt;/div&gt;
-
+{{/html}}
+{{html clean='false'}}
+&lt;/div&gt;
+{{/html}}
 #else
-
+{{html clean='false'}}
 &lt;h1&gt;$services.localization.render('activitypub.webfinger')&lt;/h1&gt;
 &lt;div class="xform"&gt;
-&lt;input type="text" disabled="disable" value="$services.webfinger.getWebfingerId($xcontext.user)" class="form-control"/&gt;
+&lt;input type="text" readonly="true" value="$services.webfinger.getWebfingerId($doc.documentReference)" class="form-control"/&gt;
 &lt;/div&gt;
-#end
 {{/html}}
+#end
 {{/velocity}}</content>
     </property>
     <property>

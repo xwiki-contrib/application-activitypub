@@ -30,7 +30,10 @@ import javax.inject.Singleton;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.script.service.ScriptService;
+import org.xwiki.user.UserReference;
 
 import com.xpn.xwiki.XWikiContext;
 
@@ -49,6 +52,9 @@ public class WebfingerScriptService implements ScriptService
     private Provider<XWikiContext> contextProvider;
 
     @Inject
+    private XWikiUserBridge userBridge;
+
+    @Inject
     private Logger logger;
 
     /**
@@ -56,15 +62,17 @@ public class WebfingerScriptService implements ScriptService
      * @param user the user name.
      * @return The webfinger id.
      */
-    public String getWebfingerId(String user)
+    public String getWebfingerId(DocumentReference user)
     {
-        XWikiContext context = this.contextProvider.get();
         try {
+            String userLogin = this.userBridge.getUserLogin(this.userBridge.resolveDocumentReference(user));
+            XWikiContext context = this.contextProvider.get();
             URL url = context.getURLFactory().getServerURL(context);
-            if (url.getPort() != 80) {
-                return String.format("%s@%s:%d", user, url.getHost(), url.getPort());
+            int port = url.getPort();
+            if (port != 80 && port > 0) {
+                return String.format("%s@%s:%d", userLogin, url.getHost(), port);
             } else {
-                return String.format("%s@%s", user, url.getHost());
+                return String.format("%s@%s", userLogin, url.getHost());
             }
         } catch (MalformedURLException e) {
             this.logger.warn("Can't resolve the server URL. Cause [{}]", ExceptionUtils.getRootCauseMessage(e));

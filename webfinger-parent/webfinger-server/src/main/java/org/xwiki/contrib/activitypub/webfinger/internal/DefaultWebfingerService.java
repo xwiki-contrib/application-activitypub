@@ -57,7 +57,7 @@ public class DefaultWebfingerService implements WebfingerService
     public URI resolveActivityPubUserUrl(String username) throws WebfingerException
     {
         // FIXME: deal more cleanly with the username prefix.
-        ActivityPubResourceReference aprr = new ActivityPubResourceReference("Person", "xwiki:" + username);
+        ActivityPubResourceReference aprr = new ActivityPubResourceReference("Person", username);
         try {
             return this.defaultURLHandler.getAbsoluteURI(this.serializer.serialize(aprr));
         } catch (Exception e) {

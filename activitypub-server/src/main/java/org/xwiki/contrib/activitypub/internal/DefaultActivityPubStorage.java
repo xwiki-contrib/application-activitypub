@@ -22,7 +22,9 @@ package org.xwiki.contrib.activitypub.internal;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -54,7 +56,6 @@ import org.xwiki.resource.SerializeResourceReferenceException;
 import org.xwiki.resource.UnsupportedResourceReferenceException;
 import org.xwiki.search.solr.Solr;
 import org.xwiki.search.solr.SolrException;
-import org.xwiki.search.solr.internal.api.SolrInstance;
 import org.xwiki.url.ExtendedURL;
 
 /**
@@ -104,11 +105,18 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     @Override
     public boolean belongsToCurrentInstance(URI id)
     {
-        // FIXME: This should definitely be computed in a better way
         try {
-            return id.toURL().toString().contains(this.urlHandler.getServerUrl().toString());
+            URL serverUrl = this.urlHandler.getServerUrl();
+            URL idUrl = id.toURL();
+            int serverUrlPort;
+            if (serverUrl.getPort() == -1) {
+                serverUrlPort = 80;
+            } else {
+                serverUrlPort = serverUrl.getPort();
+            }
+            return Objects.equals(serverUrl.getHost(), idUrl.getHost()) && serverUrlPort == idUrl.getPort();
         } catch (MalformedURLException e) {
-            logger.error("Error while comparing server URL and actor ID", e);
+            this.logger.error("Error while comparing server URL and actor ID", e);
         }
         return false;
     }

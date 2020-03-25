@@ -42,14 +42,15 @@
   #if ("$!actor" != '')
     #set ($followWorked = $services.activitypub.follow($actor))
     #if ($followWorked)
-        #set ($followWorked = true)
-       #set ($followMessage = $services.localization.render('activitypub.follow.followRequested'))
+      #set ($followWorked = true)
+      #set ($followMessage = $services.localization.render('activitypub.follow.followRequested'))
     #else
-        #set ($followWorked = false)
-         #set ($followMessage = $services.localization.render('activitypub.follow.followNotRequested'))
+      #set ($followWorked = false)
+      #set ($followMessage = $services.localization.render('activitypub.follow.followNotRequested'))
     #end
   #else
-   #set ($followMessage = $services.localization.render('activitypub.follow.actornotfound', [$request.followInput]))
+    #set ($followWorked = false)
+    #set ($followMessage = $services.localization.render('activitypub.follow.actornotfound', [$request.followInput]))
   #end
 #end
 
@@ -65,7 +66,7 @@
   &lt;dl&gt;
     &lt;dt&gt;
       &lt;label for="followInput"&gt;$services.localization.render('activitypub.follow.input.label')&lt;/label&gt;
-      &lt;span class='xHint'&gt;$services.localization.render('activitypub.follow.input.hint')&lt;/span&gt;
+      &lt;span class="xHint"&gt;$services.localization.render('activitypub.follow.input.hint')&lt;/span&gt;
     &lt;/dt&gt;
     &lt;dd&gt;
       &lt;input type="text" name="followInput" id="followInput" class="form-control" placeholder="$services.localization.render('activitypub.follow.input.placeholder')" /&gt;
@@ -78,33 +79,11 @@
 #if ($followMessage)
 $followMessage
 #end
+{{/html}}
+{{html clean="false" wiki="true"}}
 &lt;div&gt;
-  &lt;div&gt;
-    &lt;h1&gt;Following&lt;/h1&gt;
-#set ($following = $services.activitypub.following())
-#if ($following.empty)
-  &lt;p&gt;Start following users!&lt;/p&gt;
-#else
-    &lt;ul&gt;
-  #foreach ($actor in $following)
-      &lt;li&gt;$actor.preferredUsername&lt;/li&gt;
-  #end
-    &lt;/ul&gt;
-#end
-  &lt;/div&gt;
-  &lt;div&gt;
-    &lt;h1&gt;Followers&lt;/h1&gt;
-    #set ($followers = $services.activitypub.followers())
-    #if ($followers.empty)
-    &lt;p&gt;Nobody is following you!&lt;/p&gt;
-    #else
-    &lt;ul&gt;
-      #foreach ($actor in $followers)
-      &lt;li&gt;$actor.preferredUsername&lt;/li&gt;
-      #end
-    &lt;/ul&gt;
-    #end
-  &lt;/div&gt;
+  {{include reference="ActivityPub.ListFollowing" /}}
+  {{include reference="ActivityPub.ListFollowers" /}}
 &lt;/div&gt;
 {{/html}}
 #end
