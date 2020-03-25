@@ -1,0 +1,371 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.4" reference="ActivityPub.UserDashboard" locale="">
+  <web>ActivityPub</web>
+  <name>UserDashboard</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>Main.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>UserDashboard</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content/>
+  <object>
+    <name>ActivityPub.UserDashboard</name>
+    <number>0</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>eef7e5b2-9a4c-47c0-8837-3878afa1fc80</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>require(['jquery', 'xwiki-meta'], function($, xm) {
+  function displayMessage(message) {
+    const messageP = $('#messageBox')
+    if(messageP.length === 0) {
+      $('&lt;p id="messageBox"&gt;'+message+'&lt;/p&gt;').insertAfter('#followForm');
+    } else {
+      messageP.text(message);
+    }
+  }
+
+  $(document).ready(function() {
+    const followUserDoc = new XWiki.Document(XWiki.Model.resolve('ActivityPub.FollowUser', XWiki.EntityType.DOCUMENT));
+    $('#followForm').submit(function(event) {
+      event.preventDefault();
+
+      const data = {
+        'form_token': xm.form_token,
+        'followInput': $('#followInput').val()
+      };
+      $.post(followUserDoc.getURL("view") + '?outputSyntax=plain', data, function(data) {
+        $('#followInput').val('');
+        displayMessage(data.message);
+      })
+    });
+  });
+});</code>
+    </property>
+    <property>
+      <name>JSX</name>
+    </property>
+    <property>
+      <parse>1</parse>
+    </property>
+    <property>
+      <use>onDemand</use>
+    </property>
+  </object>
+  <object>
+    <name>ActivityPub.UserDashboard</name>
+    <number>0</number>
+    <className>XWiki.UIExtensionClass</className>
+    <guid>62a224d2-a88e-40c5-8028-2285dbc1e60d</guid>
+    <class>
+      <name>XWiki.UIExtensionClass</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <async_cached>
+        <defaultValue>0</defaultValue>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType/>
+        <name>async_cached</name>
+        <number>3</number>
+        <prettyName>Cached</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </async_cached>
+      <async_context>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>1</multiSelect>
+        <name>async_context</name>
+        <number>4</number>
+        <prettyName>Context elements</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>5</size>
+        <unmodifiable>0</unmodifiable>
+        <values>doc.reference=Document|icon.theme=Icon theme|locale=Language|rendering.defaultsyntax=Default syntax|rendering.restricted=Restricted|rendering.targetsyntax=Target syntax|request.base=Request base URL|request.parameters=Request parameters|request.url=Request URL|request.wiki=Request wiki|user=User|wiki=Wiki</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </async_context>
+      <async_enabled>
+        <defaultValue>0</defaultValue>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType/>
+        <name>async_enabled</name>
+        <number>2</number>
+        <prettyName>Asynchronous rendering</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </async_enabled>
+      <content>
+        <disabled>0</disabled>
+        <editor>Text</editor>
+        <name>content</name>
+        <number>1</number>
+        <prettyName>Executed Content</prettyName>
+        <rows>25</rows>
+        <size>120</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </content>
+      <extensionPointId>
+        <disabled>0</disabled>
+        <name>extensionPointId</name>
+        <number>5</number>
+        <prettyName>Extension Point ID</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </extensionPointId>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>6</number>
+        <prettyName>Extension ID</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parameters>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>parameters</name>
+        <number>7</number>
+        <prettyName>Extension Parameters</prettyName>
+        <rows>10</rows>
+        <size>40</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </parameters>
+      <scope>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>scope</name>
+        <number>8</number>
+        <prettyName>Extension Scope</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>wiki=Current Wiki|user=Current User|global=Global</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </scope>
+    </class>
+    <property>
+      <async_cached>0</async_cached>
+    </property>
+    <property>
+      <async_context/>
+    </property>
+    <property>
+      <async_enabled>0</async_enabled>
+    </property>
+    <property>
+      <content>{{velocity}}
+
+#set ($isMyProfile = $services.model.resolveDocument($xcontext.user) == $doc.documentReference)
+{{html clean='false'}}
+#if ($isMyProfile)
+
+#set ($discard = $xwiki.jsx.use('ActivityPub.UserDashboard'))
+
+&lt;form id="followForm" class='xform'&gt;
+  &lt;dl&gt;
+    &lt;dt&gt;
+      &lt;label for="followInput"&gt;$services.localization.render('activitypub.follow.input.label')&lt;/label&gt;
+      &lt;span class='xHint'&gt;$services.localization.render('activitypub.follow.input.hint')&lt;/span&gt;
+    &lt;/dt&gt;
+    &lt;dd&gt;
+      &lt;input type="text" name="followInput" id="followInput" class="form-control" placeholder="$services.localization.render('activitypub.follow.input.placeholder')" /&gt;
+    &lt;/dd&gt;
+  &lt;/dl&gt;
+  &lt;div class='buttonwrapper'&gt;
+    &lt;input value="$services.localization.render('activitypub.follow.button')" class='button' type='submit'&gt;
+  &lt;/div&gt;
+&lt;/form&gt;
+#if ($services.csrf.isTokenValid($request.form_token) &amp;&amp; "$!request.followInput" != "")
+  #set ($followWorked = $services.activitypub.follow($request.followInput))
+  #if ($followWorked)
+      $services.localization.render('activitypub.follow.followRequested')
+  #else
+      $services.localization.render('activitypub.follow.followNotRequested')
+  #end
+#end
+&lt;div&gt;
+  &lt;div&gt;
+    &lt;h1&gt;Following&lt;/h1&gt;
+#set ($following = $services.activitypub.following())
+#if ($following.empty)
+  &lt;p&gt;Start following users!&lt;/p&gt;
+#else
+    &lt;ul&gt;
+  #foreach ($actor in $following)
+      &lt;li&gt;$actor.preferredUsername&lt;/li&gt;
+  #end
+    &lt;/ul&gt;
+#end
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;h1&gt;Followers&lt;/h1&gt;
+    #set ($followers = $services.activitypub.followers())
+    #if ($followers.empty)
+    &lt;p&gt;Nobody is following you!&lt;/p&gt;
+    #else
+    &lt;ul&gt;
+      #foreach ($actor in $followers)
+      &lt;li&gt;$actor.preferredUsername&lt;/li&gt;
+      #end
+    &lt;/ul&gt;
+    #end
+  &lt;/div&gt;
+&lt;/div&gt;
+
+#else
+
+&lt;h1&gt;$services.localization.render('activitypub.webfinger')&lt;/h1&gt;
+&lt;div class="xform"&gt;
+&lt;input type="text" disabled="disable" value="$services.webfinger.getWebfingerId($xcontext.user)" class="form-control"/&gt;
+&lt;/div&gt;
+#end
+{{/html}}
+{{/velocity}}</content>
+    </property>
+    <property>
+      <extensionPointId>org.xwiki.plaftorm.user.profile.menu</extensionPointId>
+    </property>
+    <property>
+      <name>org.xwiki.contrib.activitypub.menu</name>
+    </property>
+    <property>
+      <parameters>icon=key
+name=$services.localization.render('activitypub.user.profile.menu')</parameters>
+    </property>
+    <property>
+      <scope>wiki</scope>
+    </property>
+  </object>
+</xwikidoc>

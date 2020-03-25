@@ -47,7 +47,7 @@ import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 @Singleton
 public class DefaultWebfingerClient implements WebfingerClient
 {
-    private static final Pattern ACTOR_REGEX = Pattern.compile("@?(?<username>.+)@(?<domain>.+)");
+    private static final Pattern ACTOR_REGEX = Pattern.compile("^@?(?<username>[^@]+)@(?<domain>[^@]+)$");
 
     private HttpClient httpClient;
 

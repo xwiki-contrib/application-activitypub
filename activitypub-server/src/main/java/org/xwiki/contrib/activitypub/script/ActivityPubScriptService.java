@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -72,7 +73,7 @@ public class ActivityPubScriptService implements ScriptService
 {
     private static final String GET_CURRENT_ACTOR_ERR_MSG = "Failed to retrieve the current actor. Cause [{}].";
 
-    private static final String GET_CURRENT_ACTOR_UNEXPECTED8ERR_MSG =
+    private static final String GET_CURRENT_ACTOR_UNEXPECTED_ERR_MSG =
         "Failed to retrieve the current actor. Unexpected Cause [{}].";
 
     @Inject
@@ -124,11 +125,11 @@ public class ActivityPubScriptService implements ScriptService
         AbstractActor result = null;
         try {
             if (StringUtils.isBlank(actor)) {
-                checkAuthentication();
+                this.checkAuthentication();
                 result = this.actorHandler.getCurrentActor();
             } else {
                 String trimmedActor = actor.trim();
-                if (trimmedActor.startsWith("http://") || trimmedActor.startsWith("@")) {
+                if (trimmedActor.startsWith("http://") || trimmedActor.contains("@")) {
                     result = this.actorHandler.getRemoteActor(trimmedActor);
                 } else {
                     result = this.actorHandler.getLocalActor(trimmedActor);
@@ -153,7 +154,7 @@ public class ActivityPubScriptService implements ScriptService
         try {
             return userReference.equals(this.actorHandler.getXWikiUserReference(actor));
         } catch (ActivityPubException e) {
-            logger.error("Error while getting user reference for actor [{}]", actor, e);
+            this.logger.error("Error while getting user reference for actor [{}]", actor, e);
             return false;
         }
     }
@@ -168,7 +169,7 @@ public class ActivityPubScriptService implements ScriptService
         boolean result = false;
 
         try {
-            checkAuthentication();
+            this.checkAuthentication();
             AbstractActor currentActor = this.actorHandler.getCurrentActor();
             Follow follow = new Follow().setActor(currentActor).setObject(remoteActor);
             this.activityPubStorage.storeEntity(follow);
@@ -219,8 +220,8 @@ public class ActivityPubScriptService implements ScriptService
             checkAuthentication();
             AbstractActor currentActor = this.actorHandler.getCurrentActor();
             Note note = new Note()
-                .setAttributedTo(Collections.singletonList(currentActor.getReference()))
-                .setContent(content);
+                            .setAttributedTo(Collections.singletonList(currentActor.getReference()))
+                            .setContent(content);
             if (targets != null && !targets.isEmpty()) {
                 List<ProxyActor> to = new ArrayList<>();
                 for (String target : targets) {
@@ -240,16 +241,15 @@ public class ActivityPubScriptService implements ScriptService
             this.activityPubStorage.storeEntity(note);
 
             Create create = new Create()
-                .setActor(currentActor)
-                .setObject(note)
-                .setAttributedTo(note.getAttributedTo())
-                .setTo(note.getTo())
-                .setPublished(new Date());
+                                .setActor(currentActor)
+                                .setObject(note)
+                                .setAttributedTo(note.getAttributedTo())
+                                .setTo(note.getTo())
+                                .setPublished(new Date());
             this.activityPubStorage.storeEntity(create);
 
             this.createActivityHandler.handleOutboxRequest(new ActivityRequest<>(currentActor, create));
-        } catch (IOException | ActivityPubException e)
-        {
+        } catch (IOException | ActivityPubException e) {
             this.logger.error("Error while posting a note.");
         }
     }
@@ -262,14 +262,17 @@ public class ActivityPubScriptService implements ScriptService
     {
         try {
             AbstractActor currentActor = this.actorHandler.getCurrentActor();
-            OrderedCollection<AbstractActor> activityPubObjectReferences =
-                this.activityPubObjectReferenceResolver.resolveReference(currentActor.getFollowing());
-            return activityPubObjectReferences.getOrderedItems().stream().map(this::resolveActor)
-                       .filter(Objects::nonNull).collect(Collectors.toList());
+            ActivityPubObjectReference<OrderedCollection<AbstractActor>> following = currentActor.getFollowing();
+            if (following != null) {
+                OrderedCollection<AbstractActor> activityPubObjectReferences =
+                    this.activityPubObjectReferenceResolver.resolveReference(following);
+                return activityPubObjectReferences.getOrderedItems().stream().map(this::resolveActor)
+                           .filter(Objects::nonNull).collect(Collectors.toList());
+            }
         } catch (ActivityPubException e) {
             this.logger.warn(GET_CURRENT_ACTOR_ERR_MSG, ExceptionUtils.getRootCauseMessage(e));
         } catch (Exception e) {
-            this.logger.warn(GET_CURRENT_ACTOR_UNEXPECTED8ERR_MSG, ExceptionUtils.getRootCauseMessage(e));
+            this.logger.warn(GET_CURRENT_ACTOR_UNEXPECTED_ERR_MSG, ExceptionUtils.getRootCauseMessage(e));
         }
         return Collections.emptyList();
     }
@@ -291,14 +294,17 @@ public class ActivityPubScriptService implements ScriptService
     {
         try {
             AbstractActor currentActor = this.actorHandler.getCurrentActor();
-            OrderedCollection<AbstractActor> activityPubObjectReferences =
-                this.activityPubObjectReferenceResolver.resolveReference(currentActor.getFollowers());
-            return activityPubObjectReferences.getOrderedItems().stream().map(this::resolveActor)
-                       .filter(Objects::nonNull).collect(Collectors.toList());
+            ActivityPubObjectReference<OrderedCollection<AbstractActor>> followers = currentActor.getFollowers();
+            if (followers != null) {
+                OrderedCollection<AbstractActor> activityPubObjectReferences =
+                    this.activityPubObjectReferenceResolver.resolveReference(followers);
+                return activityPubObjectReferences.getOrderedItems().stream().map(this::resolveActor)
+                           .filter(Objects::nonNull).collect(Collectors.toList());
+            }
         } catch (ActivityPubException e) {
             this.logger.warn(GET_CURRENT_ACTOR_ERR_MSG, ExceptionUtils.getRootCauseMessage(e));
         } catch (Exception e) {
-            this.logger.warn(GET_CURRENT_ACTOR_UNEXPECTED8ERR_MSG, ExceptionUtils.getRootCauseMessage(e));
+            this.logger.warn(GET_CURRENT_ACTOR_UNEXPECTED_ERR_MSG, ExceptionUtils.getRootCauseMessage(e));
         }
         return Collections.emptyList();
     }

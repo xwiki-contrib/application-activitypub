@@ -47,7 +47,9 @@ activitypub.message.target.hint=You can select your followers and/or some specif
 activitypub.message.target.placeholder=Insert here the identifier(s) of user(s)
 activitypub.message.content.label=Content of your message
 activitypub.message.content.hint=Type here the message you want to send
-activitypub.message.button=Send the message</content>
+activitypub.message.button=Send the message
+activitypub.user.profile.menu=ActivityPub
+activitypub.webfinger=Webfinger</content>
   <object>
     <name>ActivityPub.ActivityPubTranslations</name>
     <number>0</number>

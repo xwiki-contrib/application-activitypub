@@ -37,8 +37,28 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>false</hidden>
   <content>{{velocity}}
+#if ("$!request.followInput" != "" &amp;&amp; $services.csrf.isTokenValid($request.form_token))
+  #set ($actor = $services.activitypub.getActor($request.followInput))
+  #if ("$!actor" != '')
+    #set ($followWorked = $services.activitypub.follow($actor))
+    #if ($followWorked)
+        #set ($followWorked = true)
+       #set ($followMessage = $services.localization.render('activitypub.follow.followRequested'))
+    #else
+        #set ($followWorked = false)
+         #set ($followMessage = $services.localization.render('activitypub.follow.followNotRequested'))
+    #end
+  #else
+   #set ($followMessage = $services.localization.render('activitypub.follow.actornotfound', [$request.followInput]))
+  #end
+#end
+
+#if ($request.outputSyntax == "plain")
+  #setVariable("$json" { "success": $followWorked, "message": "$followMessage" })
+  #jsonResponse($json)
+#else
 {{html clean="false"}}
-&lt;form method="post" action="${xwiki.getURL('ActivityPub.FollowUser', 'view')}" class='xform'&gt;
+&lt;form method="post" id="authenticationSecurityConfigForm" action="${xwiki.getURL('ActivityPub.FollowUser', 'view')}" class='xform'&gt;
   &lt;div class="hidden"&gt;
     &lt;input type='hidden' name='form_token' value="$!{services.csrf.getToken()}" /&gt;
   &lt;/div&gt;
@@ -55,19 +75,8 @@
     &lt;input value="$services.localization.render('activitypub.follow.button')" class='button' type='submit'&gt;
   &lt;/div&gt;
 &lt;/form&gt;
-#if ("$!request.followInput" != "" &amp;&amp; $services.csrf.isTokenValid($request.form_token))
-  #set ($actor = $services.activitypub.getActor($request.followInput))
-  #if ("$!actor" != '')
-    #set ($followWorked = $services.activitypub.follow($actor))
-    #if ($followWorked)
-        $services.localization.render('activitypub.follow.followRequested')
-    #else
-        $services.localization.render('activitypub.follow.followNotRequested')
-    #end
-  #else
-    $services.localization.render('activitypub.follow.actornotfound', [$request.followInput])
-  #end
-  
+#if ($followMessage)
+$followMessage
 #end
 &lt;div&gt;
   &lt;div&gt;
@@ -98,6 +107,7 @@
   &lt;/div&gt;
 &lt;/div&gt;
 {{/html}}
+#end
 {{/velocity}}
 </content>
 </xwikidoc>

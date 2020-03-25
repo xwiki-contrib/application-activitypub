@@ -2,3 +2,4 @@ org.xwiki.contrib.activitypub.webfinger.internal.WebfingerResourceReferenceHandl
 org.xwiki.contrib.activitypub.webfinger.internal.WebfingerResourceReferenceResolver
 org.xwiki.contrib.activitypub.webfinger.internal.DefaultWebfingerService
 org.xwiki.contrib.activitypub.webfinger.internal.DefaultWebfingerClient
+org.xwiki.contrib.activitypub.webfinger.script.WebfingerScriptService
