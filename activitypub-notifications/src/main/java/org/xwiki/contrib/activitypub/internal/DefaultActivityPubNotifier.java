@@ -26,15 +26,22 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubNotifier;
-import org.xwiki.contrib.activitypub.ActivityPubEvent;
+import org.xwiki.contrib.activitypub.entities.Accept;
+import org.xwiki.contrib.activitypub.entities.Create;
+import org.xwiki.contrib.activitypub.entities.Follow;
+import org.xwiki.contrib.activitypub.entities.Reject;
+import org.xwiki.contrib.activitypub.events.AbstractActivityPubEvent;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
+import org.xwiki.contrib.activitypub.events.CreateEvent;
+import org.xwiki.contrib.activitypub.events.FollowEvent;
 import org.xwiki.observation.ObservationManager;
 import org.xwiki.user.UserReference;
 import org.xwiki.user.UserReferenceSerializer;
 
 /**
- * Default implementation of the notifier: basically it creates an {@link ActivityPubEvent} and send it to the
+ * Default implementation of the notifier: basically it creates an {@link AbstractActivityPubEvent} and send it to the
  * {@link ObservationManager}.
  *
  * @version $Id$
@@ -50,9 +57,16 @@ public class DefaultActivityPubNotifier implements ActivityPubNotifier
     private ObservationManager observationManager;
 
     @Override
-    public <T extends AbstractActivity> void notify(T activity, Set<UserReference> targets)
+    public <T extends AbstractActivity> void notify(T activity, Set<UserReference> targets) throws ActivityPubException
     {
-        ActivityPubEvent<T> event = new ActivityPubEvent<T>(activity, this.serializeTargets(targets));
+        AbstractActivityPubEvent<? extends AbstractActivity> event;
+        if (activity instanceof Create) {
+            event = new CreateEvent((Create) activity, this.serializeTargets(targets));
+        } else if (activity instanceof Follow || activity instanceof Reject || activity instanceof Accept) {
+            event = new FollowEvent<>(activity, this.serializeTargets(targets));
+        } else {
+            throw new ActivityPubException(String.format("Cannot find the right event to notify about [%s]", activity));
+        }
         this.observationManager.notify(event, "org.xwiki.contrib:activitypub-notifications", activity.getType());
     }
 

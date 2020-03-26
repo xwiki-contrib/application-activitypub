@@ -17,46 +17,34 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.internal;
+package org.xwiki.contrib.activitypub.internal.descriptors;
 
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.activitypub.ActivityPubNotifier;
-import org.xwiki.eventstream.RecordableEventDescriptor;
+import org.xwiki.contrib.activitypub.events.FollowEvent;
 
 /**
- * An event descriptor for ActivityPub to allows enabling/disabling the notifications.
+ * Event descriptor for {@link FollowEvent}.
  *
+ * @since 1.1
  * @version $Id$
  */
 @Component
-@Named("ActivityPubEvent")
 @Singleton
-public class ActivityPubEventDescriptor implements RecordableEventDescriptor
+@Named(FollowEvent.EVENT_TYPE)
+public class FollowEventDescriptor extends AbstractActivityPubEventDescriptor
 {
     @Override
     public String getEventType()
     {
-        return ActivityPubNotifier.EVENT_TYPE;
-    }
-
-    @Override
-    public String getApplicationName()
-    {
-        return "activitypub.application.name";
+        return FollowEvent.EVENT_TYPE;
     }
 
     @Override
     public String getDescription()
     {
-        return "activitypub.application.description";
-    }
-
-    @Override
-    public String getApplicationIcon()
-    {
-        return "branch";
+        return "activitypub.follow.event.description";
     }
 }

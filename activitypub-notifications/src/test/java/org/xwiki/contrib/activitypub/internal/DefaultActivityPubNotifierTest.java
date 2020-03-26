@@ -24,7 +24,7 @@ import java.util.HashSet;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
-import org.xwiki.contrib.activitypub.ActivityPubEvent;
+import org.xwiki.contrib.activitypub.events.AbstractActivityPubEvent;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.observation.ObservationManager;
@@ -58,18 +58,18 @@ public class DefaultActivityPubNotifierTest
     private UserReferenceSerializer<String> userReferenceSerializer;
 
     @Test
-    void notifyNoTargets()
+    void notifyNoTargets() throws Exception
     {
         this.defaultActivityPubNotifier.notify(new Accept(), new HashSet<>());
         verify(this.observationManager)
             .notify(ArgumentMatchers.argThat(
-                (ActivityPubEvent<? extends AbstractActivity> activityPubEvent) -> activityPubEvent.getTarget()
+                (AbstractActivityPubEvent<? extends AbstractActivity> activityPubEvent) -> activityPubEvent.getTarget()
                                                                                        .isEmpty()),
                 eq("org.xwiki.contrib:activitypub-notifications"), eq("Accept"));
     }
 
     @Test
-    void notifyOneTarget()
+    void notifyOneTarget() throws Exception
     {
         UserReference userReference = mock(UserReference.class);
         when(userReferenceSerializer.serialize(userReference)).thenReturn("Foobar");
@@ -77,7 +77,7 @@ public class DefaultActivityPubNotifierTest
         verify(this.observationManager)
             .notify(
                 ArgumentMatchers
-                    .argThat((ActivityPubEvent<? extends AbstractActivity> activityPubEvent) ->
+                    .argThat((AbstractActivityPubEvent<? extends AbstractActivity> activityPubEvent) ->
                         activityPubEvent.getTarget().size() == 1
                             && activityPubEvent.getTarget().contains("Foobar")),
                 eq("org.xwiki.contrib:activitypub-notifications"), eq("Accept"));

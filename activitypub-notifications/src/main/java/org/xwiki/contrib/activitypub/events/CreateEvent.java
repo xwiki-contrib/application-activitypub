@@ -17,49 +17,47 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub;
+package org.xwiki.contrib.activitypub.events;
 
-import java.util.HashSet;
+import java.util.Set;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.xwiki.contrib.activitypub.entities.Create;
-import org.xwiki.contrib.activitypub.entities.Follow;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.xwiki.stability.Unstable;
 
 /**
- * Test of {@link ActivityPubEvent}.
+ * A specific event type for Create activities.
  *
- * @since 1.0
+ * @since 1.1
  * @version $Id$
  */
-public class ActivityPubEventTest
+@Unstable
+public class CreateEvent extends AbstractActivityPubEvent<Create>
 {
-    private ActivityPubEvent<Create> activityPubEvent;
+    /**
+     * Default name for those events.
+     */
+    public static final String EVENT_TYPE = "activitypub.create";
 
-    @BeforeEach
-    void beforeEach()
+    /**
+     * Default constructor.
+     *
+     * @param activity the activity to notify about
+     * @param target the serialized references of users to notify to
+     */
+    public CreateEvent(Create activity, Set<String> target)
     {
-        this.activityPubEvent = new ActivityPubEvent<>(new Create(), new HashSet<>());
+        super(activity, target);
     }
 
-    @Test
-    void matchNull()
+    @Override
+    public String getType()
     {
-        assertFalse(this.activityPubEvent.matches(null));
+        return EVENT_TYPE;
     }
 
-    @Test
-    void matchObject()
+    @Override
+    public boolean matches(Object otherEvent)
     {
-        assertFalse(this.activityPubEvent.matches(new Object()));
-    }
-
-    @Test
-    void matchActivityPubEvent()
-    {
-        assertTrue(this.activityPubEvent.matches(new ActivityPubEvent<>(new Follow(), new HashSet<>())));
+        return otherEvent != null && otherEvent instanceof CreateEvent;
     }
 }

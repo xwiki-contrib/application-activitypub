@@ -26,7 +26,6 @@ import javax.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.activitypub.ActivityPubNotifier;
 import org.xwiki.eventstream.Event;
 import org.xwiki.eventstream.store.internal.AbstractLegacyEventConverter;
 import org.xwiki.eventstream.store.internal.LegacyEvent;
@@ -39,10 +38,11 @@ import static org.xwiki.contrib.activitypub.internal.ActivityPubRecordableEventC
  * what will be stored.
  *
  * @version $Id$
+ * @since 1.0
  */
 @Component
 @Singleton
-@Named(ActivityPubNotifier.EVENT_TYPE)
+@Named("activitypub")
 public class ActivityPubLegacyEventConverter extends AbstractLegacyEventConverter
 {
     @Override

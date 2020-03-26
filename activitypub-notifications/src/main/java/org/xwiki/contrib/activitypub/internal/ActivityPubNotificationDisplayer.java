@@ -32,8 +32,9 @@ import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
-import org.xwiki.contrib.activitypub.ActivityPubNotifier;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
+import org.xwiki.contrib.activitypub.events.CreateEvent;
+import org.xwiki.contrib.activitypub.events.FollowEvent;
 import org.xwiki.eventstream.Event;
 import org.xwiki.notifications.CompositeEvent;
 import org.xwiki.notifications.NotificationException;
@@ -46,9 +47,16 @@ import org.xwiki.template.TemplateManager;
 
 import static org.xwiki.contrib.activitypub.internal.ActivityPubRecordableEventConverter.ACTIVITY_PARAMETER_KEY;
 
+/**
+ * Standard displayer for all activitypub events.
+ * This displayer retrieves velocity templates based on the activity types of the events.
+ *
+ * @since 1.0
+ * @version $Id$
+ */
 @Component
 @Singleton
-@Named(ActivityPubNotifier.EVENT_TYPE)
+@Named("activitypub")
 public class ActivityPubNotificationDisplayer implements NotificationDisplayer
 {
     private static final String EVENT_BINDING_NAME = "event";
@@ -124,6 +132,6 @@ public class ActivityPubNotificationDisplayer implements NotificationDisplayer
     @Override
     public List<String> getSupportedEvents()
     {
-        return Arrays.asList(ActivityPubNotifier.EVENT_TYPE);
+        return Arrays.asList(CreateEvent.EVENT_TYPE, FollowEvent.EVENT_TYPE);
     }
 }

@@ -17,32 +17,34 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub;
+package org.xwiki.contrib.activitypub.internal.descriptors;
 
-import java.util.Set;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
-import org.xwiki.component.annotation.Role;
-import org.xwiki.contrib.activitypub.entities.AbstractActivity;
-import org.xwiki.stability.Unstable;
-import org.xwiki.user.UserReference;
+import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.events.CreateEvent;
 
 /**
- * External API to send an ActivityPub notification.
+ * Event descriptor for {@link CreateEvent}.
  *
+ * @since 1.1
  * @version $Id$
- * @since 1.0
  */
-@Unstable
-@Role
-public interface ActivityPubNotifier
+@Component
+@Singleton
+@Named(CreateEvent.EVENT_TYPE)
+public class CreateEventDescriptor extends AbstractActivityPubEventDescriptor
 {
-    /**
-     * Send a notification related to the given activity to the given targets.
-     *
-     * @param activity the activity source of the notification.
-     * @param targets the target users of the notification.
-     * @param <T> the real type of the activity
-     * @throws ActivityPubException if the activity is not supported by any event.
-     */
-    <T extends AbstractActivity> void notify(T activity, Set<UserReference> targets) throws ActivityPubException;
+    @Override
+    public String getEventType()
+    {
+        return CreateEvent.EVENT_TYPE;
+    }
+
+    @Override
+    public String getDescription()
+    {
+        return "activitypub.create.event.description";
+    }
 }

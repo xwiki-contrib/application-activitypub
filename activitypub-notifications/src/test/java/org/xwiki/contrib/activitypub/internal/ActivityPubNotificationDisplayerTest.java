@@ -20,6 +20,7 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -31,6 +32,8 @@ import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubNotifier;
 import org.xwiki.contrib.activitypub.entities.Accept;
+import org.xwiki.contrib.activitypub.events.CreateEvent;
+import org.xwiki.contrib.activitypub.events.FollowEvent;
 import org.xwiki.eventstream.internal.DefaultEvent;
 import org.xwiki.notifications.CompositeEvent;
 import org.xwiki.notifications.NotificationException;
@@ -136,6 +139,6 @@ public class ActivityPubNotificationDisplayerTest
     void getSuppotedEventsDefault()
     {
         List<String> supportedEvents = this.activityPubNotificationDisplayer.getSupportedEvents();
-        assertEquals(ActivityPubNotifier.EVENT_TYPE, supportedEvents.get(0));
+        assertEquals(Arrays.asList(CreateEvent.EVENT_TYPE, FollowEvent.EVENT_TYPE), supportedEvents);
     }
 }

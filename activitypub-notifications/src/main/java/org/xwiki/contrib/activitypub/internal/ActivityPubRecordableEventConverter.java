@@ -29,18 +29,17 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.activitypub.ActivityPubEvent;
+import org.xwiki.contrib.activitypub.events.AbstractActivityPubEvent;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
-import org.xwiki.contrib.activitypub.ActivityPubNotifier;
-import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
+import org.xwiki.contrib.activitypub.events.CreateEvent;
+import org.xwiki.contrib.activitypub.events.FollowEvent;
 import org.xwiki.eventstream.Event;
 import org.xwiki.eventstream.RecordableEvent;
 import org.xwiki.eventstream.RecordableEventConverter;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.DocumentReferenceResolver;
 
 /**
- * Define the conversion from an {@link ActivityPubEvent} to a {@link org.xwiki.eventstream.internal.DefaultEvent}.
+ * Define the conversion from an {@link AbstractActivityPubEvent} to a {@link org.xwiki.eventstream.internal.DefaultEvent}.
  * The component will set the activity in a parameter of the {@link org.xwiki.eventstream.internal.DefaultEvent} and
  * will ensure that the event have a defined user.
  *
@@ -48,7 +47,7 @@ import org.xwiki.model.reference.DocumentReferenceResolver;
  */
 @Component
 @Singleton
-@Named(ActivityPubNotifier.EVENT_TYPE)
+@Named("activitypub")
 public class ActivityPubRecordableEventConverter implements RecordableEventConverter
 {
     /**
@@ -62,37 +61,29 @@ public class ActivityPubRecordableEventConverter implements RecordableEventConve
     @Inject
     private ActivityPubJsonSerializer activityPubJsonSerializer;
 
-    @Inject
-    private ActivityPubObjectReferenceResolver objectReferenceResolver;
-
-    @Inject
-    @Named("current")
-    private DocumentReferenceResolver<String> stringDocumentReferenceResolver;
-
     @Override
     public Event convert(RecordableEvent recordableEvent, String source, Object data) throws Exception
     {
         Event convertedEvent = this.defaultConverter.convert(recordableEvent, source, data);
 
-        ActivityPubEvent<?> activityPubEvent = (ActivityPubEvent<?>) recordableEvent;
+        AbstractActivityPubEvent<?> activityPubEvent = (AbstractActivityPubEvent<?>) recordableEvent;
         Map<String, String> parameters = new HashMap<>(convertedEvent.getParameters());
         parameters.put(ACTIVITY_PARAMETER_KEY,
             this.activityPubJsonSerializer.serialize(activityPubEvent.getActivity()));
         convertedEvent.setParameters(parameters);
-        convertedEvent.setType(ActivityPubNotifier.EVENT_TYPE);
+        convertedEvent.setType(activityPubEvent.getType());
 
         /* 
         FIXME: all notification related to activitypub event are attributed to a non existing user named "ActivityPub".
         */
         convertedEvent.setUser(new DocumentReference("xwiki", "XWiki", "ActivityPub"));
-        
-        
+
         return convertedEvent;
     }
 
     @Override
     public List<RecordableEvent> getSupportedEvents()
     {
-        return Arrays.asList(new ActivityPubEvent<>(null, null));
+        return Arrays.asList(new CreateEvent(null, null), new FollowEvent(null, null));
     }
 }

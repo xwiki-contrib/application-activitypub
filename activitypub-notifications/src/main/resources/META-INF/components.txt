@@ -1,5 +1,6 @@
 org.xwiki.contrib.activitypub.internal.DefaultActivityPubNotifier
-org.xwiki.contrib.activitypub.internal.ActivityPubEventDescriptor
 org.xwiki.contrib.activitypub.internal.ActivityPubNotificationDisplayer
 org.xwiki.contrib.activitypub.internal.ActivityPubRecordableEventConverter
 org.xwiki.contrib.activitypub.internal.ActivityPubLegacyEventConverter
+org.xwiki.contrib.activitypub.internal.descriptors.CreateEventDescriptor
+org.xwiki.contrib.activitypub.internal.descriptors.FollowEventDescriptor

@@ -17,32 +17,54 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub;
+package org.xwiki.contrib.activitypub.events;
 
 import java.util.Set;
 
-import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
+import org.xwiki.eventstream.RecordableEvent;
+import org.xwiki.eventstream.TargetableEvent;
 import org.xwiki.stability.Unstable;
-import org.xwiki.user.UserReference;
 
 /**
- * External API to send an ActivityPub notification.
- *
+ * Defines the generic ActivityPub event to be displayed as Notifications.
+ * @param <T> the type of the activity
  * @version $Id$
  * @since 1.0
  */
 @Unstable
-@Role
-public interface ActivityPubNotifier
+public abstract class AbstractActivityPubEvent<T extends AbstractActivity> implements RecordableEvent, TargetableEvent
 {
+    private Set<String> target;
+    private T activity;
+
     /**
-     * Send a notification related to the given activity to the given targets.
-     *
-     * @param activity the activity source of the notification.
-     * @param targets the target users of the notification.
-     * @param <T> the real type of the activity
-     * @throws ActivityPubException if the activity is not supported by any event.
+     * Default constructor.
+     * @param activity the activity to notify about
+     * @param target the serialized references of users to notify to
      */
-    <T extends AbstractActivity> void notify(T activity, Set<UserReference> targets) throws ActivityPubException;
+    public AbstractActivityPubEvent(T activity, Set<String> target)
+    {
+        this.activity = activity;
+        this.target = target;
+    }
+
+    @Override
+    public Set<String> getTarget()
+    {
+        return target;
+    }
+
+    /**
+     * @return the activity this event is about.
+     */
+    public T getActivity()
+    {
+        return activity;
+    }
+
+    /**
+     * @return the type of the event that will be used in notifications.
+     */
+    public abstract String getType();
 }

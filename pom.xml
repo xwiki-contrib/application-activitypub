@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.xwiki.contrib</groupId>
     <artifactId>parent-platform</artifactId>
-    <version>12.1</version>
+    <version>12.2</version>
   </parent>
   <artifactId>application-activitypub</artifactId>
   <version>1.1-SNAPSHOT</version>
@@ -61,12 +61,6 @@
   <properties>
     <xwiki.release.jira.skip>false</xwiki.release.jira.skip>
     <xwiki.issueManagement.jira.id>XAP</xwiki.issueManagement.jira.id>
-    <!-- FIXME: the following properties should be removed after the release of XWiki 12.2 and the release of parents
-    to 12.2 -->
-    <commons.version>12.2-SNAPSHOT</commons.version>
-    <platform.version>12.2-SNAPSHOT</platform.version>
-    <mockito.version>3.3.0</mockito.version>
-    <xwiki.enforcer.skip>true</xwiki.enforcer.skip>
   </properties>
   <dependencies>
     <dependency>
@@ -212,12 +206,6 @@
                     "justification": "The @context field must be a collection and not a single element."
                   },
                   {
-                    "code": "java.method.parameterTypeParameterChanged",
-                    "old": "parameter <T extends org.xwiki.contrib.activitypub.entities.AbstractActivity> void org.xwiki.contrib.activitypub.ActivityPubNotifier::notify(T, ===java.util.Set<org.xwiki.model.reference.EntityReference>===)",
-                    "new": "parameter <T extends org.xwiki.contrib.activitypub.entities.AbstractActivity> void org.xwiki.contrib.activitypub.ActivityPubNotifier::notify(T, ===java.util.Set<org.xwiki.user.UserReference>===)",
-                    "justification": "We now use the new UserReference since this parameter is really to target users."
-                  },
-                  {
                     "code": "java.method.parameterTypeChanged",
                     "old": "parameter org.xwiki.contrib.activitypub.entities.AbstractActor org.xwiki.contrib.activitypub.ActorHandler::getActor(===org.xwiki.model.reference.EntityReference===) throws org.xwiki.contrib.activitypub.ActivityPubException",
                     "new": "parameter org.xwiki.contrib.activitypub.entities.AbstractActor org.xwiki.contrib.activitypub.ActorHandler::getActor(===org.xwiki.user.UserReference===) throws org.xwiki.contrib.activitypub.ActivityPubException",
@@ -315,6 +303,29 @@
                     "code": "java.method.removed",
                     "old": "method org.xwiki.model.reference.EntityReference org.xwiki.contrib.activitypub.script.ActivityPubScriptService::getXWikiUserReference(org.xwiki.contrib.activitypub.entities.AbstractActor)",
                     "justification": "That method was too technical and shouldn't be needed anymore."
+                  },
+                  {
+                    "code": "java.class.removed",
+                    "old": "class org.xwiki.contrib.activitypub.ActivityPubEvent<T extends org.xwiki.contrib.activitypub.entities.AbstractActivity>",
+                    "justification": "The class has been made abstract, moved and renamed, if favor of the new CreateEvent and FollowEvent."
+                  },
+                  {
+                    "code": "java.field.removedWithConstant",
+                    "old": "field org.xwiki.contrib.activitypub.ActivityPubNotifier.EVENT_TYPE",
+                    "justification": "There is no more one event type but multiple, so the type should be get from each actual events."
+                  },
+                  {
+                    "code": "java.method.parameterTypeParameterChanged",
+                    "old": "parameter <T extends org.xwiki.contrib.activitypub.entities.AbstractActivity> void org.xwiki.contrib.activitypub.ActivityPubNotifier::notify(T, ===java.util.Set<org.xwiki.model.reference.EntityReference>===)",
+                    "new": "parameter <T extends org.xwiki.contrib.activitypub.entities.AbstractActivity> void org.xwiki.contrib.activitypub.ActivityPubNotifier::notify(T, ===java.util.Set<org.xwiki.user.UserReference>===) throws org.xwiki.contrib.activitypub.ActivityPubException",
+                    "justification": "We now use the new UserReference since this parameter is really to target users."
+                  },
+                  {
+                    "code": "java.method.exception.checkedAdded",
+                    "old": "method <T extends org.xwiki.contrib.activitypub.entities.AbstractActivity> void org.xwiki.contrib.activitypub.ActivityPubNotifier::notify(T, java.util.Set<org.xwiki.model.reference.EntityReference>)",
+                    "new": "method <T extends org.xwiki.contrib.activitypub.entities.AbstractActivity> void org.xwiki.contrib.activitypub.ActivityPubNotifier::notify(T, java.util.Set<org.xwiki.user.UserReference>) throws org.xwiki.contrib.activitypub.ActivityPubException",
+                    "exception": "org.xwiki.contrib.activitypub.ActivityPubException",
+                    "justification": "Add an exception throw to handle some corner cases."
                   }
                 ]
               }

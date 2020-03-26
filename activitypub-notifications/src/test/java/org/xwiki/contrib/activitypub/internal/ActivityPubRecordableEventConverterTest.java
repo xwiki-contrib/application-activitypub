@@ -24,12 +24,12 @@ import java.util.List;
 import javax.inject.Named;
 
 import org.junit.jupiter.api.Test;
-import org.xwiki.contrib.activitypub.ActivityPubEvent;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
-import org.xwiki.contrib.activitypub.ActivityPubNotifier;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.contrib.activitypub.entities.Person;
+import org.xwiki.contrib.activitypub.events.CreateEvent;
+import org.xwiki.contrib.activitypub.events.FollowEvent;
 import org.xwiki.eventstream.Event;
 import org.xwiki.eventstream.RecordableEvent;
 import org.xwiki.eventstream.RecordableEventConverter;
@@ -87,14 +87,14 @@ public class ActivityPubRecordableEventConverterTest
         when(this.stringDocumentReferenceResolver.resolve(anyString()))
             .thenReturn(new DocumentReference("xwiki", "XWiki", "user"));
 
-        RecordableEvent recordableEvent = new ActivityPubEvent<>(new Accept(), null);
+        RecordableEvent recordableEvent = new FollowEvent<>(new Accept(), null);
         String source = null;
         Object data = null;
         Event actual =
             this.activityPubRecordableEventConverter.convert(recordableEvent, source, data);
         assertNotNull(actual);
         assertEquals("Serialized AP", actual.getParameters().get(ACTIVITY_PARAMETER_KEY));
-        assertEquals(ActivityPubNotifier.EVENT_TYPE, actual.getType());
+        assertEquals(FollowEvent.EVENT_TYPE, actual.getType());
         assertEquals("ActivityPub", actual.getUser().getName());
     }
 
@@ -111,14 +111,14 @@ public class ActivityPubRecordableEventConverterTest
         when(this.stringDocumentReferenceResolver.resolve(anyString()))
             .thenReturn(new DocumentReference("xwiki", "XWiki", "user"));
 
-        RecordableEvent recordableEvent = new ActivityPubEvent<>(new Accept(), null);
+        RecordableEvent recordableEvent = new FollowEvent<>(new Accept(), null);
         String source = null;
         Object data = null;
         Event actual =
             this.activityPubRecordableEventConverter.convert(recordableEvent, source, data);
         assertNotNull(actual);
         assertEquals("Serialized AP", actual.getParameters().get(ACTIVITY_PARAMETER_KEY));
-        assertEquals(ActivityPubNotifier.EVENT_TYPE, actual.getType());
+        assertEquals(FollowEvent.EVENT_TYPE, actual.getType());
         assertEquals("ActivityPub", actual.getUser().getName());
     }
 
@@ -127,7 +127,8 @@ public class ActivityPubRecordableEventConverterTest
     {
         List<RecordableEvent> actual =
             this.activityPubRecordableEventConverter.getSupportedEvents();
-        assertEquals(1, actual.size());
-        assertEquals(ActivityPubEvent.class, actual.get(0).getClass());
+        assertEquals(2, actual.size());
+        assertEquals(CreateEvent.class, actual.get(0).getClass());
+        assertEquals(FollowEvent.class, actual.get(1).getClass());
     }
 }

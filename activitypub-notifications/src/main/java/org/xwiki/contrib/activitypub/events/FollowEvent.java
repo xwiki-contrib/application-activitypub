@@ -17,55 +17,52 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub;
+package org.xwiki.contrib.activitypub.events;
 
 import java.util.Set;
 
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
-import org.xwiki.eventstream.RecordableEvent;
-import org.xwiki.eventstream.TargetableEvent;
 import org.xwiki.stability.Unstable;
 
 /**
- * Defines the ActivityPub event to be displayed as Notifications.
- * @param <T> the type of the activity
+ * A specific events when it concerns the follow activities.
+ * This event is voluntarily not bounded to {@link org.xwiki.contrib.activitypub.entities.Follow} type, so we can
+ * also handle {@link org.xwiki.contrib.activitypub.entities.Accept} or
+ * {@link org.xwiki.contrib.activitypub.entities.Reject} activities with it, since they are related to the follow
+ * activities.
+ *
+ * @param <T> the actual type of the activity.
  * @version $Id$
- * @since 1.0
+ * @since 1.1
  */
 @Unstable
-public class ActivityPubEvent<T extends AbstractActivity> implements RecordableEvent, TargetableEvent
+public class FollowEvent<T extends AbstractActivity> extends AbstractActivityPubEvent<T>
 {
-    private Set<String> target;
-    private T activity;
+    /**
+     * Default name for those events.
+     */
+    public static final String EVENT_TYPE = "activitypub.follow";
 
     /**
      * Default constructor.
+     *
      * @param activity the activity to notify about
      * @param target the serialized references of users to notify to
      */
-    public ActivityPubEvent(T activity, Set<String> target)
+    public FollowEvent(T activity, Set<String> target)
     {
-        this.activity = activity;
-        this.target = target;
+        super(activity, target);
     }
 
     @Override
-    public Set<String> getTarget()
+    public String getType()
     {
-        return target;
-    }
-
-    /**
-     * @return the activity this event is about.
-     */
-    public T getActivity()
-    {
-        return activity;
+        return EVENT_TYPE;
     }
 
     @Override
     public boolean matches(Object otherEvent)
     {
-        return otherEvent != null && otherEvent instanceof ActivityPubEvent;
+        return otherEvent != null && otherEvent instanceof FollowEvent;
     }
 }
