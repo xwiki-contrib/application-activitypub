@@ -108,17 +108,23 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         try {
             URL serverUrl = this.urlHandler.getServerUrl();
             URL idUrl = id.toURL();
-            int serverUrlPort;
-            if (serverUrl.getPort() == -1) {
-                serverUrlPort = 80;
-            } else {
-                serverUrlPort = serverUrl.getPort();
-            }
-            return Objects.equals(serverUrl.getHost(), idUrl.getHost()) && serverUrlPort == idUrl.getPort();
+            return Objects.equals(serverUrl.getHost(), idUrl.getHost())
+                       && this.normalizePort(serverUrl.getPort()) == this.normalizePort(idUrl.getPort());
         } catch (MalformedURLException e) {
             this.logger.error("Error while comparing server URL and actor ID", e);
         }
         return false;
+    }
+
+    private int normalizePort(int sup)
+    {
+        int serverUrlPort;
+        if (sup == -1) {
+            serverUrlPort = 80;
+        } else {
+            serverUrlPort = sup;
+        }
+        return serverUrlPort;
     }
 
     @Override
@@ -165,7 +171,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
             this.getSolrClient().commit();
             return uuid;
         } catch (SolrException | SerializeResourceReferenceException | UnsupportedResourceReferenceException
-            | SolrServerException | IOException e) {
+                     | SolrServerException | IOException e) {
             throw new ActivityPubException(String.format("Error while storing [%s].", resourceReference), e);
         }
     }
