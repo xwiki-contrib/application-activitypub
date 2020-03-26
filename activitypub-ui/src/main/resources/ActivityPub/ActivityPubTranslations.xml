@@ -48,6 +48,10 @@ activitypub.message.target.placeholder=Insert here the identifier(s) of user(s)
 activitypub.message.content.label=Content of your message
 activitypub.message.content.hint=Type here the message you want to send
 activitypub.message.button=Send the message
+activitypub.following.title=Following
+activitypub.following.empty=Start following users!
+activitypub.followers.title=Followers
+activitypub.followers.empty=Nobody is following you!
 activitypub.user.profile.menu=ActivityPub
 activitypub.webfinger=Webfinger</content>
   <object>

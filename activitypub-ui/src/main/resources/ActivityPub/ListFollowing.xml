@@ -39,10 +39,10 @@
   <content>{{velocity}}
 {{html clean="false"}}
 &lt;div&gt;
-    &lt;h1&gt;Following&lt;/h1&gt;
+    &lt;h1&gt;$services.localization.render('activitypub.following.title')&lt;/h1&gt;
 #set ($following = $services.activitypub.following())
 #if ($following.empty)
-  &lt;p&gt;Start following users!&lt;/p&gt;
+  &lt;p&gt;$services.localization.render('activitypub.following.empty')&lt;/p&gt;
 #else
     &lt;ul&gt;
   #foreach ($actor in $following)
