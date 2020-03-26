@@ -33,7 +33,6 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.script.service.ScriptService;
-import org.xwiki.user.UserReference;
 
 import com.xpn.xwiki.XWikiContext;
 

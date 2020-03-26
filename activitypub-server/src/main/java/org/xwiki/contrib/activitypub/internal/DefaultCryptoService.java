@@ -45,6 +45,12 @@ import org.xwiki.crypto.pkix.params.x509certificate.extension.KeyUsage;
 import org.xwiki.crypto.signer.Signer;
 import org.xwiki.crypto.signer.SignerFactory;
 
+/**
+ * Default implementation of {@link CryptoService}.
+ * 
+ * @version $Id$
+ * @since 1.1
+ */
 @Component
 @Singleton
 public class DefaultCryptoService implements CryptoService
