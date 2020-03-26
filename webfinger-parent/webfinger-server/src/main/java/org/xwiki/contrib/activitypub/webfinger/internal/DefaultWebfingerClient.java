@@ -31,6 +31,7 @@ import javax.inject.Singleton;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerClient;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
@@ -59,7 +60,12 @@ public class DefaultWebfingerClient implements WebfingerClient
      */
     public DefaultWebfingerClient()
     {
-        this.httpClient = new HttpClient(new MultiThreadedHttpConnectionManager());
+        // The 1000 value is an arbitrarily large value, see https://jira.xwiki.org/browse/XAP-25
+        MultiThreadedHttpConnectionManager httpConnectionManager = new MultiThreadedHttpConnectionManager();
+        HttpConnectionManagerParams params = httpConnectionManager.getParams();
+        params.setMaxTotalConnections(10000);
+        params.setDefaultMaxConnectionsPerHost(10000);
+        this.httpClient = new HttpClient(httpConnectionManager);
     }
 
     @Override

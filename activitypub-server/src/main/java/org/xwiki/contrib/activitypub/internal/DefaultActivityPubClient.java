@@ -34,6 +34,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
@@ -76,7 +77,12 @@ public class DefaultActivityPubClient implements ActivityPubClient
      */
     public DefaultActivityPubClient()
     {
-        this.httpClient = new HttpClient(new MultiThreadedHttpConnectionManager());
+        // The 1000 value is an arbitrarily large value, see https://jira.xwiki.org/browse/XAP-25
+        MultiThreadedHttpConnectionManager httpConnectionManager = new MultiThreadedHttpConnectionManager();
+        HttpConnectionManagerParams params = httpConnectionManager.getParams();
+        params.setMaxTotalConnections(10000);
+        params.setDefaultMaxConnectionsPerHost(10000);
+        this.httpClient = new HttpClient(httpConnectionManager);
     }
 
     /**
