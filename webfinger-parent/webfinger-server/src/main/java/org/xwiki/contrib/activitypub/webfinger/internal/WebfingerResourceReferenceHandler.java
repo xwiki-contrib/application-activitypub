@@ -145,8 +145,8 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
              * host.  If the query target does not contain a "host" portion, then the client chooses a host to which
              * it directs the query using additional information it has."
              */
-            if (!(apUserURI.getPort() == resourceURI.getPort() && Objects.equals(apUserURI.getHost(),
-                resourceURI.getHost())))
+            if (!(Objects.equals(apUserURI.getHost(), resourceURI.getHost())
+                      && this.normalizePort(apUserURI.getPort()) == this.normalizePort(resourceURI.getPort())))
             {
                 throw new WebfingerException("No user found for the given domain", 404);
             }
@@ -157,6 +157,11 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
         } catch (URISyntaxException | IOException e) {
             this.handleError(response, 500, e.getMessage());
         }
+    }
+
+    private int normalizePort(int port)
+    {
+        return port == -1 ? 80 : port;
     }
 
     /**
@@ -223,8 +228,16 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
         List<Link> links = this.filterLinks(rels, xWikiUserLink, apUserLink);
 
         JSONResourceDescriptor object =
-            new JSONResourceDescriptor().setSubject(ACCT_PARAM_KEY + resource).setLinks(links);
+            new JSONResourceDescriptor().setSubject(normalizeSubject(resource)).setLinks(links);
         this.webfingerJsonSerializer.serialize(response.getOutputStream(), object);
+    }
+
+    private String normalizeSubject(String resource)
+    {
+        if (resource.startsWith(ACCT_PARAM_KEY)) {
+            return resource;
+        }
+        return ACCT_PARAM_KEY + resource;
     }
 
     /**

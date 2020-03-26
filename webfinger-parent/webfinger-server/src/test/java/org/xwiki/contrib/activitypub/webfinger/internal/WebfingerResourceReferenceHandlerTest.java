@@ -172,9 +172,9 @@ public class WebfingerResourceReferenceHandlerTest
     void handleResourceValid() throws Exception
     {
         ResourceReference reference = mock(WebfingerResourceReference.class);
-        String invalidResource = "acct:XWiki.Admin@xwiki.tst";
-        when(reference.getParameterValues("resource")).thenReturn(singletonList(invalidResource));
-        when(reference.getParameterValue("resource")).thenReturn(invalidResource);
+        String resource = "XWiki.Admin@xwiki.tst";
+        when(reference.getParameterValues("resource")).thenReturn(singletonList(resource));
+        when(reference.getParameterValue("resource")).thenReturn(resource);
         when(reference.getParameterValues("rel")).thenReturn(null);
         ResourceReferenceHandlerChain chain = mock(ResourceReferenceHandlerChain.class);
         URI uri = new URI("https://xwiki.tst");
@@ -186,8 +186,33 @@ public class WebfingerResourceReferenceHandlerTest
             new Link().setRel("http://webfinger.net/rel/profile-page").setType("text/html").setHref(null);
         Link link2 = new Link().setRel("self").setType("application/activity+json").setHref("https://xwiki.tst");
         JSONResourceDescriptor expectedJSONResourceDescriptor = new JSONResourceDescriptor()
-                                                .setSubject("acct:acct:XWiki.Admin@xwiki.tst")
+                                                .setSubject("acct:XWiki.Admin@xwiki.tst")
                                                 .setLinks(asList(link1, link2));
+        verify(this.webfingerJsonSerializer)
+            .serialize(ArgumentMatchers.nullable(OutputStream.class), eq(expectedJSONResourceDescriptor));
+        verify(chain).handleNext(reference);
+    }
+
+    @Test
+    void handleResourceValidWithAcct() throws Exception
+    {
+        ResourceReference reference = mock(WebfingerResourceReference.class);
+        String resource = "acct:XWiki.Admin@xwiki.tst";
+        when(reference.getParameterValues("resource")).thenReturn(singletonList(resource));
+        when(reference.getParameterValue("resource")).thenReturn(resource);
+        when(reference.getParameterValues("rel")).thenReturn(null);
+        ResourceReferenceHandlerChain chain = mock(ResourceReferenceHandlerChain.class);
+        URI uri = new URI("https://xwiki.tst");
+        when(this.webfingerService.resolveActivityPubUserUrl("XWiki.Admin")).thenReturn(uri);
+        this.handler.handle(reference, chain);
+        verify(this.httpServletResponse, times(0)).setStatus(anyInt());
+        verify(this.httpServletResponse).setContentType("application/activity+json; charset=utf-8");
+        Link link1 =
+            new Link().setRel("http://webfinger.net/rel/profile-page").setType("text/html").setHref(null);
+        Link link2 = new Link().setRel("self").setType("application/activity+json").setHref("https://xwiki.tst");
+        JSONResourceDescriptor expectedJSONResourceDescriptor = new JSONResourceDescriptor()
+                                                                    .setSubject("acct:XWiki.Admin@xwiki.tst")
+                                                                    .setLinks(asList(link1, link2));
         verify(this.webfingerJsonSerializer)
             .serialize(ArgumentMatchers.nullable(OutputStream.class), eq(expectedJSONResourceDescriptor));
         verify(chain).handleNext(reference);
@@ -209,7 +234,7 @@ public class WebfingerResourceReferenceHandlerTest
         verify(this.httpServletResponse).setContentType("application/activity+json; charset=utf-8");
         Link link = new Link().setRel("self").setType("application/activity+json").setHref("https://xwiki.tst");
         JSONResourceDescriptor expectedJSONResourceDescriptor = new JSONResourceDescriptor()
-                                                .setSubject("acct:acct:XWiki.Admin@xwiki.tst")
+                                                .setSubject("acct:XWiki.Admin@xwiki.tst")
                                                 .setLinks(singletonList(link));
         verify(this.webfingerJsonSerializer)
             .serialize(ArgumentMatchers.nullable(OutputStream.class), eq(expectedJSONResourceDescriptor));
@@ -232,7 +257,7 @@ public class WebfingerResourceReferenceHandlerTest
         verify(this.httpServletResponse).setContentType("application/activity+json; charset=utf-8");
         Link link = new Link().setRel("http://webfinger.net/rel/profile-page").setType("text/html").setHref(null);
         JSONResourceDescriptor expectedJSONResourceDescriptor = new JSONResourceDescriptor()
-                                                .setSubject("acct:acct:XWiki.Admin@xwiki.tst")
+                                                .setSubject("acct:XWiki.Admin@xwiki.tst")
                                                 .setLinks(singletonList(link));
         verify(this.webfingerJsonSerializer)
             .serialize(ArgumentMatchers.nullable(OutputStream.class), eq(expectedJSONResourceDescriptor));
