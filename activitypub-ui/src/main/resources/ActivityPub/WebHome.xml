@@ -36,7 +36,10 @@
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>false</hidden>
-  <content>{{activitypubDashboard isCurrentUser="true"/}}</content>
+  <content>{{include reference="ActivityPub.UserDashboard"/}}
+{{velocity}}
+#activitypubDashboard(true)
+{{/velocity}}</content>
   <object>
     <name>ActivityPub.WebHome</name>
     <number>0</number>
