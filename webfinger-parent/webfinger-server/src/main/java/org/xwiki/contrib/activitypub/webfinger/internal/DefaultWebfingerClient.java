@@ -100,6 +100,26 @@ public class DefaultWebfingerClient implements WebfingerClient
         }
     }
 
+    @Override
+    public boolean testWebFingerConfiguration(String domain) throws WebfingerException
+    {
+        String query = String.format("http://%s/.well-known/webfinger", domain);
+        GetMethod get = new GetMethod(query);
+        try {
+            this.httpClient.executeMethod(get);
+            if (get.getStatusCode() == 400) {
+                String response = get.getResponseBodyAsString();
+                if (WebfingerResourceReferenceHandler.DEFAULT_ERROR_ANSWER_NO_RESOURCE.equals(response)) {
+                    return true;
+                }
+            }
+        } catch (IOException e) {
+            throw new WebfingerException(
+                String.format("Error while testing WebFinger configuration on domain [%s].", domain), e);
+        }
+        return false;
+    }
+
     /**
      * Replace the http client.
      * @param httpClient An externaly defined http client.

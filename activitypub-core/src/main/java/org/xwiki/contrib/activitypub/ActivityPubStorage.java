@@ -36,6 +36,14 @@ import org.xwiki.stability.Unstable;
 public interface ActivityPubStorage
 {
     /**
+     * Check if the current storage is ready to be used.
+     * @return {@code true} if the storage is ready.
+     * @since 1.1
+     */
+    @Unstable
+    boolean isStorageReady();
+
+    /**
      * Check that the given URI is part of the current instance.
      * @param id the URI to check.
      * @return {@code true} if it belongs to the current instance.

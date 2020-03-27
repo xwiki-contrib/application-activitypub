@@ -103,6 +103,17 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     }
 
     @Override
+    public boolean isStorageReady()
+    {
+        try {
+            return getSolrClient() != null;
+        } catch (SolrException e) {
+            logger.debug("Error while initializing solr client.", e);
+            return false;
+        }
+    }
+
+    @Override
     public boolean belongsToCurrentInstance(URI id)
     {
         try {

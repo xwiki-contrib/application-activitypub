@@ -31,6 +31,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
+import org.xwiki.contrib.activitypub.webfinger.WebfingerClient;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.script.service.ScriptService;
 
@@ -47,6 +48,8 @@ import com.xpn.xwiki.XWikiContext;
 @Named("webfinger")
 public class WebfingerScriptService implements ScriptService
 {
+    private static Boolean webfingerConfigured;
+
     @Inject
     private Provider<XWikiContext> contextProvider;
 
@@ -55,6 +58,40 @@ public class WebfingerScriptService implements ScriptService
 
     @Inject
     private Logger logger;
+
+    @Inject
+    private WebfingerClient webfingerClient;
+
+    private void testWebfingerConfiguration()
+    {
+        try {
+            XWikiContext context = this.contextProvider.get();
+            URL url = context.getURLFactory().getServerURL(context);
+            int port = url.getPort();
+            String domain;
+            if (port != 80 && port > 0) {
+                domain = String.format("%s:%d", url.getHost(), port);
+            } else {
+                domain = String.format("%s", url.getHost());
+            }
+            webfingerConfigured = this.webfingerClient.testWebFingerConfiguration(domain);
+        } catch (Exception e) {
+            logger.debug("Error while testing webfinger configuration.", e);
+            webfingerConfigured = false;
+        }
+    }
+
+    /**
+     * @return {@code true} iff the current server has a working implementation of WebFinger.
+     */
+    public boolean isWebfingerConfigured()
+    {
+        if (webfingerConfigured == null) {
+            testWebfingerConfiguration();
+        }
+
+        return webfingerConfigured;
+    }
 
     /**
      * Return the webfinger id of the user on the current server.

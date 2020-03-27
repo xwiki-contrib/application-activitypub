@@ -37,8 +37,8 @@
   <syntaxId>plain/1.0</syntaxId>
   <hidden>true</hidden>
   <content>activitypub.follow.input.label=Follow the given user
-activitypub.follow.input.hint=Enter the full URL of an user profile (XWiki Profile or ActivityPub Actor URL) to start following him/her
-activitypub.follow.input.placeholder=http://mywiki/xwiki/activitypub/person/Foo
+activitypub.follow.input.hint=Enter the identifier of an user to start following him/her
+activitypub.follow.input.placeholder=@foo@domain
 activitypub.follow.button=Follow
 activitypub.follow.followRequested=The follow request has been sent.
 activitypub.follow.followNotRequested=The follow request failed.
@@ -49,11 +49,18 @@ activitypub.message.content.label=Content of your message
 activitypub.message.content.hint=Type here the message you want to send
 activitypub.message.button=Send the message
 activitypub.following.title=Following
-activitypub.following.empty=Start following users!
+activitypub.following.empty=You are not following anyone.
 activitypub.followers.title=Followers
-activitypub.followers.empty=Nobody is following you!
+activitypub.followers.empty=Nobody is currently following you.
 activitypub.user.profile.menu=ActivityPub
-activitypub.webfinger=Webfinger</content>
+activitypub.webfinger=Webfinger
+activitypub.follow.actornotfound=The user you specified cannot be found.
+activitypub.storage.needrestart=The ActivityPub storage is not ready. Please ask the administrator to restart the server to initialize it.
+activitypub.webfinger.notconfigured=The WebFinger endpoint is not configured on this server. You might want to ask your administrator to configure it in order to help using ActivityPub.
+activitypub.user.identifier=ActivityPub user identifier
+activitypub.user.identifier.tip=Use this identifier if you want to interact with this user.
+activitypub.user.identifier.copyButton=Copy the ActivityPub user identifier
+activitypub.user.identifier.copied=The identifier has been copied into your clipboard.</content>
   <object>
     <name>ActivityPub.ActivityPubTranslations</name>
     <number>0</number>

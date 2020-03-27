@@ -51,6 +51,8 @@ import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
+import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.script.service.ScriptService;
 import org.xwiki.stability.Unstable;
 import org.xwiki.text.StringUtils;
@@ -93,6 +95,9 @@ public class ActivityPubScriptService implements ScriptService
 
     @Inject
     private UserReferenceResolver<CurrentUserReference> userReferenceResolver;
+
+    @Inject
+    private XWikiUserBridge xWikiUserBridge;
 
     @Inject
     private Logger logger;
@@ -307,5 +312,31 @@ public class ActivityPubScriptService implements ScriptService
             this.logger.warn(GET_CURRENT_ACTOR_UNEXPECTED_ERR_MSG, ExceptionUtils.getRootCauseMessage(e));
         }
         return Collections.emptyList();
+    }
+
+    /**
+     * Return the ActivityPub endpoint URL to the user referred by the given document reference.
+     * @param userDocumentReference a document reference to an XWiki user.
+     * @return the URL to an activitypub endpoint for the actor linked to that user. Or null in case of error.
+     */
+    public String getActorURLFromDocumentReference(DocumentReference userDocumentReference)
+    {
+        UserReference userReference = this.xWikiUserBridge.resolveDocumentReference(userDocumentReference);
+        try {
+            return actorHandler.getActor(userReference).getId().toASCIIString();
+        } catch (ActivityPubException e) {
+            logger.error("Cannot find the actor from [{}].", userReference, e);
+            return null;
+        }
+    }
+
+    /**
+     * @return {@code true} if the storage is ready.
+     * @since 1.1
+     */
+    @Unstable
+    public boolean isStorageReady()
+    {
+        return this.activityPubStorage.isStorageReady();
     }
 }

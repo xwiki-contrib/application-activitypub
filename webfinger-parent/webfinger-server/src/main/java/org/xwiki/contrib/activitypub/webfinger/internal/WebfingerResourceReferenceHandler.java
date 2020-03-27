@@ -68,6 +68,11 @@ import org.xwiki.user.UserReference;
 @Singleton
 public class WebfingerResourceReferenceHandler extends AbstractResourceReferenceHandler<ResourceType>
 {
+    /**
+     * Default WebFinger answer if the resource parameter is missing.
+     */
+    public static final String DEFAULT_ERROR_ANSWER_NO_RESOURCE = "Missing resource parameter.";
+
     private static final ResourceType TYPE = new ResourceType("webfinger");
 
     private static final String TEXTPLAIN_CONTENTTYPE = "text/plain";
@@ -180,7 +185,7 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
         if (reference.getParameterValues(RESOURCE_PARAM_KEY) == null
                 || reference.getParameterValues(RESOURCE_PARAM_KEY).size() != 1)
         {
-            throw new WebfingerException("Missing resource parameter.", 400);
+            throw new WebfingerException(DEFAULT_ERROR_ANSWER_NO_RESOURCE, 400);
         }
 
         // checks is unexpected parameters exist

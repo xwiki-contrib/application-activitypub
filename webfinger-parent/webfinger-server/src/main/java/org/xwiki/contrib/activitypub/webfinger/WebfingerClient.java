@@ -40,4 +40,14 @@ public interface WebfingerClient
      * @throws WebfingerException In case of error during the query.
      */
     JSONResourceDescriptor get(String webfingerResource) throws WebfingerException;
+
+    /**
+     * Test if the given domain do have a working WebFinger implementation.
+     * Note that this method should only be used to test an XWiki WebFinger implementation.
+     *
+     * @param domain the domain on which WebFinger is supposed to be working.
+     * @return {@code true} if WebFinger sent the right answer.
+     * @throws WebfingerException in case of error when performing the check.
+     */
+    boolean testWebFingerConfiguration(String domain) throws WebfingerException;
 }

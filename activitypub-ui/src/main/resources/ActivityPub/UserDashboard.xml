@@ -38,51 +38,66 @@
   <hidden>true</hidden>
   <content>{{velocity}}
 #macro(activitypubDashboard $isMyProfile)
-#if ($isMyProfile)
-{{html clean='false'}}
 #set ($discard = $xwiki.jsx.use('ActivityPub.UserDashboard'))
-
-&lt;form id="followForm" class='xform'&gt;
-  &lt;dl&gt;
-    &lt;dt&gt;
-      &lt;label for="followInput"&gt;$services.localization.render('activitypub.follow.input.label')&lt;/label&gt;
-      &lt;span class='xHint'&gt;$services.localization.render('activitypub.follow.input.hint')&lt;/span&gt;
-    &lt;/dt&gt;
-    &lt;dd&gt;
-      &lt;input type="text" name="followInput" id="followInput" class="form-control" placeholder="$services.localization.render('activitypub.follow.input.placeholder')" /&gt;
-    &lt;/dd&gt;
-  &lt;/dl&gt;
-  &lt;div class='buttonwrapper'&gt;
-    &lt;input value="$services.localization.render('activitypub.follow.button')" class='button' type='submit'&gt;
-  &lt;/div&gt;
-&lt;/form&gt;
-#if ($services.csrf.isTokenValid($request.form_token) &amp;&amp; "$!request.followInput" != "")
-  #set ($followWorked = $services.activitypub.follow($request.followInput))
-  #if ($followWorked)
-      $services.localization.render('activitypub.follow.followRequested')
-  #else
-      $services.localization.render('activitypub.follow.followNotRequested')
+#set ($discard = $xwiki.ssx.use('ActivityPub.UserDashboard'))
+#if ($isMyProfile)
+  #if (!$services.activitypub.isStorageReady())
+    {{warning}}
+    $services.localization.render('activitypub.storage.needrestart')
+    {{/warning}}
   #end
-#end
-&lt;div&gt;
+  #if (!$services.webfinger.isWebfingerConfigured())
+    {{warning}}
+    $services.localization.render('activitypub.webfinger.notconfigured')
+    {{/warning}}
+  #end
+
+  {{html clean='false'}}
+  &lt;form id="followForm" class='xform'&gt;
+    &lt;dl&gt;
+      &lt;dt&gt;
+        &lt;label for="followInput"&gt;$services.localization.render('activitypub.follow.input.label')&lt;/label&gt;
+        &lt;span class='xHint'&gt;$services.localization.render('activitypub.follow.input.hint')&lt;/span&gt;
+      &lt;/dt&gt;
+      &lt;dd&gt;
+        &lt;input type="text" name="followInput" id="followInput" class="form-control" placeholder="$services.localization.render('activitypub.follow.input.placeholder')" /&gt;
+      &lt;/dd&gt;
+    &lt;/dl&gt;
+    &lt;div class='buttonwrapper'&gt;
+      &lt;input value="$services.localization.render('activitypub.follow.button')" class='button' type='submit'&gt;
+    &lt;/div&gt;
+  &lt;/form&gt;
+  #if ("$!request.followInput" != "" &amp;&amp; $services.csrf.isTokenValid($request.form_token))
+    #set ($followWorked = $services.activitypub.follow($request.followInput))
+    #if ($followWorked)
+      $services.localization.render('activitypub.follow.followRequested')
+    #else
+      $services.localization.render('activitypub.follow.followNotRequested')
+    #end
+  #end
   {{/html}}
-{{html clean="false" wiki="true"}}
-&lt;div id="linkActors"&gt;
-  {{include reference="ActivityPub.ListFollowing" /}}
-  {{include reference="ActivityPub.ListFollowers" /}}
-&lt;/div&gt;
-{{/html}}
-{{html clean='false'}}
-&lt;/div&gt;
-{{/html}}
+  {{html clean="false" wiki="true"}}
+    &lt;div id="linkActors"&gt;
+      {{include reference="ActivityPub.ListFollowing" /}}
+      {{include reference="ActivityPub.ListFollowers" /}}
+    &lt;/div&gt;
+  {{/html}}
 #else
-{{html clean='false'}}
-&lt;h1&gt;$services.localization.render('activitypub.webfinger')&lt;/h1&gt;
-&lt;div class="xform"&gt;
-&lt;input type="text" readonly="true" value="$services.webfinger.getWebfingerId($doc.documentReference)" class="form-control"/&gt;
-&lt;/div&gt;
-{{/html}}
-#end
+  #if ($services.webfinger.isWebfingerConfigured())
+    #set ($userIdentifier = $services.webfinger.getWebfingerId($doc.documentReference))
+  #else
+    #set ($userIdentifier = $services.activitypub.getActorURLFromDocumentReference($doc.documentReference))
+  #end
+  {{html clean='false'}}
+    &lt;h1&gt;$services.localization.render('activitypub.user.identifier')&lt;/h1&gt;
+    &lt;span class="noitems"&gt;$services.localization.render('activitypub.user.identifier.tip')&lt;/span&gt;
+    &lt;div class="identifier-group"&gt;
+      &lt;span class="form-control" id="user-identifier"&gt;$userIdentifier&lt;/span&gt;
+      &lt;div class="btn btn-default" id="ap-button-paste" title="$services.localization.render('activitypub.user.identifier.copyButton')"&gt;
+        $services.icon.renderHTML('paste')
+      &lt;/div&gt;
+    &lt;/div&gt;
+  {{/html}}
 #end
 {{/velocity}}
 </content>
@@ -208,6 +223,22 @@
       })
     });
   });
+
+  var copyToClipboard = function(element) {
+    var $temp = $("&lt;input&gt;");
+    $("body").append($temp);
+    var value = $(element).text();
+    $temp.val(value).select();
+    document.execCommand("copy");
+    $temp.remove();
+    return value;
+  };
+
+  $(document).on('click', '#ap-button-paste', function() {
+    copyToClipboard('#user-identifier');
+    new XWiki.widgets.Notification("$services.localization.render('activitypub.user.identifier.copied')",
+    'info');
+  });
 });</code>
     </property>
     <property>
@@ -218,6 +249,146 @@
     </property>
     <property>
       <use>onDemand</use>
+    </property>
+  </object>
+  <object>
+    <name>ActivityPub.UserDashboard</name>
+    <number>0</number>
+    <className>XWiki.StyleSheetExtension</className>
+    <guid>ff3cf3c2-273f-4a14-9127-9624c64fb930</guid>
+    <class>
+      <name>XWiki.StyleSheetExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <contentType>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>contentType</name>
+        <number>6</number>
+        <prettyName>Content Type</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>CSS|LESS</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </contentType>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>forbid</cache>
+    </property>
+    <property>
+      <code>.identifier-group {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.identifier-group .btn {
+  float: left;
+  margin: 0;
+  width: 10%;
+  min-width: 2.5em;
+}
+
+#user-identifier {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  width: 80%;
+  white-space: nowrap;
+  display: inline-block;
+  float: left;
+  border-radius: 0px;
+}</code>
+    </property>
+    <property>
+      <contentType>CSS</contentType>
+    </property>
+    <property>
+      <name/>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>currentPage</use>
     </property>
   </object>
   <object>
