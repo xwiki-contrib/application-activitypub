@@ -181,7 +181,7 @@ public class WebfingerResourceReferenceHandlerTest
         when(this.webfingerService.resolveActivityPubUserUrl("XWiki.Admin")).thenReturn(uri);
         this.handler.handle(reference, chain);
         verify(this.httpServletResponse, times(0)).setStatus(anyInt());
-        verify(this.httpServletResponse).setContentType("application/activity+json; charset=utf-8");
+        verify(this.httpServletResponse).setContentType("application/jrd+json");
         Link link1 =
             new Link().setRel("http://webfinger.net/rel/profile-page").setType("text/html").setHref(null);
         Link link2 = new Link().setRel("self").setType("application/activity+json").setHref("https://xwiki.tst");
@@ -206,7 +206,7 @@ public class WebfingerResourceReferenceHandlerTest
         when(this.webfingerService.resolveActivityPubUserUrl("XWiki.Admin")).thenReturn(uri);
         this.handler.handle(reference, chain);
         verify(this.httpServletResponse, times(0)).setStatus(anyInt());
-        verify(this.httpServletResponse).setContentType("application/activity+json; charset=utf-8");
+        verify(this.httpServletResponse).setContentType("application/jrd+json");
         Link link1 =
             new Link().setRel("http://webfinger.net/rel/profile-page").setType("text/html").setHref(null);
         Link link2 = new Link().setRel("self").setType("application/activity+json").setHref("https://xwiki.tst");
@@ -231,7 +231,7 @@ public class WebfingerResourceReferenceHandlerTest
         when(this.webfingerService.resolveActivityPubUserUrl("XWiki.Admin")).thenReturn(uri);
         this.handler.handle(reference, chain);
         verify(this.httpServletResponse, times(0)).setStatus(anyInt());
-        verify(this.httpServletResponse).setContentType("application/activity+json; charset=utf-8");
+        verify(this.httpServletResponse).setContentType("application/jrd+json");
         Link link = new Link().setRel("self").setType("application/activity+json").setHref("https://xwiki.tst");
         JSONResourceDescriptor expectedJSONResourceDescriptor = new JSONResourceDescriptor()
                                                 .setSubject("acct:XWiki.Admin@xwiki.tst")
@@ -254,7 +254,7 @@ public class WebfingerResourceReferenceHandlerTest
         when(this.webfingerService.resolveActivityPubUserUrl("XWiki.Admin")).thenReturn(uri);
         this.handler.handle(reference, chain);
         verify(this.httpServletResponse, times(0)).setStatus(anyInt());
-        verify(this.httpServletResponse).setContentType("application/activity+json; charset=utf-8");
+        verify(this.httpServletResponse).setContentType("application/jrd+json");
         Link link = new Link().setRel("http://webfinger.net/rel/profile-page").setType("text/html").setHref(null);
         JSONResourceDescriptor expectedJSONResourceDescriptor = new JSONResourceDescriptor()
                                                 .setSubject("acct:XWiki.Admin@xwiki.tst")

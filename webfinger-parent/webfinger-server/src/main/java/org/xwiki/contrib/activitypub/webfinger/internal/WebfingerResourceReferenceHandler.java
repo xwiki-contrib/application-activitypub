@@ -105,6 +105,7 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
     {
         WebfingerResourceReference resourceReference = (WebfingerResourceReference) reference;
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
+
         this.proceed(resourceReference, response);
 
         // Be a good citizen, continue the chain, in case some lower-priority Handler has something to do for this
@@ -212,7 +213,7 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
     private void sendValidResponse(HttpServletResponse response, UserReference user, URI apUserURI, String resource,
         List<String> rels) throws IOException, WebfingerException
     {
-        response.setContentType("application/activity+json; charset=utf-8");
+        response.setContentType("application/jrd+json");
 
         String xWikiUserURI = this.webfingerService.resolveXWikiUserUrl(user);
         Link xWikiUserLink = new Link()

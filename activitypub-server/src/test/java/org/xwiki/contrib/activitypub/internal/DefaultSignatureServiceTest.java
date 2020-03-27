@@ -82,7 +82,7 @@ class DefaultSignatureServiceTest
         InOrder inOrder = inOrder(postMethod, postMethod);
         inOrder.verify(postMethod).addRequestHeader(eq("Signature"), matches(
             "keyId=\"http:\\/\\/actoruri\\/\",headers=\"\\(request-target\\) host date\","
-                + "signature=\"[^\"]*\",algorithm=\"rsa-sha256\""));
+                + "signature=\"[^\"]*\""));
         inOrder.verify(postMethod).addRequestHeader(eq("Date"), anyString());
     }
 
@@ -105,7 +105,7 @@ class DefaultSignatureServiceTest
         InOrder inOrder = inOrder(postMethod, postMethod);
         inOrder.verify(postMethod).addRequestHeader(eq("Signature"), matches(
             "keyId=\"http:\\/\\/actoruri\\/\",headers=\"\\(request-target\\) host date\","
-                + "signature=\"[^\"]*\",algorithm=\"rsa-sha256\""));
+                + "signature=\"[^\"]*\""));
         inOrder.verify(postMethod).addRequestHeader(eq("Date"), anyString());
     }
 }

@@ -65,7 +65,7 @@ public class DefaultSignatureService implements SignatureService
     private CMSSignedDataGenerator cmsSignedDataGenerator;
 
     @Inject
-    @Named("SHA1withRSAEncryption")
+    @Named("SHA256")
     private SignerFactory signerFactory;
 
     @Inject
@@ -92,8 +92,7 @@ public class DefaultSignatureService implements SignatureService
         String signatureB64 = Base64.getEncoder().encodeToString(bytess);
         String actorAPURL = actorURI.toASCIIString();
         postMethod.addRequestHeader("Signature", String.format(
-            "keyId=\"%s\",headers=\"(request-target) host date\",signature=\"%s\",algorithm=\"rsa-sha256\"", actorAPURL,
-            signatureB64));
+            "keyId=\"%s\",headers=\"(request-target) host date\",signature=\"%s\"", actorAPURL, signatureB64));
         postMethod.addRequestHeader("Date", date);
     }
 
