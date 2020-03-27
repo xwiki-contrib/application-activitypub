@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -261,13 +260,14 @@ public class ActivityPubScriptService implements ScriptService
 
     /**
      *
+     * @param userLogin The actor of interest.
      * @return the list of actor followed by the current user.
      */
-    public List<AbstractActor> following()
+    public List<AbstractActor> following(String userLogin)
     {
         try {
-            AbstractActor currentActor = this.actorHandler.getCurrentActor();
-            ActivityPubObjectReference<OrderedCollection<AbstractActor>> following = currentActor.getFollowing();
+            AbstractActor actor = this.getActor(userLogin);
+            ActivityPubObjectReference<OrderedCollection<AbstractActor>> following = actor.getFollowing();
             if (following != null) {
                 OrderedCollection<AbstractActor> activityPubObjectReferences =
                     this.activityPubObjectReferenceResolver.resolveReference(following);
@@ -292,14 +292,14 @@ public class ActivityPubScriptService implements ScriptService
     }
 
     /**
-     *
+     * @param userLogin The actor of interest.
      * @return the list of actors following the current user.
      */
-    public List<AbstractActor> followers()
+    public List<AbstractActor> followers(String userLogin)
     {
         try {
-            AbstractActor currentActor = this.actorHandler.getCurrentActor();
-            ActivityPubObjectReference<OrderedCollection<AbstractActor>> followers = currentActor.getFollowers();
+            AbstractActor actor = this.getActor(userLogin);
+            ActivityPubObjectReference<OrderedCollection<AbstractActor>> followers = actor.getFollowers();
             if (followers != null) {
                 OrderedCollection<AbstractActor> activityPubObjectReferences =
                     this.activityPubObjectReferenceResolver.resolveReference(followers);

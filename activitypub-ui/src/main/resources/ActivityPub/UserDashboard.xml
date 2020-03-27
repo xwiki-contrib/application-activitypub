@@ -38,6 +38,7 @@
   <hidden>true</hidden>
   <content>{{velocity}}
 #macro(activitypubDashboard $isMyProfile)
+#set ($userId = $services.model.resolveDocument($xcontext.user))
 #set ($discard = $xwiki.jsx.use('ActivityPub.UserDashboard'))
 #set ($discard = $xwiki.ssx.use('ActivityPub.UserDashboard'))
 #if ($isMyProfile)
@@ -78,8 +79,8 @@
   {{/html}}
   {{html clean="false" wiki="true"}}
     &lt;div id="linkActors"&gt;
-      {{include reference="ActivityPub.ListFollowing" /}}
-      {{include reference="ActivityPub.ListFollowers" /}}
+      #listFollowing($userId)
+      #listFollowers($userId)
     &lt;/div&gt;
   {{/html}}
 #else
@@ -98,6 +99,42 @@
       &lt;/div&gt;
     &lt;/div&gt;
   {{/html}}
+#end
+
+#macro(listFollowing $userId)
+{{html clean="false"}}
+&lt;div&gt;
+    &lt;h1&gt;$services.localization.render('activitypub.following.title')&lt;/h1&gt;
+#set ($following = $services.activitypub.following($userId))
+#if ($following.empty)
+  &lt;p&gt;$services.localization.render('activitypub.following.empty')&lt;/p&gt;
+#else
+    &lt;ul&gt;
+  #foreach ($actor in $following)
+    &lt;li&gt;$actor.preferredUsername@$actor.id.getHost()&lt;/li&gt;
+  #end
+    &lt;/ul&gt;
+#end
+&lt;/div&gt;
+{{/html}}
+#end
+
+#macro (listFollowers $userId)
+{{html clean="false"}}
+&lt;div&gt;
+  &lt;h1&gt;$services.localization.render('activitypub.followers.title')&lt;/h1&gt;
+  #set ($followers = $services.activitypub.followers($userId))
+  #if ($followers.empty)
+  &lt;p&gt;$services.localization.render('activitypub.followers.empty')&lt;/p&gt;
+  #else
+  &lt;ul&gt;
+    #foreach ($actor in $followers)
+     &lt;li&gt;$actor.preferredUsername@$actor.id.getHost()&lt;/li&gt;
+    #end
+  &lt;/ul&gt;
+  #end
+&lt;/div&gt;
+{{/html}}
 #end
 #end
 {{/velocity}}

@@ -114,7 +114,7 @@ class ActivityPubScriptServiceTest
         when(this.actorHandler.getCurrentActor()).thenReturn(aa);
         when(this.activityPubObjectReferenceResolver.resolveReference(apor)).thenReturn(mock(
             OrderedCollection.class));
-        List<AbstractActor> res = this.scriptService.following();
+        List<AbstractActor> res = this.scriptService.following("User.Test");
         assertTrue(res.isEmpty());
     }
 
@@ -127,7 +127,7 @@ class ActivityPubScriptServiceTest
         when(this.actorHandler.getCurrentActor()).thenReturn(aa);
         when(this.activityPubObjectReferenceResolver.resolveReference(apor)).thenReturn(mock(
             OrderedCollection.class));
-        List<AbstractActor> res = this.scriptService.followers();
+        List<AbstractActor> res = this.scriptService.followers("User.Test");
         assertTrue(res.isEmpty());
     }
 
