@@ -177,7 +177,9 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
          * If the "resource" parameter is a value for which the server has no information, the server MUST indicate that
          * it was unable to match the request as per Section 10.4.5 of RFC 2616.
          */
-        if (reference.getParameterValues(RESOURCE_PARAM_KEY).size() != 1) {
+        if (reference.getParameterValues(RESOURCE_PARAM_KEY) == null
+                || reference.getParameterValues(RESOURCE_PARAM_KEY).size() != 1)
+        {
             throw new WebfingerException("Missing resource parameter.", 400);
         }
 

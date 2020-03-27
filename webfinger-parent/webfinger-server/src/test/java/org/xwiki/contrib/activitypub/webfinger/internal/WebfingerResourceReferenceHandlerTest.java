@@ -122,6 +122,17 @@ public class WebfingerResourceReferenceHandlerTest
     }
 
     @Test
+    void handleResourceMissing() throws Exception
+    {
+        ResourceReference reference = mock(WebfingerResourceReference.class);
+        when(reference.getParameterValue("resource")).thenReturn(null);
+        ResourceReferenceHandlerChain chain = mock(ResourceReferenceHandlerChain.class);
+        this.handler.handle(reference, chain);
+        verify(this.httpServletResponse).setStatus(400);
+        verify(chain).handleNext(reference);
+    }
+
+    @Test
     void handleResourceMalformed() throws Exception
     {
         ResourceReference reference = mock(WebfingerResourceReference.class);
