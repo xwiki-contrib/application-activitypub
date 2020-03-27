@@ -21,11 +21,12 @@ package org.xwiki.contrib.activitypub.internal;
 
 import java.util.Collections;
 
-import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.events.CreateEvent;
+import org.xwiki.contrib.activitypub.events.FollowEvent;
 import org.xwiki.eventstream.Event;
 import org.xwiki.eventstream.store.internal.AbstractLegacyEventConverter;
 import org.xwiki.eventstream.store.internal.LegacyEvent;
@@ -40,9 +41,9 @@ import static org.xwiki.contrib.activitypub.internal.ActivityPubRecordableEventC
  * @version $Id$
  * @since 1.0
  */
-@Component
+// FIXME: we should have a better management of type once XWIKI-17156 is fixed.
+@Component(hints = {CreateEvent.EVENT_TYPE, FollowEvent.EVENT_TYPE})
 @Singleton
-@Named("activitypub")
 public class ActivityPubLegacyEventConverter extends AbstractLegacyEventConverter
 {
     @Override
