@@ -67,7 +67,7 @@ public class DefaultCryptoService implements CryptoService
     private CertificateGeneratorFactory certificateGeneratorFactory;
 
     @Inject
-    @Named("SHA1withRSAEncryption")
+    @Named("SHA256withRSAEncryption")
     private SignerFactory signerFactory;
 
     @Override

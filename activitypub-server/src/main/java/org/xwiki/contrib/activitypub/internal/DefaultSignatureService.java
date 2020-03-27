@@ -65,7 +65,7 @@ public class DefaultSignatureService implements SignatureService
     private CMSSignedDataGenerator cmsSignedDataGenerator;
 
     @Inject
-    @Named("SHA256")
+    @Named("SHA256withRSAEncryption")
     private SignerFactory signerFactory;
 
     @Inject
