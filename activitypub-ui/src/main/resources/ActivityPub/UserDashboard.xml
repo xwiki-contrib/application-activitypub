@@ -481,7 +481,7 @@
       </use>
     </class>
     <property>
-      <cache>forbid</cache>
+      <cache>long</cache>
     </property>
     <property>
       <code>.identifier-group {
@@ -504,6 +504,11 @@
   display: inline-block;
   float: left;
   border-radius: 0px;
+}
+
+.nav-tabs {
+  text-overflow: ellipsis;
+  overflow: hidden;
 }</code>
     </property>
     <property>
