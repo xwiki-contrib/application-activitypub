@@ -217,8 +217,9 @@ public class ActivityPubScriptService implements ScriptService
      * If the list of targets is empty or null, it means the note will be private only.
      * @param targets the list of targets for the note (see below for information about accepted values)
      * @param content the actual concent of the note
+     * @return {@code true} if everything went well, else return false.
      */
-    public void publishNote(List<String> targets, String content)
+    public boolean publishNote(List<String> targets, String content)
     {
         try {
             checkAuthentication();
@@ -253,8 +254,10 @@ public class ActivityPubScriptService implements ScriptService
             this.activityPubStorage.storeEntity(create);
 
             this.createActivityHandler.handleOutboxRequest(new ActivityRequest<>(currentActor, create));
+            return true;
         } catch (IOException | ActivityPubException e) {
             this.logger.error("Error while posting a note.");
+            return false;
         }
     }
 

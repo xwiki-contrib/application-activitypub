@@ -37,7 +37,7 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
   <content>{{velocity}}
-#if ("$!request.followInput" != "" &amp;&amp; $services.csrf.isTokenValid($request.form_token))
+#if ("$!request.followInput" != "" &amp;&amp; $services.csrf.isTokenValid($request.form_token) &amp;&amp; $request.outputSyntax == "plain")
   #set ($actor = $services.activitypub.getActor($request.followInput))
   #if ("$!actor" != '')
     #set ($followWorked = $services.activitypub.follow($actor))
@@ -50,43 +50,11 @@
     #end
   #else
     #set ($followWorked = false)
-    #set ($followMessage = $services.localization.render('activitypub.follow.actornotfound', [$request.followInput]))
+    #set ($followMessage = $services.localization.render('activitypub.follow.actornotfound'))
   #end
-#end
-
-#if ($request.outputSyntax == "plain")
   #setVariable("$json" { "success": $followWorked, "message": "$followMessage" })
   #jsonResponse($json)
-#else
-{{html clean="false"}}
-&lt;form method="post" id="authenticationSecurityConfigForm" action="${xwiki.getURL('ActivityPub.FollowUser', 'view')}" class='xform'&gt;
-  &lt;div class="hidden"&gt;
-    &lt;input type='hidden' name='form_token' value="$!{services.csrf.getToken()}" /&gt;
-  &lt;/div&gt;
-  &lt;dl&gt;
-    &lt;dt&gt;
-      &lt;label for="followInput"&gt;$services.localization.render('activitypub.follow.input.label')&lt;/label&gt;
-      &lt;span class="xHint"&gt;$services.localization.render('activitypub.follow.input.hint')&lt;/span&gt;
-    &lt;/dt&gt;
-    &lt;dd&gt;
-      &lt;input type="text" name="followInput" id="followInput" class="form-control" placeholder="$services.localization.render('activitypub.follow.input.placeholder')" /&gt;
-    &lt;/dd&gt;
-  &lt;/dl&gt;
-  &lt;div class='buttonwrapper'&gt;
-    &lt;input value="$services.localization.render('activitypub.follow.button')" class='button' type='submit'&gt;
-  &lt;/div&gt;
-&lt;/form&gt;
-#if ($followMessage)
-$followMessage
-#end
-{{/html}}
-{{html clean="false" wiki="true"}}
-&lt;div&gt;
-  {{include reference="ActivityPub.ListFollowing" /}}
-  {{include reference="ActivityPub.ListFollowers" /}}
-&lt;/div&gt;
-{{/html}}
 #end
 {{/velocity}}
-</content>
+This page contains the velocity code to process Follow requests.</content>
 </xwikidoc>

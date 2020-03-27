@@ -60,7 +60,11 @@ activitypub.webfinger.notconfigured=The WebFinger endpoint is not configured on 
 activitypub.user.identifier=ActivityPub user identifier
 activitypub.user.identifier.tip=Use this identifier if you want to interact with this user.
 activitypub.user.identifier.copyButton=Copy the ActivityPub user identifier
-activitypub.user.identifier.copied=The identifier has been copied into your clipboard.</content>
+activitypub.user.identifier.copied=The identifier has been copied into your clipboard.
+activitypub.message.messageSent=Message sent.
+activitypub.message.messageError=Error when sending the message.
+activitypub.dashboard.tab.follow=Follow users
+activitypub.dashboard.tab.message=Send messages</content>
   <object>
     <name>ActivityPub.ActivityPubTranslations</name>
     <number>0</number>

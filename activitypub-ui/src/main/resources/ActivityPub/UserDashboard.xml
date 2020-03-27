@@ -37,45 +37,110 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
   <content>{{velocity}}
+#set ($defaultValues = [
+  "public",
+  "followers"
+])
+#macro (apPicker_displayOptions $selectedValues)
+  #foreach ($defaultValue in $defaultValues)
+    &lt;option value="$!escapetool.xml($defaultValue)"#if ($selectedValues.contains($defaultValue)) selected="selected"#end
+      &gt;$!escapetool.xml($defaultValue)&lt;/option&gt;
+  #end
+#end
+#macro (apTargetPicker_import)
+  #picker_import
+  #set ($discard = $xwiki.jsfx.use('uicomponents/suggest/xwiki.selectize.js', true))
+  #set ($discard = $xwiki.jsfx.use('uicomponents/suggest/suggestPropertyValues.js',
+  {'forceSkinAction': true, 'language': $xcontext.locale}))
+#end
+#macro (activityPubUserPicker $parameters)
+  #apTargetPicker_import
+  #if ("$!parameters" == "")
+    #set ($parameters = {
+      'name': 'messageTarget',
+      'multiple': 'multiple',
+      'data-freeText': 'allowed',
+      'data-xwiki-selectize': {
+         'create': true
+      }
+    })
+  #end
+  #set ($discard = $parameters.put('class', "$!parameters.get('class') xwiki-selectize suggest-apusers"))
+  #if (!$parameters.containsKey('placeholder'))
+    #set ($parameters.placeholder = $services.localization.render('activitypub.message.target.placeholder'))
+  #end
+  #suggestInput($parameters 'apPicker_displayOptions')
+#end
 #macro(activitypubDashboard $isMyProfile)
 #set ($userId = $services.model.resolveDocument($xcontext.user))
 #set ($discard = $xwiki.jsx.use('ActivityPub.UserDashboard'))
 #set ($discard = $xwiki.ssx.use('ActivityPub.UserDashboard'))
-#if ($isMyProfile)
-  #if (!$services.activitypub.isStorageReady())
+#if (!$services.activitypub.isStorageReady())
     {{warning}}
     $services.localization.render('activitypub.storage.needrestart')
     {{/warning}}
-  #end
+#elseif ($isMyProfile)
   #if (!$services.webfinger.isWebfingerConfigured())
     {{warning}}
     $services.localization.render('activitypub.webfinger.notconfigured')
     {{/warning}}
   #end
-
   {{html clean='false'}}
-  &lt;form id="followForm" class='xform'&gt;
-    &lt;dl&gt;
-      &lt;dt&gt;
-        &lt;label for="followInput"&gt;$services.localization.render('activitypub.follow.input.label')&lt;/label&gt;
-        &lt;span class='xHint'&gt;$services.localization.render('activitypub.follow.input.hint')&lt;/span&gt;
-      &lt;/dt&gt;
-      &lt;dd&gt;
-        &lt;input type="text" name="followInput" id="followInput" class="form-control" placeholder="$services.localization.render('activitypub.follow.input.placeholder')" /&gt;
-      &lt;/dd&gt;
-    &lt;/dl&gt;
-    &lt;div class='buttonwrapper'&gt;
-      &lt;input value="$services.localization.render('activitypub.follow.button')" class='button' type='submit'&gt;
+  &lt;ul class="nav nav-tabs" role="tablist"&gt;
+    &lt;li role="presentation" class="active"&gt;
+      &lt;a href="#follow" aria-controls="follow" role="tab" data-toggle="tab"&gt;
+        $services.localization.render('activitypub.dashboard.tab.follow')
+      &lt;/a&gt;
+    &lt;/li&gt;
+    &lt;li role="presentation"&gt;
+      &lt;a href="#messaging" aria-controls="messaging" role="tab" data-toggle="tab"&gt;
+        $services.localization.render('activitypub.dashboard.tab.message')
+      &lt;/a&gt;
+    &lt;/li&gt;
+  &lt;/ul&gt;
+  &lt;div class="tab-content"&gt;
+    &lt;div role="tabpanel" class="tab-pane active" id="follow"&gt;
+       &lt;form id="followForm" class='xform'&gt;
+        &lt;dl&gt;
+          &lt;dt&gt;
+            &lt;label for="followInput"&gt;$services.localization.render('activitypub.follow.input.label')&lt;/label&gt;
+            &lt;span class='xHint'&gt;$services.localization.render('activitypub.follow.input.hint')&lt;/span&gt;
+          &lt;/dt&gt;
+          &lt;dd&gt;
+            &lt;input type="text" name="followInput" id="followInput" class="form-control" placeholder="$services.localization.render('activitypub.follow.input.placeholder')" /&gt;
+          &lt;/dd&gt;
+        &lt;/dl&gt;
+        &lt;div class='buttonwrapper'&gt;
+          &lt;input value="$services.localization.render('activitypub.follow.button')" class='button' type='submit'&gt;
+        &lt;/div&gt;
+      &lt;/form&gt;
     &lt;/div&gt;
-  &lt;/form&gt;
-  #if ("$!request.followInput" != "" &amp;&amp; $services.csrf.isTokenValid($request.form_token))
-    #set ($followWorked = $services.activitypub.follow($request.followInput))
-    #if ($followWorked)
-      $services.localization.render('activitypub.follow.followRequested')
-    #else
-      $services.localization.render('activitypub.follow.followNotRequested')
-    #end
-  #end
+    &lt;div role="tabpanel" class="tab-pane" id="messaging"&gt;
+      &lt;form id="messageForm" class='xform'&gt;
+      &lt;dl&gt;
+        &lt;dt&gt;
+          &lt;label for="messageTarget"&gt;$services.localization.render('activitypub.message.target.label')&lt;/label&gt;
+          &lt;span class='xHint'&gt;$services.localization.render('activitypub.message.target.hint')&lt;/span&gt;
+        &lt;/dt&gt;
+        &lt;dd&gt;
+          #activityPubUserPicker("")
+        &lt;/dd&gt;
+      &lt;/dl&gt;
+      &lt;dl&gt;
+        &lt;dt&gt;
+          &lt;label for="messageContent"&gt;$services.localization.render('activitypub.message.content.label')&lt;/label&gt;
+          &lt;span class='xHint'&gt;$services.localization.render('activitypub.message.content.hint')&lt;/span&gt;
+        &lt;/dt&gt;
+        &lt;dd&gt;
+          &lt;textarea name="messageContent" id="messageContent" class="form-control"&gt;&lt;/textarea&gt;
+        &lt;/dd&gt;
+      &lt;/dl&gt;
+      &lt;div class='buttonwrapper'&gt;
+        &lt;input value="$services.localization.render('activitypub.message.button')" class='button' type='submit'/&gt;
+      &lt;/div&gt;
+      &lt;/form&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
   {{/html}}
   {{html clean="false" wiki="true"}}
     &lt;div id="linkActors"&gt;
@@ -99,6 +164,7 @@
       &lt;/div&gt;
     &lt;/div&gt;
   {{/html}}
+#end
 #end
 
 #macro(listFollowing $userId)
@@ -135,7 +201,6 @@
   #end
 &lt;/div&gt;
 {{/html}}
-#end
 #end
 {{/velocity}}
 </content>
@@ -228,23 +293,16 @@
     <property>
       <code>require(['jquery', 'xwiki-meta'], function($, xm) {
   const followUserDoc = new XWiki.Document(XWiki.Model.resolve('ActivityPub.FollowUser', XWiki.EntityType.DOCUMENT));
+  const messageUserDoc = new XWiki.Document(XWiki.Model.resolve('ActivityPub.MessageUser', XWiki.EntityType.DOCUMENT));
   const followingDoc = new XWiki.Document(XWiki.Model.resolve('ActivityPub.ListFollowing', XWiki.EntityType.DOCUMENT));
-  function displayMessage(message) {
-    const messageP = $('#messageBox')
-    if(messageP.length === 0) {
-      $('&lt;p id="messageBox"&gt;'+message+'&lt;/p&gt;').insertAfter('#followForm');
-    } else {
-      messageP.text(message);
-    }
-  }
 
   function updateFollowing() {
     $.get(followingDoc.getURL("get"), function(res) {
       $('#linkActors&gt;:first-child').replaceWith(res);
     });
-  }
-
-  $(document).ready(function() {
+  };
+  
+  function initFollow() {
     $('#followForm').submit(function(event) {
       event.preventDefault();
 
@@ -254,12 +312,37 @@
       };
       $.post(followUserDoc.getURL("view") + '?outputSyntax=plain', data, function(data) {
         if(data.success) {
-          $('#followInput').val('');
+          new XWiki.widgets.Notification(data.message, 'success');
+        } else {
+          new XWiki.widgets.Notification(data.message, 'error');
         }
-        displayMessage(data.message);
         updateFollowing();
       })
     });
+  };
+  
+  function initMessaging() {
+    $('#messageForm').submit(function(event) {
+      event.preventDefault();
+
+      const data = {
+        'form_token': xm.form_token,
+        'messageTarget': $('input[name=messageTarget]').val(),
+        'messageContent': $('#messageContent').val()
+      };
+      $.post(messageUserDoc.getURL("view") + '?outputSyntax=plain', data, function(data) {
+        if(data.success) {
+          new XWiki.widgets.Notification(data.message, 'success');
+        } else {
+          new XWiki.widgets.Notification(data.message, 'error');
+        }
+      })
+    });
+  };
+
+  $(document).ready(function() {
+    initFollow();
+    initMessaging();
   });
 
   var copyToClipboard = function(element) {
