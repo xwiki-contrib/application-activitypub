@@ -111,7 +111,7 @@ class ActivityPubScriptServiceTest
         AbstractActor aa = mock(AbstractActor.class);
         ActivityPubObjectReference apor = mock(ActivityPubObjectReference.class);
         when(aa.getFollowing()).thenReturn(apor);
-        when(this.actorHandler.getCurrentActor()).thenReturn(aa);
+        when(this.actorHandler.getLocalActor("User.Test")).thenReturn(aa);
         when(this.activityPubObjectReferenceResolver.resolveReference(apor)).thenReturn(mock(
             OrderedCollection.class));
         List<AbstractActor> res = this.scriptService.following("User.Test");
@@ -124,7 +124,7 @@ class ActivityPubScriptServiceTest
         AbstractActor aa = mock(AbstractActor.class);
         ActivityPubObjectReference apor = mock(ActivityPubObjectReference.class);
         when(aa.getFollowers()).thenReturn(apor);
-        when(this.actorHandler.getCurrentActor()).thenReturn(aa);
+        when(this.actorHandler.getLocalActor("User.Test")).thenReturn(aa);
         when(this.activityPubObjectReferenceResolver.resolveReference(apor)).thenReturn(mock(
             OrderedCollection.class));
         List<AbstractActor> res = this.scriptService.followers("User.Test");
