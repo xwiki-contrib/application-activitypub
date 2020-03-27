@@ -99,6 +99,7 @@
     &lt;/div&gt;
   {{/html}}
 #end
+#end
 {{/velocity}}
 </content>
   <object>
