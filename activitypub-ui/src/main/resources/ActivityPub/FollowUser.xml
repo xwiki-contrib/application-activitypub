@@ -35,7 +35,7 @@
   <comment/>
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
-  <hidden>false</hidden>
+  <hidden>true</hidden>
   <content>{{velocity}}
 #if ("$!request.followInput" != "" &amp;&amp; $services.csrf.isTokenValid($request.form_token))
   #set ($actor = $services.activitypub.getActor($request.followInput))
