@@ -353,7 +353,7 @@
       <name>org.xwiki.contrib.activitypub.menu</name>
     </property>
     <property>
-      <parameters>icon=key
+      <parameters>icon=branch
 name=$services.localization.render('activitypub.user.profile.menu')</parameters>
     </property>
     <property>
