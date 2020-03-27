@@ -326,6 +326,11 @@
                     "new": "method <T extends org.xwiki.contrib.activitypub.entities.AbstractActivity> void org.xwiki.contrib.activitypub.ActivityPubNotifier::notify(T, java.util.Set<org.xwiki.user.UserReference>) throws org.xwiki.contrib.activitypub.ActivityPubException",
                     "exception": "org.xwiki.contrib.activitypub.ActivityPubException",
                     "justification": "Add an exception throw to handle some corner cases."
+                  },
+                  {
+                    "code": "java.method.addedToInterface",
+                    "new": "method boolean org.xwiki.contrib.activitypub.ActivityPubStorage::isStorageReady()",
+                    "justification": "This is a needed method to work with real persistency."
                   }
                 ]
               }
