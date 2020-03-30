@@ -74,7 +74,7 @@ public class ActivityPubResourceReferenceSerializer implements
         extendedURL = this.extendedURLNormalizer.normalize(extendedURL);
 
         // The following is a nasty hack, we should rely on URLURLNormarlizer once
-        // https://jira.xwiki.org/browse/XWIKI-17023https://jira.xwiki.org/browse/XWIKI-17023 is fixed.
+        // https://jira.xwiki.org/browse/XWIKI-17023 is fixed.
         try {
             URIBuilder uriBuilder = new URIBuilder(this.urlHandler.getServerUrl().toURI());
             uriBuilder.setPathSegments(extendedURL.getSegments());

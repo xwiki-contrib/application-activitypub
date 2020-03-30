@@ -162,7 +162,6 @@ public class DefaultActivityPubClient implements ActivityPubClient
         }
 
         return false;
-        // return (contentTypeHeader != null && Arrays.asList(CONTENT_TYPES).contains(contentTypeHeader.getValue()));
     }
 
     @Override

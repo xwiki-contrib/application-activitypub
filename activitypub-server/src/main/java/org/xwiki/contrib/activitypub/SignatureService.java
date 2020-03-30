@@ -30,7 +30,7 @@ import org.xwiki.user.UserReference;
  * Deal with the concerns related to the management, storage and use of asymetric keys.
  *
  * @version $Id$
- * @since 1.0
+ * @since 1.1
  */
 @Unstable
 @Role

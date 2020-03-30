@@ -27,7 +27,7 @@ import org.xwiki.stability.Unstable;
  * Provides the service specific to cryptography.
  * 
  * @version $Id$
- * @since 1.0
+ * @since 1.1
  */
 @Unstable
 @Role

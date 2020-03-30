@@ -28,6 +28,12 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Test of {@link ProxyActor}.
+ * 
+ * @since 1.1
+ * @version $Id$
+ */
 public class ProxyActorTest extends AbstractEntityTest
 {
     @Test

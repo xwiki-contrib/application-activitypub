@@ -40,7 +40,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 
 /**
  * A custom json deserializer for {@link JSONLDContext} fields.
- * @since 1.0
+ * @since 1.1
  * @version $Id$
  */
 @Component(roles = JSONLDContextDeserializer.class)

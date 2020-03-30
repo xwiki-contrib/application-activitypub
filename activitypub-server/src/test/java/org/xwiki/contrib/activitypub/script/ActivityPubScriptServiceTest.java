@@ -63,6 +63,7 @@ import static org.mockito.Mockito.when;
  * Tests for {@link ActivityPubScriptService}.
  *
  * @version $Id$
+ * @since 1.1
  */
 @ComponentTest
 class ActivityPubScriptServiceTest

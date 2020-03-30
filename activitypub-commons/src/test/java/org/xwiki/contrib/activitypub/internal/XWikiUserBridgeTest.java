@@ -52,6 +52,7 @@ import static org.mockito.Mockito.when;
  * Tests for {@link XWikiUserBridge}.
  *
  * @version $Id$
+ * @since 1.1
  */
 @ComponentTest
 public class XWikiUserBridgeTest
