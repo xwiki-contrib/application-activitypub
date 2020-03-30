@@ -130,8 +130,15 @@ public class DocumentCreatedEventListener extends AbstractEventListener
                 this.createActivityHandler.handleOutboxRequest(activityRequest);
             }
         } catch (URISyntaxException | ActivityPubException | IOException e) {
-            this.logger.error("Error while trying to handle DocumentCreatedEvent for document [{}]",
-                document.getDocumentReference(), e);
+            // FIXME: we have a special handling of errors coming from user reference resolution,
+            // since we have regular stacktraces related to Scheduler listener and AP resolution issue with
+            // CurrentUserReference. This should be removed after fixing XAP-28.
+            String errorMessage = "Error while trying to handle DocumentCreatedEvent for document [{}]";
+            if (e instanceof ActivityPubException && e.getMessage().contains("Cannot find any actor with reference")) {
+                this.logger.debug(errorMessage, document.getDocumentReference(), e);
+            } else {
+                this.logger.error(errorMessage, document.getDocumentReference(), e);
+            }
         }
     }
 
