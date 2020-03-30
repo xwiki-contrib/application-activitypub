@@ -49,6 +49,7 @@ import org.xwiki.contrib.activitypub.webfinger.entities.Link;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
+import org.xwiki.user.CurrentUserReference;
 import org.xwiki.user.UserProperties;
 import org.xwiki.user.UserReference;
 
@@ -190,13 +191,18 @@ public class DefaultActorHandlerTest
     }
 
     @Test
-    public void isLocalActor()
+    public void isLocalActor() throws Exception
     {
         assertTrue(this.actorHandler.isLocalActor(new Person().setPreferredUsername("Foo")));
         assertTrue(this.actorHandler.isLocalActor(new Person().setPreferredUsername("XWiki.Foo")));
 
         assertFalse(this.actorHandler.isLocalActor(new Person().setPreferredUsername("Bar")));
         assertFalse(this.actorHandler.isLocalActor(new Person().setPreferredUsername("XWiki.Bar")));
+
+        URI actorId = new URI("http://myId");
+        when(this.activityPubStorage.belongsToCurrentInstance(actorId)).thenReturn(true);
+        assertTrue(this.actorHandler.isLocalActor(new Person().setId(actorId)));
+        verify(this.activityPubStorage).belongsToCurrentInstance(actorId);
     }
 
     @Test
@@ -284,5 +290,15 @@ public class DefaultActorHandlerTest
         when(this.activityPubClient.get(new URI(remoteActorUrl))).thenReturn(getMethodActor);
         when(this.jsonParser.parse(getMethodActor.getResponseBodyAsStream())).thenReturn(person);
         assertSame(person, this.actorHandler.getRemoteActor(remoteActorUrl));
+    }
+
+    @Test
+    public void getCurrentActor() throws Exception
+    {
+        when(this.xWikiUserBridge.isExistingUser(CurrentUserReference.INSTANCE)).thenReturn(true);
+        when(this.xWikiUserBridge.getUserLogin(CurrentUserReference.INSTANCE)).thenReturn("XWiki.Foo");
+        AbstractActor expectedActor = new Person().setPreferredUsername("XWiki.Foo");
+        when(this.activityPubStorage.retrieveEntity("XWiki.Foo")).thenReturn(expectedActor);
+        assertSame(expectedActor, this.actorHandler.getCurrentActor());
     }
 }
