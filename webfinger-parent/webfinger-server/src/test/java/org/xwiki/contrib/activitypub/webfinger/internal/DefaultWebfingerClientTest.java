@@ -25,6 +25,7 @@ import java.net.URISyntaxException;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.URIException;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
@@ -39,6 +40,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -80,6 +83,19 @@ class DefaultWebfingerClientTest
                     return false;
                 }
             }));
+    }
+    
+    @Test
+    void getNull() throws Exception {
+        WebfingerException actual = assertThrows(WebfingerException.class, () -> this.client.get(null));
+        assertEquals("Invalid agument, webfingerResource is null.", actual.getMessage());
+    }
+
+    @Test
+    void getMalformed() throws Exception
+    {
+        WebfingerException actual = assertThrows(WebfingerException.class, () -> this.client.get("hello"));
+        assertEquals("[hello] is not a valid webfinger resource", actual.getMessage());
     }
 
     @Test

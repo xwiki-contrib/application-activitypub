@@ -71,8 +71,13 @@ public class DefaultWebfingerClient implements WebfingerClient
     @Override
     public JSONResourceDescriptor get(String webfingerResource) throws WebfingerException
     {
+        if (webfingerResource == null) {
+            throw new WebfingerException("Invalid agument, webfingerResource is null.", null);
+        }
+        
         Matcher match = ACTOR_REGEX.matcher(webfingerResource);
-        if (match.matches()) {
+        boolean matches = match.matches();
+        if (matches) {
             String username = match.group("username");
             String domain = match.group("domain");
             GetMethod get = null;
@@ -84,8 +89,7 @@ public class DefaultWebfingerClient implements WebfingerClient
                 this.httpClient.executeMethod(get);
 
                 InputStream responseBodyAsStream = get.getResponseBodyAsStream();
-                JSONResourceDescriptor parse = this.parser.parse(responseBodyAsStream);
-                return parse;
+                return this.parser.parse(responseBodyAsStream);
             } catch (IOException e) {
                 throw new WebfingerException(
                     String.format("Error while querying the webfinger resource for %s", webfingerResource), e);
@@ -95,7 +99,7 @@ public class DefaultWebfingerClient implements WebfingerClient
                 }
             }
         } else {
-            throw new WebfingerException(String.format("%s is not a valid webfinger resource", webfingerResource),
+            throw new WebfingerException(String.format("[%s] is not a valid webfinger resource", webfingerResource),
                 null);
         }
     }
