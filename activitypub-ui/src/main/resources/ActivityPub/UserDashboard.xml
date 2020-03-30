@@ -72,7 +72,6 @@
   #suggestInput($parameters 'apPicker_displayOptions')
 #end
 #macro(activitypubDashboard $isMyProfile)
-#set ($userId = $services.model.resolveDocument($xcontext.user))
 #set ($discard = $xwiki.jsx.use('ActivityPub.UserDashboard'))
 #set ($discard = $xwiki.ssx.use('ActivityPub.UserDashboard'))
 #if (!$services.activitypub.isStorageReady())
@@ -80,6 +79,7 @@
     $services.localization.render('activitypub.storage.needrestart')
     {{/warning}}
 #elseif ($isMyProfile)
+  #set ($userId = $services.model.resolveDocument($xcontext.user))
   #if (!$services.webfinger.isWebfingerConfigured())
     {{warning}}
     $services.localization.render('activitypub.webfinger.notconfigured')
@@ -149,10 +149,11 @@
     &lt;/div&gt;
   {{/html}}
 #else
+  #set ($userId = $doc.documentReference)
   #if ($services.webfinger.isWebfingerConfigured())
-    #set ($userIdentifier = $services.webfinger.getWebfingerId($doc.documentReference))
+    #set ($userIdentifier = $services.webfinger.getWebfingerId($userId))
   #else
-    #set ($userIdentifier = $services.activitypub.getActorURLFromDocumentReference($doc.documentReference))
+    #set ($userIdentifier = $services.activitypub.getActorURLFromDocumentReference($userId))
   #end
   {{html clean='false'}}
     &lt;h1&gt;$services.localization.render('activitypub.user.identifier')&lt;/h1&gt;
@@ -170,7 +171,6 @@
       #listFollowers($userId)
     &lt;/div&gt;
   {{/html}}
-  
 #end
 #end
 
@@ -305,7 +305,7 @@
 
   function updateFollowing() {
     $.get(followingDoc.getURL("get"), function(res) {
-      $('#linkActors&gt;:first-child').replaceWith(res);
+      $('#linkActors&gt;:first-child').replaceWith($(res)[1]);
     });
   };
   

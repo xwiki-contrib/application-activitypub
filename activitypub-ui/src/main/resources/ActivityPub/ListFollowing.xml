@@ -38,7 +38,9 @@
   <hidden>true</hidden>
   <content>{{include reference="ActivityPub.UserDashboard"/}}{{velocity}}
 {{html clean="false" wiki="true"}}
+#if (!$isGuest)
 #set ($userId = $services.model.resolveDocument($xcontext.user))
-#listFollowing($userId){{/html}}
+#listFollowing($userId)
+#end{{/html}}
 {{/velocity}}</content>
 </xwikidoc>
