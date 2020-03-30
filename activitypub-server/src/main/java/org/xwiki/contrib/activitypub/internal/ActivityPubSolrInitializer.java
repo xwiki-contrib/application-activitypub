@@ -65,7 +65,7 @@ public class ActivityPubSolrInitializer implements SolrCoreInitializer
                 createField(client, CONTENT, STRING_TYPE);
                 createField(client, TYPE, STRING_TYPE);
             }
-        } catch (SolrServerException | IOException e)
+        } catch (SolrServerException | IOException | org.apache.solr.common.SolrException e)
         {
             throw new SolrException("Error when initializing activitypub Solr schema", e);
         }
