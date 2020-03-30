@@ -5,7 +5,11 @@ This application is an implementation of the  [ActivityPub protocol](https://www
 :warning: Currently work in progress, more information to come.
 
 * Project Lead: [Simon Urli](https://www.xwiki.org/xwiki/bin/view/XWiki/surli)
+* [Documentation & Download](https://extensions.xwiki.org/xwiki/bin/view/Extension/ActivityPub%20Application/)
 * [Issue Tracker](https://jira.xwiki.org/projects/XAP) 
+* Minimal XWiki version supported: XWiki 12.2
+* License: LGPL 2.1
+* Continuous Integration Status: [![Build Status](https://ci.xwiki.org/job/XWiki%20Contrib/job/application-activitypub/job/master/badge/icon)](https://ci.xwiki.org/job/XWiki%20Contrib/job/application-activitypub/job/master/)
 
 # Aknowledgement
 
