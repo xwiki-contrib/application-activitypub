@@ -23,6 +23,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,7 +45,9 @@ import org.xwiki.user.UserReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -155,7 +158,7 @@ public class RejectActivityHandlerTest extends AbstractHandlerTest
             new ActivityRequest<>(followedPerson, reject, this.servletRequest, this.servletResponse));
         verifyResponse(reject);
         assertEquals(new ArrayList<>(), followers.getOrderedItems());
-        verify(this.notifier).notify(reject, Collections.singleton(followedRef));
+        verify(this.notifier, never()).notify(eq(reject), any(Set.class));
         verify(this.activityPubClient).checkAnswer(any());
         verify(this.activityPubClient).postInbox(followingPerson, reject);
         verify(this.postMethod).releaseConnection();

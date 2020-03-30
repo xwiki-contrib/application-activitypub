@@ -22,6 +22,7 @@ package org.xwiki.contrib.activitypub.internal.activities;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,7 +46,9 @@ import org.xwiki.user.UserReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -160,7 +163,7 @@ public class AcceptActivityHandlerTest extends AbstractHandlerTest
         verifyResponse(accept);
         assertEquals(Collections.singletonList(followingPerson.getReference()), followers.getOrderedItems());
         verify(this.activityPubStorage).storeEntity(followers);
-        verify(this.notifier).notify(accept, Collections.singleton(null));
+        verify(this.notifier, never()).notify(eq(accept), any(Set.class));
         verify(this.activityPubClient).checkAnswer(any());
         verify(this.activityPubClient).postInbox(followingPerson, accept);
         verify(this.postMethod).releaseConnection();

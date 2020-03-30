@@ -86,8 +86,6 @@ public class RejectActivityHandler extends AbstractActivityHandler<Reject>
         if (object instanceof Follow) {
             Follow follow = (Follow) object;
             AbstractActor followingActor = this.activityPubObjectReferenceResolver.resolveReference(follow.getActor());
-            this.notifier
-                .notify(reject, Collections.singleton(this.actorHandler.getXWikiUserReference(rejectingActor)));
             HttpMethod postMethod = this.activityPubClient.postInbox(followingActor, reject);
 
             try {

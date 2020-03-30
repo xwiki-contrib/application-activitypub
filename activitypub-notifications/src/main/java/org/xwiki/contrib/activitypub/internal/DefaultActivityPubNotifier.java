@@ -70,10 +70,13 @@ public class DefaultActivityPubNotifier implements ActivityPubNotifier
         this.observationManager.notify(event, "org.xwiki.contrib:activitypub-notifications", activity.getType());
     }
 
-    private Set<String> serializeTargets(Set<UserReference> targets)
+    private Set<String> serializeTargets(Set<UserReference> targets) throws ActivityPubException
     {
         Set<String> result = new HashSet<>();
         for (UserReference target : targets) {
+            if (target == null) {
+                throw new ActivityPubException("You cannot send a notification to a null target.");
+            }
             result.add(this.userReferenceSerializer.serialize(target));
         }
         return result;
