@@ -83,9 +83,10 @@ public class CreateActivityHandler extends AbstractActivityHandler<Create>
         if (target != null && !target.isEmpty()) {
             List<ActivityPubObjectReference<AbstractActor>> targetActors = new ArrayList<>();
 
-            // FIXME: we should check if Public actor is called here.
             for (ProxyActor proxyActor : target) {
-                targetActors.addAll(proxyActor.resolveActors(this.activityPubObjectReferenceResolver));
+                if (!proxyActor.isPublic()) {
+                    targetActors.addAll(proxyActor.resolveActors(this.activityPubObjectReferenceResolver));
+                }
             }
 
             for (ActivityPubObjectReference<AbstractActor> actorReference : targetActors) {

@@ -334,10 +334,10 @@
 
       const data = {
         'form_token': xm.form_token,
-        'messageTarget': $('input[name=messageTarget]').val(),
+        'messageTarget': $('select[name=messageTarget]').first().val(),
         'messageContent': $('#messageContent').val()
       };
-      $.post(messageUserDoc.getURL("view") + '?outputSyntax=plain', data, function(data) {
+      $.post(messageUserDoc.getURL("view") + '?outputSyntax=plain', $.param(data, true), function(data) {
         if(data.success) {
           new XWiki.widgets.Notification(data.message, 'success');
         } else {

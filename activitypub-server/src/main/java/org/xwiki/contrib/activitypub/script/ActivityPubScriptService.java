@@ -256,7 +256,7 @@ public class ActivityPubScriptService implements ScriptService
             this.createActivityHandler.handleOutboxRequest(new ActivityRequest<>(currentActor, create));
             return true;
         } catch (IOException | ActivityPubException e) {
-            this.logger.error("Error while posting a note.");
+            this.logger.error("Error while posting a note.", e);
             return false;
         }
     }

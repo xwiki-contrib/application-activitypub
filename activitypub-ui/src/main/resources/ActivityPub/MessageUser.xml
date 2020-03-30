@@ -37,8 +37,8 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>false</hidden>
   <content>{{velocity}}
-#if ("$!request.messageTarget" != "" &amp;&amp; $services.csrf.isTokenValid($request.form_token) &amp;&amp; $request.outputSyntax == "plain")
-    #set ($messageSent = $services.activitypub.publishNote($$request.messageTarget, $request.messageContent))
+#if ("$!request.messageContent" != "" &amp;&amp; $services.csrf.isTokenValid($request.form_token) &amp;&amp; $request.outputSyntax == "plain")
+    #set ($messageSent = $services.activitypub.publishNote($request.getParameterValues('messageTarget'), $request.messageContent))
     #if ($messageSent)
       #set ($messageSent = true)
       #set ($messageSentMessage = $services.localization.render('activitypub.message.messageSent'))
@@ -46,7 +46,7 @@
       #set ($messageSent = false)
       #set ($messageSentMessage = $services.localization.render('activitypub.message.messageError'))
     #end
-    #setVariable("$json" { "success": $followWorked, "message": "$followMessage" })
+    #setVariable("$json" { "success": $messageSent, "message": "$messageSentMessage" })
     #jsonResponse($json)
 #else
   This page contains the velocity code to handle messaging.
