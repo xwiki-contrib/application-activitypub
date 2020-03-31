@@ -35,6 +35,7 @@ import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Inbox;
+import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
@@ -78,18 +79,18 @@ public class CreateActivityHandlerTest extends AbstractHandlerTest
     @Test
     public void handleInboxNoId() throws Exception
     {
-        this.handler.handleInboxRequest(new ActivityRequest<>(null, new Create()));
+        this.handler.handleInboxRequest(new ActivityRequest<>(null, new Create().setObject(new Note())));
         assertEquals("The ID of the activity must not be null.", logCapture.getMessage(0));
 
         this.handler.handleInboxRequest(
-            new ActivityRequest<>(null, new Create(), this.servletRequest, this.servletResponse));
+            new ActivityRequest<>(null, new Create().setObject(new Note()), this.servletRequest, this.servletResponse));
         this.verifyResponse(400, "The ID of the activity must not be null.");
     }
 
     @Test
     public void handleInbox() throws Exception
     {
-        Create activity = new Create().setId(new URI("http://www.xwiki.org"));
+        Create activity = new Create().setObject(new Note()).setId(new URI("http://www.xwiki.org"));
         UserReference userReference = mock(UserReference.class);
         Person actor = new Person()
             .setPreferredUsername("XWiki.Foo")

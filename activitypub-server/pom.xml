@@ -32,7 +32,7 @@
   <name>XWiki ActivityPub - Server</name>
   <packaging>jar</packaging>
   <properties>
-    <xwiki.jacoco.instructionRatio>0.77</xwiki.jacoco.instructionRatio>
+    <xwiki.jacoco.instructionRatio>0.79</xwiki.jacoco.instructionRatio>
     <!-- The server should only be installed at farm level so it can handle the URLs -->
     <xwiki.extension.namespaces>{root}</xwiki.extension.namespaces>
   </properties>
