@@ -51,6 +51,7 @@ public class CreateActivityHandler extends AbstractActivityHandler<Create>
     public void handleInboxRequest(ActivityRequest<Create> activityRequest) throws IOException, ActivityPubException
     {
         Create create = activityRequest.getActivity();
+        create.getObject().setExpand(true);
         if (create.getId() == null) {
             this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_BAD_REQUEST,
                 "The ID of the activity must not be null.");
