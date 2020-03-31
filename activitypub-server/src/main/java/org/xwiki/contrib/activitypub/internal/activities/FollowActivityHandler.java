@@ -83,6 +83,8 @@ public class FollowActivityHandler extends AbstractActivityHandler<Follow>
                         .setObject(follow)
                         .setTo(Collections.singletonList(followingActor.getProxyActor()));
                     this.activityPubStorage.storeEntity(accept);
+                    this.notifier.notify(accept, Collections.singleton(this.actorHandler
+                        .getXWikiUserReference(followedActor)));
                     ActivityRequest<Accept> acceptActivityRequest = new ActivityRequest<>(followedActor, accept);
                     this.acceptActivityHandler.handleOutboxRequest(acceptActivityRequest);
                     this.answer(servletResponse, HttpServletResponse.SC_OK, accept);
@@ -99,6 +101,8 @@ public class FollowActivityHandler extends AbstractActivityHandler<Follow>
 
                     this.activityPubStorage.storeEntity(reject);
                     ActivityRequest<Reject> rejectActivityRequest = new ActivityRequest<>(followedActor, reject);
+                    this.notifier.notify(reject, Collections.singleton(this.actorHandler
+                        .getXWikiUserReference(followedActor)));
                     this.rejectActivityHandler.handleOutboxRequest(rejectActivityRequest);
                     this.answer(servletResponse, HttpServletResponse.SC_OK, reject);
             }

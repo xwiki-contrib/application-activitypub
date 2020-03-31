@@ -134,6 +134,8 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
             .setPreferredUsername("Following")
             .setId(new URI("http://foo"));
         Person followedActor = new Person().setPreferredUsername("Followed");
+        UserReference followedUserRef = mock(UserReference.class);
+        when(this.actorHandler.getXWikiUserReference(followedActor)).thenReturn(followedUserRef);
         Follow follow = new Follow()
             .setObject(followedActor)
             .setActor(followingActor)
@@ -156,7 +158,7 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
         verify(this.activityPubStorage, never()).storeEntity(follow);
         verify(this.activityPubStorage).storeEntity(reject);
         verify(this.rejectActivityHandler).handleOutboxRequest(new ActivityRequest<>(followedActor, reject));
-        verify(this.notifier, never()).notify(any(), any());
+        verify(this.notifier).notify(reject, Collections.singleton(followedUserRef));
         verifyResponse(reject);
     }
 
@@ -168,7 +170,6 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
             .setId(new URI("http://foo"));
         Person followedActor = new Person()
             .setPreferredUsername("Followed");
-
         UserReference followedUserRef = mock(UserReference.class);
         when(this.actorHandler.getXWikiUserReference(followedActor)).thenReturn(followedUserRef);
         Follow follow = new Follow()
@@ -193,7 +194,7 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
         verify(this.activityPubStorage, never()).storeEntity(follow);
         verify(this.activityPubStorage).storeEntity(accept);
         verify(this.acceptActivityHandler).handleOutboxRequest(new ActivityRequest<>(followedActor, accept));
-        verify(this.notifier, never()).notify(any(), any());
+        verify(this.notifier).notify(accept, Collections.singleton(followedUserRef));
         verifyResponse(accept);
     }
 
@@ -244,6 +245,8 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
             .setPreferredUsername("Following")
             .setId(new URI("http://foo"));
         Person followedActor = new Person().setPreferredUsername("Followed");
+        UserReference followedUserRef = mock(UserReference.class);
+        when(this.actorHandler.getXWikiUserReference(followedActor)).thenReturn(followedUserRef);
         Follow follow = new Follow()
             .setObject(followedActor)
             .setActor(followingActor)
@@ -266,7 +269,7 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
         verify(this.activityPubStorage, never()).storeEntity(follow);
         verify(this.activityPubStorage).storeEntity(reject);
         verify(this.rejectActivityHandler).handleOutboxRequest(new ActivityRequest<>(followedActor, reject));
-        verify(this.notifier, never()).notify(any(), any());
+        verify(this.notifier).notify(reject, Collections.singleton(followedUserRef));
         verifyResponse(reject);
     }
 
@@ -303,7 +306,7 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
         verify(this.activityPubStorage, never()).storeEntity(follow);
         verify(this.activityPubStorage).storeEntity(accept);
         verify(this.acceptActivityHandler).handleOutboxRequest(new ActivityRequest<>(followedActor, accept));
-        verify(this.notifier, never()).notify(any(), any());
+        verify(this.notifier).notify(accept, Collections.singleton(followedUserRef));
         verifyResponse(accept);
     }
 }
