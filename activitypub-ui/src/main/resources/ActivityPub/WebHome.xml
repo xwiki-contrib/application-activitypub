@@ -38,7 +38,13 @@
   <hidden>false</hidden>
   <content>{{include reference="ActivityPub.UserDashboard"/}}
 {{velocity}}
-#activitypubDashboard(true)
+#if (!$isGuest)
+  #activitypubDashboard(true)
+#else
+  {{warning}}
+    $services.localization.render('activitypub.dashboard.guest')
+  {{/warning}}
+#end
 {{/velocity}}</content>
   <object>
     <name>ActivityPub.WebHome</name>

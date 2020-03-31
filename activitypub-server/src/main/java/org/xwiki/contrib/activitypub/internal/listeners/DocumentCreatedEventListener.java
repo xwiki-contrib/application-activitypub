@@ -134,7 +134,7 @@ public class DocumentCreatedEventListener extends AbstractEventListener
             // since we have regular stacktraces related to Scheduler listener and AP resolution issue with
             // CurrentUserReference. This should be removed after fixing XAP-28.
             String errorMessage = "Error while trying to handle DocumentCreatedEvent for document [{}]";
-            if (e instanceof ActivityPubException && e.getMessage().contains("Cannot find any actor with reference")) {
+            if (e instanceof ActivityPubException && e.getMessage().contains("Cannot find any user with reference")) {
                 this.logger.debug(errorMessage, document.getDocumentReference(), e);
             } else {
                 this.logger.error(errorMessage, document.getDocumentReference(), e);
