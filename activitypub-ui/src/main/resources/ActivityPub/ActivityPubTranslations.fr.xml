@@ -1,0 +1,70 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.4" reference="ActivityPub.ActivityPubTranslations" locale="fr">
+  <web>ActivityPub</web>
+  <name>ActivityPubTranslations</name>
+  <language>fr</language>
+  <defaultLanguage>en</defaultLanguage>
+  <translation>1</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>ActivityPub.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>ActivityPubTranslations</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>plain/1.0</syntaxId>
+  <hidden>true</hidden>
+  <content>activitypub.follow.input.label=Suivre l'utilisateur indiqué
+activitypub.follow.input.hint=Entrez l'identifiant d'un utilisateur pour commencer à le suivre
+activitypub.follow.input.placeholder=@foo@domaine
+activitypub.follow.button=Suivre
+activitypub.follow.followRequested=La requête de suivi a été envoyée.
+activitypub.follow.followNotRequested=La requête de suivi a échoué.
+activitypub.message.target.label=Destinataire du message
+activitypub.message.target.hint=Vous pouvez sélectionner vos followers et/ou des utilisateurs spécifiques.
+activitypub.message.target.placeholder=Insérez ici le(s) identifiant(s) du ou des utilisateur(s)
+activitypub.message.content.label=Contenu de votre message
+activitypub.message.content.hint=Tapez ici le message que vous voulez envoyer
+activitypub.message.button=Envoyer le message
+### Missing: activitypub.following.title=Following
+### Missing: activitypub.following.empty=This user is not following anyone.
+### Missing: activitypub.followers.title=Followers
+### Missing: activitypub.followers.empty=This user does not have any follower yet.
+### Missing: activitypub.user.profile.menu=ActivityPub
+### Missing: activitypub.webfinger=Webfinger
+### Missing: activitypub.follow.actornotfound=The user you specified cannot be found.
+### Missing: activitypub.storage.needrestart=The ActivityPub storage is not ready. Please ask the administrator to restart the server to initialize it.
+### Missing: activitypub.webfinger.notconfigured=The WebFinger endpoint is not configured on this server. You might want to ask your administrator to configure it in order to help using ActivityPub.
+### Missing: activitypub.user.identifier=ActivityPub user identifier
+### Missing: activitypub.user.identifier.tip=Use this identifier if you want to interact with this user.
+### Missing: activitypub.user.identifier.copyButton=Copy the ActivityPub user identifier
+### Missing: activitypub.user.identifier.copied=The identifier has been copied into your clipboard.
+### Missing: activitypub.message.messageSent=Message sent.
+### Missing: activitypub.message.messageError=Error when sending the message.
+### Missing: activitypub.dashboard.tab.follow=Follow users
+### Missing: activitypub.dashboard.tab.message=Send messages
+### Missing: activitypub.dashboard.guest=You cannot use this application as guest user, please log in.</content>
+  
+</xwikidoc>
