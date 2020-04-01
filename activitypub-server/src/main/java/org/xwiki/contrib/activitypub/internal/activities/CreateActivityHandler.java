@@ -20,9 +20,7 @@
 package org.xwiki.contrib.activitypub.internal.activities;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
@@ -31,12 +29,10 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
-import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.Outbox;
-import org.xwiki.contrib.activitypub.entities.ProxyActor;
 
 /**
  * Specific handler for {@link Create} activities.
@@ -79,29 +75,18 @@ public class CreateActivityHandler extends AbstractActivityHandler<Create>
         outbox.addActivity(create);
         this.activityPubStorage.storeEntity(outbox);
 
-        List<ProxyActor> target = create.getTo();
+        ResolvedTargets resolvedTargets = this.getTargets(create);
 
-        if (target != null && !target.isEmpty()) {
-            List<ActivityPubObjectReference<AbstractActor>> targetActors = new ArrayList<>();
+        for (AbstractActor targetActor : resolvedTargets.getActorTargets()) {
+            HttpMethod postMethod = this.activityPubClient.postInbox(targetActor, create);
 
-            for (ProxyActor proxyActor : target) {
-                if (!proxyActor.isPublic()) {
-                    targetActors.addAll(proxyActor.resolveActors(this.activityPubObjectReferenceResolver));
-                }
-            }
-
-            for (ActivityPubObjectReference<AbstractActor> actorReference : targetActors) {
-                AbstractActor targetActor = this.activityPubObjectReferenceResolver.resolveReference(actorReference);
-                HttpMethod postMethod = this.activityPubClient.postInbox(targetActor, create);
-
-                try {
-                    this.activityPubClient.checkAnswer(postMethod);
-                } catch (ActivityPubException e) {
-                    // FIXME: in that case is the final answer still a 200 OK?
-                    this.logger.error("The sharing to followers didn't go well.", e);
-                } finally {
-                    postMethod.releaseConnection();
-                }
+            try {
+                this.activityPubClient.checkAnswer(postMethod);
+            } catch (ActivityPubException e) {
+                // FIXME: in that case is the final answer still a 200 OK?
+                this.logger.error("The sharing to followers didn't go well.", e);
+            } finally {
+                postMethod.releaseConnection();
             }
         }
         this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, create);

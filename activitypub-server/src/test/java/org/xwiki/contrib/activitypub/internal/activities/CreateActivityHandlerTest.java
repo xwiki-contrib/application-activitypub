@@ -139,7 +139,8 @@ public class CreateActivityHandlerTest extends AbstractHandlerTest
     public void handleOutbox() throws Exception
     {
         UserReference userReference = mock(UserReference.class);
-        Person follower1 = new Person().setPreferredUsername("Bar");
+        Person follower1 = new Person()
+            .setPreferredUsername("Bar");
         ActivityPubObjectReference<AbstractActor> follower1Ref = new ActivityPubObjectReference<AbstractActor>()
             .setObject(follower1);
         Person follower2 = new Person().setPreferredUsername("Baz");
@@ -151,9 +152,11 @@ public class CreateActivityHandlerTest extends AbstractHandlerTest
             Arrays.asList(follower1Ref, follower2Ref)
         ).setId(new URI("http://foo/followers"));
         ProxyActor followersProxyActor = followers.getProxyActor();
+        ProxyActor follower1Proxy = mock(ProxyActor.class);
+        when(this.activityPubObjectReferenceResolver.resolveReference(follower1Proxy)).thenReturn(follower1);
         Create activity = new Create()
             .setId(new URI("http://www.xwiki.org"))
-            .setTo(Collections.singletonList(followersProxyActor));
+            .setTo(Arrays.asList(followersProxyActor, follower1Proxy));
         when(this.activityPubObjectReferenceResolver.resolveReference(followersProxyActor)).thenReturn(followers);
         ActivityPubObjectReference<OrderedCollection<AbstractActor>> followersRef =
             new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(followers);
