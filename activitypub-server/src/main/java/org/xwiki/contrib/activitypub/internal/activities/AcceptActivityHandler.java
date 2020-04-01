@@ -21,6 +21,7 @@ package org.xwiki.contrib.activitypub.internal.activities;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
@@ -30,8 +31,9 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
-import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Accept;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 
@@ -64,7 +66,11 @@ public class AcceptActivityHandler extends AbstractActivityHandler<Accept>
                     this.activityPubObjectReferenceResolver.resolveReference(follow.getActor());
                 OrderedCollection<AbstractActor> followingActorfollowings =
                     this.activityPubObjectReferenceResolver.resolveReference(followingActor.getFollowing());
-                followingActorfollowings.addItem(acceptingActor);
+
+                boolean found = this.isDuplicate(followingActorfollowings, acceptingActor, followingActor);
+                if (!found) {
+                    followingActorfollowings.addItem(acceptingActor);
+                }
                 this.activityPubStorage.storeEntity(followingActorfollowings);
 
                 this.notifier.notify(accept,
@@ -75,6 +81,29 @@ public class AcceptActivityHandler extends AbstractActivityHandler<Accept>
                     ONLY_FOLLOW_IMPLEMENTED);
             }
         }
+    }
+
+    /**
+     * Search for a duplicate in the following list. 
+     * @param list the list of following 
+     * @param acceptingActor the actor being followed.
+     * @param followingActor the actor who follows.
+     * @return true if a duplicate is found.
+     * @throws ActivityPubException In case of error when resolving references.
+     */
+    private boolean isDuplicate(OrderedCollection<AbstractActor> list, AbstractActor acceptingActor,
+        AbstractActor followingActor) throws ActivityPubException
+    {
+        List<ActivityPubObjectReference<AbstractActor>> lst = list.getOrderedItems();
+        boolean found = false;
+        for (ActivityPubObjectReference<AbstractActor> x : lst) {
+            AbstractActor rx = this.activityPubObjectReferenceResolver.resolveReference(x);
+            if (rx.equals(followingActor) || rx.equals(acceptingActor)) {
+                found = true;
+                break;
+            }
+        }
+        return found;
     }
 
     @Override
@@ -92,7 +121,10 @@ public class AcceptActivityHandler extends AbstractActivityHandler<Accept>
             AbstractActor followingActor = this.activityPubObjectReferenceResolver.resolveReference(follow.getActor());
             OrderedCollection<AbstractActor> acceptingActorFollowers =
                 this.activityPubObjectReferenceResolver.resolveReference(acceptingActor.getFollowers());
-            acceptingActorFollowers.addItem(followingActor);
+            boolean found = this.isDuplicate(acceptingActorFollowers, acceptingActor, followingActor);
+            if (!found) {
+                acceptingActorFollowers.addItem(followingActor);
+            }
             this.activityPubStorage.storeEntity(acceptingActorFollowers);
 
             accept.getObject().setExpand(true);

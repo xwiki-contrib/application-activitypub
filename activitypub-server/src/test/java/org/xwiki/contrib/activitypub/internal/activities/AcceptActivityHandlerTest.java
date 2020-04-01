@@ -19,8 +19,8 @@
  */
 package org.xwiki.contrib.activitypub.internal.activities;
 
-import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 
@@ -28,16 +28,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.xwiki.contrib.activitypub.ActivityRequest;
-import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Accept;
-import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Person;
-import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.test.LogLevel;
 import org.xwiki.test.junit5.LogCaptureExtension;
 import org.xwiki.test.junit5.mockito.ComponentTest;
@@ -74,7 +71,7 @@ public class AcceptActivityHandlerTest extends AbstractHandlerTest
     }
 
     @Test
-    public void handleInboxIDNull() throws Exception
+    void handleInboxIDNull() throws Exception
     {
         this.handler.handleInboxRequest(new ActivityRequest<>(null, new Accept()));
         assertEquals("The ID of the activity must not be null.", logCapture.getMessage(0));
@@ -85,7 +82,7 @@ public class AcceptActivityHandlerTest extends AbstractHandlerTest
     }
 
     @Test
-    public void handleInboxNotFollowAccept() throws Exception
+    void handleInboxNotFollowAccept() throws Exception
     {
         Accept accept = new Accept().setObject(new Document()).setId(new URI("http://www.xwiki.org"));
         when(this.activityPubObjectReferenceResolver.resolveReference(
@@ -96,7 +93,7 @@ public class AcceptActivityHandlerTest extends AbstractHandlerTest
     }
 
     @Test
-    public void handleInbox() throws Exception
+    void handleInbox() throws Exception
     {
         Person followedPerson = new Person()
             .setPreferredUsername("Followed");
@@ -132,7 +129,46 @@ public class AcceptActivityHandlerTest extends AbstractHandlerTest
     }
 
     @Test
-    public void handleOutbox() throws Exception
+    void handleInboxDuplicate() throws Exception
+    {
+        OrderedCollection<AbstractActor> followers = new OrderedCollection<>().setName("followers");
+        UserReference followedRef = mock(UserReference.class);
+        Person followedPerson = new Person()
+                                    .setPreferredUsername("Followed")
+                                    .setFollowers(followers.getReference());
+
+        Person followingPerson = new Person()
+                                     .setPreferredUsername("Following");
+
+        Follow follow = new Follow()
+                            .setActor(followingPerson.getReference())
+                            .setObject(followedPerson.getReference());
+
+        Accept accept = new Accept()
+                            .setActor(followedPerson.getReference())
+                            .setObject(follow.getReference());
+        when(this.activityPubObjectReferenceResolver.resolveReference(accept.getActor())).thenReturn(followedPerson);
+        when(this.activityPubObjectReferenceResolver.resolveReference(
+            (ActivityPubObjectReference<Follow>) accept.getObject())).thenReturn(follow);
+        when(this.activityPubObjectReferenceResolver.resolveReference(follow.getActor())).thenReturn(followingPerson);
+        when(this.activityPubObjectReferenceResolver.resolveReference(followedPerson.getFollowers()))
+            .thenReturn(followers);
+
+        OrderedCollection orderedCollection = mock(OrderedCollection.class);
+        when(this.activityPubObjectReferenceResolver.resolveReference(followingPerson.getFollowing())).thenReturn(orderedCollection);
+        ActivityPubObjectReference<AbstractActor> abstractActorActivityPubObjectReference =
+            new ActivityPubObjectReference<>();
+        when(orderedCollection.getOrderedItems()).thenReturn(Arrays.asList(
+            abstractActorActivityPubObjectReference));
+        when(this.activityPubObjectReferenceResolver.resolveReference(abstractActorActivityPubObjectReference))
+            .thenReturn(followingPerson);
+        this.handler
+            .handleInboxRequest(new ActivityRequest<Accept>(followedPerson, accept.setId(URI.create("http://id"))));
+        verify(orderedCollection, times(0)).addItem(followedPerson);
+    }
+
+    @Test
+    void handleOutbox() throws Exception
     {
         OrderedCollection<AbstractActor> followers = new OrderedCollection<>().setName("followers");
         UserReference followedRef = mock(UserReference.class);

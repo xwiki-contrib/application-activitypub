@@ -27,7 +27,7 @@ import org.xwiki.contrib.activitypub.entities.AbstractActor;
  * In addition the translation key of a message to display to the user is also returned. 
  * 
  * @version $Id$
- * @since 1.0
+ * @since 1.2
  */
 public class FollowResult
 {
