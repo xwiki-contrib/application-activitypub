@@ -25,7 +25,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -168,13 +170,25 @@ public class ActivityPubScriptService implements ScriptService
      * @param remoteActor the actor to follow.
      * @return {@code true} iff the request has been sent properly.
      */
-    public boolean follow(AbstractActor remoteActor)
+    public FollowResult follow(AbstractActor remoteActor)
     {
-        boolean result = false;
+        FollowResult result = new FollowResult("activitypub.follow.followNotRequested");
 
         try {
             this.checkAuthentication();
             AbstractActor currentActor = this.actorHandler.getCurrentActor();
+            if (Objects.equals(currentActor, remoteActor)) {
+                // can't follow yourself.
+                return result.setMessage("activitypub.follow.followYourself");
+            }
+
+            Optional<Stream<AbstractActor>> oaas = this.getAbstractActorStream(currentActor);
+            Optional<Boolean> aBoolean = oaas.map(s -> s.anyMatch(f -> Objects.equals(f, remoteActor)));
+            if (aBoolean.orElse(false)) {
+                // can't follow the same user twice.
+                return result.setMessage("activitypub.follow.alreadyFollowed");
+            }
+
             Follow follow = new Follow().setActor(currentActor).setObject(remoteActor);
             this.activityPubStorage.storeEntity(follow);
             HttpMethod httpMethod = this.activityPubClient.postInbox(remoteActor, follow);
@@ -183,7 +197,7 @@ public class ActivityPubScriptService implements ScriptService
             } finally {
                 httpMethod.releaseConnection();
             }
-            result = true;
+            result.setSuccess(true).setMessage("activitypub.follow.followRequested");
         } catch (ActivityPubException | IOException e) {
             this.logger.error("Error while trying to send a follow request to [{}].", remoteActor, e);
         }
@@ -270,12 +284,9 @@ public class ActivityPubScriptService implements ScriptService
     {
         try {
             AbstractActor actor = this.getActor(userLogin);
-            ActivityPubObjectReference<OrderedCollection<AbstractActor>> following = actor.getFollowing();
-            if (following != null) {
-                OrderedCollection<AbstractActor> activityPubObjectReferences =
-                    this.activityPubObjectReferenceResolver.resolveReference(following);
-                return activityPubObjectReferences.getOrderedItems().stream().map(this::resolveActor)
-                           .filter(Objects::nonNull).collect(Collectors.toList());
+            Optional<Stream<AbstractActor>> abstractActorStream = this.getAbstractActorStream(actor);
+            if (abstractActorStream.isPresent()) {
+                return abstractActorStream.get().filter(Objects::nonNull).collect(Collectors.toList());
             }
         } catch (ActivityPubException e) {
             this.logger.warn(GET_CURRENT_ACTOR_ERR_MSG, ExceptionUtils.getRootCauseMessage(e));
@@ -285,6 +296,26 @@ public class ActivityPubScriptService implements ScriptService
         return Collections.emptyList();
     }
 
+    /**
+     * Return a stream of abstract actors following the actor.
+     * @param actor The actor.
+     * @return An optional stram of actor.
+     * @throws ActivityPubException In case of error during the resolution of actors.
+     */
+    private Optional<Stream<AbstractActor>> getAbstractActorStream(AbstractActor actor)
+        throws ActivityPubException
+    {
+        Stream<AbstractActor> abstractActorStream = null;
+        ActivityPubObjectReference<OrderedCollection<AbstractActor>> following = actor.getFollowing();
+        if (following != null) {
+            OrderedCollection<AbstractActor> activityPubObjectReferences =
+                this.activityPubObjectReferenceResolver.resolveReference(following);
+            abstractActorStream = activityPubObjectReferences.getOrderedItems().stream().map(this::resolveActor);
+        }
+        return Optional.ofNullable(abstractActorStream);
+    }
+
+    
     private AbstractActor resolveActor(ActivityPubObjectReference<AbstractActor> it)
     {
         try {

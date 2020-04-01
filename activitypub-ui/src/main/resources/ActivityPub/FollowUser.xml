@@ -40,14 +40,9 @@
 #if ("$!request.followInput" != "" &amp;&amp; $services.csrf.isTokenValid($request.form_token) &amp;&amp; $request.outputSyntax == "plain")
   #set ($actor = $services.activitypub.getActor($request.followInput))
   #if ("$!actor" != '')
-    #set ($followWorked = $services.activitypub.follow($actor))
-    #if ($followWorked)
-      #set ($followWorked = true)
-      #set ($followMessage = $services.localization.render('activitypub.follow.followRequested'))
-    #else
-      #set ($followWorked = false)
-      #set ($followMessage = $services.localization.render('activitypub.follow.followNotRequested'))
-    #end
+    #set ($followRes = $services.activitypub.follow($actor))
+    #set($followWorked = $followRes.success)
+    #set($followMessage = $services.localization.render($followRes.message))
   #else
     #set ($followWorked = false)
     #set ($followMessage = $services.localization.render('activitypub.follow.actornotfound'))

@@ -23,6 +23,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.commons.httpclient.HttpMethod;
 import org.junit.jupiter.api.Test;
@@ -54,6 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -92,6 +94,30 @@ class ActivityPubScriptServiceTest
     @Test
     void follow() throws Exception
     {
+        AbstractActor remoteActor = mock(AbstractActor.class);
+        AbstractActor currentActor = mock(AbstractActor.class);
+
+        ActivityPubObjectReference actorReference = mock(ActivityPubObjectReference.class);
+        when(remoteActor.getReference()).thenReturn(actorReference);
+        when(this.actorHandler.getCurrentActor()).thenReturn(currentActor);
+
+        AbstractActor targetActor = mock(AbstractActor.class);
+        ActivityPubObjectReference targetActorReference = mock(ActivityPubObjectReference.class);
+        when(targetActor.getReference()).thenReturn(targetActorReference);
+        when(this.actorHandler.getRemoteActor("test")).thenReturn(targetActor);
+
+        when(this.activityPubClient.postInbox(any(), any())).thenReturn(mock(HttpMethod.class));
+        FollowResult actual = this.scriptService.follow(remoteActor);
+        assertTrue(actual.isSuccess());
+        assertEquals("activitypub.follow.followRequested", actual.getMessage());
+        verify(this.activityPubStorage, times(1)).storeEntity(any());
+        verify(this.activityPubClient, times(1)).postInbox(eq(remoteActor), any());
+        verify(this.activityPubClient, times(1)).checkAnswer(any());
+    }
+
+    @Test
+    void followYourself() throws Exception
+    {
         AbstractActor actor = mock(AbstractActor.class);
         ActivityPubObjectReference actorReference = mock(ActivityPubObjectReference.class);
         when(actor.getReference()).thenReturn(actorReference);
@@ -100,21 +126,59 @@ class ActivityPubScriptServiceTest
         AbstractActor targetActor = mock(AbstractActor.class);
         ActivityPubObjectReference targetActorReference = mock(ActivityPubObjectReference.class);
         when(targetActor.getReference()).thenReturn(targetActorReference);
-        when(actorHandler.getRemoteActor("test")).thenReturn(targetActor);
+        when(this.actorHandler.getRemoteActor("test")).thenReturn(targetActor);
 
         when(this.activityPubClient.postInbox(any(), any())).thenReturn(mock(HttpMethod.class));
-        assertTrue(this.scriptService.follow(actor));
+        FollowResult actual = this.scriptService.follow(actor);
+        assertFalse(actual.isSuccess());
+        assertEquals("activitypub.follow.followYourself", actual.getMessage());
+        verify(this.activityPubStorage, times(0)).storeEntity(any());
+        verify(this.activityPubClient, times(0)).postInbox(eq(actor), any());
+        verify(this.activityPubClient, times(0)).checkAnswer(any());
+    }
+
+    @Test
+    void followAlreadyFollowing() throws Exception
+    {
+        AbstractActor actor = mock(AbstractActor.class);
+        AbstractActor current = mock(AbstractActor.class);
+        ActivityPubObjectReference mock = mock(ActivityPubObjectReference.class);
+        when(current.getFollowing()).thenReturn(mock);
+        OrderedCollection orderedCollection = mock(OrderedCollection.class);
+        when(this.activityPubObjectReferenceResolver.resolveReference(mock)).thenReturn(orderedCollection);
+        List list1 = mock(List.class);
+        when(orderedCollection.getOrderedItems()).thenReturn(list1);
+        Stream stream1 = mock(Stream.class);
+        when(list1.stream()).thenReturn(stream1);
+        Stream stream2 = mock(Stream.class);
+        when(stream1.map(any())).thenReturn(stream2);
+        when(stream2.anyMatch(any())).thenReturn(true);
+        ActivityPubObjectReference actorReference = mock(ActivityPubObjectReference.class);
+        when(actor.getReference()).thenReturn(actorReference);
+        when(this.actorHandler.getCurrentActor()).thenReturn(current);
+
+        AbstractActor targetActor = mock(AbstractActor.class);
+        ActivityPubObjectReference targetActorReference = mock(ActivityPubObjectReference.class);
+        when(targetActor.getReference()).thenReturn(targetActorReference);
+        when(this.actorHandler.getRemoteActor("test")).thenReturn(targetActor);
+
+        when(this.activityPubClient.postInbox(any(), any())).thenReturn(mock(HttpMethod.class));
+        FollowResult actual = this.scriptService.follow(actor);
+        assertFalse(actual.isSuccess());
+        assertEquals("activitypub.follow.alreadyFollowed", actual.getMessage());
+        verify(this.activityPubStorage, times(0)).storeEntity(any());
+        verify(this.activityPubClient, times(0)).postInbox(eq(actor), any());
+        verify(this.activityPubClient, times(0)).checkAnswer(any());
     }
 
     @Test
     void following() throws Exception
     {
-        AbstractActor aa = mock(AbstractActor.class);
+        AbstractActor actor = mock(AbstractActor.class);
         ActivityPubObjectReference apor = mock(ActivityPubObjectReference.class);
-        when(aa.getFollowing()).thenReturn(apor);
-        when(this.actorHandler.getLocalActor("User.Test")).thenReturn(aa);
-        when(this.activityPubObjectReferenceResolver.resolveReference(apor)).thenReturn(mock(
-            OrderedCollection.class));
+        when(actor.getFollowing()).thenReturn(apor);
+        when(this.actorHandler.getLocalActor("User.Test")).thenReturn(actor);
+        when(this.activityPubObjectReferenceResolver.resolveReference(apor)).thenReturn(mock(OrderedCollection.class));
         List<AbstractActor> res = this.scriptService.following("User.Test");
         assertTrue(res.isEmpty());
     }
@@ -143,8 +207,8 @@ class ActivityPubScriptServiceTest
         String noteContent = "some content";
         this.scriptService.publishNote(null, noteContent);
         Note note = new Note()
-            .setContent(noteContent)
-            .setAttributedTo(Collections.singletonList(actor.getReference()));
+                        .setContent(noteContent)
+                        .setAttributedTo(Collections.singletonList(actor.getReference()));
 
         ArgumentCaptor<ActivityPubObject> argumentCaptor = ArgumentCaptor.forClass(ActivityPubObject.class);
         verify(this.activityPubStorage, times(2)).storeEntity(argumentCaptor.capture());
@@ -184,9 +248,9 @@ class ActivityPubScriptServiceTest
         this.scriptService.publishNote(Arrays.asList("followers", "@targetActor"), noteContent);
 
         Note note = new Note()
-            .setContent(noteContent)
-            .setAttributedTo(Collections.singletonList(actor.getReference()))
-            .setTo(Arrays.asList(new ProxyActor(followersReference.getLink()), targetProxyActor));
+                        .setContent(noteContent)
+                        .setAttributedTo(Collections.singletonList(actor.getReference()))
+                        .setTo(Arrays.asList(new ProxyActor(followersReference.getLink()), targetProxyActor));
 
         ArgumentCaptor<ActivityPubObject> argumentCaptor = ArgumentCaptor.forClass(ActivityPubObject.class);
         verify(this.activityPubStorage, times(2)).storeEntity(argumentCaptor.capture());

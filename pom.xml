@@ -96,7 +96,14 @@
           <analysisConfiguration><![CDATA[
             {
               "revapi": {
-                "ignore": []
+                "ignore": [
+                  {
+                    "code": "java.method.returnTypeChanged",
+                    "old": "method boolean org.xwiki.contrib.activitypub.script.ActivityPubScriptService::follow(org.xwiki.contrib.activitypub.entities.AbstractActor)",
+                    "new": "method org.xwiki.contrib.activitypub.script.FollowResult org.xwiki.contrib.activitypub.script.ActivityPubScriptService::follow(org.xwiki.contrib.activitypub.entities.AbstractActor)",
+                    "justification": "Return type of the follow operation changed to allow more accurate information to be returned."
+                  }
+                ]
               }
             }
           ]]></analysisConfiguration>
