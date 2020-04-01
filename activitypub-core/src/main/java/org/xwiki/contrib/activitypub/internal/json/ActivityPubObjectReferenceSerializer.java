@@ -35,8 +35,6 @@ import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.resource.ResourceReferenceSerializer;
-import org.xwiki.resource.SerializeResourceReferenceException;
-import org.xwiki.resource.UnsupportedResourceReferenceException;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -92,13 +90,9 @@ public class ActivityPubObjectReferenceSerializer extends JsonSerializer<Activit
                     // answers.
                 } else {
                     try {
-                        String uuid = this.getActivityPubStorage().storeEntity(object);
-                        ActivityPubResourceReference resourceReference =
-                            new ActivityPubResourceReference(object.getType(), uuid);
-                        URI uri = this.activityPubResourceReferenceSerializer.serialize(resourceReference);
-                        jsonGenerator.writeString(uri.toString());
-                    } catch (SerializeResourceReferenceException | UnsupportedResourceReferenceException
-                                 | ActivityPubException | ComponentLookupException e) {
+                        URI uri = this.getActivityPubStorage().storeEntity(object);
+                        jsonGenerator.writeString(uri.toASCIIString());
+                    } catch (ActivityPubException | ComponentLookupException e) {
                         throw new IOException(String.format("Error when serializing [%s]", object.toString()), e);
                     }
                 }

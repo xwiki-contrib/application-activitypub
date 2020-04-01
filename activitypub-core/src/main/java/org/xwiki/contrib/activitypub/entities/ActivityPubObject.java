@@ -56,7 +56,7 @@ public class ActivityPubObject extends JSONLDObjects
     private String content;
     private List<ActivityPubObjectReference<AbstractActor>> attributedTo;
     private List<URI> url;
-
+    
     /**
      * The type is not stored as a property but instead we rely on the class name to return it.
      * @return the current type based on class name.

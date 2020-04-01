@@ -22,14 +22,18 @@ package org.xwiki.contrib.activitypub.internal;
 import java.io.IOException;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.commons.httpclient.HttpMethod;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.component.manager.ComponentLookupException;
+import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
+import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 
@@ -48,6 +52,20 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
     @Inject
     private ActivityPubClient activityPubClient;
 
+    private ActivityPubStorage activityPubStorage;
+
+    @Inject
+    @Named("context")
+    private ComponentManager componentManager;
+
+    private ActivityPubStorage getActivityPubStorage() throws ComponentLookupException
+    {
+        if (this.activityPubStorage == null) {
+            this.activityPubStorage = this.componentManager.getInstance(ActivityPubStorage.class);
+        }
+        return this.activityPubStorage;
+    }
+
     @Override
     public <T extends ActivityPubObject> T resolveReference(ActivityPubObjectReference<T> reference)
         throws ActivityPubException
@@ -58,6 +76,14 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
         T result = reference.getObject();
         if (!reference.isLink() && result == null) {
             throw new ActivityPubException("The reference property is null and does not have any ID to follow.");
+        }
+        if (result == null) {
+            try {
+                result = this.getActivityPubStorage().retrieveEntity(reference.getLink());
+                reference.setObject(result);
+            } catch (ComponentLookupException e) {
+                throw new ActivityPubException("Cannot load the storage.", e);
+            }
         }
         if (result == null) {
             try {

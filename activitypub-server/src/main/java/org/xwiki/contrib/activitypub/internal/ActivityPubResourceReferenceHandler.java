@@ -21,6 +21,8 @@ package org.xwiki.contrib.activitypub.internal;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
@@ -136,7 +138,8 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         HttpServletRequest request = ((ServletRequest) this.container.getRequest()).getHttpServletRequest();
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
         try {
-            ActivityPubObject entity = this.activityPubStorage.retrieveEntity(resourceReference.getUuid());
+            ActivityPubObject entity =
+                this.activityPubStorage.retrieveEntity(new URI(request.getRequestURL().toString()));
 
             // We didn't manage to retrieve the entity from storage, but it's about an Actor: we lazily create it.
             if (entity == null && isAboutExistingUser(resourceReference)) {
@@ -171,7 +174,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
             } else {
                 this.handleBox(entity);
             }
-        } catch (ActivityPubException | IOException e) {
+        } catch (ActivityPubException | IOException | URISyntaxException e) {
             try {
                 this.handleException(response, e);
             } catch (IOException ex) {

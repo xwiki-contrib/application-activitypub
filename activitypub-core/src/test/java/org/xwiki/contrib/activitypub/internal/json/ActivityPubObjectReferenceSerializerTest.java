@@ -24,8 +24,11 @@ import java.net.URI;
 
 import javax.inject.Named;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.xwiki.component.manager.ComponentManager;
+import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.entities.Accept;
@@ -66,6 +69,15 @@ public class ActivityPubObjectReferenceSerializerTest
     @Named("context")
     private ComponentManager componentManager;
 
+    @Mock
+    private ActivityPubStorage activityPubStorage;
+
+    @BeforeEach
+    public void setup() throws Exception
+    {
+        when(this.componentManager.getInstance(ActivityPubStorage.class)).thenReturn(this.activityPubStorage);
+    }
+
     @Test
     void serializeIsLink() throws IOException
     {
@@ -80,14 +92,15 @@ public class ActivityPubObjectReferenceSerializerTest
     @Test
     void serializeIsObject() throws Exception
     {
-        ActivityPubObjectReference<ActivityPubObject> ref =
-            new ActivityPubObjectReference<>().setObject(new Accept());
+        Accept object = new Accept();
+        ActivityPubObjectReference<ActivityPubObject> ref = new ActivityPubObjectReference<>().setObject(object);
         JsonGenerator jsonGenerator = mock(JsonGenerator.class);
         SerializerProvider serializeProvider = mock(SerializerProvider.class);
-        when(this.componentManager.getInstance(ActivityPubStorage.class)).thenReturn(mock(ActivityPubStorage.class));
-        when(this.activityPubResourceReferenceSerializer.serialize(any())).thenReturn(URI.create("http://newuri"));
+        String uriString = "http://newuri";
+        when(this.activityPubStorage.storeEntity(object)).thenReturn(URI.create(uriString));
+
         this.activityPubObjectReferenceSerializer.serialize(ref, jsonGenerator, serializeProvider);
-        verify(jsonGenerator).writeString("http://newuri");
+        verify(jsonGenerator).writeString(uriString);
     }
 
     @Test
@@ -97,9 +110,7 @@ public class ActivityPubObjectReferenceSerializerTest
             new ActivityPubObjectReference<>().setObject(new Accept());
         JsonGenerator jsonGenerator = mock(JsonGenerator.class);
         SerializerProvider serializeProvider = mock(SerializerProvider.class);
-        when(this.componentManager.getInstance(ActivityPubStorage.class)).thenReturn(mock(ActivityPubStorage.class));
-        when(this.activityPubResourceReferenceSerializer.serialize(any()))
-            .thenThrow(new SerializeResourceReferenceException("ERR"));
+        when(this.activityPubStorage.storeEntity(any())).thenThrow(new ActivityPubException("Error when storing"));
         IOException e = assertThrows(IOException.class,
             () -> this.activityPubObjectReferenceSerializer.serialize(ref, jsonGenerator, serializeProvider));
 

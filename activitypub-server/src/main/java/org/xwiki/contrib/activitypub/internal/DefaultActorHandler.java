@@ -35,6 +35,7 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
+import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.SignatureService;
@@ -49,6 +50,9 @@ import org.xwiki.contrib.activitypub.webfinger.WebfingerClient;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 import org.xwiki.contrib.activitypub.webfinger.entities.Link;
+import org.xwiki.resource.ResourceReferenceSerializer;
+import org.xwiki.resource.SerializeResourceReferenceException;
+import org.xwiki.resource.UnsupportedResourceReferenceException;
 import org.xwiki.user.CurrentUserReference;
 import org.xwiki.user.UserProperties;
 import org.xwiki.user.UserReference;
@@ -80,6 +84,9 @@ public class DefaultActorHandler implements ActorHandler
     @Inject
     private WebfingerClient webfingerClient;
 
+    @Inject
+    private ResourceReferenceSerializer<ActivityPubResourceReference, URI> serializer;
+
     private HttpConnection jsoupConnection;
 
     private HttpConnection getJsoupConnection()
@@ -108,9 +115,17 @@ public class DefaultActorHandler implements ActorHandler
     @Override
     public AbstractActor getActor(UserReference userReference) throws ActivityPubException
     {
+        String errorMessage = String.format("Cannot find any user with reference [%s]", userReference);
         if (this.xWikiUserBridge.isExistingUser(userReference)) {
             String login = this.xWikiUserBridge.getUserLogin(userReference);
-            AbstractActor actor = this.activityPubStorage.retrieveEntity(login);
+            ActivityPubResourceReference resourceReference =
+                new ActivityPubResourceReference("Person", login);
+            AbstractActor actor = null;
+            try {
+                actor = this.activityPubStorage.retrieveEntity(this.serializer.serialize(resourceReference));
+            } catch (SerializeResourceReferenceException|UnsupportedResourceReferenceException e) {
+                throw new ActivityPubException(errorMessage, e);
+            }
             if (actor == null) {
                 UserProperties userProperties = this.xWikiUserBridge.resolveUser(userReference);
                 String fullname = String.format("%s %s", userProperties.getFirstName(), userProperties.getLastName());
@@ -118,8 +133,7 @@ public class DefaultActorHandler implements ActorHandler
             }
             return actor;
         } else {
-            throw new ActivityPubException(
-                String.format("Cannot find any user with reference [%s]", userReference));
+            throw new ActivityPubException(errorMessage);
         }
     }
 

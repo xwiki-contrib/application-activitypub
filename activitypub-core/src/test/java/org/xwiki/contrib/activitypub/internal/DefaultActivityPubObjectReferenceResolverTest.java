@@ -22,12 +22,18 @@ package org.xwiki.contrib.activitypub.internal;
 import java.io.IOException;
 import java.net.URI;
 
+import javax.inject.Named;
+
 import org.apache.commons.httpclient.HttpMethod;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
+import org.mockito.Mock;
+import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
+import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
@@ -41,6 +47,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -61,6 +69,19 @@ public class DefaultActivityPubObjectReferenceResolverTest
     @MockComponent
     private ActivityPubClient activityPubClient;
 
+    @MockComponent
+    @Named("context")
+    private ComponentManager componentManager;
+
+    @Mock
+    private ActivityPubStorage activityPubStorage;
+
+    @BeforeEach
+    public void setup() throws Exception
+    {
+        when(this.componentManager.getInstance(ActivityPubStorage.class)).thenReturn(this.activityPubStorage);
+    }
+
     @Test
     public void resolveReferenceInvalidLink()
     {
@@ -71,17 +92,40 @@ public class DefaultActivityPubObjectReferenceResolverTest
     }
 
     @Test
-    public void resolveReferenceObjectNull() throws Exception
+    public void resolveReferenceWithObject() throws Exception
+    {
+        ActivityPubObject object = mock(ActivityPubObject.class);
+        assertSame(object, this.defaultActivityPubObjectReferenceResolver
+            .resolveReference(new ActivityPubObjectReference<>().setObject(object)));
+        verify(this.activityPubClient, never()).get(any());
+        verify(this.activityPubStorage, never()).retrieveEntity(any());
+    }
+
+    @Test
+    public void resolveReferenceObjectNullNotStored() throws Exception
     {
         Accept t = new Accept();
         HttpMethod hm = mock(HttpMethod.class);
-        when(hm.getResponseBodyAsString()).thenReturn("");
-        ActivityPubObjectReference<ActivityPubObject> reference =
-            new ActivityPubObjectReference<>().setLink(URI.create("http://test/create/1"));
-        when(this.activityPubClient.get(any())).thenReturn(hm);
-        when(this.activityPubJsonParser.parse(anyString())).thenReturn(t);
+        when(hm.getResponseBodyAsString()).thenReturn("{accept}");
+        URI uri = URI.create("http://test/create/1");
+        ActivityPubObjectReference<ActivityPubObject> reference = new ActivityPubObjectReference<>().setLink(uri);
+        when(this.activityPubClient.get(uri)).thenReturn(hm);
+        when(this.activityPubJsonParser.parse("{accept}")).thenReturn(t);
         assertSame(t, this.defaultActivityPubObjectReferenceResolver.resolveReference(reference));
         assertSame(t, reference.getObject());
+        verify(this.activityPubStorage).retrieveEntity(uri);
+    }
+
+    @Test
+    public void resolveReferenceObjectNullStored() throws Exception
+    {
+        Accept t = new Accept();
+        URI uri = URI.create("http://test/create/1");
+        ActivityPubObjectReference<ActivityPubObject> reference = new ActivityPubObjectReference<>().setLink(uri);
+        when(this.activityPubStorage.retrieveEntity(uri)).thenReturn(t);
+        assertSame(t, this.defaultActivityPubObjectReferenceResolver.resolveReference(reference));
+        assertSame(t, reference.getObject());
+        verify(this.activityPubClient, never()).get(uri);
     }
 
     @Test

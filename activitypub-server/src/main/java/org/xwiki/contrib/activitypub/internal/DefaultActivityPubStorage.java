@@ -138,100 +138,61 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         return serverUrlPort;
     }
 
-    @Override
-    public String storeEntity(ActivityPubObject entity) throws ActivityPubException
+    private void storeInformation(ActivityPubObject entity)
+        throws ActivityPubException, SolrException, IOException, SolrServerException
     {
-        if (entity.getId() != null && belongsToCurrentInstance(entity.getId())) {
-            return this.storeEntity(entity.getId(), entity);
-        } else if (entity.getId() != null && !belongsToCurrentInstance(entity.getId())) {
-            throw new ActivityPubException(
-                String.format("Entity [%s] won't be stored since it's not part of the current instance", entity.getId())
-            );
-        }
-
-        String uuid;
-        if (entity instanceof Inbox) {
-            Inbox inbox = (Inbox) entity;
-            if (inbox.getAttributedTo() == null || inbox.getAttributedTo().isEmpty()) {
-                throw new ActivityPubException("Cannot store an inbox without owner.");
-            }
-            AbstractActor owner = this.resolver.resolveReference(inbox.getAttributedTo().get(0));
-            uuid = getActorEntityUID(owner, INBOX_SUFFIX_ID);
-        } else if (entity instanceof Outbox) {
-            Outbox outbox = (Outbox) entity;
-            if (outbox.getAttributedTo() == null || outbox.getAttributedTo().isEmpty()) {
-                throw new ActivityPubException("Cannot store an outbox without owner.");
-            }
-            AbstractActor owner = this.resolver.resolveReference(outbox.getAttributedTo().get(0));
-            uuid = getActorEntityUID(owner, OUTBOX_SUFFIX_ID);
-        } else if (entity instanceof AbstractActor) {
-            uuid = ((AbstractActor) entity).getPreferredUsername();
-        } else {
-            // FIXME: we cannot rely on hashCode because of possible collisions and size limitation, but we shouldn't
-            // rely on total randomness because of dedup.
-            uuid = UUID.randomUUID().toString();
-        }
-        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference(entity.getType(), uuid);
-        try {
-            entity.setId(this.serializer.serialize(resourceReference));
-            SolrInputDocument inputDocument = new SolrInputDocument();
-            inputDocument.addField("id", uuid);
-            inputDocument.addField("type", entity.getType());
-            inputDocument.addField("content", this.jsonSerializer.serialize(entity));
-            this.getSolrClient().add(inputDocument);
-            this.getSolrClient().commit();
-            return uuid;
-        } catch (SolrException | SerializeResourceReferenceException | UnsupportedResourceReferenceException
-                     | SolrServerException | IOException e) {
-            throw new ActivityPubException(String.format("Error while storing [%s].", resourceReference), e);
-        }
-    }
-
-    @Override
-    public String storeEntity(URI uri, ActivityPubObject entity) throws ActivityPubException
-    {
-        try {
-            // FIXME: the prefix should be at the very least dynamically computed.
-            //  But maybe we should use a URI resolver.
-            ExtendedURL extendedURL = new ExtendedURL(uri.toURL(), "xwiki/activitypub");
-            ActivityPubResourceReference resourceReference = (ActivityPubResourceReference)
-                                                                 this.urlResolver.resolve(extendedURL,
-                                                                     new ResourceType("activitypub"),
-                                                                     Collections.emptyMap());
-            this.storeEntity(resourceReference.getUuid(), entity);
-            return resourceReference.getUuid();
-        } catch (MalformedURLException | CreateResourceReferenceException | UnsupportedResourceReferenceException e) {
-            throw new ActivityPubException(String.format("Error when getting UID from URI [%s]", uri), e);
-        }
-    }
-
-    @Override
-    public boolean storeEntity(String uid, ActivityPubObject entity) throws ActivityPubException
-    {
-        if (StringUtils.isEmpty(uid)) {
-            throw new ActivityPubException("The UID cannot be empty.");
-        }
         SolrInputDocument inputDocument = new SolrInputDocument();
-        inputDocument.addField("id", uid);
+        inputDocument.addField("id", entity.getId().toASCIIString());
         inputDocument.addField("type", entity.getType());
         inputDocument.addField("content", this.jsonSerializer.serialize(entity));
+        this.getSolrClient().add(inputDocument);
+        this.getSolrClient().commit();
+    }
+
+    @Override
+    public URI storeEntity(ActivityPubObject entity) throws ActivityPubException
+    {
+        String uuid;
         try {
-            SolrDocument solrDocument = this.getSolrClient().getById(uid);
-            boolean result = solrDocument != null && !solrDocument.isEmpty();
-            this.getSolrClient().add(inputDocument);
-            this.getSolrClient().commit();
-            return result;
-        } catch (SolrServerException | IOException | SolrException e) {
-            throw new ActivityPubException(
-                String.format("Error when trying to save the entity of id [%s]", uid), e);
+            if (entity.getId() == null) {
+                if (entity instanceof Inbox) {
+                    Inbox inbox = (Inbox) entity;
+                    if (inbox.getAttributedTo() == null || inbox.getAttributedTo().isEmpty()) {
+                        throw new ActivityPubException("Cannot store an inbox without owner.");
+                    }
+                    AbstractActor owner = this.resolver.resolveReference(inbox.getAttributedTo().get(0));
+                    uuid = getActorEntityUID(owner, INBOX_SUFFIX_ID);
+                } else if (entity instanceof Outbox) {
+                    Outbox outbox = (Outbox) entity;
+                    if (outbox.getAttributedTo() == null || outbox.getAttributedTo().isEmpty()) {
+                        throw new ActivityPubException("Cannot store an outbox without owner.");
+                    }
+                    AbstractActor owner = this.resolver.resolveReference(outbox.getAttributedTo().get(0));
+                    uuid = getActorEntityUID(owner, OUTBOX_SUFFIX_ID);
+                } else if (entity instanceof AbstractActor) {
+                    uuid = ((AbstractActor) entity).getPreferredUsername();
+                } else {
+                    // FIXME: we cannot rely on hashCode because of possible collisions and size limitation, but we shouldn't
+                    // rely on total randomness because of dedup.
+                    uuid = UUID.randomUUID().toString();
+                }
+                ActivityPubResourceReference resourceReference = new ActivityPubResourceReference(entity.getType(), uuid);
+                entity.setId(this.serializer.serialize(resourceReference));
+            }
+
+            this.storeInformation(entity);
+            return entity.getId();
+        } catch (SolrException | SerializeResourceReferenceException | UnsupportedResourceReferenceException
+                     | SolrServerException | IOException e) {
+            throw new ActivityPubException(String.format("Error while storing [%s].", entity), e);
         }
     }
 
     @Override
-    public <T extends ActivityPubObject> T retrieveEntity(String uuid) throws ActivityPubException
+    public <T extends ActivityPubObject> T retrieveEntity(URI id) throws ActivityPubException
     {
         try {
-            SolrDocument solrDocument = this.getSolrClient().getById(uuid);
+            SolrDocument solrDocument = this.getSolrClient().getById(id.toASCIIString());
             if (solrDocument == null || solrDocument.isEmpty()) {
                 return null;
             } else {
@@ -239,7 +200,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
             }
         } catch (IOException | SolrServerException | SolrException e) {
             throw new ActivityPubException(
-                String.format("Error when trying to retrieve the entity of id [%s]", uuid), e);
+                String.format("Error when trying to retrieve the entity of id [%s]", id), e);
         }
     }
 

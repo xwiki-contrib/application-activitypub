@@ -51,46 +51,26 @@ public interface ActivityPubStorage
     boolean belongsToCurrentInstance(URI id);
 
     /**
-     * Store a given entity and return a UUID to retrieve it.
+     * Store a given entity and return an ID to retrieve it.
      * This method performs the following checks:
-     *   1. if the entity already has an UUID, then we check that it's already stored in the current instance and we
-     *   override previous record if it's the case, else we throw an exception.
-     *   2. if the entity is an Inbox or an Outbox, we expect it to have an attributedTo attribute, so we can link it
-     *   to an actor, we throw an exception if it's not the case.
+     *   1. if the entity already has an id, this id will be used for the storing.
+     *   2. if the entity does not have an id, and is an Inbox or an Outbox,
+     *   we expect it to have an attributedTo attribute, so we can link it to an actor,
+     *   we throw an exception if it's not the case.
      *
      * @param entity the entity to persist.
-     * @return an UUID to retrieve this entity.
+     * @return the URI corresponding to the genered or existing ID of this entity.
      * @throws ActivityPubException in case one of the check failed or the storing failed for some reason.
      */
-    String storeEntity(ActivityPubObject entity) throws ActivityPubException;
-
-    /**
-     * Store an entity with a given UID.
-     *
-     * @param uid the ID to use to store the entity.
-     * @param entity the entity to store.
-     * @return {@code true} iff the entity has been overridden.
-     * @throws ActivityPubException in case the storing failed (e.g. because of a serialization issue)
-     */
-    boolean storeEntity(String uid, ActivityPubObject entity) throws ActivityPubException;
-
-    /**
-     * This method resolve the given URI to identify the UID of the entity and
-     * calls {@link #storeEntity(String, ActivityPubObject)} in order to store it.
-     * @param uri the URI to resolve
-     * @param entity the entity to persist
-     * @return the actual ID of the entity to be retrieved.
-     * @throws ActivityPubException in case the URI has not been properly resolved or if the storing failed.
-     */
-    String storeEntity(URI uri, ActivityPubObject entity) throws ActivityPubException;
+    URI storeEntity(ActivityPubObject entity) throws ActivityPubException;
 
     /**
      * Extract an entity from its UUID.
      *
-     * @param uuid the unique identifier of the entity as given by {@link #storeEntity(ActivityPubObject)}.
+     * @param id the unique identifier of the entity as given by {@link #storeEntity(ActivityPubObject)}.
      * @param <T> the concrete type of the entity to retrieve.
      * @return the stored entity or null if it has not been found.
      * @throws ActivityPubException if the parsing of the entity failed.
      */
-    <T extends ActivityPubObject> T retrieveEntity(String uuid) throws ActivityPubException;
+    <T extends ActivityPubObject> T retrieveEntity(URI id) throws ActivityPubException;
 }

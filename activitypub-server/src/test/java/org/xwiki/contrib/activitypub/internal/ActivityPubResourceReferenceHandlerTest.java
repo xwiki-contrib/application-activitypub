@@ -23,6 +23,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
@@ -134,6 +135,7 @@ public class ActivityPubResourceReferenceHandlerTest
         when(container.getResponse()).thenReturn(response);
         when(response.getHttpServletResponse()).thenReturn(this.servletResponse);
         when(this.servletResponse.getOutputStream()).thenReturn(this.responseOutput);
+        when(this.servletRequest.getRequestURL()).thenReturn(new StringBuffer());
         componentManager.registerComponent(ComponentManager.class, "context", componentManager);
 
         this.xWikiContext = mock(XWikiContext.class);
@@ -198,7 +200,9 @@ public class ActivityPubResourceReferenceHandlerTest
     {
         Create create = new Create().setName("Create 42");
         ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("create", "42");
-        when(this.activityPubStorage.retrieveEntity("42")).thenReturn(create);
+        String requestURL = "http://domain.org/xwiki/activitypub/Create/42";
+        when(this.servletRequest.getRequestURL()).thenReturn(new StringBuffer(requestURL));
+        when(this.activityPubStorage.retrieveEntity(new URI(requestURL))).thenReturn(create);
         when(servletRequest.getMethod()).thenReturn("GET");
         this.handler.handle(resourceReference, this.handlerChain);
         this.verifyResponse(create);
@@ -211,7 +215,9 @@ public class ActivityPubResourceReferenceHandlerTest
         Create create = new Create().setName("Create 42");
         when(servletRequest.getMethod()).thenReturn("POST");
         ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("create", "42");
-        when(this.activityPubStorage.retrieveEntity("42")).thenReturn(create);
+        String requestURL = "http://domain.org/xwiki/activitypub/Create/42";
+        when(this.servletRequest.getRequestURL()).thenReturn(new StringBuffer(requestURL));
+        when(this.activityPubStorage.retrieveEntity(new URI(requestURL))).thenReturn(create);
         this.handler.handle(resourceReference, this.handlerChain);
         this.verifyResponse(400, "POST requests are only allowed on inbox or outbox.");
         verify(handlerChain, times(1)).handleNext(resourceReference);
@@ -223,7 +229,9 @@ public class ActivityPubResourceReferenceHandlerTest
         Inbox inbox = new Inbox();
         when(servletRequest.getMethod()).thenReturn("POST");
         ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("inbox", "42");
-        when(this.activityPubStorage.retrieveEntity("42")).thenReturn(inbox);
+        String requestURL = "http://domain.org/xwiki/activitypub/Inbox/42";
+        when(this.servletRequest.getRequestURL()).thenReturn(new StringBuffer(requestURL));
+        when(this.activityPubStorage.retrieveEntity(new URI(requestURL))).thenReturn(inbox);
         this.handler.handle(resourceReference, this.handlerChain);
         this.verifyResponse(500,
             "This box is not attributed. Please report the error to the administrator.");
@@ -240,7 +248,9 @@ public class ActivityPubResourceReferenceHandlerTest
         Inbox inbox = new Inbox().setAttributedTo(Collections.singletonList(actorReference));
         when(servletRequest.getMethod()).thenReturn("POST");
         ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("inbox", "42");
-        when(this.activityPubStorage.retrieveEntity("42")).thenReturn(inbox);
+        String requestURL = "http://domain.org/xwiki/activitypub/Inbox/42";
+        when(servletRequest.getRequestURL()).thenReturn(new StringBuffer(requestURL));
+        when(this.activityPubStorage.retrieveEntity(new URI(requestURL))).thenReturn(inbox);
 
         Create create = new Create().setName("Create 42");
         when(servletRequest.getReader()).thenReturn(new BufferedReader(new StringReader("{create:42}")));
@@ -268,7 +278,9 @@ public class ActivityPubResourceReferenceHandlerTest
         Outbox outbox = new Outbox().setAttributedTo(Collections.singletonList(actorReference));
         when(servletRequest.getMethod()).thenReturn("POST");
         ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("outbox", "42");
-        when(this.activityPubStorage.retrieveEntity("42")).thenReturn(outbox);
+        String requestURL = "http://domain.org/xwiki/activitypub/Outbox/42";
+        when(this.servletRequest.getRequestURL()).thenReturn(new StringBuffer(requestURL));
+        when(this.activityPubStorage.retrieveEntity(new URI(requestURL))).thenReturn(outbox);
 
         Create create = new Create().setName("Create 42");
         when(servletRequest.getReader()).thenReturn(new BufferedReader(new StringReader("{create:42}")));
@@ -300,7 +312,9 @@ public class ActivityPubResourceReferenceHandlerTest
         Outbox outbox = new Outbox().setAttributedTo(Collections.singletonList(actorReference));
         when(servletRequest.getMethod()).thenReturn("POST");
         ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("outbox", "42");
-        when(this.activityPubStorage.retrieveEntity("42")).thenReturn(outbox);
+        String requestURL = "http://domain.org/xwiki/activitypub/Outbox/42";
+        when(this.servletRequest.getRequestURL()).thenReturn(new StringBuffer(requestURL));
+        when(this.activityPubStorage.retrieveEntity(new URI(requestURL))).thenReturn(outbox);
 
         Create create = new Create().setName("Create 42");
         when(servletRequest.getReader()).thenReturn(new BufferedReader(new StringReader("{create:42}")));

@@ -35,6 +35,7 @@ import org.mockito.Mock;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
+import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.SignatureService;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
@@ -46,6 +47,7 @@ import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerClient;
 import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 import org.xwiki.contrib.activitypub.webfinger.entities.Link;
+import org.xwiki.resource.ResourceReferenceSerializer;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
@@ -95,11 +97,16 @@ public class DefaultActorHandlerTest
     @MockComponent
     private WebfingerClient webfingerClient;
 
+    @MockComponent
+    private ResourceReferenceSerializer<ActivityPubResourceReference, URI> serializer;
+
     @Mock
     private UserReference fooUserReference;
 
     @Mock
     private UserReference barUserReference;
+
+    private URI fooUserURI;
 
     @BeforeEach
     public void setup() throws Exception
@@ -115,6 +122,8 @@ public class DefaultActorHandlerTest
         when(fooUser.getFirstName()).thenReturn("Foo");
         when(fooUser.getLastName()).thenReturn("Foo");
         when(this.xWikiUserBridge.getUserLogin(this.fooUserReference)).thenReturn("XWiki.Foo");
+        this.fooUserURI = new URI("http://domain.org/xwiki/activitypub/Person/XWiki.Foo");
+        when(this.serializer.serialize(new ActivityPubResourceReference("Person", "XWiki.Foo"))).thenReturn(fooUserURI);
 
         // Bar does not exist.
         when(this.xWikiUserBridge.resolveUser("XWiki.Bar")).thenReturn(this.barUserReference);
@@ -128,7 +137,7 @@ public class DefaultActorHandlerTest
     public void getActorWithAlreadyExistingActor() throws Exception
     {
         AbstractActor expectedActor = new Person().setPreferredUsername("XWiki.Foo");
-        when(this.activityPubStorage.retrieveEntity("XWiki.Foo")).thenReturn(expectedActor);
+        when(this.activityPubStorage.retrieveEntity(this.fooUserURI)).thenReturn(expectedActor);
 
         assertSame(expectedActor, this.actorHandler.getActor(this.fooUserReference));
     }
@@ -298,7 +307,8 @@ public class DefaultActorHandlerTest
         when(this.xWikiUserBridge.isExistingUser(CurrentUserReference.INSTANCE)).thenReturn(true);
         when(this.xWikiUserBridge.getUserLogin(CurrentUserReference.INSTANCE)).thenReturn("XWiki.Foo");
         AbstractActor expectedActor = new Person().setPreferredUsername("XWiki.Foo");
-        when(this.activityPubStorage.retrieveEntity("XWiki.Foo")).thenReturn(expectedActor);
+        when(this.activityPubStorage.retrieveEntity(this.fooUserURI)).thenReturn(expectedActor);
+
         assertSame(expectedActor, this.actorHandler.getCurrentActor());
     }
 }
