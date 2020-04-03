@@ -43,6 +43,8 @@ import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
+import org.xwiki.contrib.activitypub.internal.async.PageCreatedRequest;
+import org.xwiki.job.JobExecutor;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.security.authorization.AuthorizationManager;
 import org.xwiki.security.authorization.Right;
@@ -56,6 +58,7 @@ import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.user.api.XWikiRightService;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -96,6 +99,9 @@ public class DocumentCreatedEventListenerTest
 
     @MockComponent
     private XWikiUserBridge xWikiUserBridge;
+
+    @MockComponent
+    private JobExecutor jobExecutor;
 
     @Mock
     private XWikiDocument document;
@@ -157,28 +163,34 @@ public class DocumentCreatedEventListenerTest
         String documentTile = "A document title";
         Date creationDate = new Date();
 
-        when(document.getURL("view", context)).thenReturn(relativeDocumentUrl);
-        when(urlHandler.getAbsoluteURI(new URI(relativeDocumentUrl))).thenReturn(new URI(absoluteDocumentUrl));
-        when(document.getCreationDate()).thenReturn(creationDate);
-        when(document.getTitle()).thenReturn(documentTile);
+        when(this.document.getURL("view", this.context)).thenReturn(relativeDocumentUrl);
+        when(this.urlHandler.getAbsoluteURI(new URI(relativeDocumentUrl))).thenReturn(new URI(absoluteDocumentUrl));
+        when(this.document.getCreationDate()).thenReturn(creationDate);
+        when(this.document.getTitle()).thenReturn(documentTile);
 
         Document apDoc = new Document()
-            .setName(documentTile)
-            .setAttributedTo(
-                Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(person))
-            )
-            .setPublished(creationDate)
-            .setUrl(Collections.singletonList(new URI(absoluteDocumentUrl)));
+                             .setName(documentTile)
+                             .setAttributedTo(
+                                 Collections.singletonList(
+                                     new ActivityPubObjectReference<AbstractActor>().setObject(this.person))
+                             )
+                             .setPublished(creationDate)
+                             .setUrl(Collections.singletonList(new URI(absoluteDocumentUrl)));
         Create create = new Create()
-            .setActor(person)
-            .setObject(apDoc)
-            .setName("Creation of document [A document title]")
-            .setPublished(creationDate)
-            .setTo(Collections.singletonList(new ProxyActor(person.getFollowers().getLink())));
-        ActivityRequest<Create> activityRequest = new ActivityRequest<>(person, create);
-        this.listener.onEvent(new DocumentCreatedEvent(), document, context);
+                            .setActor(this.person)
+                            .setObject(apDoc)
+                            .setName("Creation of document [A document title]")
+                            .setPublished(creationDate)
+                            .setTo(Collections.singletonList(new ProxyActor(this.person.getFollowers().getLink())));
+        ActivityRequest<Create> activityRequest = new ActivityRequest<>(this.person, create);
+        this.listener.onEvent(new DocumentCreatedEvent(), this.document, this.context);
 
-        verify(this.activityPubStorage, times(1)).storeEntity(apDoc);
-        verify(this.createActivityHandler, times(1)).handleOutboxRequest(activityRequest);
+        PageCreatedRequest request =
+            new PageCreatedRequest(this.document.getDocumentReference(), this.document.getAuthorReference(),
+                this.document.getURL("view", this.context), this.document.getTitle(), this.document.getCreationDate());
+        request.setId("activitypub-create-page", this.document.getKey());
+        verify(this.jobExecutor, times(1)).execute(eq("activitypub-create-page"), eq(request));
+        verify(this.activityPubStorage, times(0)).storeEntity(apDoc);
+        verify(this.createActivityHandler, times(0)).handleOutboxRequest(activityRequest);
     }
 }

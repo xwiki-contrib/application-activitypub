@@ -99,6 +99,11 @@
       <groupId>org.jsoup</groupId>
       <artifactId>jsoup</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.xwiki.commons</groupId>
+      <artifactId>xwiki-commons-job</artifactId>
+      <version>${commons.version}</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -121,8 +126,8 @@
                 <!-- Fan-Out complexity: 31 on 20 max -->
                 **/ActivityPubResourceReferenceHandler.java,
 
-                <!-- Fan-Out complexity: 21 on 20 max -->
-                **/DocumentCreatedEventListener.java,
+                <!-- Fan-Out complexity: 24 on 20 max -->
+                **/PageCreatedNotificationJob.java,
 
                 <!-- Fan-Out complexity: 21 on 20 max -->
                 **/ActivityPubScriptService.java

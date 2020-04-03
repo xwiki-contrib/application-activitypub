@@ -16,3 +16,4 @@ org.xwiki.contrib.activitypub.internal.ActivityPubConfigurationSource
 org.xwiki.contrib.activitypub.internal.DefaultURLHandler
 org.xwiki.contrib.activitypub.internal.DefaultSignatureService
 org.xwiki.contrib.activitypub.internal.ActivityPubSolrInitializer
+org.xwiki.contrib.activitypub.internal.async.PageCreatedNotificationJob

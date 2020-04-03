@@ -19,45 +19,30 @@
  */
 package org.xwiki.contrib.activitypub.internal.listeners;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.xwiki.bridge.event.DocumentCreatedEvent;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.activitypub.ActivityHandler;
-import org.xwiki.contrib.activitypub.ActivityPubException;
-import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
-import org.xwiki.contrib.activitypub.ActivityPubStorage;
-import org.xwiki.contrib.activitypub.ActivityRequest;
-import org.xwiki.contrib.activitypub.ActorHandler;
-import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
-import org.xwiki.contrib.activitypub.entities.AbstractActor;
-import org.xwiki.contrib.activitypub.entities.Create;
-import org.xwiki.contrib.activitypub.entities.Document;
-import org.xwiki.contrib.activitypub.entities.OrderedCollection;
-import org.xwiki.contrib.activitypub.entities.ProxyActor;
-import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
-import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
+import org.xwiki.contrib.activitypub.internal.async.PageCreatedRequest;
+import org.xwiki.job.JobException;
+import org.xwiki.job.JobExecutor;
+import org.xwiki.job.Request;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.Event;
-import org.xwiki.security.authorization.AuthorizationManager;
-import org.xwiki.security.authorization.Right;
-import org.xwiki.user.UserReference;
 
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
-import com.xpn.xwiki.user.api.XWikiRightService;
+
+import static org.xwiki.contrib.activitypub.internal.async.PageCreatedNotificationJob.ASYNC_REQUEST_TYPE;
 
 /**
  * Listen for {@link DocumentCreatedEvent} and notify the followers of the creator with ActivityPub protocol.
@@ -71,32 +56,11 @@ public class DocumentCreatedEventListener extends AbstractEventListener
 {
     private static final List<Event> EVENTS = Arrays.asList(new DocumentCreatedEvent());
 
-    private static final DocumentReference GUEST_USER =
-        new DocumentReference("xwiki", "XWiki", XWikiRightService.GUEST_USER);
-
-    @Inject
-    private ActorHandler actorHandler;
-
-    @Inject
-    private ActivityPubObjectReferenceResolver objectReferenceResolver;
-
-    @Inject
-    private ActivityPubStorage storage;
-
-    @Inject
-    private AuthorizationManager authorizationManager;
-
-    @Inject
-    private DefaultURLHandler urlHandler;
-
     @Inject
     private Logger logger;
 
     @Inject
-    private ActivityHandler<Create> createActivityHandler;
-
-    @Inject
-    private XWikiUserBridge xWikiUserBridge;
+    private JobExecutor jobExecutor;
 
     /**
      * Default constructor.
@@ -109,60 +73,34 @@ public class DocumentCreatedEventListener extends AbstractEventListener
     @Override
     public void onEvent(Event event, Object source, Object data)
     {
-        DocumentCreatedEvent documentCreatedEvent = (DocumentCreatedEvent) event;
         XWikiDocument document = (XWikiDocument) source;
         XWikiContext context = (XWikiContext) data;
 
-        try {
-            UserReference authorReference =
-                this.xWikiUserBridge.resolveDocumentReference(document.getAuthorReference());
-            AbstractActor author = this.actorHandler.getActor(authorReference);
-            OrderedCollection<AbstractActor> followers =
-                this.objectReferenceResolver.resolveReference(author.getFollowers());
+        Request createJob = this.newRequest(document, context);
 
-            // ensure the page can be viewed with guest user to not disclose private stuff in a notif
-            boolean guestAccess =
-                this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, document.getDocumentReference());
-            if (guestAccess && !followers.isEmpty()) {
-                Create createActivity = getActivity(author, document, context);
-                ActivityRequest<Create> activityRequest = new ActivityRequest<>(createActivity.getActor().getObject(),
-                    createActivity);
-                this.createActivityHandler.handleOutboxRequest(activityRequest);
-            }
-        } catch (URISyntaxException | ActivityPubException | IOException e) {
-            // FIXME: we have a special handling of errors coming from user reference resolution,
-            // since we have regular stacktraces related to Scheduler listener and AP resolution issue with
-            // CurrentUserReference. This should be removed after fixing XAP-28.
-            String errorMessage = "Error while trying to handle DocumentCreatedEvent for document [{}]";
-            if (e instanceof ActivityPubException && e.getMessage().contains("Cannot find any user with reference")) {
-                this.logger.debug(errorMessage, document.getDocumentReference(), e);
-            } else {
-                this.logger.error(errorMessage, document.getDocumentReference(), e);
-            }
+        try {
+            this.jobExecutor.execute(ASYNC_REQUEST_TYPE, createJob);
+        } catch (JobException e) {
+            this.logger.warn("ActivityPub page creation [{}] event task failed. Cause [{}]", document,
+                ExceptionUtils.getRootCauseMessage(e));
         }
     }
 
-    private Create getActivity(AbstractActor author, XWikiDocument xWikiDocument, XWikiContext context)
-        throws URISyntaxException, ActivityPubException, MalformedURLException
+    private Request newRequest(XWikiDocument document, XWikiContext context)
     {
-        URI documentUrl = this.urlHandler.getAbsoluteURI(new URI(xWikiDocument.getURL("view", context)));
+        /*
+         * XWikiDocument is not serializable and cannot be passed safely to the job executor.
+         * Only interesting parameters are passed explicitly on the request.
+         */
+        DocumentReference documentReference = document.getDocumentReference();
+        DocumentReference authorReference = document.getAuthorReference();
+        String viewURL = document.getURL("view", context);
+        String documentTitle = document.getTitle();
+        Date creationDate = document.getCreationDate();
 
-        Document document = new Document()
-            .setName(xWikiDocument.getTitle())
-            .setAttributedTo(
-                Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(author)))
-            .setPublished(xWikiDocument.getCreationDate())
-            // We cannot put it as a document id, since we need to be able to resolve it with an activitypub answer.
-            .setUrl(Collections.singletonList(documentUrl));
-
-        // Make sure it's stored so it can be resolved later.
-        this.storage.storeEntity(document);
-
-        return new Create()
-            .setActor(author)
-            .setObject(document)
-            .setName(String.format("Creation of document [%s]", xWikiDocument.getTitle()))
-            .setTo(Collections.singletonList(new ProxyActor(author.getFollowers().getLink())))
-            .setPublished(xWikiDocument.getCreationDate());
+        PageCreatedRequest ret =
+            new PageCreatedRequest(documentReference, authorReference, viewURL, documentTitle, creationDate);
+        ret.setId(ASYNC_REQUEST_TYPE, document.getKey());
+        return ret;
     }
 }
