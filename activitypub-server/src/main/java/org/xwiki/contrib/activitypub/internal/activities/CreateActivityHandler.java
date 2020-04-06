@@ -78,6 +78,7 @@ public class CreateActivityHandler extends AbstractActivityHandler<Create>
         ResolvedTargets resolvedTargets = this.getTargets(create);
 
         for (AbstractActor targetActor : resolvedTargets.getActorTargets()) {
+            create.getObject().setExpand(true);
             HttpMethod postMethod = this.activityPubClient.postInbox(targetActor, create);
 
             try {

@@ -19,17 +19,13 @@
  */
 package org.xwiki.contrib.activitypub.internal.activities;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
-import org.apache.commons.httpclient.methods.PostMethod;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
@@ -40,7 +36,6 @@ import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
-import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.test.LogLevel;
 import org.xwiki.test.junit5.LogCaptureExtension;
 import org.xwiki.test.junit5.mockito.ComponentTest;
@@ -140,12 +135,12 @@ public class CreateActivityHandlerTest extends AbstractHandlerTest
     {
         UserReference userReference = mock(UserReference.class);
         Person follower1 = new Person()
-            .setPreferredUsername("Bar");
+                               .setPreferredUsername("Bar");
         ActivityPubObjectReference<AbstractActor> follower1Ref = new ActivityPubObjectReference<AbstractActor>()
-            .setObject(follower1);
+                                                                     .setObject(follower1);
         Person follower2 = new Person().setPreferredUsername("Baz");
         ActivityPubObjectReference<AbstractActor> follower2Ref = new ActivityPubObjectReference<AbstractActor>()
-            .setObject(follower2);
+                                                                     .setObject(follower2);
         when(this.activityPubObjectReferenceResolver.resolveReference(follower1Ref)).thenReturn(follower1);
         when(this.activityPubObjectReferenceResolver.resolveReference(follower2Ref)).thenReturn(follower2);
         OrderedCollection<AbstractActor> followers = new OrderedCollection<AbstractActor>().setOrderedItems(
@@ -155,17 +150,18 @@ public class CreateActivityHandlerTest extends AbstractHandlerTest
         ProxyActor follower1Proxy = mock(ProxyActor.class);
         when(this.activityPubObjectReferenceResolver.resolveReference(follower1Proxy)).thenReturn(follower1);
         Create activity = new Create()
-            .setId(new URI("http://www.xwiki.org"))
-            .setTo(Arrays.asList(followersProxyActor, follower1Proxy));
+                              .setObject(new Note())
+                              .setId(new URI("http://www.xwiki.org"))
+                              .setTo(Arrays.asList(followersProxyActor, follower1Proxy));
         when(this.activityPubObjectReferenceResolver.resolveReference(followersProxyActor)).thenReturn(followers);
         ActivityPubObjectReference<OrderedCollection<AbstractActor>> followersRef =
             new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(followers);
 
         when(this.activityPubObjectReferenceResolver.resolveReference(followersRef)).thenReturn(followers);
         Person actor = new Person()
-            .setPreferredUsername("XWiki.Foo")
-            .setOutbox(new ActivityPubObjectReference<Outbox>())
-            .setFollowers(followersRef);
+                           .setPreferredUsername("XWiki.Foo")
+                           .setOutbox(new ActivityPubObjectReference<Outbox>())
+                           .setFollowers(followersRef);
         Outbox outbox = new Outbox();
         when(this.activityPubObjectReferenceResolver.resolveReference(actor.getOutbox())).thenReturn(outbox);
         when(this.actorHandler.getXWikiUserReference(actor)).thenReturn(userReference);
@@ -176,7 +172,7 @@ public class CreateActivityHandlerTest extends AbstractHandlerTest
         assertTrue(outbox.getAllActivities().contains(activity));
         verify(this.activityPubStorage).storeEntity(outbox);
         verify(this.notifier, never()).notify(any(), any());
-        verifyResponse(activity);
+        this.verifyResponse(activity);
         verify(this.activityPubClient, times(2)).checkAnswer(any());
         verify(this.activityPubClient).postInbox(follower1, activity);
         verify(this.activityPubClient).postInbox(follower2, activity);

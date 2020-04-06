@@ -174,13 +174,13 @@ public class DefaultActorHandler implements ActorHandler
     private PublicKey initPublicKey(String login) throws ActivityPubException
     {
         String pkId;
+        UserReference userReference = this.xWikiUserBridge.resolveUser(login);
         try {
-            pkId = this.xWikiUserBridge.getUserProfileURL(this.xWikiUserBridge.resolveUser(login));
+            pkId = this.xWikiUserBridge.getUserProfileURL(userReference);
         } catch (Exception e) {
             throw new ActivityPubException("Error while resolving user profile URL", e);
         }
-        UserReference user = this.xWikiUserBridge.resolveUser(login);
-        String pubKey = this.signatureService.getPublicKeyPEM(user);
+        String pubKey = this.signatureService.getPublicKeyPEM(userReference);
 
         return new PublicKey().setId(pkId + "#main-key").setOwner(pkId).setPublicKeyPem(pubKey);
     }
