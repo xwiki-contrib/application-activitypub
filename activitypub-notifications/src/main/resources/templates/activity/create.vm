@@ -32,7 +32,7 @@
   #elseif ($object.type == "Note")
       #define($summary)
           $username sent the following message:
-        <div>$escapetool.xml($object.content)</div>
+        <div>$services.rendering.render($services.rendering.parse($object.content, 'xhtml/1.0'), 'xhtml/1.0')</div>
       #end
   #else
       #define($summary)
