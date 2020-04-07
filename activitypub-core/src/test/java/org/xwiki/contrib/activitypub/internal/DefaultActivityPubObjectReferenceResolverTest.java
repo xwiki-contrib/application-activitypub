@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.URI;
 
 import javax.inject.Named;
+import javax.inject.Provider;
 
 import org.apache.commons.httpclient.HttpMethod;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import org.mockito.Mock;
 import org.xwiki.component.manager.ComponentManager;
+import org.xwiki.component.util.DefaultParameterizedType;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
@@ -37,9 +39,11 @@ import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
+import org.xwiki.test.annotation.BeforeComponent;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
+import org.xwiki.test.mockito.MockitoComponentManager;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -70,16 +74,20 @@ public class DefaultActivityPubObjectReferenceResolverTest
     private ActivityPubClient activityPubClient;
 
     @MockComponent
-    @Named("context")
-    private ComponentManager componentManager;
-
-    @Mock
     private ActivityPubStorage activityPubStorage;
 
     @BeforeEach
-    public void setup() throws Exception
+    public void setup(MockitoComponentManager componentManager) throws Exception
     {
-        when(this.componentManager.getInstance(ActivityPubStorage.class)).thenReturn(this.activityPubStorage);
+        DefaultParameterizedType storageProviderType = new DefaultParameterizedType(null, Provider.class,
+            ActivityPubStorage.class);
+        Provider<ActivityPubStorage> storageProvider = componentManager.registerMockComponent(storageProviderType);
+        when(storageProvider.get()).thenReturn(this.activityPubStorage);
+
+        DefaultParameterizedType clientProviderType = new DefaultParameterizedType(null, Provider.class,
+            ActivityPubClient.class);
+        Provider<ActivityPubClient> clientProvider = componentManager.registerMockComponent(clientProviderType);
+        when(clientProvider.get()).thenReturn(this.activityPubClient);
     }
 
     @Test

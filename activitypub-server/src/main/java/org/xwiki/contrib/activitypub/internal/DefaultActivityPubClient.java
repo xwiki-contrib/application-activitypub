@@ -126,7 +126,7 @@ public class DefaultActivityPubClient implements ActivityPubClient
         PostMethod postMethod = new PostMethod(uri.toASCIIString());
         postMethod.setRequestEntity(bodyRequest);
         AbstractActor actor = this.resolver.resolveReference(activity.getActor());
-        this.signature.generateSignature(postMethod, uri, activity.getActor().getLink(), actor);
+        this.signature.generateSignature(postMethod, actor);
         this.httpClient.executeMethod(postMethod);
         return postMethod;
     }

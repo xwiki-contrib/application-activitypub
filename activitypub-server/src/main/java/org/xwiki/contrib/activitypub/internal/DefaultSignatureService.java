@@ -19,7 +19,6 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
-import java.net.URI;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -41,6 +40,8 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.URI;
+import org.apache.commons.httpclient.URIException;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActorHandler;
@@ -97,21 +98,28 @@ public class DefaultSignatureService implements SignatureService
     private CryptoService cryptoService;
 
     @Override
-    public void generateSignature(HttpMethod postMethod, URI targetURI, URI actorURI, AbstractActor actor)
+    public void generateSignature(HttpMethod postMethod, AbstractActor actor)
         throws ActivityPubException
     {
         String date = this.dateProvider.getFormatedDate();
-        String uriPath = targetURI.getPath();
-        String host = targetURI.getHost();
-        String signatureStr = String.format("(request-target): post %s\nhost: %s\ndate: %s", uriPath, host, date);
 
-        byte[] bytess = this.sign(actor, signatureStr);
-        String signatureB64 = Base64.getEncoder().encodeToString(bytess);
-        String actorAPURL = actorURI.toASCIIString();
-        String signature = String.format("keyId=\"%s\",headers=\"(request-target) host date\",signature=\"%s\"",
-            actorAPURL, signatureB64);
-        postMethod.addRequestHeader("Signature", signature);
-        postMethod.addRequestHeader("Date", date);
+        try {
+            URI postMethodURI = postMethod.getURI();
+            String uriPath = postMethodURI.getPath();
+            String host = postMethodURI.getHost();
+            String signatureStr = String.format("(request-target): post %s\nhost: %s\ndate: %s", uriPath, host, date);
+
+            byte[] bytess = this.sign(actor, signatureStr);
+            String signatureB64 = Base64.getEncoder().encodeToString(bytess);
+            String actorAPURL = actor.getId().toASCIIString();
+            String signature = String.format("keyId=\"%s\",headers=\"(request-target) host date\",signature=\"%s\"",
+                actorAPURL, signatureB64);
+            postMethod.addRequestHeader("Signature", signature);
+            postMethod.addRequestHeader("Date", date);
+        } catch (URIException e) {
+            throw new ActivityPubException("Error while retrieving the URI from post method", e);
+        }
+
     }
 
     private CertifiedKeyPair getCertifiedKeyPair(AbstractActor actor) throws ActivityPubException

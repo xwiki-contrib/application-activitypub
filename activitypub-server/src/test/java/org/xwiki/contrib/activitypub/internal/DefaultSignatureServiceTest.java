@@ -90,9 +90,12 @@ class DefaultSignatureServiceTest
     void generateSignature() throws Exception
     {
         HttpMethod postMethod = mock(HttpMethod.class);
-        URI targetURI = URI.create("http://targeturi/");
-        URI actorURI = URI.create("http://actoruri/");
+        org.apache.commons.httpclient.URI postURI = mock(org.apache.commons.httpclient.URI.class);
+        when(postURI.getPath()).thenReturn("/");
+        when(postURI.getHost()).thenReturn("targeturi");
+        when(postMethod.getURI()).thenReturn(postURI);
         Person actor = mock(Person.class);
+        when(actor.getId()).thenReturn(URI.create("http://actoruri/"));
         when(actor.getPreferredUsername()).thenReturn("tmp");
         DocumentReference documentReference = new DocumentReference("xwiki", "XWiki", "test");
         when(this.actorHandler.getStoreDocument(actor)).thenReturn(documentReference);
@@ -104,7 +107,7 @@ class DefaultSignatureServiceTest
         when(privateKeyParameters.getEncoded())
             .thenReturn(KeyPairGenerator.getInstance("RSA").generateKeyPair().getPrivate().getEncoded());
 
-        this.signatureService.generateSignature(postMethod, targetURI, actorURI, actor);
+        this.signatureService.generateSignature(postMethod, actor);
         InOrder inOrder = inOrder(postMethod, postMethod);
         inOrder.verify(postMethod).addRequestHeader(eq("Signature"), matches(
             "keyId=\"http:\\/\\/actoruri\\/\",headers=\"\\(request-target\\) host date\","
@@ -116,9 +119,12 @@ class DefaultSignatureServiceTest
     void generateSignatureWithInit() throws Exception
     {
         HttpMethod postMethod = mock(HttpMethod.class);
-        URI targetURI = URI.create("http://targeturi/");
-        URI actorURI = URI.create("http://actoruri/");
+        org.apache.commons.httpclient.URI postURI = mock(org.apache.commons.httpclient.URI.class);
+        when(postURI.getPath()).thenReturn("/");
+        when(postURI.getHost()).thenReturn("targeturi");
+        when(postMethod.getURI()).thenReturn(postURI);
         Person actor = mock(Person.class);
+        when(actor.getId()).thenReturn(URI.create("http://actoruri/"));
         when(actor.getPreferredUsername()).thenReturn("tmp");
         DocumentReference documentReference = new DocumentReference("xwiki", "XWiki", "test");
         when(this.actorHandler.getStoreDocument(actor)).thenReturn(documentReference);
@@ -130,7 +136,7 @@ class DefaultSignatureServiceTest
         when(privateKeyParameters.getEncoded())
             .thenReturn(KeyPairGenerator.getInstance("RSA").generateKeyPair().getPrivate().getEncoded());
 
-        this.signatureService.generateSignature(postMethod, targetURI, actorURI, actor);
+        this.signatureService.generateSignature(postMethod, actor);
         InOrder inOrder = inOrder(postMethod, postMethod);
         inOrder.verify(postMethod).addRequestHeader(eq("Signature"), matches(
             "keyId=\"http:\\/\\/actoruri\\/\",headers=\"\\(request-target\\) host date\","
@@ -147,9 +153,13 @@ class DefaultSignatureServiceTest
         when(dateProvider.getFormatedDate()).thenReturn("Mon, 06 Apr 2020 08:39:20 GMT");
 
         HttpMethod postMethod = mock(HttpMethod.class);
-        URI targetURI = URI.create("http://targeturi/");
-        URI actorURI = URI.create("http://actoruri/");
+        String targetURI = "http://targeturi/";
+        org.apache.commons.httpclient.URI postURI = mock(org.apache.commons.httpclient.URI.class);
+        when(postURI.getPath()).thenReturn("/");
+        when(postURI.getHost()).thenReturn("targeturi");
+        when(postMethod.getURI()).thenReturn(postURI);
         Person actor = mock(Person.class);
+        when(actor.getId()).thenReturn(URI.create("http://actoruri/"));
         when(actor.getPreferredUsername()).thenReturn("tmp");
         DocumentReference documentReference = new DocumentReference("xwiki", "XWiki", "test");
         when(this.actorHandler.getStoreDocument(actor)).thenReturn(documentReference);
@@ -163,7 +173,7 @@ class DefaultSignatureServiceTest
         when(certifiedKeyPair.getPrivateKey()).thenReturn(privateKeyParameters);
         when(privateKeyParameters.getEncoded()).thenReturn(PK);
 
-        this.signatureService.generateSignature(postMethod, targetURI, actorURI, actor);
+        this.signatureService.generateSignature(postMethod, actor);
         InOrder inOrder = inOrder(postMethod, postMethod);
         inOrder.verify(postMethod).addRequestHeader(eq("Signature"),
             eq("keyId=\"http://actoruri/\",headers=\"(request-target) host date\""

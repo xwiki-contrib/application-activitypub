@@ -23,10 +23,16 @@ import java.io.FileNotFoundException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
+import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Test of {@link ProxyActor}.
@@ -80,5 +86,31 @@ public class ProxyActorTest extends AbstractEntityTest
 
         String expectedSerialization = this.readResource("note/note2.json");
         assertEquals(note, this.parser.parse(expectedSerialization));
+    }
+
+    @Test
+    public void resolveActors() throws Exception
+    {
+        ActivityPubObjectReferenceResolver resolver = mock(ActivityPubObjectReferenceResolver.class);
+        ProxyActor proxyActor = new ProxyActor(new URI("http://foo/bar"));
+
+        Note note = mock(Note.class);
+        when(resolver.resolveReference(proxyActor)).thenReturn(note);
+        when(note.toString()).thenReturn("Note");
+
+        ActivityPubException activityPubException =
+            assertThrows(ActivityPubException.class, () -> proxyActor.resolveActors(resolver));
+        assertEquals("The given element cannot be processed here: [Note]", activityPubException.getMessage());
+
+        Person person = mock(Person.class);
+        ActivityPubObjectReference reference = mock(ActivityPubObjectReference.class);
+        when(person.getReference()).thenReturn(reference);
+        when(resolver.resolveReference(proxyActor)).thenReturn(person);
+        assertEquals(Collections.singletonList(reference), proxyActor.resolveActors(resolver));
+
+        Collection collection = mock(Collection.class);
+        when(collection.getAllItems()).thenReturn(Arrays.asList("foo", "bar", "baz"));
+        when(resolver.resolveReference(proxyActor)).thenReturn(collection);
+        assertEquals(Arrays.asList("foo", "bar", "baz"), proxyActor.resolveActors(resolver));
     }
 }

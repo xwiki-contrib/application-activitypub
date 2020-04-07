@@ -19,8 +19,6 @@
  */
 package org.xwiki.contrib.activitypub;
 
-import java.net.URI;
-
 import org.apache.commons.httpclient.HttpMethod;
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
@@ -39,13 +37,11 @@ public interface SignatureService
     /**
      * Generate the signature of a message send to an external ActivityPub inbox.
      *
-     * @param postMethod The post method to sign. 
-     * @param targetURI The URI where the request is send.
-     * @param actorURI The URI of the ActivityPub actor the sign the request.
+     * @param postMethod The post method to sign.
      * @param actor the actor who posts the message.
      * @throws ActivityPubException In case of error when signing the request.
      */
-    void generateSignature(HttpMethod postMethod, URI targetURI, URI actorURI, AbstractActor actor)
+    void generateSignature(HttpMethod postMethod, AbstractActor actor)
         throws ActivityPubException;
 
     /**
