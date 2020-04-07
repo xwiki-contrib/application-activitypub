@@ -22,10 +22,14 @@ package org.xwiki.contrib.activitypub.internal;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.httpclient.HttpMethod;
@@ -33,6 +37,7 @@ import org.jsoup.helper.HttpConnection;
 import org.jsoup.nodes.Document;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
+import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
@@ -46,16 +51,25 @@ import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.PublicKey;
+import org.xwiki.contrib.activitypub.entities.Service;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerClient;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 import org.xwiki.contrib.activitypub.webfinger.entities.Link;
+import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.EntityReferenceSerializer;
+import org.xwiki.model.reference.WikiReference;
 import org.xwiki.resource.ResourceReferenceSerializer;
 import org.xwiki.resource.SerializeResourceReferenceException;
 import org.xwiki.resource.UnsupportedResourceReferenceException;
 import org.xwiki.user.CurrentUserReference;
 import org.xwiki.user.UserProperties;
 import org.xwiki.user.UserReference;
+import org.xwiki.user.UserReferenceSerializer;
+import org.xwiki.user.group.GroupException;
+import org.xwiki.user.group.GroupManager;
+
+import com.xpn.xwiki.XWikiContext;
 
 /**
  * Link an ActivityPub actor to an XWiki User and retrieves the inbox/outbox of users.
@@ -66,6 +80,8 @@ import org.xwiki.user.UserReference;
 @Singleton
 public class DefaultActorHandler implements ActorHandler
 {
+    private static final List<String> SERVICE_USER_SPACE_REFERENCE = Arrays.asList("ActivityPub", "ServiceActors");
+
     @Inject
     private ActivityPubStorage activityPubStorage;
 
@@ -86,6 +102,21 @@ public class DefaultActorHandler implements ActorHandler
 
     @Inject
     private ResourceReferenceSerializer<ActivityPubResourceReference, URI> serializer;
+
+    @Inject
+    private Provider<XWikiContext> contextProvider;
+
+    @Inject
+    private ActivityPubConfiguration activityPubConfiguration;
+
+    @Inject
+    private GroupManager groupManager;
+
+    @Inject
+    private UserReferenceSerializer<String> userReferenceSerializer;
+
+    @Inject
+    private EntityReferenceSerializer<String> entityReferenceSerializer;
 
     private HttpConnection jsoupConnection;
 
@@ -113,14 +144,14 @@ public class DefaultActorHandler implements ActorHandler
     }
 
     @Override
-    public AbstractActor getActor(UserReference userReference) throws ActivityPubException
+    public Person getActor(UserReference userReference) throws ActivityPubException
     {
         String errorMessage = String.format("Cannot find any user with reference [%s]", userReference);
         if (this.xWikiUserBridge.isExistingUser(userReference)) {
             String login = this.xWikiUserBridge.getUserLogin(userReference);
             ActivityPubResourceReference resourceReference =
                 new ActivityPubResourceReference("Person", login);
-            AbstractActor actor = null;
+            Person actor = null;
             try {
                 actor = this.activityPubStorage.retrieveEntity(this.serializer.serialize(resourceReference));
             } catch (SerializeResourceReferenceException|UnsupportedResourceReferenceException e) {
@@ -129,7 +160,7 @@ public class DefaultActorHandler implements ActorHandler
             if (actor == null) {
                 UserProperties userProperties = this.xWikiUserBridge.resolveUser(userReference);
                 String fullname = String.format("%s %s", userProperties.getFirstName(), userProperties.getLastName());
-                actor = createActor(fullname, login);
+                actor = createPerson(fullname, login);
             }
             return actor;
         } else {
@@ -137,12 +168,27 @@ public class DefaultActorHandler implements ActorHandler
         }
     }
 
-    private AbstractActor createActor(String fullName, String login) throws ActivityPubException
+    @Override
+    public Service getActor(WikiReference wikiReference) throws ActivityPubException
     {
-        AbstractActor actor = new Person();
+        Service service = new Service()
+            .setPreferredUsername(wikiReference.getName())
+            .setName("Wiki "+ wikiReference.getName());
+        this.fillActor(service);
+        return service;
+    }
+
+    private Person createPerson(String fullName, String login) throws ActivityPubException
+    {
+        Person actor = new Person();
         actor.setName(fullName);
         actor.setPreferredUsername(login);
+        this.fillActor(actor);
+        return actor;
+    }
 
+    private void fillActor(AbstractActor actor) throws ActivityPubException
+    {
         Inbox inbox = new Inbox();
         inbox.setAttributedTo(
             Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(actor)));
@@ -163,30 +209,26 @@ public class DefaultActorHandler implements ActorHandler
         this.activityPubStorage.storeEntity(followers);
         actor.setFollowers(new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(followers));
 
-        PublicKey publicKey = this.initPublicKey(login);
+        this.activityPubStorage.storeEntity(actor);
+
+        PublicKey publicKey = this.initPublicKey(actor);
         actor.setPublicKey(publicKey);
 
         this.activityPubStorage.storeEntity(actor);
-
-        return actor;
     }
 
-    private PublicKey initPublicKey(String login) throws ActivityPubException
+    private PublicKey initPublicKey(AbstractActor actor) throws ActivityPubException
     {
-        String pkId;
-        UserReference userReference = this.xWikiUserBridge.resolveUser(login);
-        try {
-            pkId = this.xWikiUserBridge.getUserProfileURL(userReference);
-        } catch (Exception e) {
-            throw new ActivityPubException("Error while resolving user profile URL", e);
-        }
-        String pubKey = this.signatureService.getPublicKeyPEM(userReference);
+        String pubKey = this.signatureService.getPublicKeyPEM(actor);
 
-        return new PublicKey().setId(pkId + "#main-key").setOwner(pkId).setPublicKeyPem(pubKey);
+        return new PublicKey()
+            .setId(actor.getId() + "#main-key")
+            .setOwner(actor.getId().toASCIIString())
+            .setPublicKeyPem(pubKey);
     }
 
     @Override
-    public UserReference getXWikiUserReference(AbstractActor actor) throws ActivityPubException
+    public UserReference getXWikiUserReference(Person actor) throws ActivityPubException
     {
         if (actor == null) {
             throw new ActivityPubException("Cannot find user reference from actor, actor is null");
@@ -214,6 +256,72 @@ public class DefaultActorHandler implements ActorHandler
             String userName = actor.getPreferredUsername();
             return isExistingUser(userName);
         }
+    }
+
+    @Override
+    public boolean isAuthorizedToActFor(UserReference authenticatedUser, AbstractActor targetActor)
+        throws ActivityPubException
+    {
+        boolean result = false;
+        XWikiContext xWikiContext = this.contextProvider.get();
+
+        DocumentReference userDocumentReference = this.xWikiUserBridge.getDocumentReference(authenticatedUser);
+        // We only allow authenticated users.
+        if (authenticatedUser != null) {
+            // Someone's trying to post in the Outbox of a person: it needs to be the same person.
+            if (targetActor instanceof Person) {
+                UserReference xWikiUserReference = this.getXWikiUserReference((Person) targetActor);
+                result = authenticatedUser.equals(xWikiUserReference);
+
+                // Someone's trying to post in the Outbox of an entire Wiki: the person needs to belongs to
+                // the group that manage the wiki
+            } else if (targetActor instanceof Service) {
+                DocumentReference wikiGroup = this.activityPubConfiguration.getWikiGroup();
+                try {
+                    Collection<DocumentReference> groups =
+                        this.groupManager.getGroups(userDocumentReference, xWikiContext.getWikiReference(), true);
+                    result = groups.contains(wikiGroup);
+                } catch (GroupException e) {
+                    throw new ActivityPubException(
+                        String.format("Error while looking for groups for [%s].", userDocumentReference), e);
+                }
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public String getNotificationTarget(AbstractActor targetedActor) throws ActivityPubException
+    {
+        String result;
+        if (targetedActor instanceof Person) {
+            UserReference xWikiUserReference = this.getXWikiUserReference((Person) targetedActor);
+            result = this.userReferenceSerializer.serialize(xWikiUserReference);
+        } else if (targetedActor instanceof Service) {
+            result = this.entityReferenceSerializer.serialize(this.activityPubConfiguration.getWikiGroup());
+        } else {
+            throw new ActivityPubException(
+                String.format("This type of actor is not supported yet [%s]", targetedActor.getType()));
+        }
+
+        return result;
+    }
+
+    @Override
+    public DocumentReference getStoreDocument(AbstractActor actor) throws ActivityPubException
+    {
+        DocumentReference documentReference;
+        if (actor instanceof Person) {
+            UserReference userReference = this.getXWikiUserReference((Person) actor);
+            documentReference = this.xWikiUserBridge.getDocumentReference(userReference);
+        } else if (actor instanceof Service) {
+            documentReference = new DocumentReference(actor.getPreferredUsername(), SERVICE_USER_SPACE_REFERENCE,
+                actor.getPreferredUsername());
+        } else {
+            throw new ActivityPubException(String.format("Only person and service actors are taken into account for now."
+                + " The type [%s] is not implemented yet.", actor.getType()));
+        }
+        return documentReference;
     }
 
     @Override

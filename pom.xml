@@ -124,6 +124,30 @@
                     "code": "java.method.removed",
                     "old": "method java.lang.String org.xwiki.contrib.activitypub.ActivityPubStorage::storeEntity(java.net.URI, org.xwiki.contrib.activitypub.entities.ActivityPubObject) throws org.xwiki.contrib.activitypub.ActivityPubException",
                     "justification": "Change unstable API for storage to comply with new usecases."
+                  },
+                  {
+                    "code": "java.method.parameterTypeParameterChanged",
+                    "old": "parameter <T extends org.xwiki.contrib.activitypub.entities.AbstractActivity> void org.xwiki.contrib.activitypub.ActivityPubNotifier::notify(T, ===java.util.Set<org.xwiki.user.UserReference>===) throws org.xwiki.contrib.activitypub.ActivityPubException",
+                    "new": "parameter <T extends org.xwiki.contrib.activitypub.entities.AbstractActivity> void org.xwiki.contrib.activitypub.ActivityPubNotifier::notify(T, ===java.util.Set<org.xwiki.contrib.activitypub.entities.AbstractActor>===) throws org.xwiki.contrib.activitypub.ActivityPubException",
+                    "justification": "Unstable API: not breaking. Use a more sound type for AP."
+                  },
+                  {
+                    "code": "java.method.parameterTypeChanged",
+                    "old": "parameter void org.xwiki.contrib.activitypub.SignatureService::generateSignature(org.apache.commons.httpclient.HttpMethod, java.net.URI, java.net.URI, ===org.xwiki.user.UserReference===) throws org.xwiki.contrib.activitypub.ActivityPubException",
+                    "new": "parameter void org.xwiki.contrib.activitypub.SignatureService::generateSignature(org.apache.commons.httpclient.HttpMethod, java.net.URI, java.net.URI, ===org.xwiki.contrib.activitypub.entities.AbstractActor===) throws org.xwiki.contrib.activitypub.ActivityPubException",
+                    "justification": "Unstable API: not breaking. The signature should be made for an Actor."
+                  },
+                  {
+                    "code": "java.method.parameterTypeChanged",
+                    "old": "parameter java.lang.String org.xwiki.contrib.activitypub.SignatureService::getPublicKeyPEM(===org.xwiki.user.UserReference===) throws org.xwiki.contrib.activitypub.ActivityPubException",
+                    "new": "parameter java.lang.String org.xwiki.contrib.activitypub.SignatureService::getPublicKeyPEM(===org.xwiki.contrib.activitypub.entities.AbstractActor===) throws org.xwiki.contrib.activitypub.ActivityPubException",
+                    "justification": "Unstable API: not breaking. The signature should be made for an Actor."
+                  },
+                  {
+                    "code": "java.method.parameterTypeChanged",
+                    "old": "parameter boolean org.xwiki.contrib.activitypub.script.ActivityPubScriptService::isCurrentUser(===org.xwiki.contrib.activitypub.entities.AbstractActor===)",
+                    "new": "parameter boolean org.xwiki.contrib.activitypub.script.ActivityPubScriptService::isCurrentUser(===org.xwiki.contrib.activitypub.entities.Person===)",
+                    "justification": "Unstable API: not breaking. The current user is necessarily a Person."
                   }
                 ]
               }

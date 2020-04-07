@@ -20,6 +20,7 @@
 package org.xwiki.contrib.activitypub;
 
 import org.xwiki.component.annotation.Role;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.stability.Unstable;
 
 /**
@@ -57,4 +58,9 @@ public interface ActivityPubConfiguration
      * @return which follow policy is used by the server.
      */
     FollowPolicy getFollowPolicy();
+
+    /**
+     * @return the reference to the group who handles a followed wiki.
+     */
+    DocumentReference getWikiGroup();
 }

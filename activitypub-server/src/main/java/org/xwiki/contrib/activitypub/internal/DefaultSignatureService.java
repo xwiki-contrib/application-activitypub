@@ -42,15 +42,16 @@ import javax.inject.Singleton;
 import org.apache.commons.httpclient.HttpMethod;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.CryptoService;
 import org.xwiki.contrib.activitypub.SignatureService;
 import org.xwiki.crypto.params.cipher.asymmetric.PrivateKeyParameters;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.crypto.pkix.params.CertifiedKeyPair;
 import org.xwiki.crypto.store.KeyStore;
 import org.xwiki.crypto.store.KeyStoreException;
 import org.xwiki.crypto.store.WikiStoreReference;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.user.UserReference;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -92,10 +93,13 @@ public class DefaultSignatureService implements SignatureService
     private XWikiUserBridge userBridge;
 
     @Inject
+    private ActorHandler actorHandler;
+
+    @Inject
     private CryptoService cryptoService;
 
     @Override
-    public void generateSignature(HttpMethod postMethod, URI targetURI, URI actorURI, UserReference user)
+    public void generateSignature(HttpMethod postMethod, URI targetURI, URI actorURI, AbstractActor actor)
         throws ActivityPubException
     {
         String date = this.dateProvider.getFormatedDate();
@@ -103,7 +107,7 @@ public class DefaultSignatureService implements SignatureService
         String host = targetURI.getHost();
         String signatureStr = String.format("(request-target): post %s\nhost: %s\ndate: %s", uriPath, host, date);
 
-        byte[] bytess = this.sign(user, signatureStr);
+        byte[] bytess = this.sign(actor, signatureStr);
         String signatureB64 = Base64.getEncoder().encodeToString(bytess);
         String actorAPURL = actorURI.toASCIIString();
         String signature = String.format("keyId=\"%s\",headers=\"(request-target) host date\",signature=\"%s\"",
@@ -112,10 +116,10 @@ public class DefaultSignatureService implements SignatureService
         postMethod.addRequestHeader("Date", date);
     }
 
-    private CertifiedKeyPair getCertifiedKeyPair(UserReference user) throws ActivityPubException
+    private CertifiedKeyPair getCertifiedKeyPair(AbstractActor actor) throws ActivityPubException
     {
         try {
-            DocumentReference dr = this.userBridge.getDocumentReference(user);
+            DocumentReference dr = this.actorHandler.getStoreDocument(actor);
             CertifiedKeyPair stored = this.x509WikiKeyStore.retrieve(new WikiStoreReference(dr));
 
             if (stored != null) {
@@ -124,16 +128,16 @@ public class DefaultSignatureService implements SignatureService
 
             return this.initKeys(dr);
         } catch (KeyStoreException e) {
-            throw new ActivityPubException(String.format("Error while retrieving the private key for user [%s]", user),
+            throw new ActivityPubException(String.format("Error while retrieving the private key for user [%s]", actor),
                 e);
         }
     }
 
-    private byte[] sign(UserReference user, String signedString)
+    private byte[] sign(AbstractActor actor, String signedString)
         throws ActivityPubException
     {
         try {
-            PrivateKeyParameters pk = this.getCertifiedKeyPair(user).getPrivateKey();
+            PrivateKeyParameters pk = this.getCertifiedKeyPair(actor).getPrivateKey();
             byte[] encoded = pk.getEncoded();
             KeyFactory rsa = KeyFactory.getInstance("RSA");
             PrivateKey key = rsa.generatePrivate(new PKCS8EncodedKeySpec(encoded));
@@ -142,7 +146,7 @@ public class DefaultSignatureService implements SignatureService
             sign.update(signedString.getBytes(UTF_8));
             return sign.sign();
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | InvalidKeySpecException e) {
-            throw new ActivityPubException(String.format("Error while signing [%s] for [%s]", signedString, user),
+            throw new ActivityPubException(String.format("Error while signing [%s] for [%s]", signedString, actor),
                 e);
         }
     }
@@ -160,9 +164,9 @@ public class DefaultSignatureService implements SignatureService
     }
 
     @Override
-    public String getPublicKeyPEM(UserReference user) throws ActivityPubException
+    public String getPublicKeyPEM(AbstractActor actor) throws ActivityPubException
     {
-        byte[] encoded = this.getCertifiedKeyPair(user).getPublicKey().getEncoded();
+        byte[] encoded = this.getCertifiedKeyPair(actor).getPublicKey().getEncoded();
 
         return String.format("-----BEGIN PUBLIC KEY-----\n%s\n-----END PUBLIC KEY-----\n",
             Base64.getEncoder().encodeToString(encoded));

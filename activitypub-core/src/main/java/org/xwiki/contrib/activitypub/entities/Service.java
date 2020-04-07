@@ -17,32 +17,22 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub;
+package org.xwiki.contrib.activitypub.entities;
 
-import java.util.Set;
-
-import org.xwiki.component.annotation.Role;
-import org.xwiki.contrib.activitypub.entities.AbstractActivity;
-import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.stability.Unstable;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 /**
- * External API to send an ActivityPub notification.
+ * Represents a Service actor as defined by ActivityStream vocabulary.
+ * This is used in particular in XWiki to represent an entire wiki.
  *
+ * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-service">ActivityStream Definition</a>
+ * @since 1.2
  * @version $Id$
- * @since 1.0
  */
 @Unstable
-@Role
-public interface ActivityPubNotifier
+@JsonDeserialize(as = Service.class)
+public class Service extends AbstractActor
 {
-    /**
-     * Send a notification related to the given activity to the given targets.
-     *
-     * @param activity the activity source of the notification.
-     * @param targetedActors the target actors of the notification.
-     * @param <T> the real type of the activity
-     * @throws ActivityPubException if the activity is not supported by any event.
-     */
-    <T extends AbstractActivity> void notify(T activity, Set<AbstractActor> targetedActors) throws ActivityPubException;
 }

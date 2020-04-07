@@ -115,6 +115,9 @@ class PageCreatedNotificationJobTest
 
     private Person person;
 
+    @Mock
+    private UserReference authorReference;
+
     @BeforeEach
     public void setup() throws Exception
     {
@@ -124,10 +127,9 @@ class PageCreatedNotificationJobTest
                               new ActivityPubObjectReference<OrderedCollection<AbstractActor>>()
                                   .setLink(new URI("http://foobar/followers")));
 
-        UserReference userReference = mock(UserReference.class);
         when(this.xWikiUserBridge.resolveDocumentReference(this.document.getAuthorReference()))
-            .thenReturn(userReference);
-        when(this.actorHandler.getActor(userReference)).thenReturn(this.person);
+            .thenReturn(this.authorReference);
+        when(this.actorHandler.getActor(this.authorReference)).thenReturn(this.person);
     }
 
     @Test
@@ -140,7 +142,10 @@ class PageCreatedNotificationJobTest
     void runInternalNoFollowers() throws Exception
     {
         PageCreatedRequest t = mock(PageCreatedRequest.class);
-        when(this.actorHandler.getActor(any())).thenReturn(mock(AbstractActor.class));
+        when(this.xWikiUserBridge.resolveDocumentReference(t.getAuthorReference()))
+            .thenReturn(this.authorReference);
+
+        when(this.actorHandler.getActor(this.authorReference)).thenReturn(mock(Person.class));
         when(this.objectReferenceResolver.resolveReference(any())).thenReturn(new OrderedCollection<AbstractActor>());
         this.job.initialize(t);
         this.job.runInternal();
@@ -151,7 +156,10 @@ class PageCreatedNotificationJobTest
     void runInternalOneFollowerNoRight() throws Exception
     {
         PageCreatedRequest t = mock(PageCreatedRequest.class);
-        when(this.actorHandler.getActor(any())).thenReturn(mock(AbstractActor.class));
+        when(this.xWikiUserBridge.resolveDocumentReference(t.getAuthorReference()))
+            .thenReturn(this.authorReference);
+
+        when(this.actorHandler.getActor(this.authorReference)).thenReturn(mock(Person.class));
         when(this.objectReferenceResolver.resolveReference(any()))
             .thenReturn(new OrderedCollection<AbstractActor>().addItem(new Person().setPreferredUsername("user1")));
         when(this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, t.getDocumentReference())).thenReturn(false);

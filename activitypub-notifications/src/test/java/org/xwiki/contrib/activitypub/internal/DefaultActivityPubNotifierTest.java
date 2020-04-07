@@ -24,6 +24,8 @@ import java.util.HashSet;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
+import org.xwiki.contrib.activitypub.ActorHandler;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.events.AbstractActivityPubEvent;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.Accept;
@@ -55,7 +57,7 @@ public class DefaultActivityPubNotifierTest
     private ObservationManager observationManager;
 
     @MockComponent
-    private UserReferenceSerializer<String> userReferenceSerializer;
+    private ActorHandler actorHandler;
 
     @Test
     void notifyNoTargets() throws Exception
@@ -71,9 +73,9 @@ public class DefaultActivityPubNotifierTest
     @Test
     void notifyOneTarget() throws Exception
     {
-        UserReference userReference = mock(UserReference.class);
-        when(userReferenceSerializer.serialize(userReference)).thenReturn("Foobar");
-        this.defaultActivityPubNotifier.notify(new Accept(), Collections.singleton(userReference));
+        AbstractActor actor = mock(AbstractActor.class);
+        when(actorHandler.getNotificationTarget(actor)).thenReturn("Foobar");
+        this.defaultActivityPubNotifier.notify(new Accept(), Collections.singleton(actor));
         verify(this.observationManager)
             .notify(
                 ArgumentMatchers

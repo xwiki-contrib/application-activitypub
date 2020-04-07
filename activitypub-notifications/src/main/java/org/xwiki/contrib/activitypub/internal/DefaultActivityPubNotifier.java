@@ -28,6 +28,8 @@ import javax.inject.Singleton;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubNotifier;
+import org.xwiki.contrib.activitypub.ActorHandler;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Follow;
@@ -37,8 +39,6 @@ import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.events.CreateEvent;
 import org.xwiki.contrib.activitypub.events.FollowEvent;
 import org.xwiki.observation.ObservationManager;
-import org.xwiki.user.UserReference;
-import org.xwiki.user.UserReferenceSerializer;
 
 /**
  * Default implementation of the notifier: basically it creates an {@link AbstractActivityPubEvent} and send it to the
@@ -51,33 +51,35 @@ import org.xwiki.user.UserReferenceSerializer;
 public class DefaultActivityPubNotifier implements ActivityPubNotifier
 {
     @Inject
-    private UserReferenceSerializer<String> userReferenceSerializer;
+    private ActorHandler actorHandler;
 
     @Inject
     private ObservationManager observationManager;
 
     @Override
-    public <T extends AbstractActivity> void notify(T activity, Set<UserReference> targets) throws ActivityPubException
+    public <T extends AbstractActivity> void notify(T activity, Set<AbstractActor> targetedActors)
+        throws ActivityPubException
     {
         AbstractActivityPubEvent<? extends AbstractActivity> event;
+        Set<String> serializedTargets = this.serializeTargets(targetedActors);
         if (activity instanceof Create) {
-            event = new CreateEvent((Create) activity, this.serializeTargets(targets));
+            event = new CreateEvent((Create) activity, serializedTargets);
         } else if (activity instanceof Follow || activity instanceof Reject || activity instanceof Accept) {
-            event = new FollowEvent<>(activity, this.serializeTargets(targets));
+            event = new FollowEvent<>(activity, serializedTargets);
         } else {
             throw new ActivityPubException(String.format("Cannot find the right event to notify about [%s]", activity));
         }
         this.observationManager.notify(event, "org.xwiki.contrib:activitypub-notifications", activity.getType());
     }
 
-    private Set<String> serializeTargets(Set<UserReference> targets) throws ActivityPubException
+    private Set<String> serializeTargets(Set<AbstractActor> targets) throws ActivityPubException
     {
         Set<String> result = new HashSet<>();
-        for (UserReference target : targets) {
+        for (AbstractActor target : targets) {
             if (target == null) {
                 throw new ActivityPubException("You cannot send a notification to a null target.");
             }
-            result.add(this.userReferenceSerializer.serialize(target));
+            result.add(this.actorHandler.getNotificationTarget(target));
         }
         return result;
     }

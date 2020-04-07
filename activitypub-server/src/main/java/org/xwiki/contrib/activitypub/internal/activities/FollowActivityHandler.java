@@ -70,8 +70,7 @@ public class FollowActivityHandler extends AbstractActivityHandler<Follow>
                     Inbox actorInbox = this.getInbox(followedActor);
                     actorInbox.addPendingFollow(follow);
                     this.activityPubStorage.storeEntity(actorInbox);
-                    this.notifier.notify(follow, Collections.singleton(this.actorHandler
-                        .getXWikiUserReference(followedActor)));
+                    this.notifier.notify(follow, Collections.singleton(followedActor));
                     this.answer(servletResponse, HttpServletResponse.SC_OK, follow);
                     break;
 
@@ -83,8 +82,7 @@ public class FollowActivityHandler extends AbstractActivityHandler<Follow>
                         .setObject(follow)
                         .setTo(Collections.singletonList(followingActor.getProxyActor()));
                     this.activityPubStorage.storeEntity(accept);
-                    this.notifier.notify(accept, Collections.singleton(this.actorHandler
-                        .getXWikiUserReference(followedActor)));
+                    this.notifier.notify(accept, Collections.singleton(followedActor));
                     ActivityRequest<Accept> acceptActivityRequest = new ActivityRequest<>(followedActor, accept);
                     this.acceptActivityHandler.handleOutboxRequest(acceptActivityRequest);
                     this.answer(servletResponse, HttpServletResponse.SC_OK, accept);
@@ -101,8 +99,7 @@ public class FollowActivityHandler extends AbstractActivityHandler<Follow>
 
                     this.activityPubStorage.storeEntity(reject);
                     ActivityRequest<Reject> rejectActivityRequest = new ActivityRequest<>(followedActor, reject);
-                    this.notifier.notify(reject, Collections.singleton(this.actorHandler
-                        .getXWikiUserReference(followedActor)));
+                    this.notifier.notify(reject, Collections.singleton(followedActor));
                     this.rejectActivityHandler.handleOutboxRequest(rejectActivityRequest);
                     this.answer(servletResponse, HttpServletResponse.SC_OK, reject);
             }

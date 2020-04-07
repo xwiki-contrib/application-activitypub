@@ -56,7 +56,7 @@ public class CreateActivityHandler extends AbstractActivityHandler<Create>
             Inbox inbox = this.getInbox(actor);
             inbox.addActivity(create);
             this.activityPubStorage.storeEntity(inbox);
-            this.notifier.notify(create, Collections.singleton(this.actorHandler.getXWikiUserReference(actor)));
+            this.notifier.notify(create, Collections.singleton(actor));
             this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, create);
         }
     }

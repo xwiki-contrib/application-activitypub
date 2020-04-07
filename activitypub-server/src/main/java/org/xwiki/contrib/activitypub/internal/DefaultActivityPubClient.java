@@ -40,12 +40,12 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
+import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.SignatureService;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
-import org.xwiki.user.UserReference;
 
 /**
  * Default implementation of the {@link ActivityPubClient}.
@@ -70,7 +70,7 @@ public class DefaultActivityPubClient implements ActivityPubClient
     private SignatureService signature;
 
     @Inject
-    private XWikiUserBridge userBridge;
+    private ActivityPubObjectReferenceResolver resolver;
 
     /**
      * Default constructor.
@@ -125,8 +125,8 @@ public class DefaultActivityPubClient implements ActivityPubClient
             new StringRequestEntity(this.activityPubJsonSerializer.serialize(activity), CONTENT_TYPE_STRICT, "UTF-8");
         PostMethod postMethod = new PostMethod(uri.toASCIIString());
         postMethod.setRequestEntity(bodyRequest);
-        UserReference user = this.userBridge.resolveUser(activity.getActor().getObject().getPreferredUsername());
-        this.signature.generateSignature(postMethod, uri, activity.getActor().getLink(), user);
+        AbstractActor actor = this.resolver.resolveReference(activity.getActor());
+        this.signature.generateSignature(postMethod, uri, activity.getActor().getLink(), actor);
         this.httpClient.executeMethod(postMethod);
         return postMethod;
     }

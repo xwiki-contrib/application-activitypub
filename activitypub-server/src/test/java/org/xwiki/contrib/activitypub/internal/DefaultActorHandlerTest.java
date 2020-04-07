@@ -20,7 +20,7 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import java.net.URI;
-import java.security.PublicKey;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -44,6 +44,7 @@ import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
+import org.xwiki.contrib.activitypub.entities.PublicKey;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerClient;
 import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 import org.xwiki.contrib.activitypub.webfinger.entities.Link;
@@ -76,6 +77,8 @@ import static org.mockito.Mockito.when;
 @ComponentTest
 public class DefaultActorHandlerTest
 {
+    private static final String GENERIC_ACTOR_ID = "http://xwiki.org/actor/foo";
+
     @InjectMockComponents
     private DefaultActorHandler actorHandler;
 
@@ -131,6 +134,12 @@ public class DefaultActorHandlerTest
         when(this.xWikiUserBridge.isExistingUser(this.barUserReference)).thenReturn(false);
         when(this.xWikiUserBridge.resolveUser("Bar")).thenReturn(this.barUserReference);
         when(this.xWikiUserBridge.isExistingUser("Bar")).thenReturn(false);
+
+        when(this.activityPubStorage.storeEntity(any(AbstractActor.class))).thenAnswer(invocationOnMock -> {
+           AbstractActor actor = (AbstractActor) invocationOnMock.getArguments()[0];
+           actor.setId(new URI(GENERIC_ACTOR_ID));
+           return null;
+        });
     }
 
     @Test
@@ -146,9 +155,9 @@ public class DefaultActorHandlerTest
     public void getActorWithExistingUser() throws Exception
     {
         when(this.signatureService.getPublicKeyPEM(any())).thenReturn("...");
-        org.xwiki.contrib.activitypub.entities.PublicKey publicKey =
-            new org.xwiki.contrib.activitypub.entities.PublicKey().setPublicKeyPem("...")
-                .setId("null#main-key");
+        PublicKey publicKey = new PublicKey().setPublicKeyPem("...")
+                .setId(GENERIC_ACTOR_ID + "#main-key")
+                .setOwner(GENERIC_ACTOR_ID);
         AbstractActor expectedActor = new Person();
         expectedActor.setPreferredUsername("XWiki.Foo")
             .setPublicKey(publicKey)
@@ -162,7 +171,8 @@ public class DefaultActorHandlerTest
                 new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(new OrderedCollection<>()))
             .setFollowing(
                 new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(new OrderedCollection<>()))
-            .setName("Foo Foo");
+            .setName("Foo Foo")
+            .setId(new URI(GENERIC_ACTOR_ID));
 
         AbstractActor obtainedActor = this.actorHandler.getActor(this.fooUserReference);
         assertEquals(expectedActor, obtainedActor);
@@ -215,12 +225,12 @@ public class DefaultActorHandlerTest
     }
 
     @Test
-    public void getLocalActor() throws ActivityPubException
+    public void getLocalActor() throws ActivityPubException, URISyntaxException
     {
         when(this.signatureService.getPublicKeyPEM(any())).thenReturn("...");
-        org.xwiki.contrib.activitypub.entities.PublicKey publicKey =
-            new org.xwiki.contrib.activitypub.entities.PublicKey().setPublicKeyPem("...")
-                .setId("null#main-key");
+        PublicKey publicKey = new PublicKey().setPublicKeyPem("...")
+                .setId(GENERIC_ACTOR_ID + "#main-key")
+                .setOwner(GENERIC_ACTOR_ID);
 
         AbstractActor expectedActor = new Person();
         expectedActor.setPreferredUsername("XWiki.Foo")
@@ -235,7 +245,8 @@ public class DefaultActorHandlerTest
                 new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(new OrderedCollection<>()))
             .setFollowing(
                 new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(new OrderedCollection<>()))
-            .setName("Foo Foo");
+            .setName("Foo Foo")
+            .setId(new URI(GENERIC_ACTOR_ID));
 
         assertEquals(expectedActor, this.actorHandler.getLocalActor("Foo"));
         assertEquals(expectedActor, this.actorHandler.getLocalActor("XWiki.Foo"));

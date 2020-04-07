@@ -51,6 +51,7 @@ import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
+import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.model.reference.DocumentReference;
@@ -154,7 +155,7 @@ public class ActivityPubScriptService implements ScriptService
      * @since 1.1
      */
     @Unstable
-    public boolean isCurrentUser(AbstractActor actor)
+    public boolean isCurrentUser(Person actor)
     {
         UserReference userReference = this.userReferenceResolver.resolve(null);
         try {

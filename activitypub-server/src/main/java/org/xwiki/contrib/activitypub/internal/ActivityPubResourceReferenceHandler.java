@@ -58,7 +58,6 @@ import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.EntityReference;
 import org.xwiki.resource.AbstractResourceReferenceHandler;
 import org.xwiki.resource.ResourceReference;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
@@ -216,15 +215,15 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
             handler.handleInboxRequest(activityRequest);
         } else {
             // Perform some authorization checks
-            UserReference sessionUserReference =
-                this.xWikiUserBridge.resolveDocumentReference(this.contextProvider.get().getUserReference());
-            UserReference xWikiUserReference = this.actorHandler.getXWikiUserReference(actor);
-            if (xWikiUserReference != null && xWikiUserReference.equals(sessionUserReference)) {
+            XWikiContext xWikiContext = this.contextProvider.get();
+            DocumentReference userDocumentReference = xWikiContext.getUserReference();
+            UserReference userReference = this.xWikiUserBridge.resolveDocumentReference(userDocumentReference);
+            if (this.actorHandler.isAuthorizedToActFor(userReference, actor)) {
                 handler.handleOutboxRequest(activityRequest);
             } else {
                 this.sendErrorResponse(HttpServletResponse.SC_FORBIDDEN,
                     String.format("The session user [%s] cannot post to [%s] outbox.",
-                        sessionUserReference, xWikiUserReference));
+                        userDocumentReference, actor.getPreferredUsername()));
             }
         }
     }

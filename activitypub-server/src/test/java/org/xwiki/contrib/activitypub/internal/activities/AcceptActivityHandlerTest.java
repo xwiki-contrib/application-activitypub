@@ -99,7 +99,6 @@ public class AcceptActivityHandlerTest extends AbstractHandlerTest
             .setPreferredUsername("Followed");
 
         OrderedCollection<AbstractActor> following = new OrderedCollection<>().setName("following");
-        UserReference followingRef = mock(UserReference.class);
         Person followingPerson = new Person()
             .setPreferredUsername("Following")
             .setFollowing(following.getReference());
@@ -118,14 +117,13 @@ public class AcceptActivityHandlerTest extends AbstractHandlerTest
         when(this.activityPubObjectReferenceResolver.resolveReference(follow.getActor())).thenReturn(followingPerson);
         when(this.activityPubObjectReferenceResolver.resolveReference(followingPerson.getFollowing()))
             .thenReturn(following);
-        when(this.actorHandler.getXWikiUserReference(followingPerson)).thenReturn(followingRef);
 
         this.handler.handleInboxRequest(
             new ActivityRequest<>(followingPerson, accept, this.servletRequest, this.servletResponse));
         verifyResponse(accept);
         assertEquals(Collections.singletonList(followedPerson.getReference()), following.getOrderedItems());
         verify(this.activityPubStorage).storeEntity(following);
-        verify(this.notifier).notify(accept, Collections.singleton(followingRef));
+        verify(this.notifier).notify(accept, Collections.singleton(followingPerson));
     }
 
     @Test

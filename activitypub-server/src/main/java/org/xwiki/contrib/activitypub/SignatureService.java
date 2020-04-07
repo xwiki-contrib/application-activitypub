@@ -23,8 +23,8 @@ import java.net.URI;
 
 import org.apache.commons.httpclient.HttpMethod;
 import org.xwiki.component.annotation.Role;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.stability.Unstable;
-import org.xwiki.user.UserReference;
 
 /**
  * Deal with the concerns related to the management, storage and use of asymetric keys.
@@ -42,22 +42,17 @@ public interface SignatureService
      * @param postMethod The post method to sign. 
      * @param targetURI The URI where the request is send.
      * @param actorURI The URI of the ActivityPub actor the sign the request.
-     * @param user User object.
+     * @param actor the actor who posts the message.
      * @throws ActivityPubException In case of error when signing the request.
      */
-    void generateSignature(HttpMethod postMethod, URI targetURI, URI actorURI, UserReference user)
+    void generateSignature(HttpMethod postMethod, URI targetURI, URI actorURI, AbstractActor actor)
         throws ActivityPubException;
 
-    // /**
-    //  * Initialize the keys of an actor.
-    //  * @param user user object.
-    //  * @throws ActivityPubException In case of error when initializing the keys.
-    //  */
-    // void initKeys(UserReference user) throws ActivityPubException;
-
     /**
-     * @param user user object.
+     * Retrieve the public key of an actor.
+     *
+     * @param actor the actor from which to retrieve the public key.
      * @return The public key of the actor.
      */
-    String getPublicKeyPEM(UserReference user) throws ActivityPubException;
+    String getPublicKeyPEM(AbstractActor actor) throws ActivityPubException;
 }

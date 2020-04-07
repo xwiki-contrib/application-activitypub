@@ -288,11 +288,12 @@ public class ActivityPubResourceReferenceHandlerTest
         ActivityHandler<Create> activityHandler = this.componentManager
             .registerMockComponent(new DefaultParameterizedType(null, ActivityHandler.class, Create.class));
 
+        when(this.actorHandler.isAuthorizedToActFor(fooUser, person)).thenReturn(false);
         this.handler.handle(resourceReference, this.handlerChain);
 
         verify(activityHandler, never())
             .handleOutboxRequest(new ActivityRequest<>(person, create, servletRequest, servletResponse));
-        verifyResponse(403, "The session user [null] cannot post to [FooUser] outbox.");
+        verifyResponse(403, "The session user [null] cannot post to [Foo] outbox.");
         verify(handlerChain, times(1)).handleNext(resourceReference);
     }
 
@@ -322,6 +323,7 @@ public class ActivityPubResourceReferenceHandlerTest
         ActivityHandler<Create> activityHandler = this.componentManager
             .registerMockComponent(new DefaultParameterizedType(null, ActivityHandler.class, Create.class));
 
+        when(this.actorHandler.isAuthorizedToActFor(fooUserReference, person)).thenReturn(true);
         this.handler.handle(resourceReference, this.handlerChain);
 
         verify(activityHandler, times(1))

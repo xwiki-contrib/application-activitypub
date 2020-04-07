@@ -41,6 +41,7 @@ import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
+import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
@@ -272,7 +273,7 @@ class ActivityPubScriptServiceTest
     @Test
     public void isCurrentUser() throws ActivityPubException
     {
-        AbstractActor actor = mock(AbstractActor.class);
+        Person actor = mock(Person.class);
         UserReference userReference = mock(UserReference.class);
 
         when(this.userReferenceResolver.resolve(null)).thenReturn(userReference);

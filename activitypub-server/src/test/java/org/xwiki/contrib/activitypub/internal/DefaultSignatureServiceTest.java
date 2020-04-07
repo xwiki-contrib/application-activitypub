@@ -27,8 +27,9 @@ import javax.inject.Named;
 import org.apache.commons.httpclient.HttpMethod;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
+import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.CryptoService;
-import org.xwiki.contrib.activitypub.entities.AbstractActor;
+import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.crypto.params.cipher.asymmetric.PrivateKeyParameters;
 import org.xwiki.crypto.pkix.params.CertifiedKeyPair;
 import org.xwiki.crypto.store.KeyStore;
@@ -37,13 +38,11 @@ import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
-import org.xwiki.user.UserReference;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.matches;
-import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -65,10 +64,10 @@ class DefaultSignatureServiceTest
     private KeyStore x509WikiKeyStore;
 
     @MockComponent
-    private XWikiUserBridge userBridge;
+    private CryptoService cryptoService;
 
     @MockComponent
-    private CryptoService cryptoService;
+    private ActorHandler actorHandler;
 
     private final static byte[] PK = new byte[]{
         48, -126, 1, 84, 2, 1, 0, 48, 13, 6, 9, 42, -122, 72, -122, -9, 13, 1, 1, 1, 5, 0, 4, -126, 1, 62, 48, -126, 1,
@@ -93,10 +92,10 @@ class DefaultSignatureServiceTest
         HttpMethod postMethod = mock(HttpMethod.class);
         URI targetURI = URI.create("http://targeturi/");
         URI actorURI = URI.create("http://actoruri/");
-        AbstractActor actor = mock(AbstractActor.class);
+        Person actor = mock(Person.class);
         when(actor.getPreferredUsername()).thenReturn("tmp");
-        DocumentReference dr = new DocumentReference("xwiki", "XWiki", "test");
-        when(this.userBridge.getDocumentReference(any())).thenReturn(dr);
+        DocumentReference documentReference = new DocumentReference("xwiki", "XWiki", "test");
+        when(this.actorHandler.getStoreDocument(actor)).thenReturn(documentReference);
 
         CertifiedKeyPair certifiedKeyPair = mock(CertifiedKeyPair.class);
         when(this.cryptoService.generateCertifiedKeyPair()).thenReturn(certifiedKeyPair);
@@ -105,7 +104,7 @@ class DefaultSignatureServiceTest
         when(privateKeyParameters.getEncoded())
             .thenReturn(KeyPairGenerator.getInstance("RSA").generateKeyPair().getPrivate().getEncoded());
 
-        this.signatureService.generateSignature(postMethod, targetURI, actorURI, mock(UserReference.class));
+        this.signatureService.generateSignature(postMethod, targetURI, actorURI, actor);
         InOrder inOrder = inOrder(postMethod, postMethod);
         inOrder.verify(postMethod).addRequestHeader(eq("Signature"), matches(
             "keyId=\"http:\\/\\/actoruri\\/\",headers=\"\\(request-target\\) host date\","
@@ -119,10 +118,10 @@ class DefaultSignatureServiceTest
         HttpMethod postMethod = mock(HttpMethod.class);
         URI targetURI = URI.create("http://targeturi/");
         URI actorURI = URI.create("http://actoruri/");
-        AbstractActor actor = mock(AbstractActor.class);
+        Person actor = mock(Person.class);
         when(actor.getPreferredUsername()).thenReturn("tmp");
-        UserReference user = mock(UserReference.class);
-        when(this.userBridge.getDocumentReference(user)).thenReturn(new DocumentReference("xwiki", "XWiki", "test"));
+        DocumentReference documentReference = new DocumentReference("xwiki", "XWiki", "test");
+        when(this.actorHandler.getStoreDocument(actor)).thenReturn(documentReference);
 
         CertifiedKeyPair certifiedKeyPair = mock(CertifiedKeyPair.class);
         when(this.cryptoService.generateCertifiedKeyPair()).thenReturn(certifiedKeyPair);
@@ -131,7 +130,7 @@ class DefaultSignatureServiceTest
         when(privateKeyParameters.getEncoded())
             .thenReturn(KeyPairGenerator.getInstance("RSA").generateKeyPair().getPrivate().getEncoded());
 
-        this.signatureService.generateSignature(postMethod, targetURI, actorURI, user);
+        this.signatureService.generateSignature(postMethod, targetURI, actorURI, actor);
         InOrder inOrder = inOrder(postMethod, postMethod);
         inOrder.verify(postMethod).addRequestHeader(eq("Signature"), matches(
             "keyId=\"http:\\/\\/actoruri\\/\",headers=\"\\(request-target\\) host date\","
@@ -150,11 +149,11 @@ class DefaultSignatureServiceTest
         HttpMethod postMethod = mock(HttpMethod.class);
         URI targetURI = URI.create("http://targeturi/");
         URI actorURI = URI.create("http://actoruri/");
-        AbstractActor actor = mock(AbstractActor.class);
+        Person actor = mock(Person.class);
         when(actor.getPreferredUsername()).thenReturn("tmp");
-        UserReference user = mock(UserReference.class);
         DocumentReference documentReference = new DocumentReference("xwiki", "XWiki", "test");
-        when(this.userBridge.getDocumentReference(user)).thenReturn(documentReference);
+        when(this.actorHandler.getStoreDocument(actor)).thenReturn(documentReference);
+
         CertifiedKeyPair certifiedKeyPair = mock(CertifiedKeyPair.class);
         when(this.x509WikiKeyStore.retrieve(argThat(
             storeReference -> (storeReference instanceof WikiStoreReference) &&
@@ -164,7 +163,7 @@ class DefaultSignatureServiceTest
         when(certifiedKeyPair.getPrivateKey()).thenReturn(privateKeyParameters);
         when(privateKeyParameters.getEncoded()).thenReturn(PK);
 
-        this.signatureService.generateSignature(postMethod, targetURI, actorURI, user);
+        this.signatureService.generateSignature(postMethod, targetURI, actorURI, actor);
         InOrder inOrder = inOrder(postMethod, postMethod);
         inOrder.verify(postMethod).addRequestHeader(eq("Signature"),
             eq("keyId=\"http://actoruri/\",headers=\"(request-target) host date\""

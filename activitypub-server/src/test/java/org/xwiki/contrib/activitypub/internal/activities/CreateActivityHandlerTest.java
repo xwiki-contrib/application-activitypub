@@ -86,20 +86,18 @@ public class CreateActivityHandlerTest extends AbstractHandlerTest
     public void handleInbox() throws Exception
     {
         Create activity = new Create().setObject(new Note()).setId(new URI("http://www.xwiki.org"));
-        UserReference userReference = mock(UserReference.class);
         Person actor = new Person()
             .setPreferredUsername("XWiki.Foo")
             .setInbox(new ActivityPubObjectReference<Inbox>());
         Inbox inbox = new Inbox();
         when(this.activityPubObjectReferenceResolver.resolveReference(actor.getInbox())).thenReturn(inbox);
-        when(this.actorHandler.getXWikiUserReference(actor)).thenReturn(userReference);
 
         this.handler.handleInboxRequest(
             new ActivityRequest<>(actor, activity, this.servletRequest, this.servletResponse));
         assertEquals(1, inbox.getAllActivities().size());
         assertTrue(inbox.getAllActivities().contains(activity));
         verify(this.activityPubStorage).storeEntity(inbox);
-        verify(this.notifier).notify(activity, Collections.singleton(userReference));
+        verify(this.notifier).notify(activity, Collections.singleton(actor));
         verifyResponse(activity);
     }
 

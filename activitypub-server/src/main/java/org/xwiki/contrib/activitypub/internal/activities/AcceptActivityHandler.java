@@ -73,8 +73,7 @@ public class AcceptActivityHandler extends AbstractActivityHandler<Accept>
                 }
                 this.activityPubStorage.storeEntity(followingActorfollowings);
 
-                this.notifier.notify(accept,
-                    Collections.singleton(this.actorHandler.getXWikiUserReference(followingActor)));
+                this.notifier.notify(accept, Collections.singleton(followingActor));
                 this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, accept);
             } else {
                 this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_NOT_IMPLEMENTED,

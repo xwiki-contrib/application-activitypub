@@ -63,7 +63,7 @@ public class RejectActivityHandler extends AbstractActivityHandler<Reject>
                 AbstractActor followingActor =
                     this.activityPubObjectReferenceResolver.resolveReference(follow.getActor());
                 this.notifier
-                    .notify(reject, Collections.singleton(this.actorHandler.getXWikiUserReference(followingActor)));
+                    .notify(reject, Collections.singleton(followingActor));
                 this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, reject);
             } else {
                 this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_NOT_IMPLEMENTED,

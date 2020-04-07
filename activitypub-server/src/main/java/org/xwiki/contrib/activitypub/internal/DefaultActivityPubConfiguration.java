@@ -24,6 +24,8 @@ import javax.inject.Named;
 
 import org.xwiki.configuration.ConfigurationSource;
 import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
+import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.DocumentReferenceResolver;
 
 import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.FollowPolicy.REJECT;
 import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.FollowPolicy.valueOf;
@@ -35,9 +37,15 @@ import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.FollowPolic
  */
 public class DefaultActivityPubConfiguration implements ActivityPubConfiguration
 {
+    private static final String ADMIN_GROUP = "XWiki.XWikiAdminGroup";
+
     @Inject
     @Named("activitypub")
     private ConfigurationSource configuration;
+
+    @Inject
+    @Named("currentmixed")
+    private DocumentReferenceResolver<String> stringEntityReferenceResolver;
 
     @Override
     public FollowPolicy getFollowPolicy()
@@ -48,5 +56,12 @@ public class DefaultActivityPubConfiguration implements ActivityPubConfiguration
         } catch (IllegalArgumentException | NullPointerException e) {
             return REJECT;
         }
+    }
+
+    @Override
+    public DocumentReference getWikiGroup()
+    {
+        String group = this.configuration.getProperty("wikiGroup", ADMIN_GROUP);
+        return this.stringEntityReferenceResolver.resolve(group);
     }
 }
