@@ -37,6 +37,7 @@ import java.util.TimeZone;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.httpclient.HttpMethod;
@@ -90,10 +91,7 @@ public class DefaultSignatureService implements SignatureService
     private KeyStore x509WikiKeyStore;
 
     @Inject
-    private XWikiUserBridge userBridge;
-
-    @Inject
-    private ActorHandler actorHandler;
+    private Provider<ActorHandler> actorHandlerProvider;
 
     @Inject
     private CryptoService cryptoService;
@@ -119,7 +117,7 @@ public class DefaultSignatureService implements SignatureService
     private CertifiedKeyPair getCertifiedKeyPair(AbstractActor actor) throws ActivityPubException
     {
         try {
-            DocumentReference dr = this.actorHandler.getStoreDocument(actor);
+            DocumentReference dr = this.actorHandlerProvider.get().getStoreDocument(actor);
             CertifiedKeyPair stored = this.x509WikiKeyStore.retrieve(new WikiStoreReference(dr));
 
             if (stored != null) {

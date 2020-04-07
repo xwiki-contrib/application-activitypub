@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.httpclient.HttpMethod;
@@ -50,21 +51,10 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
     private ActivityPubJsonParser activityPubJsonParser;
     
     @Inject
-    private ActivityPubClient activityPubClient;
-
-    private ActivityPubStorage activityPubStorage;
+    private Provider<ActivityPubClient> activityPubClientProvider;
 
     @Inject
-    @Named("context")
-    private ComponentManager componentManager;
-
-    private ActivityPubStorage getActivityPubStorage() throws ComponentLookupException
-    {
-        if (this.activityPubStorage == null) {
-            this.activityPubStorage = this.componentManager.getInstance(ActivityPubStorage.class);
-        }
-        return this.activityPubStorage;
-    }
+    private Provider<ActivityPubStorage> activityPubStorageProvider;
 
     @Override
     public <T extends ActivityPubObject> T resolveReference(ActivityPubObjectReference<T> reference)
@@ -78,18 +68,14 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
             throw new ActivityPubException("The reference property is null and does not have any ID to follow.");
         }
         if (result == null) {
-            try {
-                result = this.getActivityPubStorage().retrieveEntity(reference.getLink());
-                reference.setObject(result);
-            } catch (ComponentLookupException e) {
-                throw new ActivityPubException("Cannot load the storage.", e);
-            }
+            result = this.activityPubStorageProvider.get().retrieveEntity(reference.getLink());
+            reference.setObject(result);
         }
         if (result == null) {
             try {
-                HttpMethod getMethod = this.activityPubClient.get(reference.getLink());
+                HttpMethod getMethod = this.activityPubClientProvider.get().get(reference.getLink());
                 try {
-                    this.activityPubClient.checkAnswer(getMethod);
+                    this.activityPubClientProvider.get().checkAnswer(getMethod);
                     result = this.activityPubJsonParser.parse(getMethod.getResponseBodyAsString());
                 } finally {
                     getMethod.releaseConnection();
