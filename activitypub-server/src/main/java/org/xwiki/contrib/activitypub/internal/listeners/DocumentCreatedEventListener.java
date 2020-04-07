@@ -20,7 +20,6 @@
 package org.xwiki.contrib.activitypub.internal.listeners;
 
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -35,7 +34,6 @@ import org.xwiki.contrib.activitypub.internal.async.PageCreatedRequest;
 import org.xwiki.job.JobException;
 import org.xwiki.job.JobExecutor;
 import org.xwiki.job.Request;
-import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.Event;
 
@@ -92,14 +90,15 @@ public class DocumentCreatedEventListener extends AbstractEventListener
          * XWikiDocument is not serializable and cannot be passed safely to the job executor.
          * Only interesting parameters are passed explicitly on the request.
          */
-        DocumentReference documentReference = document.getDocumentReference();
-        DocumentReference authorReference = document.getAuthorReference();
-        String viewURL = document.getURL("view", context);
-        String documentTitle = document.getTitle();
-        Date creationDate = document.getCreationDate();
 
         PageCreatedRequest ret =
-            new PageCreatedRequest(documentReference, authorReference, viewURL, documentTitle, creationDate);
+            new PageCreatedRequest()
+                .setDocumentReference(document.getDocumentReference())
+                .setAuthorReference(document.getAuthorReference())
+                .setDocumentTitle(document.getTitle())
+                .setContent(document.getXDOM())
+                .setCreationDate(document.getCreationDate())
+                .setViewURL(document.getURL("view", context));
         ret.setId(ASYNC_REQUEST_TYPE, document.getKey());
         return ret;
     }

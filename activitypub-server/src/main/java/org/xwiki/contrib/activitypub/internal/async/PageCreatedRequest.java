@@ -25,6 +25,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.xwiki.job.AbstractRequest;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.rendering.block.XDOM;
 
 /**
  * Create a request for handling a page creation event on ActivityPub asynchronously.
@@ -34,34 +35,17 @@ import org.xwiki.model.reference.DocumentReference;
  */
 public class PageCreatedRequest extends AbstractRequest
 {
-    private final DocumentReference documentReference;
+    private DocumentReference documentReference;
 
-    private final DocumentReference authorReference;
+    private DocumentReference authorReference;
 
-    private final String viewURL;
+    private String documentTitle;
 
-    private final String documentTitle;
+    private XDOM content;
 
-    private final Date creationDate;
+    private Date creationDate;
 
-    /**
-     * Default constructor for page creation requests.
-     *
-     * @param documentReference DocumentReference of the created page.
-     * @param authorReference   DocumentReference of the author of the page.
-     * @param viewURL           The url to view the created page.
-     * @param documentTitle     The title of the created page.
-     * @param creationDate      The date of creation of the page.
-     */
-    public PageCreatedRequest(DocumentReference documentReference, DocumentReference authorReference,
-        String viewURL, String documentTitle, Date creationDate)
-    {
-        this.documentReference = documentReference;
-        this.authorReference = authorReference;
-        this.viewURL = viewURL;
-        this.documentTitle = documentTitle;
-        this.creationDate = creationDate;
-    }
+    private String viewURL;
 
     /**
      * @return The DocumentReference of the created page.
@@ -80,14 +64,6 @@ public class PageCreatedRequest extends AbstractRequest
     }
 
     /**
-     * @return The url to view the created page.
-     */
-    public String getViewURL()
-    {
-        return this.viewURL;
-    }
-
-    /**
      * @return The title of the created page.
      */
     public String getDocumentTitle()
@@ -96,11 +72,93 @@ public class PageCreatedRequest extends AbstractRequest
     }
 
     /**
+     * @return the content of the created page.
+     */
+    public XDOM getContent()
+    {
+        return this.content;
+    }
+
+    /**
      * @return The date of creation of the page.
      */
     public Date getCreationDate()
     {
         return this.creationDate;
+    }
+
+    /**
+     * @return The url to view the created page.
+     */
+    public String getViewURL()
+    {
+        return this.viewURL;
+    }
+
+    /**
+     * 
+     * @param documentReference Set the document reference.
+     * @return The current object.
+     */
+    public PageCreatedRequest setDocumentReference(DocumentReference documentReference)
+    {
+        this.documentReference = documentReference;
+        return this;
+    }
+
+    /**
+     * 
+     * @param authorReference The author reference.
+     * @return The current object.
+     */
+    public PageCreatedRequest setAuthorReference(DocumentReference authorReference)
+    {
+        this.authorReference = authorReference;
+        return this;
+    }
+
+    /**
+     * 
+     * @param documentTitle the document title.
+     * @return The current object.
+     */
+    public PageCreatedRequest setDocumentTitle(String documentTitle)
+    {
+        this.documentTitle = documentTitle;
+        return this;
+    }
+
+    /**
+     * 
+     * @param content The content of the page.
+     * @return The current object.
+     */
+    public PageCreatedRequest setContent(XDOM content)
+    {
+        this.content = content;
+        return this;
+    }
+
+    /**
+     * 
+     * @param creationDate the creation date of the page.
+     * @return The current object.
+     */ 
+    public PageCreatedRequest setCreationDate(Date creationDate)
+    {
+        this.creationDate = creationDate;
+        return this;
+    }
+
+    /**
+     * 
+     * @param viewURL The url of the page.
+     * @return The current object.
+     */
+    public PageCreatedRequest setViewURL(String viewURL)
+    {
+        this.viewURL = viewURL;
+        return this;
     }
 
     @Override
@@ -119,9 +177,10 @@ public class PageCreatedRequest extends AbstractRequest
         return new EqualsBuilder()
                    .append(this.documentReference, that.documentReference)
                    .append(this.authorReference, that.authorReference)
-                   .append(this.viewURL, that.viewURL)
                    .append(this.documentTitle, that.documentTitle)
+                   .append(this.content, that.content)
                    .append(this.creationDate, that.creationDate)
+                   .append(this.viewURL, that.viewURL)
                    .isEquals();
     }
 
@@ -131,9 +190,10 @@ public class PageCreatedRequest extends AbstractRequest
         return new HashCodeBuilder(17, 37)
                    .append(this.documentReference)
                    .append(this.authorReference)
-                   .append(this.viewURL)
                    .append(this.documentTitle)
+                   .append(this.content)
                    .append(this.creationDate)
+                   .append(this.viewURL)
                    .toHashCode();
     }
 }

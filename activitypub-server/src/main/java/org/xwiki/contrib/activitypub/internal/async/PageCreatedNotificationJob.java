@@ -36,6 +36,7 @@ import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.ActorHandler;
+import org.xwiki.contrib.activitypub.HTMLRenderer;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Create;
@@ -46,6 +47,7 @@ import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.job.AbstractJob;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.rendering.block.XDOM;
 import org.xwiki.security.authorization.AuthorizationManager;
 import org.xwiki.security.authorization.Right;
 import org.xwiki.user.UserReference;
@@ -91,6 +93,9 @@ public class PageCreatedNotificationJob extends AbstractJob<PageCreatedRequest, 
     @Inject
     private DefaultURLHandler urlHandler;
 
+    @Inject
+    private HTMLRenderer htmlRenderer;
+
     @Override
     protected void runInternal()
     {
@@ -106,9 +111,7 @@ public class PageCreatedNotificationJob extends AbstractJob<PageCreatedRequest, 
             boolean guestAccess =
                 this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, request.getDocumentReference());
             if (guestAccess && !followers.isEmpty()) {
-                Create createActivity =
-                    this.getActivity(author, request.getViewURL(), request.getDocumentTitle(),
-                        request.getCreationDate());
+                Create createActivity = this.getActivity(author);
                 ActivityRequest<Create> activityRequest = new ActivityRequest<>(createActivity.getActor().getObject(),
                     createActivity);
                 this.createActivityHandler.handleOutboxRequest(activityRequest);
@@ -126,9 +129,15 @@ public class PageCreatedNotificationJob extends AbstractJob<PageCreatedRequest, 
         }
     }
 
-    private Create getActivity(AbstractActor author, String view, String title, Date creationDate)
+    private Create getActivity(AbstractActor author)
         throws MalformedURLException, URISyntaxException, ActivityPubException
     {
+
+        String view = this.request.getViewURL();
+        String title = this.request.getDocumentTitle();
+        Date creationDate = this.request.getCreationDate();
+        XDOM content = this.request.getContent();
+
         URI documentUrl = this.urlHandler.getAbsoluteURI(new URI(view));
 
         Document document = new Document()
@@ -137,6 +146,7 @@ public class PageCreatedNotificationJob extends AbstractJob<PageCreatedRequest, 
                                     Collections.singletonList(
                                         new ActivityPubObjectReference<AbstractActor>().setObject(author)))
                                 .setPublished(creationDate)
+                                .setContent(this.htmlRenderer.render(content))
                                 // We cannot put it as a document id, since we need to be able to resolve it 
                                 // with an activitypub answer.
                                 .setUrl(Collections.singletonList(documentUrl));

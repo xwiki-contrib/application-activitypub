@@ -115,10 +115,10 @@ public class DocumentCreatedEventListenerTest
     public void setup() throws Exception
     {
         this.person = new Person()
-            .setPreferredUsername("Foobar")
-            .setFollowers(
-                new ActivityPubObjectReference<OrderedCollection<AbstractActor>>()
-                .setLink(new URI("http://foobar/followers")));
+                          .setPreferredUsername("Foobar")
+                          .setFollowers(
+                              new ActivityPubObjectReference<OrderedCollection<AbstractActor>>()
+                                  .setLink(new URI("http://foobar/followers")));
 
         UserReference userReference = mock(UserReference.class);
         when(this.xWikiUserBridge.resolveDocumentReference(this.document.getAuthorReference()))
@@ -186,8 +186,13 @@ public class DocumentCreatedEventListenerTest
         this.listener.onEvent(new DocumentCreatedEvent(), this.document, this.context);
 
         PageCreatedRequest request =
-            new PageCreatedRequest(this.document.getDocumentReference(), this.document.getAuthorReference(),
-                this.document.getURL("view", this.context), this.document.getTitle(), this.document.getCreationDate());
+            new PageCreatedRequest()
+                .setDocumentReference(this.document.getDocumentReference())
+                .setAuthorReference(this.document.getAuthorReference())
+                .setDocumentTitle(this.document.getTitle())
+                .setContent(this.document.getXDOM())
+                .setCreationDate(this.document.getCreationDate())
+                .setViewURL(this.document.getURL("view", this.context));
         request.setId("activitypub-create-page", this.document.getKey());
         verify(this.jobExecutor, times(1)).execute(eq("activitypub-create-page"), eq(request));
         verify(this.activityPubStorage, times(0)).storeEntity(apDoc);

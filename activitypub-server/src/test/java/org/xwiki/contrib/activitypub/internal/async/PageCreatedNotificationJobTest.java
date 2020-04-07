@@ -206,8 +206,13 @@ class PageCreatedNotificationJobTest
         ActivityRequest<Create> activityRequest = new ActivityRequest<>(this.person, create);
 
         PageCreatedRequest request =
-            new PageCreatedRequest(this.document.getDocumentReference(), this.document.getAuthorReference(),
-                this.document.getURL("view", this.context), this.document.getTitle(), this.document.getCreationDate());
+            new PageCreatedRequest()
+                .setDocumentReference(this.document.getDocumentReference())
+                .setAuthorReference(this.document.getAuthorReference())
+                .setDocumentTitle(this.document.getTitle())
+                .setContent(this.document.getXDOM())
+                .setCreationDate(this.document.getCreationDate())
+                .setViewURL(this.document.getURL("view", this.context));
         request.setId("activitypub-create-page", this.document.getKey());
 
         PageCreatedRequest t = mock(PageCreatedRequest.class);
@@ -249,8 +254,13 @@ class PageCreatedNotificationJobTest
         when(this.document.getTitle()).thenReturn(documentTile);
 
         PageCreatedRequest request =
-            new PageCreatedRequest(this.document.getDocumentReference(), this.document.getAuthorReference(),
-                this.document.getURL("view", this.context), this.document.getTitle(), this.document.getCreationDate());
+            new PageCreatedRequest()
+                .setDocumentReference(this.document.getDocumentReference())
+                .setAuthorReference(this.document.getAuthorReference())
+                .setDocumentTitle(this.document.getTitle())
+                .setContent(this.document.getXDOM())
+                .setCreationDate(this.document.getCreationDate())
+                .setViewURL(this.document.getURL("view", this.context));
         request.setId("activitypub-create-page", this.document.getKey());
 
         PageCreatedRequest t = mock(PageCreatedRequest.class);
@@ -294,8 +304,13 @@ class PageCreatedNotificationJobTest
         when(this.document.getTitle()).thenReturn(documentTile);
 
         PageCreatedRequest request =
-            new PageCreatedRequest(this.document.getDocumentReference(), this.document.getAuthorReference(),
-                this.document.getURL("view", this.context), this.document.getTitle(), this.document.getCreationDate());
+            new PageCreatedRequest()
+                .setDocumentReference(this.document.getDocumentReference())
+                .setAuthorReference(this.document.getAuthorReference())
+                .setDocumentTitle(this.document.getTitle())
+                .setContent(this.document.getXDOM())
+                .setCreationDate(this.document.getCreationDate())
+                .setViewURL(this.document.getURL("view", this.context));
         request.setId("activitypub-create-page", this.document.getKey());
 
         PageCreatedRequest t = mock(PageCreatedRequest.class);
@@ -357,8 +372,13 @@ class PageCreatedNotificationJobTest
                             .setTo(Collections.singletonList(new ProxyActor(this.person.getFollowers().getLink())));
         ActivityRequest<Create> activityRequest = new ActivityRequest<>(this.person, create);
         PageCreatedRequest request =
-            new PageCreatedRequest(this.document.getDocumentReference(), this.document.getAuthorReference(),
-                this.document.getURL("view", this.context), this.document.getTitle(), this.document.getCreationDate());
+            new PageCreatedRequest()
+                .setDocumentReference(this.document.getDocumentReference())
+                .setAuthorReference(this.document.getAuthorReference())
+                .setDocumentTitle(this.document.getTitle())
+                .setContent(this.document.getXDOM())
+                .setCreationDate(this.document.getCreationDate())
+                .setViewURL(this.document.getURL("view", this.context));
         request.setId("activitypub-create-page", this.document.getKey());
 
         PageCreatedRequest t = mock(PageCreatedRequest.class);
