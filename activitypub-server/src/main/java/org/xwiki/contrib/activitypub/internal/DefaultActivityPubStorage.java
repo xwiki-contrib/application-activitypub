@@ -23,15 +23,12 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.util.Collections;
 import java.util.Objects;
 import java.util.UUID;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocument;
@@ -48,15 +45,11 @@ import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.Outbox;
-import org.xwiki.resource.CreateResourceReferenceException;
-import org.xwiki.resource.ResourceReferenceResolver;
 import org.xwiki.resource.ResourceReferenceSerializer;
-import org.xwiki.resource.ResourceType;
 import org.xwiki.resource.SerializeResourceReferenceException;
 import org.xwiki.resource.UnsupportedResourceReferenceException;
 import org.xwiki.search.solr.Solr;
 import org.xwiki.search.solr.SolrException;
-import org.xwiki.url.ExtendedURL;
 
 /**
  * Default implementation of {@link ActivityPubStorage}.
@@ -74,10 +67,6 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
 
     @Inject
     private ResourceReferenceSerializer<ActivityPubResourceReference, URI> serializer;
-
-    @Inject
-    @Named("activitypub")
-    private ResourceReferenceResolver<ExtendedURL> urlResolver;
 
     @Inject
     private ActivityPubJsonParser jsonParser;

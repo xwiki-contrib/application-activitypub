@@ -151,7 +151,7 @@ public class DefaultActorHandler implements ActorHandler
             String login = this.xWikiUserBridge.getUserLogin(userReference);
             ActivityPubResourceReference resourceReference =
                 new ActivityPubResourceReference("Person", login);
-            Person actor = null;
+            Person actor;
             try {
                 actor = this.activityPubStorage.retrieveEntity(this.serializer.serialize(resourceReference));
             } catch (SerializeResourceReferenceException|UnsupportedResourceReferenceException e) {
@@ -201,11 +201,11 @@ public class DefaultActorHandler implements ActorHandler
         this.activityPubStorage.storeEntity(outbox);
         actor.setOutbox(new ActivityPubObjectReference<Outbox>().setObject(outbox));
 
-        OrderedCollection<AbstractActor> following = new OrderedCollection<AbstractActor>();
+        OrderedCollection<AbstractActor> following = new OrderedCollection<>();
         this.activityPubStorage.storeEntity(following);
         actor.setFollowing(new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(following));
 
-        OrderedCollection<AbstractActor> followers = new OrderedCollection<AbstractActor>();
+        OrderedCollection<AbstractActor> followers = new OrderedCollection<>();
         this.activityPubStorage.storeEntity(followers);
         actor.setFollowers(new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(followers));
 
