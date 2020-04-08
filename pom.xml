@@ -154,6 +154,16 @@
                     "old": "method void org.xwiki.contrib.activitypub.SignatureService::generateSignature(org.apache.commons.httpclient.HttpMethod, java.net.URI, java.net.URI, org.xwiki.user.UserReference) throws org.xwiki.contrib.activitypub.ActivityPubException",
                     "new": "method void org.xwiki.contrib.activitypub.SignatureService::generateSignature(org.apache.commons.httpclient.HttpMethod, org.xwiki.contrib.activitypub.entities.AbstractActor) throws org.xwiki.contrib.activitypub.ActivityPubException",
                     "justification": "Unstable API: not breaking. Simplify API for SignatureService."
+                  },
+                  {
+                    "code": "java.class.removed",
+                    "old": "interface org.xwiki.contrib.activitypub.ActivityPubConfiguration",
+                    "justification": "Not breaking: class has not been removed but moved to activitypub-core."
+                  },
+                  {
+                    "code": "java.class.removed",
+                    "old": "interface org.xwiki.contrib.activitypub.ActorHandler",
+                    "justification": "Not breaking: class has not been removed but moved to activitypub-core."
                   }
                 ]
               }
