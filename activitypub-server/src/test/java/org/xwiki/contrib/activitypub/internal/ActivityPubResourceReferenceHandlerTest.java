@@ -22,6 +22,7 @@ package org.xwiki.contrib.activitypub.internal;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.io.StringReader;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -253,8 +254,9 @@ public class ActivityPubResourceReferenceHandlerTest
         when(this.activityPubStorage.retrieveEntity(new URI(requestURL))).thenReturn(inbox);
 
         Create create = new Create().setName("Create 42");
-        when(servletRequest.getReader()).thenReturn(new BufferedReader(new StringReader("{create:42}")));
-        when(activityPubJsonParser.parse("{create:42}")).thenReturn(create);
+        BufferedReader requestReader = new BufferedReader(new StringReader("{create:42}"));
+        when(servletRequest.getReader()).thenReturn(requestReader);
+        when(activityPubJsonParser.parse(requestReader)).thenReturn(create);
         ActivityHandler<Create> activityHandler = this.componentManager
             .registerMockComponent(new DefaultParameterizedType(null, ActivityHandler.class, Create.class));
 
@@ -283,8 +285,9 @@ public class ActivityPubResourceReferenceHandlerTest
         when(this.activityPubStorage.retrieveEntity(new URI(requestURL))).thenReturn(outbox);
 
         Create create = new Create().setName("Create 42");
-        when(servletRequest.getReader()).thenReturn(new BufferedReader(new StringReader("{create:42}")));
-        when(activityPubJsonParser.parse("{create:42}")).thenReturn(create);
+        BufferedReader requestReader = new BufferedReader(new StringReader("{create:42}"));
+        when(servletRequest.getReader()).thenReturn(requestReader);
+        when(activityPubJsonParser.parse(requestReader)).thenReturn(create);
         ActivityHandler<Create> activityHandler = this.componentManager
             .registerMockComponent(new DefaultParameterizedType(null, ActivityHandler.class, Create.class));
 
@@ -318,8 +321,9 @@ public class ActivityPubResourceReferenceHandlerTest
         when(this.activityPubStorage.retrieveEntity(new URI(requestURL))).thenReturn(outbox);
 
         Create create = new Create().setName("Create 42");
-        when(servletRequest.getReader()).thenReturn(new BufferedReader(new StringReader("{create:42}")));
-        when(activityPubJsonParser.parse("{create:42}")).thenReturn(create);
+        BufferedReader requestReader = new BufferedReader(new StringReader("{create:42}"));
+        when(servletRequest.getReader()).thenReturn(requestReader);
+        when(activityPubJsonParser.parse(requestReader)).thenReturn(create);
         ActivityHandler<Create> activityHandler = this.componentManager
             .registerMockComponent(new DefaultParameterizedType(null, ActivityHandler.class, Create.class));
 

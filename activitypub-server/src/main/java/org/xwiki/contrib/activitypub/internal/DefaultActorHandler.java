@@ -149,8 +149,7 @@ public class DefaultActorHandler implements ActorHandler
         String errorMessage = String.format("Cannot find any user with reference [%s]", userReference);
         if (this.xWikiUserBridge.isExistingUser(userReference)) {
             String login = this.xWikiUserBridge.getUserLogin(userReference);
-            ActivityPubResourceReference resourceReference =
-                new ActivityPubResourceReference("Person", login);
+            ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("Person", login);
             Person actor;
             try {
                 actor = this.activityPubStorage.retrieveEntity(this.serializer.serialize(resourceReference));
@@ -160,7 +159,7 @@ public class DefaultActorHandler implements ActorHandler
             if (actor == null) {
                 UserProperties userProperties = this.xWikiUserBridge.resolveUser(userReference);
                 String fullname = String.format("%s %s", userProperties.getFirstName(), userProperties.getLastName());
-                actor = createPerson(fullname, login);
+                actor = createActor(new Person(), fullname, login);
             }
             return actor;
         } else {
@@ -171,24 +170,27 @@ public class DefaultActorHandler implements ActorHandler
     @Override
     public Service getActor(WikiReference wikiReference) throws ActivityPubException
     {
-        Service service = new Service()
-            .setPreferredUsername(wikiReference.getName())
-            .setName("Wiki "+ wikiReference.getName());
-        this.fillActor(service);
-        return service;
-    }
-
-    private Person createPerson(String fullName, String login) throws ActivityPubException
-    {
-        Person actor = new Person();
-        actor.setName(fullName);
-        actor.setPreferredUsername(login);
-        this.fillActor(actor);
+        String login = wikiReference.getName();
+        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("Service", login);
+        Service actor;
+        try {
+            actor = this.activityPubStorage.retrieveEntity(this.serializer.serialize(resourceReference));
+        } catch (SerializeResourceReferenceException|UnsupportedResourceReferenceException e) {
+            throw new ActivityPubException(
+                String.format("Error while serializing reference to find actor [%s]", login), e);
+        }
+        if (actor == null) {
+            String name = String.format("Wiki %s", login);
+            actor = createActor(new Service(), name, login);
+        }
         return actor;
     }
 
-    private void fillActor(AbstractActor actor) throws ActivityPubException
+    private <T extends AbstractActor> T createActor(T actor, String fullName, String login) throws ActivityPubException
     {
+        actor.setName(fullName);
+        actor.setPreferredUsername(login);
+
         Inbox inbox = new Inbox();
         inbox.setAttributedTo(
             Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(actor)));
@@ -209,22 +211,20 @@ public class DefaultActorHandler implements ActorHandler
         this.activityPubStorage.storeEntity(followers);
         actor.setFollowers(new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(followers));
 
+        // We need to store first the actor, so we set the ID which is used for the publickey
+        // TODO: this would need to be improved, for example by directly storing the publickey in the DB.
         this.activityPubStorage.storeEntity(actor);
 
-        PublicKey publicKey = this.initPublicKey(actor);
+        String pubKey = this.signatureService.getPublicKeyPEM(actor);
+
+        PublicKey publicKey = new PublicKey()
+                                .setId(actor.getId() + "#main-key")
+                                .setOwner(actor.getId().toASCIIString())
+                                .setPublicKeyPem(pubKey);
         actor.setPublicKey(publicKey);
 
         this.activityPubStorage.storeEntity(actor);
-    }
-
-    private PublicKey initPublicKey(AbstractActor actor) throws ActivityPubException
-    {
-        String pubKey = this.signatureService.getPublicKeyPEM(actor);
-
-        return new PublicKey()
-            .setId(actor.getId() + "#main-key")
-            .setOwner(actor.getId().toASCIIString())
-            .setPublicKeyPem(pubKey);
+        return actor;
     }
 
     @Override
@@ -263,9 +263,7 @@ public class DefaultActorHandler implements ActorHandler
         throws ActivityPubException
     {
         boolean result = false;
-        XWikiContext xWikiContext = this.contextProvider.get();
 
-        DocumentReference userDocumentReference = this.xWikiUserBridge.getDocumentReference(authenticatedUser);
         // We only allow authenticated users.
         if (authenticatedUser != null) {
             // Someone's trying to post in the Outbox of a person: it needs to be the same person.
@@ -276,6 +274,8 @@ public class DefaultActorHandler implements ActorHandler
                 // Someone's trying to post in the Outbox of an entire Wiki: the person needs to belongs to
                 // the group that manage the wiki
             } else if (targetActor instanceof Service) {
+                XWikiContext xWikiContext = this.contextProvider.get();
+                DocumentReference userDocumentReference = this.xWikiUserBridge.getDocumentReference(authenticatedUser);
                 DocumentReference wikiGroup = this.activityPubConfiguration.getWikiGroup();
                 try {
                     Collection<DocumentReference> groups =
@@ -318,8 +318,8 @@ public class DefaultActorHandler implements ActorHandler
             documentReference = new DocumentReference(actor.getPreferredUsername(), SERVICE_USER_SPACE_REFERENCE,
                 actor.getPreferredUsername());
         } else {
-            throw new ActivityPubException(String.format("Only person and service actors are taken into account for now."
-                + " The type [%s] is not implemented yet.", actor.getType()));
+            throw new ActivityPubException(
+                String.format("This type of actor is not supported yet [%s]", actor.getType()));
         }
         return documentReference;
     }

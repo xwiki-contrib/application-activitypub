@@ -148,6 +148,12 @@
                     "old": "parameter boolean org.xwiki.contrib.activitypub.script.ActivityPubScriptService::isCurrentUser(===org.xwiki.contrib.activitypub.entities.AbstractActor===)",
                     "new": "parameter boolean org.xwiki.contrib.activitypub.script.ActivityPubScriptService::isCurrentUser(===org.xwiki.contrib.activitypub.entities.Person===)",
                     "justification": "Unstable API: not breaking. The current user is necessarily a Person."
+                  },
+                  {
+                    "code": "java.method.numberOfParametersChanged",
+                    "old": "method void org.xwiki.contrib.activitypub.SignatureService::generateSignature(org.apache.commons.httpclient.HttpMethod, java.net.URI, java.net.URI, org.xwiki.user.UserReference) throws org.xwiki.contrib.activitypub.ActivityPubException",
+                    "new": "method void org.xwiki.contrib.activitypub.SignatureService::generateSignature(org.apache.commons.httpclient.HttpMethod, org.xwiki.contrib.activitypub.entities.AbstractActor) throws org.xwiki.contrib.activitypub.ActivityPubException",
+                    "justification": "Unstable API: not breaking. Simplify API for SignatureService."
                   }
                 ]
               }

@@ -34,7 +34,6 @@ import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentLookupException;
@@ -203,8 +202,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         AbstractActor actor = this.objectReferenceResolver.resolveReference(box.getAttributedTo().get(0));
 
         // Parse the body of the request to retrieve the activity
-        String requestBody = IOUtils.toString(request.getReader());
-        ActivityPubObject object = this.activityPubJsonParser.parse(requestBody);
+        ActivityPubObject object = this.activityPubJsonParser.parse(request.getReader());
         AbstractActivity activity = getActivity(object);
 
         // Create the ActivityRequest and retrieve the handler for it
