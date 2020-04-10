@@ -21,6 +21,7 @@ package org.xwiki.contrib.activitypub.internal;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
@@ -30,11 +31,16 @@ import org.xwiki.rendering.block.XDOM;
 import org.xwiki.rendering.renderer.BlockRenderer;
 import org.xwiki.rendering.renderer.printer.DefaultWikiPrinter;
 
+import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.web.ExternalServletURLFactory;
+import com.xpn.xwiki.web.XWikiURLFactory;
+
 /**
- * Please document me.
+ * Default implementation of {@link HTMLRenderer}. Produce an html representation of the provided {@link XDOM} while
+ * taking care to make it seens from an outside site. For instance links are transformed to fully defined URLs.
  *
  * @version $Id$
- * @since X.Y.Z
+ * @since 1.2
  */
 @Component
 @Singleton
@@ -44,15 +50,25 @@ public class DefaultHTMLRenderer implements HTMLRenderer
     @Named("xhtml/1.0")
     private BlockRenderer renderer;
 
+    @Inject
+    private Provider<XWikiContext> xwikiContextProvider;
+
     @Override
     public String render(XDOM content) throws ActivityPubException
     {
+        XWikiContext xWikiContext = this.xwikiContextProvider.get();
+        XWikiURLFactory currentURLFactory = xWikiContext.getURLFactory();
         try {
-            DefaultWikiPrinter printer = new DefaultWikiPrinter();
-            this.renderer.render(content, printer);
-            return printer.toString();
-        } catch (Exception e) {
-            throw new ActivityPubException("Error while rendering an HTML content", e);
+            xWikiContext.setURLFactory(new ExternalServletURLFactory(xWikiContext));
+            try {
+                DefaultWikiPrinter printer = new DefaultWikiPrinter();
+                this.renderer.render(content, printer);
+                return printer.toString();
+            } catch (Exception e) {
+                throw new ActivityPubException("Error while rendering an HTML content", e);
+            }
+        } finally {
+            xWikiContext.setURLFactory(currentURLFactory);
         }
     }
 }
