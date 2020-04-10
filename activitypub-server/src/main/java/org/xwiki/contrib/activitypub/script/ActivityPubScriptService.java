@@ -57,7 +57,6 @@ import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Service;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.WikiReference;
 import org.xwiki.script.service.ScriptService;
 import org.xwiki.stability.Unstable;
 import org.xwiki.text.StringUtils;
@@ -159,7 +158,7 @@ public class ActivityPubScriptService implements ScriptService
         try {
             return this.actorHandler.getActor(context.getWikiReference());
         } catch (ActivityPubException e) {
-            this.logger.error("Error while trying to get the actor [{}].", context.getWikiReference(), e);
+            this.logger.error("Error while trying to get the wiki actor [{}].", context.getWikiReference(), e);
         }
         return null;
     }

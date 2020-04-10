@@ -116,22 +116,7 @@
             <!-- Specify the "default" execution id so that the "blocker" one is always executed -->
             <id>default</id>
             <configuration>
-              <excludes>
-                <!-- Fan-Out complexity: 24 on 20 max -->
-                **/DefaultActorHandler.java,
-
-                <!-- Cyclomatic Complexity: 13 on 10 -->
-                **/DefaultActivityPubStorage.java,
-
-                <!-- Fan-Out complexity: 31 on 20 max -->
-                **/ActivityPubResourceReferenceHandler.java,
-
-                <!-- Fan-Out complexity: 24 on 20 max -->
-                **/PageCreatedNotificationJob.java,
-
-                <!-- Fan-Out complexity: 21 on 20 max -->
-                **/ActivityPubScriptService.java
-              </excludes>
+              <suppressionsLocation>${basedir}/src/main/checkstyle/checkstyle-suppressions.xml</suppressionsLocation>
             </configuration>
           </execution>
         </executions>

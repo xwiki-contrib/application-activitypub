@@ -20,7 +20,6 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -49,7 +48,6 @@ import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.SignatureService;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
-import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
@@ -86,6 +84,7 @@ import com.xpn.xwiki.XWikiContext;
 public class DefaultActorHandler implements ActorHandler
 {
     private static final List<String> SERVICE_USER_SPACE_REFERENCE = Arrays.asList("ActivityPub", "ServiceActors");
+    private static final String STANDARD_ERROR_MESSAGE = "This type of actor is not supported yet [%s]";
 
     @Inject
     private ActivityPubStorage activityPubStorage;
@@ -161,7 +160,7 @@ public class DefaultActorHandler implements ActorHandler
             Person actor;
             try {
                 actor = this.activityPubStorage.retrieveEntity(this.serializer.serialize(resourceReference));
-            } catch (SerializeResourceReferenceException|UnsupportedResourceReferenceException e) {
+            } catch (SerializeResourceReferenceException | UnsupportedResourceReferenceException e) {
                 throw new ActivityPubException(errorMessage, e);
             }
             if (actor == null) {
@@ -183,7 +182,7 @@ public class DefaultActorHandler implements ActorHandler
         Service actor;
         try {
             actor = this.activityPubStorage.retrieveEntity(this.serializer.serialize(resourceReference));
-        } catch (SerializeResourceReferenceException|UnsupportedResourceReferenceException e) {
+        } catch (SerializeResourceReferenceException | UnsupportedResourceReferenceException e) {
             throw new ActivityPubException(
                 String.format("Error while serializing reference to find actor [%s]", login), e);
         }
@@ -308,8 +307,7 @@ public class DefaultActorHandler implements ActorHandler
         } else if (targetedActor instanceof Service) {
             result = this.entityReferenceSerializer.serialize(this.activityPubConfiguration.getWikiGroup());
         } else {
-            throw new ActivityPubException(
-                String.format("This type of actor is not supported yet [%s]", targetedActor.getType()));
+            throw new ActivityPubException(String.format(STANDARD_ERROR_MESSAGE, targetedActor.getType()));
         }
 
         return result;
@@ -326,8 +324,7 @@ public class DefaultActorHandler implements ActorHandler
             documentReference = new DocumentReference(actor.getPreferredUsername(), SERVICE_USER_SPACE_REFERENCE,
                 actor.getPreferredUsername());
         } else {
-            throw new ActivityPubException(
-                String.format("This type of actor is not supported yet [%s]", actor.getType()));
+            throw new ActivityPubException(String.format(STANDARD_ERROR_MESSAGE, actor.getType()));
         }
         return documentReference;
     }
@@ -343,9 +340,7 @@ public class DefaultActorHandler implements ActorHandler
         } else if ("service".equalsIgnoreCase(entityType)) {
             return this.getActor(new WikiReference(uid));
         } else {
-            throw new ActivityPubException(
-                String.format("Only Person and Service are handled actor for now. The type [%s] is not supported yet.",
-                    entityType));
+            throw new ActivityPubException(String.format(STANDARD_ERROR_MESSAGE, entityType));
         }
     }
 
@@ -394,7 +389,7 @@ public class DefaultActorHandler implements ActorHandler
                 }
             }
 
-        } catch (URISyntaxException|IOException e) {
+        } catch (URISyntaxException | IOException e) {
             throw new ActivityPubException(
                 String.format("Error while loading information for actor [%s].", username), e);
         }

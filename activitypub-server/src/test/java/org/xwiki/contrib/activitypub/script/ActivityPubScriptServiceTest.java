@@ -25,6 +25,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
+import javax.inject.Provider;
+
 import org.apache.commons.httpclient.HttpMethod;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -43,12 +45,17 @@ import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
+import org.xwiki.contrib.activitypub.entities.Service;
+import org.xwiki.model.reference.WikiReference;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
 import org.xwiki.user.CurrentUserReference;
+import org.xwiki.user.GuestUserReference;
 import org.xwiki.user.UserReference;
 import org.xwiki.user.UserReferenceResolver;
+
+import com.xpn.xwiki.XWikiContext;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -91,6 +98,9 @@ class ActivityPubScriptServiceTest
 
     @MockComponent
     private UserReferenceResolver<CurrentUserReference> userReferenceResolver;
+
+    @MockComponent
+    private Provider<XWikiContext> contextProvider;
 
     @Test
     void follow() throws Exception
@@ -281,5 +291,36 @@ class ActivityPubScriptServiceTest
 
         when(this.userReferenceResolver.resolve(null)).thenReturn(mock(UserReference.class));
         assertFalse(this.scriptService.isCurrentUser(actor));
+    }
+
+    @Test
+    public void currentUserCanActFor() throws Exception
+    {
+        UserReference userReference = mock(UserReference.class);
+        Person person = mock(Person.class);
+
+        when(this.userReferenceResolver.resolve(null)).thenReturn(userReference);
+        when(this.actorHandler.isAuthorizedToActFor(userReference, person)).thenReturn(true);
+        assertTrue(this.scriptService.currentUserCanActFor(person));
+
+        when(this.actorHandler.isAuthorizedToActFor(userReference, person)).thenReturn(false);
+        assertFalse(this.scriptService.currentUserCanActFor(person));
+
+        when(this.userReferenceResolver.resolve(null)).thenReturn(GuestUserReference.INSTANCE);
+        assertFalse(this.scriptService.currentUserCanActFor(person));
+        verify(this.actorHandler, times(2)).isAuthorizedToActFor(any(), any());
+    }
+
+    @Test
+    public void getCurrentWikiActor() throws Exception
+    {
+        XWikiContext context = mock(XWikiContext.class);
+        when(this.contextProvider.get()).thenReturn(context);
+        WikiReference wikiReference = new WikiReference("foobar");
+        when(context.getWikiReference()).thenReturn(wikiReference);
+        Service service = mock(Service.class);
+        when(this.actorHandler.getActor(wikiReference)).thenReturn(service);
+
+        assertSame(service, this.scriptService.getCurrentWikiActor());
     }
 }

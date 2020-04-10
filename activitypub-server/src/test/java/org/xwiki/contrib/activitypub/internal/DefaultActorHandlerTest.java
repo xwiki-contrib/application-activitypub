@@ -499,4 +499,20 @@ public class DefaultActorHandlerTest
             assertThrows(ActivityPubException.class, () -> this.actorHandler.getStoreDocument(abstractActor));
         assertEquals("This type of actor is not supported yet [Unknown type]", exception.getMessage());
     }
+
+    @Test
+    public void getActorFromResourceReference() throws Exception
+    {
+        Person expectedPerson = new Person().setPreferredUsername("XWiki.Foo");
+        when(this.activityPubStorage.retrieveEntity(this.fooUserURI)).thenReturn(expectedPerson);
+        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("Person", "Foo");
+        assertSame(expectedPerson, this.actorHandler.getActor(resourceReference));
+
+        resourceReference = new ActivityPubResourceReference("Service", "SubWiki");
+        URI subwikiURI = URI.create("http://subwiki");
+        when(this.serializer.serialize(resourceReference)).thenReturn(subwikiURI);
+        Service expectedService = mock(Service.class);
+        when(this.activityPubStorage.retrieveEntity(subwikiURI)).thenReturn(expectedService);
+        assertSame(expectedService, this.actorHandler.getActor(resourceReference));
+    }
 }

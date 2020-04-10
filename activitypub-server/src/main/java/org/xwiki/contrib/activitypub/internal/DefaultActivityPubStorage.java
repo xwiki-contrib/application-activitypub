@@ -64,6 +64,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     private static final String INBOX_SUFFIX_ID = "inbox";
 
     private static final String OUTBOX_SUFFIX_ID = "outbox";
+    private static final String CONTENT = "content";
 
     @Inject
     private ResourceReferenceSerializer<ActivityPubResourceReference, URI> serializer;
@@ -133,7 +134,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         SolrInputDocument inputDocument = new SolrInputDocument();
         inputDocument.addField("id", entity.getId().toASCIIString());
         inputDocument.addField("type", entity.getType());
-        inputDocument.addField("content", this.jsonSerializer.serialize(entity));
+        inputDocument.addField(CONTENT, this.jsonSerializer.serialize(entity));
         this.getSolrClient().add(inputDocument);
         this.getSolrClient().commit();
     }
@@ -161,11 +162,12 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
                 } else if (entity instanceof AbstractActor) {
                     uuid = ((AbstractActor) entity).getPreferredUsername();
                 } else {
-                    // FIXME: we cannot rely on hashCode because of possible collisions and size limitation, but we shouldn't
-                    // rely on total randomness because of dedup.
+                    // FIXME: we cannot rely on hashCode because of possible collisions and size limitation,
+                    //  but we shouldn't rely on total randomness because of dedup.
                     uuid = UUID.randomUUID().toString();
                 }
-                ActivityPubResourceReference resourceReference = new ActivityPubResourceReference(entity.getType(), uuid);
+                ActivityPubResourceReference resourceReference =
+                    new ActivityPubResourceReference(entity.getType(), uuid);
                 entity.setId(this.serializer.serialize(resourceReference));
             }
 
@@ -186,7 +188,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
             if (solrDocument == null || solrDocument.isEmpty()) {
                 return null;
             } else {
-                return (T) this.jsonParser.parse((String) solrDocument.getFieldValue("content"));
+                return (T) this.jsonParser.parse((String) solrDocument.getFieldValue(CONTENT));
             }
         } catch (IOException | SolrServerException | SolrException e) {
             throw new ActivityPubException(
