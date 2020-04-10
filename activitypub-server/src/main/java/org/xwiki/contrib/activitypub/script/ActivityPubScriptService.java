@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.httpclient.HttpMethod;
@@ -53,8 +54,10 @@ import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
+import org.xwiki.contrib.activitypub.entities.Service;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.WikiReference;
 import org.xwiki.script.service.ScriptService;
 import org.xwiki.stability.Unstable;
 import org.xwiki.text.StringUtils;
@@ -62,6 +65,8 @@ import org.xwiki.user.CurrentUserReference;
 import org.xwiki.user.GuestUserReference;
 import org.xwiki.user.UserReference;
 import org.xwiki.user.UserReferenceResolver;
+
+import com.xpn.xwiki.XWikiContext;
 
 /**
  * Script service for ActivityPub.
@@ -102,6 +107,9 @@ public class ActivityPubScriptService implements ScriptService
     private XWikiUserBridge xWikiUserBridge;
 
     @Inject
+    private Provider<XWikiContext> contextProvider;
+
+    @Inject
     private Logger logger;
 
     private void checkAuthentication() throws ActivityPubException
@@ -135,17 +143,37 @@ public class ActivityPubScriptService implements ScriptService
                 this.checkAuthentication();
                 result = this.actorHandler.getCurrentActor();
             } else {
-                String trimmedActor = actor.trim();
-                if (trimmedActor.startsWith("http://") || trimmedActor.contains("@")) {
-                    result = this.actorHandler.getRemoteActor(trimmedActor);
-                } else {
-                    result = this.actorHandler.getLocalActor(trimmedActor);
-                }
+                result = this.actorHandler.getActor(actor.trim());
             }
         } catch (ActivityPubException e) {
             this.logger.error("Error while trying to get the actor [{}].", actor, e);
         }
         return result;
+    }
+
+    public Service getCurrentWikiActor()
+    {
+        XWikiContext context = this.contextProvider.get();
+        try {
+            return this.actorHandler.getActor(context.getWikiReference());
+        } catch (ActivityPubException e) {
+            this.logger.error("Error while trying to get the actor [{}].", context.getWikiReference(), e);
+        }
+        return null;
+    }
+
+    public boolean currentUserCanActFor(AbstractActor actor)
+    {
+        UserReference userReference = null;
+        try {
+            this.checkAuthentication();
+            userReference = this.userReferenceResolver.resolve(null);
+            return this.actorHandler.isAuthorizedToActFor(userReference, actor);
+        } catch (ActivityPubException e) {
+            this.logger.debug("Error while trying to check authorization for the actor [{}] with user reference [{}].",
+                actor, userReference, e);
+        }
+        return false;
     }
 
     /**
@@ -173,11 +201,22 @@ public class ActivityPubScriptService implements ScriptService
      */
     public FollowResult follow(AbstractActor remoteActor)
     {
+        return follow(remoteActor, null);
+    }
+
+    /**
+     * Send a Follow request to the given actor.
+     * @param remoteActor the actor to follow.
+     * @param sourceActor the source of the follow: if null the current actor will be resolved and used.
+     * @return {@code true} iff the request has been sent properly.
+     * @since 1.2
+     */
+    public FollowResult follow(AbstractActor remoteActor, AbstractActor sourceActor)
+    {
         FollowResult result = new FollowResult("activitypub.follow.followNotRequested");
 
         try {
-            this.checkAuthentication();
-            AbstractActor currentActor = this.actorHandler.getCurrentActor();
+            AbstractActor currentActor = this.getSourceActor(sourceActor);
             if (Objects.equals(currentActor, remoteActor)) {
                 // can't follow yourself.
                 return result.setMessage("activitypub.follow.followYourself");
@@ -225,6 +264,35 @@ public class ActivityPubScriptService implements ScriptService
     }
 
     /**
+     * Retrieve the actor will perform an action and perform checks on it.
+     * If targetActor is null, then the current actor as defined by {@link ActorHandler#getCurrentActor()} is used.
+     * Else, if targetActor is given, we check if the current logged-in user can act on behalf of this actor thanks to
+     * {@link ActorHandler#isAuthorizedToActFor(UserReference, AbstractActor)} implementation.
+     * If the authorization is not met, or no user is currently logged-in, an exception is thrown.
+     *
+     * @param targetActor the actual actor that must be used to perform an action, or null to use the current actor
+     * @return the actor given in parameter or the resolved current actor
+     * @throws ActivityPubException if no user is logged in or in case of authorization error.
+     */
+    private AbstractActor getSourceActor(AbstractActor targetActor) throws ActivityPubException
+    {
+        AbstractActor currentActor;
+        checkAuthentication();
+        if (targetActor == null) {
+            currentActor = this.actorHandler.getCurrentActor();
+        } else {
+            UserReference userReference = this.userReferenceResolver.resolve(null);
+            if (this.actorHandler.isAuthorizedToActFor(userReference, targetActor)) {
+                currentActor = targetActor;
+            } else {
+                throw new ActivityPubException(
+                    String.format("You cannot act on behalf of actor [%s]", targetActor));
+            }
+        }
+        return currentActor;
+    }
+
+    /**
      * Publish the given content as a note to be send to the adressed target.
      * The given targets can take different values:
      *   - followers: means that the note will be sent to the followers
@@ -236,9 +304,26 @@ public class ActivityPubScriptService implements ScriptService
      */
     public boolean publishNote(List<String> targets, String content)
     {
+        return publishNote(targets, content, null);
+    }
+
+    /**
+     * Publish the given content as a note to be send to the adressed target.
+     * The given targets can take different values:
+     *   - followers: means that the note will be sent to the followers
+     *   - an URI qualifying an actor: means that the note will be sent to that actor
+     * If the list of targets is empty or null, it means the note will be private only.
+     * @param targets the list of targets for the note (see below for information about accepted values)
+     * @param content the actual concent of the note
+     * @param sourceActor the actor responsible from this message: if null, the current actor will be used.
+     * @return {@code true} if everything went well, else return false.
+     * @since 1.2
+     */
+    public boolean publishNote(List<String> targets, String content, AbstractActor sourceActor)
+    {
         try {
-            checkAuthentication();
-            AbstractActor currentActor = this.actorHandler.getCurrentActor();
+            AbstractActor currentActor = getSourceActor(sourceActor);
+
             Note note = new Note()
                             .setAttributedTo(Collections.singletonList(currentActor.getReference()))
                             .setContent(content);
@@ -278,13 +363,12 @@ public class ActivityPubScriptService implements ScriptService
 
     /**
      *
-     * @param userLogin The actor of interest.
+     * @param actor The actor of interest.
      * @return the list of actor followed by the current user.
      */
-    public List<AbstractActor> following(String userLogin)
+    public List<AbstractActor> following(AbstractActor actor)
     {
         try {
-            AbstractActor actor = this.getActor(userLogin);
             Optional<Stream<AbstractActor>> abstractActorStream = this.getAbstractActorStream(actor);
             if (abstractActorStream.isPresent()) {
                 return abstractActorStream.get().filter(Objects::nonNull).collect(Collectors.toList());
@@ -327,13 +411,12 @@ public class ActivityPubScriptService implements ScriptService
     }
 
     /**
-     * @param userLogin The actor of interest.
+     * @param actor The actor of interest.
      * @return the list of actors following the current user.
      */
-    public List<AbstractActor> followers(String userLogin)
+    public List<AbstractActor> followers(AbstractActor actor)
     {
         try {
-            AbstractActor actor = this.getActor(userLogin);
             ActivityPubObjectReference<OrderedCollection<AbstractActor>> followers = actor.getFollowers();
             if (followers != null) {
                 OrderedCollection<AbstractActor> activityPubObjectReferences =
@@ -347,6 +430,21 @@ public class ActivityPubScriptService implements ScriptService
             this.logger.warn(GET_CURRENT_ACTOR_UNEXPECTED_ERR_MSG, ExceptionUtils.getRootCauseMessage(e));
         }
         return Collections.emptyList();
+    }
+
+    /**
+     * Return the ActivityPub endpoint URL to the current wiki actor.
+     * @return the URL to an activitypub endpoint for the actor linked to that user. Or null in case of error.
+     */
+    public String getActorURLFromCurrentWiki()
+    {
+        XWikiContext context = this.contextProvider.get();
+        try {
+            return actorHandler.getActor(context.getWikiReference()).getId().toASCIIString();
+        } catch (ActivityPubException e) {
+            logger.error("Cannot find the actor for Wiki [{}].", context.getWikiReference(), e);
+            return null;
+        }
     }
 
     /**

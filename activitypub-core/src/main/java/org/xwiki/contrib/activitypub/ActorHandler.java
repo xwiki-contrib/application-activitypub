@@ -43,7 +43,7 @@ public interface ActorHandler
      * @return an actor corresponding to the current XWiki User or null.
      * @throws ActivityPubException in case of errors when storing information about the user.
      */
-    AbstractActor getCurrentActor() throws ActivityPubException;
+    Person getCurrentActor() throws ActivityPubException;
 
     /**
      * Retrieve or create an ActivityPub {@link Person} corresponding to the given user reference.
@@ -71,22 +71,29 @@ public interface ActorHandler
     UserReference getXWikiUserReference(Person actor) throws ActivityPubException;
 
     /**
-     * Retrieve an actor based on the serialized user reference.
-     * This method internally calls {@link #getActor(UserReference)} but resolve first the given login.
-     * @param login the name of an user.
-     * @return an actor corresponding to the given reference or null if the reference is not linked to an XWiki User.
-     * @throws ActivityPubException in case of error when loading the document pointed by the reference.
+     * Retrieve an actor based on a {@link ActivityPubResourceReference}: this reference type must be necessarily a
+     * Person or a Service.
+     * @param resourceReference the reference to resolve as an actor.
+     * @return an actor corresponding to the reference.
+     * @throws ActivityPubException in case of problem to resolve the actor.
+     * @since 1.2
      */
-    AbstractActor getLocalActor(String login) throws ActivityPubException;
+    AbstractActor getActor(ActivityPubResourceReference resourceReference) throws ActivityPubException;
 
     /**
-     * Retrieve a remote actor based on its serialized URL.
-     *
-     * @param actorURL the URL of the remote actor.
-     * @return an instance of the actor.
-     * @throws ActivityPubException in case of error while loading and parsing the request.
+     * Retrieve an actor based on the given identifier.
+     * This identifier might be and will be resolved in the following order:
+     *   - a WebFinger identifier
+     *   - an ActivityPub Actor URL
+     *   - an XWiki profile URL
+     *   - an XWiki local username
+     * If no actor has been found, the method returns null.
+     * @param actorIdentifier an identifier of an Actor
+     * @return the actual actor corresponding to the identifier or null if it has not been found
+     * @throws ActivityPubException in case of error for processing the information.
+     * @since 1.2
      */
-    AbstractActor getRemoteActor(String actorURL) throws ActivityPubException;
+    AbstractActor getActor(String actorIdentifier) throws ActivityPubException;
 
     /**
      * Verify if an user with the given serialized reference exist.

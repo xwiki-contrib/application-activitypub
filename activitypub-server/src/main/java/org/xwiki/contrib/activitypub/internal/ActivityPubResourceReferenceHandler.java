@@ -140,8 +140,8 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
                 this.activityPubStorage.retrieveEntity(new URI(request.getRequestURL().toString()));
 
             // We didn't manage to retrieve the entity from storage, but it's about an Actor: we lazily create it.
-            if (entity == null && isAboutExistingUser(resourceReference)) {
-                entity = this.actorHandler.getLocalActor(resourceReference.getUuid());
+            if (entity == null && isAboutActor(resourceReference)) {
+                entity = this.actorHandler.getActor(resourceReference);
             }
 
             // if the entity is still null, then it's a 404: we don't know about it.
@@ -290,16 +290,14 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
     }
 
     /**
-     * Check that the given resource reference is a request about an existing user: we accept request about actor or
-     * person.
+     * Check that the given resource reference is a request about an actor.
      * @param resourceReference the reference to check
-     * @return {@code true} if the request is about an actor or a person and the uid is an existing user.
+     * @return {@code true} if the request is about an actor (person or service).
      */
-    private boolean isAboutExistingUser(ActivityPubResourceReference resourceReference)
+    private boolean isAboutActor(ActivityPubResourceReference resourceReference)
     {
         return ("person".equalsIgnoreCase(resourceReference.getEntityType())
-            || "actor".equalsIgnoreCase(resourceReference.getEntityType()))
-            && this.actorHandler.isExistingUser(resourceReference.getUuid());
+            || "service".equalsIgnoreCase(resourceReference.getEntityType()));
     }
 
     /**

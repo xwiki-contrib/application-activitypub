@@ -25,6 +25,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -70,8 +71,8 @@ class JSONResourceDescriptorTest
     {
         JSONResourceDescriptor actual = this.parser.parse(this.readResource("webfinger.json"));
         assertEquals(new JSONResourceDescriptor().setSubject("acct:test@xwiki.tst").setLinks(Arrays.asList(
-            new Link().setHref("http://link1.txt").setRel("http://link1rel.tst").setType("self"),
-            new Link().setHref("http://link2.txt").setRel("http://link2rel.tst").setType("self"))), actual);
+            new Link().setHref(URI.create("http://link1.txt")).setRel("http://link1rel.tst").setType("self"),
+            new Link().setHref(URI.create("http://link2.txt")).setRel("http://link2rel.tst").setType("self"))), actual);
     }
 
     @Test
@@ -79,8 +80,8 @@ class JSONResourceDescriptorTest
     {
         JSONResourceDescriptor actual = this.parser.parse(this.readResource("webfinger_unknown_field.json"));
         assertEquals(new JSONResourceDescriptor().setSubject("acct:test@xwiki.tst").setLinks(Arrays.asList(
-            new Link().setHref("http://link1.txt").setRel("http://link1rel.tst").setType("self"),
-            new Link().setHref("http://link2.txt").setRel("http://link2rel.tst").setType("self"))), actual);
+            new Link().setHref(URI.create("http://link1.txt")).setRel("http://link1rel.tst").setType("self"),
+            new Link().setHref(URI.create("http://link2.txt")).setRel("http://link2rel.tst").setType("self"))), actual);
     }
 
     @Test
@@ -110,8 +111,8 @@ class JSONResourceDescriptorTest
     {
         JSONResourceDescriptor actual = this.parser.parse(new StringReader(this.readResource("webfinger.json")));
         assertEquals(new JSONResourceDescriptor().setSubject("acct:test@xwiki.tst").setLinks(Arrays.asList(
-            new Link().setHref("http://link1.txt").setRel("http://link1rel.tst").setType("self"),
-            new Link().setHref("http://link2.txt").setRel("http://link2rel.tst").setType("self"))), actual);
+            new Link().setHref(URI.create("http://link1.txt")).setRel("http://link1rel.tst").setType("self"),
+            new Link().setHref(URI.create("http://link2.txt")).setRel("http://link2rel.tst").setType("self"))), actual);
     }
 
     @Test
@@ -137,16 +138,16 @@ class JSONResourceDescriptorTest
         InputStream inputStream = IOUtils.toInputStream(this.readResource("webfinger.json"), "UTF-8");
         JSONResourceDescriptor actual = this.parser.parse(inputStream);
         assertEquals(new JSONResourceDescriptor().setSubject("acct:test@xwiki.tst").setLinks(Arrays.asList(
-            new Link().setHref("http://link1.txt").setRel("http://link1rel.tst").setType("self"),
-            new Link().setHref("http://link2.txt").setRel("http://link2rel.tst").setType("self"))), actual);
+            new Link().setHref(URI.create("http://link1.txt")).setRel("http://link1rel.tst").setType("self"),
+            new Link().setHref(URI.create("http://link2.txt")).setRel("http://link2rel.tst").setType("self"))), actual);
     }
 
     @Test
     void serialize() throws Exception
     {
 
-        Link l1 = new Link().setRel("http://link1rel.tst").setHref("http://link1.txt").setType("self");
-        Link l2 = new Link().setRel("http://link2rel.tst").setHref("http://link2.txt").setType("self");
+        Link l1 = new Link().setRel("http://link1rel.tst").setHref(URI.create("http://link1.txt")).setType("self");
+        Link l2 = new Link().setRel("http://link2rel.tst").setHref(URI.create("http://link2.txt")).setType("self");
         JSONResourceDescriptor webfinger = new JSONResourceDescriptor()
                                                .setSubject("acct:test@xwiki.tst")
                                                .setLinks(Arrays.asList(l1, l2));

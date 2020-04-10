@@ -19,6 +19,8 @@
  */
 package org.xwiki.contrib.activitypub.webfinger.entities;
 
+import java.net.URI;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.xwiki.text.XWikiToStringBuilder;
@@ -39,7 +41,7 @@ public class Link
 
     private String type;
 
-    private String href;
+    private URI href;
 
     /**
      * Get the link rel value.
@@ -91,7 +93,7 @@ public class Link
      * @see <a href="https://tools.ietf.org/html/rfc7033#section-4.4.4.3.">Specification of the Link's href value</a>
      * @return the href.
      */
-    public String getHref()
+    public URI getHref()
     {
         return this.href;
     }
@@ -102,7 +104,7 @@ public class Link
      * @param href the href.
      * @return self to allow chained method calls (fluent API).
      */
-    public Link setHref(String href)
+    public Link setHref(URI href)
     {
         this.href = href;
         return this;

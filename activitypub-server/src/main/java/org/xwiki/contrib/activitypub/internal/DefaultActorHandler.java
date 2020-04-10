@@ -20,8 +20,10 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -33,8 +35,10 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.helper.HttpConnection;
 import org.jsoup.nodes.Document;
+import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
@@ -45,6 +49,7 @@ import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.SignatureService;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
@@ -118,6 +123,9 @@ public class DefaultActorHandler implements ActorHandler
     @Inject
     private EntityReferenceSerializer<String> entityReferenceSerializer;
 
+    @Inject
+    private Logger logger;
+
     private HttpConnection jsoupConnection;
 
     private HttpConnection getJsoupConnection()
@@ -138,7 +146,7 @@ public class DefaultActorHandler implements ActorHandler
     }
 
     @Override
-    public AbstractActor getCurrentActor() throws ActivityPubException
+    public Person getCurrentActor() throws ActivityPubException
     {
         return getActor(CurrentUserReference.INSTANCE);
     }
@@ -325,69 +333,108 @@ public class DefaultActorHandler implements ActorHandler
     }
 
     @Override
-    public AbstractActor getLocalActor(String username) throws ActivityPubException
+    public AbstractActor getActor(ActivityPubResourceReference resourceReference) throws ActivityPubException
     {
-        return this.getActor(this.xWikiUserBridge.resolveUser(username));
+        String entityType = resourceReference.getEntityType();
+        String uid = resourceReference.getUuid();
+        if ("person".equalsIgnoreCase(entityType)) {
+            UserReference userReference = this.xWikiUserBridge.resolveUser(uid);
+            return this.getActor(userReference);
+        } else if ("service".equalsIgnoreCase(entityType)) {
+            return this.getActor(new WikiReference(uid));
+        } else {
+            throw new ActivityPubException(
+                String.format("Only Person and Service are handled actor for now. The type [%s] is not supported yet.",
+                    entityType));
+        }
     }
 
     @Override
-    public AbstractActor getRemoteActor(String actorURL) throws ActivityPubException
+    public AbstractActor getActor(String username) throws ActivityPubException
     {
         AbstractActor ret = null;
-        if (actorURL.contains("@")) {
-            ret = this.getWebfingerActor(actorURL);
-        }
 
-        // if the webfinger resolution did not succeeded, try the next resolution
-        if (ret == null) {
+        try {
+            URI actorURI = new URI(username);
 
-            ret = this.getRemoteActor(actorURL, true);
+            // A URI with a scheme (absolute) or containing a @ cannot be an XWiki identifier
+            if (actorURI.isAbsolute() || username.contains("@")) {
+                // FIXME: we need to ensure to discard remote Actor info after some time for it to be efficient.
+                ret = this.activityPubStorage.retrieveEntity(actorURI);
+                boolean isAlreadyStored = (ret != null);
+
+                // if it is not stored, try to resolve it as a WebFinger
+                if (ret == null) {
+                    ret = this.getWebfingerActor(username);
+                }
+
+                // if WebFinger didn't worked, try to resolve it as AP URL
+                if (ret == null && actorURI.isAbsolute()) {
+                    ret = this.getRemoteActor(actorURI);
+                }
+
+                // if AP URL didn't work, try it as an XWiki URL
+                if (ret == null && actorURI.isAbsolute()) {
+                    URI xWikiActorURI = this.resolveXWikiActorURL(actorURI.toURL());
+                    if (xWikiActorURI != null) {
+                        ret = this.getRemoteActor(xWikiActorURI);
+                    }
+                }
+
+                // if we managed to find an actor and it wasn't stored yet we store it for speeding further resolutions.
+                if (ret != null && !isAlreadyStored) {
+                    this.activityPubStorage.storeEntity(ret);
+                }
+            } else {
+                // the given argument might be an XWiki identifier
+                try {
+                    ret = this.getActor(this.xWikiUserBridge.resolveUser(username));
+                } catch (ActivityPubException ex) {
+                    this.logger.warn("Cannot find the asked user [{}].", username, ex);
+                }
+            }
+
+        } catch (URISyntaxException|IOException e) {
+            throw new ActivityPubException(
+                String.format("Error while loading information for actor [%s].", username), e);
         }
         return ret;
     }
 
-    private AbstractActor getWebfingerActor(String actorURL) throws ActivityPubException
+    private AbstractActor getWebfingerActor(String webfingerResource) throws IOException
     {
         try {
-            JSONResourceDescriptor jrd = this.webfingerClient.get(actorURL);
-            String href =
+            JSONResourceDescriptor jrd = this.webfingerClient.get(webfingerResource);
+            URI href =
                 jrd.getLinks().stream().filter(it -> Objects.equals(it.getRel(), "self")).findFirst().map(Link::getHref)
                     .orElse(null);
-            return this.getRemoteActor(href, false);
+            return this.getRemoteActor(href);
         } catch (WebfingerException e) {
-            throw new ActivityPubException(String.format("Error while querying the webfinger actor [%s]", actorURL), e);
+            logger.debug("Error when querying the WebFinger resource from [{}].", webfingerResource, e);
         }
+        return null;
     }
 
     /**
      * Implements {@see getRemoteActor} but tries to use actorURL as a XWiki url profile URL if the standard activitypub
      * request fails. 
      *
-     * @param actorURL the URL of the remote actor.
-     * @param fallback Specify if the url should be tried an a XWiki user profile URL in case of failure.
+     * @param actorURI the URI of the remote actor.
      * @return an instance of the actor.
-     * @throws ActivityPubException in case of error while loading and parsing the request.
+     * @throws IOException in case of error while loading and parsing the request.
      */
-    private AbstractActor getRemoteActor(String actorURL, boolean fallback) throws ActivityPubException
+    private AbstractActor getRemoteActor(URI actorURI) throws IOException
     {
+        HttpMethod httpMethod = this.activityPubClient.get(actorURI);
         try {
-            URI uri = new URI(actorURL);
-            HttpMethod httpMethod = this.activityPubClient.get(uri);
-            try {
-                this.activityPubClient.checkAnswer(httpMethod);
-                return this.jsonParser.parse(httpMethod.getResponseBodyAsStream());
-            } finally {
-                httpMethod.releaseConnection();
-            }
-        } catch (ActivityPubException | URISyntaxException | IOException e) {
-            if (fallback) {
-                String xWikiActorURL = this.resolveXWikiActorURL(actorURL);
-                return this.getRemoteActor(xWikiActorURL, false);
-            } else {
-                throw new ActivityPubException(
-                    String.format("Error when trying to retrieve the remote actor from [%s]", actorURL), e);
-            }
+            this.activityPubClient.checkAnswer(httpMethod);
+            return this.jsonParser.parse(httpMethod.getResponseBodyAsStream());
+        } catch (ActivityPubException e) {
+            this.logger.debug("Error when querying the ActivityPub actor from [{}].", actorURI, e);
+        } finally {
+            httpMethod.releaseConnection();
         }
+        return null;
     }
 
     /**
@@ -395,18 +442,16 @@ public class DefaultActorHandler implements ActorHandler
      *
      * @param xWikiActorURL The user's XWiki profile url.
      * @return The activitpub endpoint of the user.
-     * @throws ActivityPubException In case of error during the query to the user profile url.
      */
-    private String resolveXWikiActorURL(String xWikiActorURL) throws ActivityPubException
+    private URI resolveXWikiActorURL(URL xWikiActorURL) throws IOException, URISyntaxException
     {
-        try {
-            Document doc = getJsoupConnection().url(xWikiActorURL).get();
-            String userName = doc.selectFirst("html").attr("data-xwiki-document");
-            URI uri = new URI(xWikiActorURL);
-            return String.format("%s://%s/xwiki/activitypub/Person/%s", uri.getScheme(), uri.getAuthority(), userName);
-        } catch (Exception e) {
-            throw new ActivityPubException(
-                String.format("Error when trying to resolve the XWiki actor from [%s]", xWikiActorURL), e);
+        Document doc = getJsoupConnection().url(xWikiActorURL).get();
+        String userName = doc.selectFirst("html").attr("data-xwiki-document");
+        if (StringUtils.isNotBlank(userName)) {
+            return new URI(String.format("%s://%s/xwiki/activitypub/Person/%s",
+                xWikiActorURL.getProtocol(), xWikiActorURL.getAuthority(), userName));
+        } else {
+            return null;
         }
     }
 }

@@ -71,20 +71,50 @@
   #end
   #suggestInput($parameters 'apPicker_displayOptions')
 #end
-#macro(activitypubDashboard $isMyProfile)
+## Display the ActivityPub Dashboard for the actor given in parameter.
+#macro(activitypubDashboard $actor)
 #set ($discard = $xwiki.jsx.use('ActivityPub.UserDashboard'))
 #set ($discard = $xwiki.ssx.use('ActivityPub.UserDashboard'))
-#if (!$services.activitypub.isStorageReady())
-    {{warning}}
-    $services.localization.render('activitypub.storage.needrestart')
-    {{/warning}}
-#elseif ($isMyProfile)
-  #set ($userId = $services.model.resolveDocument($xcontext.user))
-  #if (!$services.webfinger.isWebfingerConfigured())
-    {{warning}}
-    $services.localization.render('activitypub.webfinger.notconfigured')
-    {{/warning}}
+#set ($canSeeDashboard = ("$!actor" != "" &amp;&amp; $services.activitypub.currentUserCanActFor($actor)))
+
+#if ("$!actor" == "")
+{{warning}}
+You can only access this macro if an actor is defined.
+{{/warning}}
+#elseif (!$services.activitypub.isStorageReady())
+{{warning}}
+$services.localization.render('activitypub.storage.needrestart')
+{{/warning}}
+#else
+  #if ($services.webfinger.isWebfingerConfigured())
+    #set ($userIdentifier = $services.webfinger.getWebfingerId($actor))
+  #else
+    #set ($userIdentifier = $actor.id)
   #end
+
+  #if ($actor.type == "Person")
+    #set($dashboardTitle = "Dashboard for user " + $actor.name)
+  #else
+    #set($dashboardTitle = "Dashboard for wiki " + $actor.name)
+  #end
+  {{html clean='false'}}
+    &lt;h2&gt;$dashboardTitle&lt;/h2&gt;
+    &lt;span class="noitems"&gt;$services.localization.render('activitypub.user.identifier.tip')&lt;/span&gt;
+    &lt;div class="identifier-group"&gt;
+      &lt;span class="form-control" id="user-identifier"&gt;$userIdentifier&lt;/span&gt;
+      &lt;div class="btn btn-default" id="ap-button-paste" title="$services.localization.render('activitypub.user.identifier.copyButton')"&gt;
+        $services.icon.renderHTML('paste')
+      &lt;/div&gt;
+    &lt;/div&gt;
+  {{/html}}
+
+  #if ($canSeeDashboard)
+  #if (!$services.webfinger.isWebfingerConfigured())
+{{warning}}
+$services.localization.render('activitypub.webfinger.notconfigured')
+{{/warning}}
+  #end
+
   {{html clean='false'}}
   &lt;ul class="nav nav-tabs" role="tablist"&gt;
     &lt;li role="presentation" class="active"&gt;
@@ -142,49 +172,27 @@
     &lt;/div&gt;
   &lt;/div&gt;
   {{/html}}
-  {{html clean="false" wiki="true"}}
-    &lt;div id="linkActors"&gt;
-      #listFollowing($userId)
-      #listFollowers($userId)
-    &lt;/div&gt;
-  {{/html}}
-#else
-  #set ($userId = $doc.documentReference)
-  #if ($services.webfinger.isWebfingerConfigured())
-    #set ($userIdentifier = $services.webfinger.getWebfingerId($userId))
-  #else
-    #set ($userIdentifier = $services.activitypub.getActorURLFromDocumentReference($userId))
   #end
-  {{html clean='false'}}
-    &lt;h1&gt;$services.localization.render('activitypub.user.identifier')&lt;/h1&gt;
-    &lt;span class="noitems"&gt;$services.localization.render('activitypub.user.identifier.tip')&lt;/span&gt;
-    &lt;div class="identifier-group"&gt;
-      &lt;span class="form-control" id="user-identifier"&gt;$userIdentifier&lt;/span&gt;
-      &lt;div class="btn btn-default" id="ap-button-paste" title="$services.localization.render('activitypub.user.identifier.copyButton')"&gt;
-        $services.icon.renderHTML('paste')
-      &lt;/div&gt;
-    &lt;/div&gt;
-  {{/html}}
   {{html clean="false" wiki="true"}}
     &lt;div id="linkActors"&gt;
-      #listFollowing($userId)
-      #listFollowers($userId)
+      #listFollowing($actor)
+      #listFollowers($actor)
     &lt;/div&gt;
   {{/html}}
 #end
 #end
 
-#macro(listFollowing $userId)
+#macro(listFollowing $actor)
 {{html clean="false"}}
 &lt;div&gt;
     &lt;h1&gt;$services.localization.render('activitypub.following.title')&lt;/h1&gt;
-#set ($following = $services.activitypub.following($userId))
+#set ($following = $services.activitypub.following($actor))
 #if ($following.empty)
   &lt;p&gt;$services.localization.render('activitypub.following.empty')&lt;/p&gt;
 #else
     &lt;ul&gt;
-  #foreach ($actor in $following)
-    &lt;li&gt;$actor.preferredUsername@$actor.id.getHost()&lt;/li&gt;
+  #foreach ($factor in $following)
+    &lt;li&gt;$factor.preferredUsername@$factor.id.getHost()&lt;/li&gt;
   #end
     &lt;/ul&gt;
 #end
@@ -192,17 +200,17 @@
 {{/html}}
 #end
 
-#macro (listFollowers $userId)
+#macro (listFollowers $actor)
 {{html clean="false"}}
 &lt;div&gt;
   &lt;h1&gt;$services.localization.render('activitypub.followers.title')&lt;/h1&gt;
-  #set ($followers = $services.activitypub.followers($userId))
+  #set ($followers = $services.activitypub.followers($actor))
   #if ($followers.empty)
   &lt;p&gt;$services.localization.render('activitypub.followers.empty')&lt;/p&gt;
   #else
   &lt;ul&gt;
-    #foreach ($actor in $followers)
-     &lt;li&gt;$actor.preferredUsername@$actor.id.getHost()&lt;/li&gt;
+    #foreach ($factor in $followers)
+     &lt;li&gt;$factor.preferredUsername@$factor.id.getHost()&lt;/li&gt;
     #end
   &lt;/ul&gt;
   #end
@@ -490,7 +498,6 @@
 }
 
 .identifier-group .btn {
-  float: left;
   margin: 0;
   width: 10%;
   min-width: 2.5em;
@@ -650,8 +657,12 @@
     <property>
       <content>{{include reference="ActivityPub.UserDashboard"/}}
 {{velocity}}
-#set ($isCurrentUser = $services.model.resolveDocument($xcontext.user) == $doc.documentReference)
-#activitypubDashboard($isCurrentUser)
+#if (!$isGuest)
+  #set($actor = $services.activitypub.getActor(""))
+#else
+  #set($actor = $services.activitypub.getActor($doc.documentReference))
+#end
+#activitypubDashboard($actor)
 {{/velocity}}</content>
     </property>
     <property>

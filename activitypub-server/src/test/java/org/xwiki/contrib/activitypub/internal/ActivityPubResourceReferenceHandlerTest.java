@@ -186,10 +186,9 @@ public class ActivityPubResourceReferenceHandlerTest
     @Test
     void handleGetNotStoredExistingActor() throws Exception
     {
-        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("actor", "Foo");
-        when(actorHandler.isExistingUser("Foo")).thenReturn(true);
+        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("person", "Foo");
         Person person = new Person().setPreferredUsername("Foo");
-        when(actorHandler.getLocalActor("Foo")).thenReturn(person);
+        when(actorHandler.getActor(resourceReference)).thenReturn(person);
         when(servletRequest.getMethod()).thenReturn("GET");
         this.handler.handle(resourceReference, this.handlerChain);
         this.verifyResponse(person);

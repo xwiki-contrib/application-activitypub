@@ -30,9 +30,9 @@ import javax.inject.Singleton;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerClient;
-import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.script.service.ScriptService;
 
 import com.xpn.xwiki.XWikiContext;
@@ -94,14 +94,14 @@ public class WebfingerScriptService implements ScriptService
     }
 
     /**
-     * Return the webfinger id of the user on the current server.
-     * @param user the user name.
+     * Return the webfinger id of the actor on the current server.
+     * @param actor the AP actor for which to retrieve the ID
      * @return The webfinger id.
      */
-    public String getWebfingerId(DocumentReference user)
+    public String getWebfingerId(AbstractActor actor)
     {
         try {
-            String userLogin = this.userBridge.getUserLogin(this.userBridge.resolveDocumentReference(user));
+            String userLogin = actor.getPreferredUsername();
             XWikiContext context = this.contextProvider.get();
             URL url = context.getURLFactory().getServerURL(context);
             int port = url.getPort();

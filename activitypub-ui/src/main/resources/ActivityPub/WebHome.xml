@@ -39,12 +39,11 @@
   <content>{{include reference="ActivityPub.UserDashboard"/}}
 {{velocity}}
 #if (!$isGuest)
-  #activitypubDashboard(true)
+  #set($actor = $services.activitypub.getActor(""))
 #else
-  {{warning}}
-    $services.localization.render('activitypub.dashboard.guest')
-  {{/warning}}
+  #set($actor = $services.activitypub.getCurrentWikiActor())
 #end
+#activitypubDashboard($actor)
 {{/velocity}}</content>
   <object>
     <name>ActivityPub.WebHome</name>

@@ -21,6 +21,7 @@ package org.xwiki.contrib.activitypub.internal;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -33,6 +34,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mock;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
@@ -50,12 +52,15 @@ import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.PublicKey;
 import org.xwiki.contrib.activitypub.entities.Service;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerClient;
+import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 import org.xwiki.contrib.activitypub.webfinger.entities.Link;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.resource.ResourceReferenceSerializer;
+import org.xwiki.test.LogLevel;
+import org.xwiki.test.junit5.LogCaptureExtension;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
@@ -137,6 +142,9 @@ public class DefaultActorHandlerTest
 
     @Mock
     private UserReference barUserReference;
+
+    @RegisterExtension
+    LogCaptureExtension logCapture = new LogCaptureExtension(LogLevel.WARN);
 
     private URI fooUserURI;
 
@@ -307,7 +315,7 @@ public class DefaultActorHandlerTest
     }
 
     @Test
-    public void getLocalActor() throws ActivityPubException, URISyntaxException
+    public void getLocalActor() throws Exception
     {
         when(this.signatureService.getPublicKeyPEM(any())).thenReturn("...");
         PublicKey publicKey = new PublicKey().setPublicKeyPem("...")
@@ -330,29 +338,25 @@ public class DefaultActorHandlerTest
             .setName("Foo Foo")
             .setId(new URI(GENERIC_ACTOR_ID));
 
-        assertEquals(expectedActor, this.actorHandler.getLocalActor("Foo"));
-        assertEquals(expectedActor, this.actorHandler.getLocalActor("XWiki.Foo"));
+        assertEquals(expectedActor, this.actorHandler.getActor("Foo"));
+        assertEquals(expectedActor, this.actorHandler.getActor("XWiki.Foo"));
+        assertNull(actorHandler.getActor("XWiki.Bar"));
+        assertNull(actorHandler.getActor("Bar"));
 
-        ActivityPubException activityPubException = assertThrows(ActivityPubException.class, () -> {
-            actorHandler.getLocalActor("XWiki.Bar");
-        });
-        assertEquals("Cannot find any user with reference [barUserReference]", activityPubException.getMessage());
-
-        activityPubException = assertThrows(ActivityPubException.class, () -> {
-            actorHandler.getLocalActor("Bar");
-        });
-        assertEquals("Cannot find any user with reference [barUserReference]", activityPubException.getMessage());
+        assertEquals("Cannot find the asked user [XWiki.Bar].", logCapture.getMessage(0));
+        assertEquals("Cannot find the asked user [Bar].", logCapture.getMessage(1));
     }
 
     @Test
     public void getRemoteActor() throws Exception
     {
+        when(this.webfingerClient.get(any())).thenThrow(new WebfingerException("Cannot find resource", 404));
         Person person = new Person().setPreferredUsername("Foobar");
         String remoteActorUrl = "http://www.xwiki.org/xwiki/activitypub/Person/Foobar";
         GetMethod getMethod = mock(GetMethod.class);
         when(this.activityPubClient.get(new URI(remoteActorUrl))).thenReturn(getMethod);
         when(this.jsonParser.parse(getMethod.getResponseBodyAsStream())).thenReturn(person);
-        assertSame(person, this.actorHandler.getRemoteActor(remoteActorUrl));
+        assertSame(person, this.actorHandler.getActor(remoteActorUrl));
     }
 
     @Test
@@ -360,28 +364,29 @@ public class DefaultActorHandlerTest
     {
         JSONResourceDescriptor jrd = mock(JSONResourceDescriptor.class);
         when(jrd.getLinks())
-            .thenReturn(Arrays.asList(new Link().setRel("self").setHref("http://server.com/user/test")));
+            .thenReturn(Arrays.asList(new Link().setRel("self").setHref(URI.create("http://server.com/user/test"))));
         when(this.activityPubClient.get(any())).thenReturn(mock(HttpMethod.class));
         when(this.webfingerClient.get("test@server.com")).thenReturn(jrd);
-        this.actorHandler.getRemoteActor("test@server.com");
+        this.actorHandler.getActor("test@server.com");
         verify(this.webfingerClient).get(eq("test@server.com"));
         verify(this.activityPubClient).get(new URI("http://server.com/user/test"));
     }
 
     @Test
-    public void getRemoteActorWithFallback() throws Exception
+    public void getRemoteActorXWikiProfile() throws Exception
     {
         Person person = new Person().setPreferredUsername("Foobar");
         String remoteProfileUrl = "http://www.xwiki.org/xwiki/view/bin/XWiki/Foobar";
         String remoteActorUrl = "http://www.xwiki.org/xwiki/activitypub/Person/XWiki.Foobar";
 
+        when(this.webfingerClient.get(any())).thenThrow(new WebfingerException("Cannot find resource", 404));
         GetMethod getMethodProfile = mock(GetMethod.class);
         when(this.activityPubClient.get(new URI(remoteProfileUrl))).thenReturn(getMethodProfile);
         doThrow(new ActivityPubException("Check issue")).when(this.activityPubClient).checkAnswer(getMethodProfile);
 
         HttpConnection jsoupConnection = mock(HttpConnection.class);
         this.actorHandler.setJsoupConnection(jsoupConnection);
-        when(jsoupConnection.url(remoteProfileUrl)).thenReturn(jsoupConnection);
+        when(jsoupConnection.url(new URL(remoteProfileUrl))).thenReturn(jsoupConnection);
         Document document = mock(Document.class);
         when(jsoupConnection.get()).thenReturn(document);
         Element element = mock(Element.class);
@@ -391,8 +396,8 @@ public class DefaultActorHandlerTest
         GetMethod getMethodActor = mock(GetMethod.class);
         when(this.activityPubClient.get(new URI(remoteActorUrl))).thenReturn(getMethodActor);
         when(this.jsonParser.parse(getMethodActor.getResponseBodyAsStream())).thenReturn(person);
-        assertSame(person, this.actorHandler.getRemoteActor(remoteProfileUrl));
-        assertSame(person, this.actorHandler.getRemoteActor(remoteActorUrl));
+        assertSame(person, this.actorHandler.getActor(remoteProfileUrl));
+        assertSame(person, this.actorHandler.getActor(remoteActorUrl));
     }
 
     @Test

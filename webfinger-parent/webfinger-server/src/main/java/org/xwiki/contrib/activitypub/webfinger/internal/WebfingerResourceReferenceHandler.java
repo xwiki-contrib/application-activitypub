@@ -222,7 +222,7 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
     {
         response.setContentType("application/jrd+json");
 
-        String xWikiUserURI = this.webfingerService.resolveXWikiUserUrl(user);
+        URI xWikiUserURI = this.webfingerService.resolveXWikiUserUrl(user);
         Link xWikiUserLink = new Link()
                                  .setRel("http://webfinger.net/rel/profile-page")
                                  .setType("text/html")
@@ -231,7 +231,7 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
         Link apUserLink = new Link()
                               .setRel("self")
                               .setType("application/activity+json")
-                              .setHref(apUserURI.toASCIIString());
+                              .setHref(apUserURI);
 
         List<Link> links = this.filterLinks(rels, xWikiUserLink, apUserLink);
 

@@ -19,6 +19,8 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
+import java.net.URL;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
@@ -148,14 +150,14 @@ public class XWikiUserBridge
      * Retrieve the URL to the profile of an user.
      *
      * @param userReference the user for which to retrieve the profile URL.
-     * @return an absolute URL as a string.
+     * @return an absolute URL
      * @throws Exception in case of error when retrieving the URL.
      */
-    public String getUserProfileURL(UserReference userReference) throws Exception
+    public URL getUserProfileURL(UserReference userReference) throws Exception
     {
         DocumentReference documentReference = this.getDocumentReference(userReference);
-        return ((XWikiDocument) this.documentAccess.getDocumentInstance(documentReference))
-                   .getExternalURL("view", this.contextProvider.get());
+        return new URL(((XWikiDocument) this.documentAccess.getDocumentInstance(documentReference))
+                   .getExternalURL("view", this.contextProvider.get()));
     }
 
     /**

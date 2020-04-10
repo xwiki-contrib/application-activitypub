@@ -48,5 +48,5 @@ public interface WebfingerService
      * @param user the user reference.
      * @return the url of the activitypub resource of the user
      */
-    String resolveXWikiUserUrl(UserReference user) throws WebfingerException;
+    URI resolveXWikiUserUrl(UserReference user) throws WebfingerException;
 }

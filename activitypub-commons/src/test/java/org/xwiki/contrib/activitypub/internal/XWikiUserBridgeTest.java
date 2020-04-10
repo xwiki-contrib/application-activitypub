@@ -19,6 +19,8 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
+import java.net.URL;
+
 import javax.inject.Named;
 import javax.inject.Provider;
 
@@ -149,6 +151,6 @@ public class XWikiUserBridgeTest
         when(this.contextProvider.get()).thenReturn(xWikiContext);
         when(this.documentAccess.getDocumentInstance(documentReference)).thenReturn(xWikiDocument);
         when(xWikiDocument.getExternalURL("view", xWikiContext)).thenReturn("http://foo");
-        assertEquals("http://foo", this.xWikiUserBridge.getUserProfileURL(userReference));
+        assertEquals(new URL("http://foo"), this.xWikiUserBridge.getUserProfileURL(userReference));
     }
 }

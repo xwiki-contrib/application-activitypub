@@ -195,7 +195,8 @@ public class WebfingerResourceReferenceHandlerTest
         verify(this.httpServletResponse).setContentType("application/jrd+json");
         Link link1 =
             new Link().setRel("http://webfinger.net/rel/profile-page").setType("text/html").setHref(null);
-        Link link2 = new Link().setRel("self").setType("application/activity+json").setHref("https://xwiki.tst");
+        Link link2 = new Link().setRel("self").setType("application/activity+json")
+            .setHref(URI.create("https://xwiki.tst"));
         JSONResourceDescriptor expectedJSONResourceDescriptor = new JSONResourceDescriptor()
                                                 .setSubject("acct:XWiki.Admin@xwiki.tst")
                                                 .setLinks(asList(link1, link2));
@@ -220,7 +221,8 @@ public class WebfingerResourceReferenceHandlerTest
         verify(this.httpServletResponse).setContentType("application/jrd+json");
         Link link1 =
             new Link().setRel("http://webfinger.net/rel/profile-page").setType("text/html").setHref(null);
-        Link link2 = new Link().setRel("self").setType("application/activity+json").setHref("https://xwiki.tst");
+        Link link2 = new Link().setRel("self").setType("application/activity+json")
+            .setHref(URI.create("https://xwiki.tst"));
         JSONResourceDescriptor expectedJSONResourceDescriptor = new JSONResourceDescriptor()
                                                                     .setSubject("acct:XWiki.Admin@xwiki.tst")
                                                                     .setLinks(asList(link1, link2));
@@ -243,7 +245,8 @@ public class WebfingerResourceReferenceHandlerTest
         this.handler.handle(reference, chain);
         verify(this.httpServletResponse, times(0)).setStatus(anyInt());
         verify(this.httpServletResponse).setContentType("application/jrd+json");
-        Link link = new Link().setRel("self").setType("application/activity+json").setHref("https://xwiki.tst");
+        Link link = new Link().setRel("self").setType("application/activity+json")
+            .setHref(URI.create("https://xwiki.tst"));
         JSONResourceDescriptor expectedJSONResourceDescriptor = new JSONResourceDescriptor()
                                                 .setSubject("acct:XWiki.Admin@xwiki.tst")
                                                 .setLinks(singletonList(link));

@@ -67,10 +67,10 @@ public class DefaultWebfingerService implements WebfingerService
     }
 
     @Override
-    public String resolveXWikiUserUrl(UserReference userReference) throws WebfingerException
+    public URI resolveXWikiUserUrl(UserReference userReference) throws WebfingerException
     {
         try {
-            return this.xWikiUserBridge.getUserProfileURL(userReference);
+            return this.xWikiUserBridge.getUserProfileURL(userReference).toURI();
         } catch (Exception e) {
             throw new WebfingerException(String.format("Error while getting profile URL for user [%s]", userReference),
                 e);

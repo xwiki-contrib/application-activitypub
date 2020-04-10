@@ -95,8 +95,8 @@ class ActivityPubScriptServiceTest
     @Test
     void follow() throws Exception
     {
-        AbstractActor remoteActor = mock(AbstractActor.class);
-        AbstractActor currentActor = mock(AbstractActor.class);
+        Person remoteActor = mock(Person.class);
+        Person currentActor = mock(Person.class);
 
         ActivityPubObjectReference actorReference = mock(ActivityPubObjectReference.class);
         when(remoteActor.getReference()).thenReturn(actorReference);
@@ -105,7 +105,7 @@ class ActivityPubScriptServiceTest
         AbstractActor targetActor = mock(AbstractActor.class);
         ActivityPubObjectReference targetActorReference = mock(ActivityPubObjectReference.class);
         when(targetActor.getReference()).thenReturn(targetActorReference);
-        when(this.actorHandler.getRemoteActor("test")).thenReturn(targetActor);
+        when(this.actorHandler.getActor("test")).thenReturn(targetActor);
 
         when(this.activityPubClient.postInbox(any(), any())).thenReturn(mock(HttpMethod.class));
         FollowResult actual = this.scriptService.follow(remoteActor);
@@ -119,7 +119,7 @@ class ActivityPubScriptServiceTest
     @Test
     void followYourself() throws Exception
     {
-        AbstractActor actor = mock(AbstractActor.class);
+        Person actor = mock(Person.class);
         ActivityPubObjectReference actorReference = mock(ActivityPubObjectReference.class);
         when(actor.getReference()).thenReturn(actorReference);
         when(this.actorHandler.getCurrentActor()).thenReturn(actor);
@@ -127,7 +127,7 @@ class ActivityPubScriptServiceTest
         AbstractActor targetActor = mock(AbstractActor.class);
         ActivityPubObjectReference targetActorReference = mock(ActivityPubObjectReference.class);
         when(targetActor.getReference()).thenReturn(targetActorReference);
-        when(this.actorHandler.getRemoteActor("test")).thenReturn(targetActor);
+        when(this.actorHandler.getActor("test")).thenReturn(targetActor);
 
         when(this.activityPubClient.postInbox(any(), any())).thenReturn(mock(HttpMethod.class));
         FollowResult actual = this.scriptService.follow(actor);
@@ -141,8 +141,8 @@ class ActivityPubScriptServiceTest
     @Test
     void followAlreadyFollowing() throws Exception
     {
-        AbstractActor actor = mock(AbstractActor.class);
-        AbstractActor current = mock(AbstractActor.class);
+        Person actor = mock(Person.class);
+        Person current = mock(Person.class);
         ActivityPubObjectReference mock = mock(ActivityPubObjectReference.class);
         when(current.getFollowing()).thenReturn(mock);
         OrderedCollection orderedCollection = mock(OrderedCollection.class);
@@ -161,7 +161,7 @@ class ActivityPubScriptServiceTest
         AbstractActor targetActor = mock(AbstractActor.class);
         ActivityPubObjectReference targetActorReference = mock(ActivityPubObjectReference.class);
         when(targetActor.getReference()).thenReturn(targetActorReference);
-        when(this.actorHandler.getRemoteActor("test")).thenReturn(targetActor);
+        when(this.actorHandler.getActor("test")).thenReturn(targetActor);
 
         when(this.activityPubClient.postInbox(any(), any())).thenReturn(mock(HttpMethod.class));
         FollowResult actual = this.scriptService.follow(actor);
@@ -178,9 +178,8 @@ class ActivityPubScriptServiceTest
         AbstractActor actor = mock(AbstractActor.class);
         ActivityPubObjectReference apor = mock(ActivityPubObjectReference.class);
         when(actor.getFollowing()).thenReturn(apor);
-        when(this.actorHandler.getLocalActor("User.Test")).thenReturn(actor);
         when(this.activityPubObjectReferenceResolver.resolveReference(apor)).thenReturn(mock(OrderedCollection.class));
-        List<AbstractActor> res = this.scriptService.following("User.Test");
+        List<AbstractActor> res = this.scriptService.following(actor);
         assertTrue(res.isEmpty());
     }
 
@@ -190,17 +189,17 @@ class ActivityPubScriptServiceTest
         AbstractActor aa = mock(AbstractActor.class);
         ActivityPubObjectReference apor = mock(ActivityPubObjectReference.class);
         when(aa.getFollowers()).thenReturn(apor);
-        when(this.actorHandler.getLocalActor("User.Test")).thenReturn(aa);
+        when(this.actorHandler.getActor("User.Test")).thenReturn(aa);
         when(this.activityPubObjectReferenceResolver.resolveReference(apor)).thenReturn(mock(
             OrderedCollection.class));
-        List<AbstractActor> res = this.scriptService.followers("User.Test");
+        List<AbstractActor> res = this.scriptService.followers(aa);
         assertTrue(res.isEmpty());
     }
 
     @Test
     public void publishNoteNoTarget() throws Exception
     {
-        AbstractActor actor = mock(AbstractActor.class);
+        Person actor = mock(Person.class);
         ActivityPubObjectReference actorReference = mock(ActivityPubObjectReference.class);
         when(actor.getReference()).thenReturn(actorReference);
         when(this.actorHandler.getCurrentActor()).thenReturn(actor);
@@ -231,7 +230,7 @@ class ActivityPubScriptServiceTest
     @Test
     public void publishNoteFollowersAndActor() throws Exception
     {
-        AbstractActor actor = mock(AbstractActor.class);
+        Person actor = mock(Person.class);
         ActivityPubObjectReference actorReference = mock(ActivityPubObjectReference.class);
         when(actor.getReference()).thenReturn(actorReference);
 
@@ -243,7 +242,7 @@ class ActivityPubScriptServiceTest
         AbstractActor targetActor = mock(AbstractActor.class);
         ProxyActor targetProxyActor = mock(ProxyActor.class);
         when(targetActor.getProxyActor()).thenReturn(targetProxyActor);
-        when(actorHandler.getRemoteActor("@targetActor")).thenReturn(targetActor);
+        when(actorHandler.getActor("@targetActor")).thenReturn(targetActor);
 
         String noteContent = "some content";
         this.scriptService.publishNote(Arrays.asList("followers", "@targetActor"), noteContent);

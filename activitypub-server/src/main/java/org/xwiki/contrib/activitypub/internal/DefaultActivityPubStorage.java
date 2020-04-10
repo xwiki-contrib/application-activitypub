@@ -178,6 +178,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     }
 
     @Override
+    //FIXME: If the informations are about an actor who is not local, we should refresh them after some time.
     public <T extends ActivityPubObject> T retrieveEntity(URI id) throws ActivityPubException
     {
         try {

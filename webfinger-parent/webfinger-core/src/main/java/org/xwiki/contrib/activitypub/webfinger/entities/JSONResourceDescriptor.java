@@ -19,6 +19,7 @@
  */
 package org.xwiki.contrib.activitypub.webfinger.entities;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -95,7 +96,7 @@ public class JSONResourceDescriptor
      * @return the list of href of the links.
      */
     @JsonProperty
-    public List<String> getAliases()
+    public List<URI> getAliases()
     {
         return this.links.stream().map(Link::getHref).collect(Collectors.toList());
     }

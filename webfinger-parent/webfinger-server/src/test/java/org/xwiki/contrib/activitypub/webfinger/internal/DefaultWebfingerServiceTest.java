@@ -21,6 +21,7 @@ package org.xwiki.contrib.activitypub.webfinger.internal;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 
 import org.junit.jupiter.api.Test;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
@@ -83,8 +84,8 @@ class DefaultWebfingerServiceTest
     void resolveXWikiUserUrl() throws Exception
     {
         UserReference mock = mock(UserReference.class);
-        when(this.xWikiUserBridge.getUserProfileURL(mock)).thenReturn("user@domain");
-        String actual = this.client.resolveXWikiUserUrl(mock);
-        assertEquals("user@domain", actual);
+        when(this.xWikiUserBridge.getUserProfileURL(mock)).thenReturn(new URL("http://user/profile"));
+        URI actual = this.client.resolveXWikiUserUrl(mock);
+        assertEquals(URI.create("http://user/profile"), actual);
     }
 }

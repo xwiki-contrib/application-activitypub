@@ -164,6 +164,48 @@
                     "code": "java.class.removed",
                     "old": "interface org.xwiki.contrib.activitypub.ActorHandler",
                     "justification": "Not breaking: class has not been removed but moved to activitypub-core."
+                  },
+                  {
+                    "code": "java.method.returnTypeTypeParametersChanged",
+                    "old": "method java.util.List<java.lang.String> org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor::getAliases()",
+                    "new": "method java.util.List<java.net.URI> org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor::getAliases()",
+                    "justification": "Not breaking: Unstable API."
+                  },
+                  {
+                    "code": "java.method.returnTypeChanged",
+                    "old": "method java.lang.String org.xwiki.contrib.activitypub.webfinger.entities.Link::getHref()",
+                    "new": "method java.net.URI org.xwiki.contrib.activitypub.webfinger.entities.Link::getHref()",
+                    "justification": "Not breaking: Unstable API."
+                  },
+                  {
+                    "code": "java.method.parameterTypeChanged",
+                    "old": "parameter org.xwiki.contrib.activitypub.webfinger.entities.Link org.xwiki.contrib.activitypub.webfinger.entities.Link::setHref(===java.lang.String===)",
+                    "new": "parameter org.xwiki.contrib.activitypub.webfinger.entities.Link org.xwiki.contrib.activitypub.webfinger.entities.Link::setHref(===java.net.URI===)",
+                    "justification": "Not breaking: Unstable API."
+                  },
+                  {
+                    "code": "java.method.returnTypeChanged",
+                    "old": "method java.lang.String org.xwiki.contrib.activitypub.webfinger.WebfingerService::resolveXWikiUserUrl(org.xwiki.user.UserReference) throws org.xwiki.contrib.activitypub.webfinger.WebfingerException",
+                    "new": "method java.net.URI org.xwiki.contrib.activitypub.webfinger.WebfingerService::resolveXWikiUserUrl(org.xwiki.user.UserReference) throws org.xwiki.contrib.activitypub.webfinger.WebfingerException",
+                    "justification": "Not breaking: Unstable API."
+                  },
+                  {
+                    "code": "java.method.parameterTypeChanged",
+                    "old": "parameter java.lang.String org.xwiki.contrib.activitypub.webfinger.script.WebfingerScriptService::getWebfingerId(===org.xwiki.model.reference.DocumentReference===)",
+                    "new": "parameter java.lang.String org.xwiki.contrib.activitypub.webfinger.script.WebfingerScriptService::getWebfingerId(===org.xwiki.contrib.activitypub.entities.AbstractActor===)",
+                    "justification": "Not breaking: Unstable API."
+                  },
+                  {
+                    "code": "java.method.parameterTypeChanged",
+                    "old": "parameter java.util.List<org.xwiki.contrib.activitypub.entities.AbstractActor> org.xwiki.contrib.activitypub.script.ActivityPubScriptService::followers(===java.lang.String===)",
+                    "new": "parameter java.util.List<org.xwiki.contrib.activitypub.entities.AbstractActor> org.xwiki.contrib.activitypub.script.ActivityPubScriptService::followers(===org.xwiki.contrib.activitypub.entities.AbstractActor===)",
+                    "justification": "Not breaking: Unstable API."
+                  },
+                  {
+                    "code": "java.method.parameterTypeChanged",
+                    "old": "parameter java.util.List<org.xwiki.contrib.activitypub.entities.AbstractActor> org.xwiki.contrib.activitypub.script.ActivityPubScriptService::following(===java.lang.String===)",
+                    "new": "parameter java.util.List<org.xwiki.contrib.activitypub.entities.AbstractActor> org.xwiki.contrib.activitypub.script.ActivityPubScriptService::following(===org.xwiki.contrib.activitypub.entities.AbstractActor===)",
+                    "justification": "Not breaking: Unstable API."
                   }
                 ]
               }
