@@ -38,9 +38,10 @@
   <hidden>true</hidden>
   <content>{{velocity}}
 #if ("$!request.followInput" != "" &amp;&amp; $services.csrf.isTokenValid($request.form_token) &amp;&amp; $request.outputSyntax == "plain")
+  #set ($sourceActor = $services.activitypub.getActor($request.actorId))
   #set ($actor = $services.activitypub.getActor($request.followInput))
   #if ("$!actor" != '')
-    #set ($followRes = $services.activitypub.follow($actor))
+    #set ($followRes = $services.activitypub.follow($actor, $sourceActor))
     #set($followWorked = $followRes.success)
     #set($followMessage = $services.localization.render($followRes.message))
   #else

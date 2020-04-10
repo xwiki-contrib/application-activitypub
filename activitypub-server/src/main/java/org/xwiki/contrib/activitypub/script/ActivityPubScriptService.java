@@ -125,10 +125,7 @@ public class ActivityPubScriptService implements ScriptService
      * It follows this strategy for resolving the given string:
      *   - if the string is null or blank, it resolves it by getting the current logged-in user actor. It will throw an
      *   {@link ActivityPubException} if no one is logged-in.
-     *   - if the string starts with {@code http} or {@code @}, the actor will be resolved as a remote ActivityPub actor
-     *   using {@link ActorHandler#getRemoteActor(String)}.
-     *   - in all other cases, the actor will be resolved as a local actor using
-     *   {@link ActorHandler#getLocalActor(String)}.
+     *   - else if will use the implementation of {@link ActorHandler#getActor(String)} to retrieve the user.
      * The method returns null if no actor is found.
      * @param actor the string to resolved following the strategy described above.
      * @return an ActivityPub actor or null.
@@ -151,6 +148,11 @@ public class ActivityPubScriptService implements ScriptService
         return result;
     }
 
+    /**
+     * @return a Service actor corresponding to the current wiki.
+     * @since 1.2
+     */
+    @Unstable
     public Service getCurrentWikiActor()
     {
         XWikiContext context = this.contextProvider.get();
@@ -162,6 +164,14 @@ public class ActivityPubScriptService implements ScriptService
         return null;
     }
 
+    /**
+     * Check if the currently logged-in user can act on behalf of the given actor.
+     * This method is useful if the current user wants to publish something as the global Wiki actor for example.
+     * @param actor the actor the current user wants to act for.
+     * @return {@code true} iff the current user is authorized to act for the given actor.
+     * @since 1.2
+     */
+    @Unstable
     public boolean currentUserCanActFor(AbstractActor actor)
     {
         UserReference userReference = null;
@@ -319,6 +329,7 @@ public class ActivityPubScriptService implements ScriptService
      * @return {@code true} if everything went well, else return false.
      * @since 1.2
      */
+    @Unstable
     public boolean publishNote(List<String> targets, String content, AbstractActor sourceActor)
     {
         try {

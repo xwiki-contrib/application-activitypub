@@ -161,6 +161,7 @@ public class DefaultSignatureService implements SignatureService
     {
         try {
             CertifiedKeyPair ret = this.cryptoService.generateCertifiedKeyPair();
+            // FIXME: We should ensure that the permissions of the wiki store reference are properly set.
             this.x509WikiKeyStore.store(new WikiStoreReference(user), ret);
             return ret;
         } catch (KeyStoreException e) {

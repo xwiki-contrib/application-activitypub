@@ -76,9 +76,37 @@
         <values>accept=Accept|reject=Reject|ask=Ask</values>
         <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
       </followPolicy>
+      <wikiGroup>
+        <cache>0</cache>
+        <customDisplay/>
+        <defaultValue/>
+        <disabled>0</disabled>
+        <displayType>input</displayType>
+        <freeText/>
+        <hint/>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>wikiGroup</name>
+        <number>2</number>
+        <picker>1</picker>
+        <prettyName>Group that manage the current wiki</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators/>
+        <size>20</size>
+        <sort/>
+        <unmodifiable>0</unmodifiable>
+        <usesList>0</usesList>
+        <validationMessage/>
+        <validationRegExp/>
+        <classType>com.xpn.xwiki.objects.classes.GroupsClass</classType>
+      </wikiGroup>
     </class>
     <property>
       <followPolicy>accept</followPolicy>
+    </property>
+    <property>
+      <wikiGroup>XWiki.XWikiAdminGroup</wikiGroup>
     </property>
   </object>
   <object>

@@ -86,6 +86,10 @@ You can only access this macro if an actor is defined.
 $services.localization.render('activitypub.storage.needrestart')
 {{/warning}}
 #else
+## The various interactions needs to send the actor id, so we put it in the document directly.
+{{html}}
+&lt;input type="hidden" id="actorId" value="actor.id" /&gt;
+{{/html}}
   #if ($services.webfinger.isWebfingerConfigured())
     #set ($userIdentifier = $services.webfinger.getWebfingerId($actor))
   #else
@@ -307,6 +311,7 @@ $services.localization.render('activitypub.webfinger.notconfigured')
     </property>
     <property>
       <code>require(['jquery', 'xwiki-meta'], function($, xm) {
+  const actorId = $('#actorId').val();
   const followUserDoc = new XWiki.Document(XWiki.Model.resolve('ActivityPub.FollowUser', XWiki.EntityType.DOCUMENT));
   const messageUserDoc = new XWiki.Document(XWiki.Model.resolve('ActivityPub.MessageUser', XWiki.EntityType.DOCUMENT));
   const followingDoc = new XWiki.Document(XWiki.Model.resolve('ActivityPub.ListFollowing', XWiki.EntityType.DOCUMENT));
@@ -323,7 +328,8 @@ $services.localization.render('activitypub.webfinger.notconfigured')
 
       const data = {
         'form_token': xm.form_token,
-        'followInput': $('#followInput').val()
+        'followInput': $('#followInput').val(),
+        'actorId': actorId
       };
       $.post(followUserDoc.getURL("view") + '?outputSyntax=plain', data, function(data) {
         if(data.success) {
@@ -343,7 +349,8 @@ $services.localization.render('activitypub.webfinger.notconfigured')
       const data = {
         'form_token': xm.form_token,
         'messageTarget': $('select[name=messageTarget]').first().val(),
-        'messageContent': $('#messageContent').val()
+        'messageContent': $('#messageContent').val(),
+        'actorId': actorId
       };
       $.post(messageUserDoc.getURL("view") + '?outputSyntax=plain', $.param(data, true), function(data) {
         if(data.success) {
@@ -657,11 +664,7 @@ $services.localization.render('activitypub.webfinger.notconfigured')
     <property>
       <content>{{include reference="ActivityPub.UserDashboard"/}}
 {{velocity}}
-#if (!$isGuest)
-  #set($actor = $services.activitypub.getActor(""))
-#else
-  #set($actor = $services.activitypub.getActor($doc.documentReference))
-#end
+#set($actor = $services.activitypub.getActor($doc.documentReference))
 #activitypubDashboard($actor)
 {{/velocity}}</content>
     </property>

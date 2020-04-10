@@ -37,12 +37,38 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>false</hidden>
   <content>{{include reference="ActivityPub.UserDashboard"/}}
+
 {{velocity}}
+#set($availableActors = [])
 #if (!$isGuest)
   #set($actor = $services.activitypub.getActor(""))
+  #set($discard = $availableActors.add({'label': 'Current User', 'actor': $actor}))
+  #set($wikiActor = $services.activitypub.getCurrentWikiActor())
+  #if ($services.activitypub.currentUserCanActFor($wikiActor))
+    #set($discard = $availableActors.add({'label': 'Current Wiki', 'actor': $wikiActor}))
+  #end
 #else
   #set($actor = $services.activitypub.getCurrentWikiActor())
 #end
+#if ("$!request.actor" != "")
+  #set($actor = $services.activitypub.getActor($request.actor))
+#end
+#if ($availableActors.size() &gt; 1)
+{{html}}
+&lt;form class="xformInline"&gt;
+    &lt;label for="actor_select"&gt;Available ActivityPub actors: &lt;/label&gt;
+    &lt;select name="actor" id="actor_select"&gt;
+      #foreach($availableActor in $availableActors)
+        &lt;option value="$availableActor.actor.id" #if ($availableActor.actor.equals($actor))selected="selected"#end&gt;$availableActor.label&lt;/option&gt;
+      #end
+    &lt;/select&gt;
+    &lt;span class="buttonwrapper"&gt;
+    &lt;input type="submit" class="button" name="changeactor" value="Switch actor" /&gt;
+    &lt;/span&gt;
+&lt;/form&gt;
+{{/html}}
+#end
+
 #activitypubDashboard($actor)
 {{/velocity}}</content>
   <object>
