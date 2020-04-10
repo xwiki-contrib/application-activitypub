@@ -29,6 +29,7 @@ import javax.inject.Provider;
 
 import org.apache.commons.httpclient.HttpMethod;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
@@ -40,11 +41,16 @@ import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
+import org.xwiki.contrib.activitypub.entities.Announce;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
+import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.DocumentReferenceResolver;
+import org.xwiki.test.LogLevel;
+import org.xwiki.test.junit5.LogCaptureExtension;
 import org.xwiki.contrib.activitypub.entities.Service;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.test.junit5.mockito.ComponentTest;
@@ -55,7 +61,9 @@ import org.xwiki.user.GuestUserReference;
 import org.xwiki.user.UserReference;
 import org.xwiki.user.UserReferenceResolver;
 
+import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.doc.XWikiDocument;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -65,9 +73,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.xwiki.test.LogLevel.*;
 
 /**
  * Tests for {@link ActivityPubScriptService}.
@@ -101,6 +111,15 @@ class ActivityPubScriptServiceTest
 
     @MockComponent
     private Provider<XWikiContext> contextProvider;
+
+    @MockComponent
+    private DocumentReferenceResolver<String> documentReferenceResolver;
+
+    @MockComponent
+    private ActivityHandler<Announce> announceActivityHandler;
+
+    @RegisterExtension
+    LogCaptureExtension logCapture = new LogCaptureExtension(ERROR);
 
     @Test
     void follow() throws Exception
@@ -322,5 +341,49 @@ class ActivityPubScriptServiceTest
         when(this.actorHandler.getActor(wikiReference)).thenReturn(service);
 
         assertSame(service, this.scriptService.getCurrentWikiActor());
+    }
+
+    @Test
+    void sharePageSuccess() throws Exception
+    {
+        DocumentReference documentReference = mock(DocumentReference.class);
+        when(this.documentReferenceResolver.resolve("xwiki:XWiki.MyPage"))
+                .thenReturn(documentReference);
+
+        Person currentActor = new Person();
+        when(this.actorHandler.getCurrentActor()).thenReturn(currentActor);
+
+        XWikiContext xWikiContext = mock(XWikiContext.class);
+        when(this.contextProvider.get()).thenReturn(xWikiContext);
+        XWiki xWiki = mock(XWiki.class);
+        when(xWikiContext.getWiki()).thenReturn(xWiki);
+        when(xWiki.getDocument(documentReference, xWikiContext)).thenReturn(mock(XWikiDocument.class));
+        boolean actual = this.scriptService.sharePage(Collections.singletonList("U1"), "xwiki:XWiki.MyPage");
+        assertTrue(actual);
+        verify(this.activityPubStorage).storeEntity(any(Announce.class));
+        verify(this.announceActivityHandler).handleOutboxRequest(any(ActivityRequest.class));
+    }
+
+    @Test
+    void sharePageError() throws Exception
+    {
+        DocumentReference documentReference = mock(DocumentReference.class);
+        when(this.documentReferenceResolver.resolve("xwiki:XWiki.MyPage"))
+                .thenReturn(documentReference);
+
+        Person currentActor = new Person();
+        when(this.actorHandler.getCurrentActor()).thenReturn(currentActor);
+
+        XWikiContext xWikiContext = mock(XWikiContext.class);
+        when(this.contextProvider.get()).thenReturn(xWikiContext);
+        XWiki xWiki = mock(XWiki.class);
+        when(xWikiContext.getWiki()).thenReturn(xWiki);
+        when(xWiki.getDocument(documentReference, xWikiContext)).thenReturn(mock(XWikiDocument.class));
+        when(this.activityPubStorage.storeEntity(any())).thenThrow(new ActivityPubException("ERR"));
+        boolean actual = this.scriptService.sharePage(Collections.singletonList("U1"), "xwiki:XWiki.MyPage");
+        assertFalse(actual);
+        verify(this.announceActivityHandler, never()).handleOutboxRequest(any(ActivityRequest.class));
+        assertEquals(1, this.logCapture.size());
+        assertEquals("Error while sharing a page.", this.logCapture.getMessage(0));
     }
 }

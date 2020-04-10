@@ -17,47 +17,20 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.events;
+package org.xwiki.contrib.activitypub.entities;
 
-import java.util.Set;
-
-import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.stability.Unstable;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 /**
- * A specific event type for Create activities.
- *
- * @since 1.1
+ * Represents an Announce activity as defined by ActivityStream.
+ * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-announce">ActivityStream Announce definition</a>
  * @version $Id$
+ * @since 1.2RC1
  */
 @Unstable
-public class CreateEvent extends AbstractActivityPubEvent<Create>
+@JsonDeserialize(as = Announce.class)
+public class Announce extends AbstractActivity
 {
-    /**
-     * Default name for those events.
-     */
-    public static final String EVENT_TYPE = "activitypub.create";
-
-    /**
-     * Default constructor.
-     *
-     * @param activity the activity to notify about
-     * @param target the serialized references of users to notify to
-     */
-    public CreateEvent(Create activity, Set<String> target)
-    {
-        super(activity, target);
-    }
-
-    @Override
-    public String getType()
-    {
-        return EVENT_TYPE;
-    }
-
-    @Override
-    public boolean matches(Object otherEvent)
-    {
-        return otherEvent instanceof CreateEvent;
-    }
 }

@@ -33,6 +33,7 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
+import org.xwiki.contrib.activitypub.events.AnnounceEvent;
 import org.xwiki.contrib.activitypub.events.CreateEvent;
 import org.xwiki.contrib.activitypub.events.FollowEvent;
 import org.xwiki.eventstream.Event;
@@ -132,6 +133,6 @@ public class ActivityPubNotificationDisplayer implements NotificationDisplayer
     @Override
     public List<String> getSupportedEvents()
     {
-        return Arrays.asList(CreateEvent.EVENT_TYPE, FollowEvent.EVENT_TYPE);
+        return Arrays.asList(CreateEvent.EVENT_TYPE, FollowEvent.EVENT_TYPE, AnnounceEvent.EVENT_TYPE);
     }
 }

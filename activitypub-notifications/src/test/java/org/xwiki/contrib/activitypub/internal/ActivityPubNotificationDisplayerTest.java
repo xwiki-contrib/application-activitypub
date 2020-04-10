@@ -30,8 +30,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
-import org.xwiki.contrib.activitypub.ActivityPubNotifier;
 import org.xwiki.contrib.activitypub.entities.Accept;
+import org.xwiki.contrib.activitypub.events.AnnounceEvent;
 import org.xwiki.contrib.activitypub.events.CreateEvent;
 import org.xwiki.contrib.activitypub.events.FollowEvent;
 import org.xwiki.eventstream.internal.DefaultEvent;
@@ -97,7 +97,6 @@ public class ActivityPubNotificationDisplayerTest
     @Test
     void renderNotificationOneEvent() throws Exception
     {
-
         when(this.activityPubJsonParser.parse("my content")).thenReturn(new Accept());
         when(this.scriptContextManager.getScriptContext()).thenReturn(new SimpleScriptContext());
         Template t = mock(Template.class);
@@ -120,7 +119,6 @@ public class ActivityPubNotificationDisplayerTest
     @Test
     void renderNotificationRetrieveError() throws Exception
     {
-
         when(this.activityPubJsonParser.parse(anyString())).thenThrow(new ActivityPubException("throwed"));
 
         DefaultEvent event = new DefaultEvent();
@@ -139,6 +137,7 @@ public class ActivityPubNotificationDisplayerTest
     void getSuppotedEventsDefault()
     {
         List<String> supportedEvents = this.activityPubNotificationDisplayer.getSupportedEvents();
-        assertEquals(Arrays.asList(CreateEvent.EVENT_TYPE, FollowEvent.EVENT_TYPE), supportedEvents);
+        assertEquals(Arrays.asList(CreateEvent.EVENT_TYPE, FollowEvent.EVENT_TYPE, AnnounceEvent.EVENT_TYPE),
+                supportedEvents);
     }
 }

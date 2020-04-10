@@ -49,16 +49,26 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 public class ActivityPubObject extends JSONLDObjects
 {
     private URI id;
+
     private String name;
+
     private Date published;
+
     private String summary;
+
     private List<ProxyActor> to;
+
     private String content;
+
     private List<ActivityPubObjectReference<AbstractActor>> attributedTo;
+
     private List<URI> url;
-    
+
+    private ActivityPubObjectReference<OrderedCollection<Announce>> shares;
+
     /**
      * The type is not stored as a property but instead we rely on the class name to return it.
+     *
      * @return the current type based on class name.
      */
     public String getType()
@@ -76,9 +86,9 @@ public class ActivityPubObject extends JSONLDObjects
      */
     public <T extends ActivityPubObject> T setType(String type)
     {
-        if (!StringUtils.isEmpty(type) && !getType().toLowerCase().equals(type.toLowerCase())) {
+        if (!StringUtils.isEmpty(type) && !getType().equalsIgnoreCase(type)) {
             throw new IllegalArgumentException(String.format("Error while parsing [%s]: illegal type [%s].",
-                getClass().toString(), type));
+                    getClass().toString(), type));
         }
         return (T) this;
     }
@@ -246,13 +256,31 @@ public class ActivityPubObject extends JSONLDObjects
     }
 
     /**
-     * @return a reference for the current instance.
      * @param <T> the concrete type of the current instance.
+     * @return a reference for the current instance.
      */
     @JsonIgnore
     public <T extends ActivityPubObject> ActivityPubObjectReference<T> getReference()
     {
         return new ActivityPubObjectReference<T>().setObject((T) this);
+    }
+
+    /**
+     * @return the list of shares of the object.
+     */
+    public ActivityPubObjectReference<OrderedCollection<Announce>> getShares()
+    {
+        return this.shares;
+    }
+
+    /**
+     * @param shares The list of shares of the object.
+     * @return The current object.
+     */
+    public ActivityPubObject setShares(ActivityPubObjectReference<OrderedCollection<Announce>> shares)
+    {
+        this.shares = shares;
+        return this;
     }
 
     @Override
@@ -266,30 +294,36 @@ public class ActivityPubObject extends JSONLDObjects
         }
 
         ActivityPubObject object = (ActivityPubObject) o;
+
         return new EqualsBuilder()
-            .appendSuper(super.equals(o))
-            .append(id, object.id)
-            .append(name, object.name)
-            .append(published, object.published)
-            .append(summary, object.summary)
-            .append(to, object.to)
-            .append(content, object.content)
-            .append(attributedTo, object.attributedTo)
-            .append(url, object.url).build();
+                .appendSuper(super.equals(o))
+                .append(id, object.id)
+                .append(name, object.name)
+                .append(published, object.published)
+                .append(summary, object.summary)
+                .append(to, object.to)
+                .append(content, object.content)
+                .append(attributedTo, object.attributedTo)
+                .append(url, object.url)
+                .append(shares, object.shares)
+                .isEquals();
     }
 
     @Override
     public int hashCode()
     {
-        return new HashCodeBuilder()
-            .appendSuper(super.hashCode())
-            .append(id)
-            .append(name)
-            .append(published)
-            .append(summary)
-            .append(to)
-            .append(content)
-            .append(attributedTo).build();
+        return new HashCodeBuilder(17, 37)
+                .appendSuper(super.hashCode())
+                .append(id)
+                .append(name)
+                .append(published)
+                .append(summary)
+                .append(to)
+                .append(content)
+                .append(attributedTo)
+                .append(url)
+                .append(shares)
+                .toHashCode();
     }
 
     @Override

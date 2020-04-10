@@ -45,10 +45,13 @@ import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.ActorHandler;
+import org.xwiki.contrib.activitypub.HTMLRenderer;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
+import org.xwiki.contrib.activitypub.entities.Announce;
 import org.xwiki.contrib.activitypub.entities.Create;
+import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
@@ -57,6 +60,7 @@ import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Service;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.script.service.ScriptService;
 import org.xwiki.stability.Unstable;
 import org.xwiki.text.StringUtils;
@@ -66,6 +70,10 @@ import org.xwiki.user.UserReference;
 import org.xwiki.user.UserReferenceResolver;
 
 import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.XWikiException;
+import com.xpn.xwiki.doc.XWikiDocument;
+
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 /**
  * Script service for ActivityPub.
@@ -100,6 +108,9 @@ public class ActivityPubScriptService implements ScriptService
     private ActivityHandler<Create> createActivityHandler;
 
     @Inject
+    private ActivityHandler<Announce> announceActivityHandler;
+
+    @Inject
     private UserReferenceResolver<CurrentUserReference> userReferenceResolver;
 
     @Inject
@@ -111,6 +122,12 @@ public class ActivityPubScriptService implements ScriptService
     @Inject
     private Logger logger;
 
+    @Inject
+    private HTMLRenderer htmlRenderer;
+
+    @Inject
+    private DocumentReferenceResolver<String> documentReferenceResolver;
+
     private void checkAuthentication() throws ActivityPubException
     {
         UserReference userReference = this.userReferenceResolver.resolve(null);
@@ -120,12 +137,12 @@ public class ActivityPubScriptService implements ScriptService
     }
 
     /**
-     * Retrieve an ActivityPub actor to be used in the methods of the script service.
-     * It follows this strategy for resolving the given string:
-     *   - if the string is null or blank, it resolves it by getting the current logged-in user actor. It will throw an
-     *   {@link ActivityPubException} if no one is logged-in.
-     *   - else if will use the implementation of {@link ActorHandler#getActor(String)} to retrieve the user.
-     * The method returns null if no actor is found.
+     * Retrieve an ActivityPub actor to be used in the methods of the script service. It follows this strategy for
+     * resolving the given string: - if the string is null or blank, it resolves it by getting the current logged-in
+     * user actor. It will throw an {@link ActivityPubException} if no one is logged-in. - if the string starts with
+     * {@code http} or {@code @}, the actor will be resolved using {@link ActorHandler#getActor(String)}. The method
+     * returns null if no actor is found.
+     *
      * @param actor the string to resolved following the strategy described above.
      * @return an ActivityPub actor or null.
      * @since 1.1
@@ -135,7 +152,7 @@ public class ActivityPubScriptService implements ScriptService
     {
         AbstractActor result = null;
         try {
-            if (StringUtils.isBlank(actor)) {
+            if (isBlank(actor)) {
                 this.checkAuthentication();
                 result = this.actorHandler.getCurrentActor();
             } else {
@@ -332,35 +349,20 @@ public class ActivityPubScriptService implements ScriptService
     public boolean publishNote(List<String> targets, String content, AbstractActor sourceActor)
     {
         try {
-            AbstractActor currentActor = getSourceActor(sourceActor);
+            AbstractActor currentActor = this.getSourceActor(sourceActor);
 
             Note note = new Note()
-                            .setAttributedTo(Collections.singletonList(currentActor.getReference()))
-                            .setContent(content);
-            if (targets != null && !targets.isEmpty()) {
-                List<ProxyActor> to = new ArrayList<>();
-                for (String target : targets) {
-                    if ("followers".equals(target)) {
-                        to.add(new ProxyActor(currentActor.getFollowers().getLink()));
-                    } else if ("public".equals(target)) {
-                        to.add(ProxyActor.getPublicActor());
-                    } else {
-                        AbstractActor remoteActor = this.getActor(target);
-                        if (remoteActor != null) {
-                            to.add(remoteActor.getProxyActor());
-                        }
-                    }
-                }
-                note.setTo(to);
-            }
+                    .setAttributedTo(Collections.singletonList(currentActor.getReference()))
+                    .setContent(content);
+            this.fillRecipients(targets, currentActor, note);
             this.activityPubStorage.storeEntity(note);
 
             Create create = new Create()
-                                .setActor(currentActor)
-                                .setObject(note)
-                                .setAttributedTo(note.getAttributedTo())
-                                .setTo(note.getTo())
-                                .setPublished(new Date());
+                    .setActor(currentActor)
+                    .setObject(note)
+                    .setAttributedTo(note.getAttributedTo())
+                    .setTo(note.getTo())
+                    .setPublished(new Date());
             this.activityPubStorage.storeEntity(create);
 
             this.createActivityHandler.handleOutboxRequest(new ActivityRequest<>(currentActor, create));
@@ -372,7 +374,73 @@ public class ActivityPubScriptService implements ScriptService
     }
 
     /**
+     * Share a page.
      *
+     * @param targets List of recipients of the sharing.
+     * @param page    The page to be shared.
+     * @return True if the shared succeeded, false otherwise.
+     */
+    public boolean sharePage(List<String> targets, String page)
+    {
+        try {
+            // get current actor
+            AbstractActor currentActor = this.getSourceActor(null);
+
+            DocumentReference dr = this.documentReferenceResolver.resolve(page);
+            XWikiDocument xwikiDoc =
+                    this.contextProvider.get().getWiki().getDocument(dr, this.contextProvider.get());
+            String content = this.htmlRenderer.render(xwikiDoc.getXDOM());
+            Document document = new Document()
+                    .setName(xwikiDoc.getTitle())
+                    .setAttributedTo(Collections.singletonList(currentActor.getReference()))
+                    .setContent(content);
+            this.fillRecipients(targets, currentActor, document);
+            this.activityPubStorage.storeEntity(document);
+
+            Announce announce = new Announce()
+                    .setActor(currentActor)
+                    .setObject(document)
+                    .setAttributedTo(document.getAttributedTo())
+                    .setTo(document.getTo())
+                    .setPublished(new Date());
+            this.activityPubStorage.storeEntity(announce);
+
+            this.announceActivityHandler.handleOutboxRequest(new ActivityRequest<>(currentActor, announce));
+            return true;
+        } catch (IOException | ActivityPubException | XWikiException e) {
+            this.logger.error("Error while sharing a page.", e);
+            return false;
+        }
+    }
+
+    /**
+     * Fill the list of recipients of the object.
+     *
+     * @param targets The targets that will be filled as recipients.
+     * @param actor The actor that send the object.
+     * @param object The object that will be sent.
+     */
+    private void fillRecipients(List<String> targets, AbstractActor actor, ActivityPubObject object)
+    {
+        if (targets != null && !targets.isEmpty()) {
+            List<ProxyActor> to = new ArrayList<>();
+            for (String target : targets) {
+                if ("followers".equals(target)) {
+                    to.add(new ProxyActor(actor.getFollowers().getLink()));
+                } else if ("public".equals(target)) {
+                    to.add(ProxyActor.getPublicActor());
+                } else {
+                    AbstractActor remoteActor = this.getActor(target);
+                    if (remoteActor != null) {
+                        to.add(remoteActor.getProxyActor());
+                    }
+                }
+            }
+            object.setTo(to);
+        }
+    }
+
+    /**
      * @param actor The actor of interest.
      * @return the list of actor followed by the current user.
      */

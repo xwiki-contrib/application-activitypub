@@ -28,6 +28,7 @@ import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.contrib.activitypub.entities.Person;
+import org.xwiki.contrib.activitypub.events.AnnounceEvent;
 import org.xwiki.contrib.activitypub.events.CreateEvent;
 import org.xwiki.contrib.activitypub.events.FollowEvent;
 import org.xwiki.eventstream.Event;
@@ -126,9 +127,10 @@ public class ActivityPubRecordableEventConverterTest
     void supportedEventsDefault()
     {
         List<RecordableEvent> actual =
-            this.activityPubRecordableEventConverter.getSupportedEvents();
-        assertEquals(2, actual.size());
+                this.activityPubRecordableEventConverter.getSupportedEvents();
+        assertEquals(3, actual.size());
         assertEquals(CreateEvent.class, actual.get(0).getClass());
         assertEquals(FollowEvent.class, actual.get(1).getClass());
+        assertEquals(AnnounceEvent.class, actual.get(2).getClass());
     }
 }

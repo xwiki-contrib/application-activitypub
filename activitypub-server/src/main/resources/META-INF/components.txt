@@ -9,6 +9,7 @@ org.xwiki.contrib.activitypub.internal.DefaultCryptoService
 org.xwiki.contrib.activitypub.internal.DefaultActivityPubStorage
 org.xwiki.contrib.activitypub.internal.listeners.DocumentCreatedEventListener
 org.xwiki.contrib.activitypub.internal.activities.CreateActivityHandler
+org.xwiki.contrib.activitypub.internal.activities.AnnounceActivityHandler
 org.xwiki.contrib.activitypub.script.ActivityPubScriptService
 org.xwiki.contrib.activitypub.internal.DefaultActivityPubClient
 org.xwiki.contrib.activitypub.internal.DefaultActivityPubConfiguration

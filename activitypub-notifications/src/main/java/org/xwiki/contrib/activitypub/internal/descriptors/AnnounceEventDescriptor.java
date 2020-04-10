@@ -17,47 +17,34 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.events;
+package org.xwiki.contrib.activitypub.internal.descriptors;
 
-import java.util.Set;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
-import org.xwiki.contrib.activitypub.entities.Create;
-import org.xwiki.stability.Unstable;
+import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.events.AnnounceEvent;
 
 /**
- * A specific event type for Create activities.
+ * Event descriptor for {@link AnnounceEvent}.
  *
- * @since 1.1
  * @version $Id$
+ * @since 1.2RC1
  */
-@Unstable
-public class CreateEvent extends AbstractActivityPubEvent<Create>
+@Component
+@Singleton
+@Named(AnnounceEvent.EVENT_TYPE)
+public class AnnounceEventDescriptor extends AbstractActivityPubEventDescriptor
 {
-    /**
-     * Default name for those events.
-     */
-    public static final String EVENT_TYPE = "activitypub.create";
-
-    /**
-     * Default constructor.
-     *
-     * @param activity the activity to notify about
-     * @param target the serialized references of users to notify to
-     */
-    public CreateEvent(Create activity, Set<String> target)
+    @Override
+    public String getEventType()
     {
-        super(activity, target);
+        return AnnounceEvent.EVENT_TYPE;
     }
 
     @Override
-    public String getType()
+    public String getDescription()
     {
-        return EVENT_TYPE;
-    }
-
-    @Override
-    public boolean matches(Object otherEvent)
-    {
-        return otherEvent instanceof CreateEvent;
+        return "activitypub.announce.event.description";
     }
 }

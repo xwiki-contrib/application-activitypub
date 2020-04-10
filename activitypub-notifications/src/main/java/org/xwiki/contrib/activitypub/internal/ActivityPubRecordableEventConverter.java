@@ -29,8 +29,9 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.activitypub.events.AbstractActivityPubEvent;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
+import org.xwiki.contrib.activitypub.events.AbstractActivityPubEvent;
+import org.xwiki.contrib.activitypub.events.AnnounceEvent;
 import org.xwiki.contrib.activitypub.events.CreateEvent;
 import org.xwiki.contrib.activitypub.events.FollowEvent;
 import org.xwiki.eventstream.Event;
@@ -84,6 +85,7 @@ public class ActivityPubRecordableEventConverter implements RecordableEventConve
     @Override
     public List<RecordableEvent> getSupportedEvents()
     {
-        return Arrays.asList(new CreateEvent(null, null), new FollowEvent(null, null));
+        return Arrays.asList(new CreateEvent(null, null), new FollowEvent<>(null, null),
+                new AnnounceEvent(null, null));
     }
 }

@@ -29,13 +29,15 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubNotifier;
 import org.xwiki.contrib.activitypub.ActorHandler;
+import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Accept;
+import org.xwiki.contrib.activitypub.entities.Announce;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.contrib.activitypub.entities.Reject;
 import org.xwiki.contrib.activitypub.events.AbstractActivityPubEvent;
-import org.xwiki.contrib.activitypub.entities.AbstractActivity;
+import org.xwiki.contrib.activitypub.events.AnnounceEvent;
 import org.xwiki.contrib.activitypub.events.CreateEvent;
 import org.xwiki.contrib.activitypub.events.FollowEvent;
 import org.xwiki.observation.ObservationManager;
@@ -64,6 +66,8 @@ public class DefaultActivityPubNotifier implements ActivityPubNotifier
         Set<String> serializedTargets = this.serializeTargets(targetedActors);
         if (activity instanceof Create) {
             event = new CreateEvent((Create) activity, serializedTargets);
+        } else if (activity instanceof Announce) {
+            event = new AnnounceEvent((Announce) activity, serializedTargets);
         } else if (activity instanceof Follow || activity instanceof Reject || activity instanceof Accept) {
             event = new FollowEvent<>(activity, serializedTargets);
         } else {

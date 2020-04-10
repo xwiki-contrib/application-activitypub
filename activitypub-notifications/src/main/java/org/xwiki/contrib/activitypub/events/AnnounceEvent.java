@@ -21,37 +21,32 @@ package org.xwiki.contrib.activitypub.events;
 
 import java.util.Set;
 
-import org.xwiki.contrib.activitypub.entities.AbstractActivity;
+import org.xwiki.contrib.activitypub.entities.Announce;
 import org.xwiki.stability.Unstable;
 
 /**
- * A specific events when it concerns the follow activities.
- * This event is voluntarily not bounded to {@link org.xwiki.contrib.activitypub.entities.Follow} type, so we can
- * also handle {@link org.xwiki.contrib.activitypub.entities.Accept} or
- * {@link org.xwiki.contrib.activitypub.entities.Reject} activities with it, since they are related to the follow
- * activities.
+ * A specific event type of {@link Announce} activities.
  *
- * @param <T> the actual type of the activity.
  * @version $Id$
- * @since 1.1
+ * @since 1.2RC1
  */
 @Unstable
-public class FollowEvent<T extends AbstractActivity> extends AbstractActivityPubEvent<T>
+public class AnnounceEvent extends AbstractActivityPubEvent<Announce>
 {
     /**
      * Default name for those events.
      */
-    public static final String EVENT_TYPE = "activitypub.follow";
+    public static final String EVENT_TYPE = "activitypub.announce";
 
     /**
      * Default constructor.
      *
-     * @param activity the activity to notify about
-     * @param target the serialized references of users to notify to
+     * @param activity An announce activity.
+     * @param targets  the serialized references of users to notify to.
      */
-    public FollowEvent(T activity, Set<String> target)
+    public AnnounceEvent(Announce activity, Set<String> targets)
     {
-        super(activity, target);
+        super(activity, targets);
     }
 
     @Override
@@ -63,6 +58,6 @@ public class FollowEvent<T extends AbstractActivity> extends AbstractActivityPub
     @Override
     public boolean matches(Object otherEvent)
     {
-        return otherEvent instanceof FollowEvent;
+        return otherEvent instanceof AnnounceEvent;
     }
 }

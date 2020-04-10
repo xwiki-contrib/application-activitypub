@@ -71,16 +71,19 @@ public class DocumentCreatedEventListener extends AbstractEventListener
     @Override
     public void onEvent(Event event, Object source, Object data)
     {
-        XWikiDocument document = (XWikiDocument) source;
-        XWikiContext context = (XWikiContext) data;
+        // FIXME: this action will later be activated by a configuration.
+        if (false) {
+            XWikiDocument document = (XWikiDocument) source;
+            XWikiContext context = (XWikiContext) data;
 
-        Request createJob = this.newRequest(document, context);
+            Request createJob = this.newRequest(document, context);
 
-        try {
-            this.jobExecutor.execute(ASYNC_REQUEST_TYPE, createJob);
-        } catch (JobException e) {
-            this.logger.warn("ActivityPub page creation [{}] event task failed. Cause [{}]", document,
-                ExceptionUtils.getRootCauseMessage(e));
+            try {
+                this.jobExecutor.execute(ASYNC_REQUEST_TYPE, createJob);
+            } catch (JobException e) {
+                this.logger.warn("ActivityPub page creation [{}] event task failed. Cause [{}]", document,
+                        ExceptionUtils.getRootCauseMessage(e));
+            }
         }
     }
 

@@ -49,6 +49,7 @@ public interface SignatureService
      *
      * @param actor the actor from which to retrieve the public key.
      * @return The public key of the actor.
+     * @throws ActivityPubException in case of error during the key generation.
      */
     String getPublicKeyPEM(AbstractActor actor) throws ActivityPubException;
 }

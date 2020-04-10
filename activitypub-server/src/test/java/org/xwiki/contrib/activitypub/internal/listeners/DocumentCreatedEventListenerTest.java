@@ -194,8 +194,10 @@ public class DocumentCreatedEventListenerTest
                 .setCreationDate(this.document.getCreationDate())
                 .setViewURL(this.document.getURL("view", this.context));
         request.setId("activitypub-create-page", this.document.getKey());
-        verify(this.jobExecutor, times(1)).execute(eq("activitypub-create-page"), eq(request));
-        verify(this.activityPubStorage, times(0)).storeEntity(apDoc);
-        verify(this.createActivityHandler, times(0)).handleOutboxRequest(activityRequest);
+        
+        // FIXME: update when a configuration is added to the creation event handler
+        verify(this.jobExecutor, never()).execute(eq("activitypub-create-page"), eq(request));
+        verify(this.activityPubStorage, never()).storeEntity(apDoc);
+        verify(this.createActivityHandler, never()).handleOutboxRequest(activityRequest);
     }
 }
