@@ -52,6 +52,7 @@ public class ActivityPubSolrInitializer implements SolrCoreInitializer
     private static final String TYPE = "type";
     private static final String CONTENT = "content";
     private static final String STRING_TYPE = "string";
+    private static final String DATE_TYPE = "pdate";
 
     @Override
     public String getCoreName()
@@ -69,7 +70,7 @@ public class ActivityPubSolrInitializer implements SolrCoreInitializer
                 createField(client, CONTENT, STRING_TYPE);
                 createField(client, TYPE, STRING_TYPE);
                 // FIXME: we should rely on the constant introduced by the new SolR API once it will be released.
-                createField(client, "updatedDate", "pdate");
+                createField(client, "updatedDate", DATE_TYPE);
             }
         } catch (SolrServerException | IOException | org.apache.solr.common.SolrException e)
         {
@@ -82,7 +83,7 @@ public class ActivityPubSolrInitializer implements SolrCoreInitializer
     {
         FieldTypeDefinition definition = new FieldTypeDefinition();
         Map<String, Object> typeAttributes = new HashMap<>();
-        typeAttributes.put(FieldType.TYPE_NAME, "pdate");
+        typeAttributes.put(FieldType.TYPE_NAME, DATE_TYPE);
         typeAttributes.put(FieldType.CLASS_NAME, DatePointField.class.getName());
         typeAttributes.put("docValues", true);
         definition.setAttributes(typeAttributes);
