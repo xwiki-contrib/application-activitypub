@@ -127,19 +127,17 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
             List<String> rels = reference.getParameterValues(REL_PARAM_KEY);
 
             URI resourceURI = this.convertResourceToURI(resource);
-
             String username = resourceURI.getUserInfo();
 
+            AbstractActor actor = this.webfingerService.resolveActivityPubUser(username);
             /*
              * https://tools.ietf.org/html/rfc7033#section-4.2
              * If the "resource" parameter is a value for which the server has no information, the server MUST indicate
              * that it was unable to match the request as per Section 10.4.5 of RFC 2616.
              */
-            if (!this.xWikiUserBridge.isExistingUser(username)) {
+            if (actor == null) {
                 throw new WebfingerException(String.format("There's no known user with username [%s].", username), 404);
             }
-
-            AbstractActor actor = this.webfingerService.resolveActivityPubUser(username);
             URI apUserURI = actor.getId();
 
             /*
