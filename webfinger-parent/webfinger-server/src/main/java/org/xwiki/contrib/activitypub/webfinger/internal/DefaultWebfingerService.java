@@ -183,14 +183,20 @@ public class DefaultWebfingerService implements WebfingerService
         boolean isWiki = login == null;
         boolean isCurrentWiki = (currentWikiId.equals(wikiName));
 
+        String cleanLogin = null;
+        if (login != null && login.contains("XWiki.")) {
+            cleanLogin = login.split("XWiki\\.")[1];
+        } else {
+            cleanLogin = login;
+        }
         if (isWiki && isCurrentWiki) {
             prefix = String.format(fullPrefixFormat, WIKI_IDENTIFIER, WIKI_IDENTIFIER);
         } else if (isWiki) {
             prefix = String.format(fullPrefixFormat, wikiName, WIKI_IDENTIFIER);
         } else if (!isCurrentWiki) {
-            prefix = String.format(fullPrefixFormat, login, wikiName);
+            prefix = String.format(fullPrefixFormat, cleanLogin, wikiName);
         } else {
-            prefix = login;
+            prefix = cleanLogin;
         }
 
         return prefix;

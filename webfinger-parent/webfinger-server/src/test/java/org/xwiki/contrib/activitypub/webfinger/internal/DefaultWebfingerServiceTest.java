@@ -231,7 +231,7 @@ class DefaultWebfingerServiceTest
 
         URI personId = URI.create("http://www.xwiki.org/person/foo");
         when(person.getId()).thenReturn(personId);
-        when(person.getPreferredUsername()).thenReturn("Foo");
+        when(person.getPreferredUsername()).thenReturn("xwiki:XWiki.Foo");
         when(this.urlHandler.getServerUrl()).thenReturn(serverUrl);
         when(this.urlHandler.belongsToCurrentInstance(personId)).thenReturn(true);
         assertEquals("Foo@www.xwiki.org", this.defaultWebfingerService.getWebFingerIdentifier(person));
