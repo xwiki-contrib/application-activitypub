@@ -123,6 +123,9 @@ public class DefaultActorHandler implements ActorHandler
     private EntityReferenceSerializer<String> entityReferenceSerializer;
 
     @Inject
+    private DefaultURLHandler defaultURLHandler;
+
+    @Inject
     private Logger logger;
 
     private HttpConnection jsoupConnection;
@@ -264,7 +267,7 @@ public class DefaultActorHandler implements ActorHandler
     public boolean isLocalActor(AbstractActor actor)
     {
         if (actor.getId() != null) {
-            return this.activityPubStorage.belongsToCurrentInstance(actor.getId());
+            return this.defaultURLHandler.belongsToCurrentInstance(actor.getId());
         } else {
             String userName = actor.getPreferredUsername();
             return isExistingUser(userName);

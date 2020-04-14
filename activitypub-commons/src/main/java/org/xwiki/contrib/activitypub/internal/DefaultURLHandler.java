@@ -23,11 +23,13 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Objects;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 
 import com.xpn.xwiki.XWikiContext;
@@ -45,7 +47,8 @@ public class DefaultURLHandler
     @Inject
     private Provider<XWikiContext> contextProvider;
 
-    private URL serverUrl;
+    @Inject
+    private Logger logger;
 
     /**
      * @return the URL of the current instance based on the current context.
@@ -53,11 +56,8 @@ public class DefaultURLHandler
      */
     public URL getServerUrl() throws MalformedURLException
     {
-        if (this.serverUrl == null) {
-            XWikiContext context = this.contextProvider.get();
-            this.serverUrl = context.getURLFactory().getServerURL(context);
-        }
-        return this.serverUrl;
+        XWikiContext context = this.contextProvider.get();
+        return context.getURLFactory().getServerURL(context);
     }
 
     /**
@@ -70,5 +70,36 @@ public class DefaultURLHandler
     public URI getAbsoluteURI(URI instanceResource) throws MalformedURLException, URISyntaxException
     {
         return getServerUrl().toURI().resolve(instanceResource);
+    }
+
+    /**
+     * Check that the given URI is part of the current instance.
+     * @param id the URI to check.
+     * @return {@code true} if it belongs to the current instance.
+     */
+    public boolean belongsToCurrentInstance(URI id)
+    {
+        if (id.isAbsolute()) {
+            try {
+                URL idUrl = id.toURL();
+                return Objects.equals(getServerUrl().getHost(), idUrl.getHost())
+                    && Objects.equals(getServerUrl().getProtocol(), idUrl.getProtocol())
+                    && this.normalizePort(getServerUrl().getPort()) == this.normalizePort(idUrl.getPort());
+            } catch (MalformedURLException e) {
+                this.logger.error("Error while comparing server URL and actor ID", e);
+            }
+        }
+        return false;
+    }
+
+    private int normalizePort(int sup)
+    {
+        int serverUrlPort;
+        if (sup == -1) {
+            serverUrlPort = 80;
+        } else {
+            serverUrlPort = sup;
+        }
+        return serverUrlPort;
     }
 }

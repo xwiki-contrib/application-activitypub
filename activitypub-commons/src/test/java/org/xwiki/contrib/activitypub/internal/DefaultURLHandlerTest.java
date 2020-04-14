@@ -37,6 +37,8 @@ import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.web.XWikiURLFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -74,9 +76,6 @@ public class DefaultURLHandlerTest
     public void getServerURL() throws MalformedURLException
     {
         assertEquals(new URL(SERVER_URL), this.urlHandler.getServerUrl());
-        // Second call to ensure the URL is locally stored for perf reason
-        assertEquals(new URL(SERVER_URL), this.urlHandler.getServerUrl());
-        verify(context, times(1)).getURLFactory();
     }
 
     @Test
@@ -86,5 +85,16 @@ public class DefaultURLHandlerTest
         URI expectedURI = new URI("http://xwiki.org/xwiki/bin/view/XWiki/Admin");
 
         assertEquals(expectedURI, this.urlHandler.getAbsoluteURI(uri));
+    }
+
+    @Test
+    public void belongsToCurrentInstance() throws Exception
+    {
+        assertTrue(this.urlHandler.belongsToCurrentInstance(URI.create("http://xwiki.org/foo/something")));
+        assertFalse(this.urlHandler.belongsToCurrentInstance(URI.create("https://xwiki.org/foo/something")));
+        assertFalse(this.urlHandler.belongsToCurrentInstance(URI.create("http://xwiki.org:4848/foo/something")));
+        assertTrue(this.urlHandler.belongsToCurrentInstance(URI.create("http://xwiki.org")));
+        assertFalse(this.urlHandler.belongsToCurrentInstance(URI.create("http://xwiki.com/foo/something")));
+        assertFalse(this.urlHandler.belongsToCurrentInstance(URI.create("/foo/something")));
     }
 }

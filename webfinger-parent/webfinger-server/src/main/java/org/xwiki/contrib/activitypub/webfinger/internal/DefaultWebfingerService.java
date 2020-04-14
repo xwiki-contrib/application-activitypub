@@ -19,6 +19,7 @@
  */
 package org.xwiki.contrib.activitypub.webfinger.internal;
 
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 
@@ -33,6 +34,7 @@ import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.Service;
+import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerService;
@@ -56,6 +58,7 @@ import com.xpn.xwiki.doc.XWikiDocument;
 @Singleton
 public class DefaultWebfingerService implements WebfingerService
 {
+    private static final String ACTOR_TYPE_ERROR = "This actor type is not supported yet [%s]";
     private static final String WIKI_IDENTIFIER = "xwiki";
 
     private static final String WIKI_SEPARATOR = ".";
@@ -76,6 +79,9 @@ public class DefaultWebfingerService implements WebfingerService
 
     @Inject
     private DocumentAccessBridge documentAccess;
+
+    @Inject
+    private DefaultURLHandler urlHandler;
 
     private Service resolveWikiActor(String wikiName) throws WikiManagerException, ActivityPubException
     {
@@ -159,8 +165,7 @@ public class DefaultWebfingerService implements WebfingerService
                 uri = new URL(((XWikiDocument) this.documentAccess.getDocumentInstance(mainPageReference))
                     .getExternalURL("view", this.contextProvider.get())).toURI();
             } else {
-                throw new IllegalArgumentException(String.format("This actor type is not supported yet [%s]",
-                    actor.getType()));
+                throw new IllegalArgumentException(String.format(ACTOR_TYPE_ERROR, actor.getType()));
             }
         } catch (Exception e) {
             throw new WebfingerException(String.format("Error while getting profile URL for user [%s]", actor),
@@ -168,5 +173,60 @@ public class DefaultWebfingerService implements WebfingerService
         }
 
         return uri;
+    }
+
+    private String getPrefixIdentifier(String login, String wikiName)
+    {
+        String prefix;
+        String fullPrefixFormat = String.format("%%s%s%%s", WIKI_SEPARATOR);
+        String currentWikiId = this.wikiDescriptorManager.getCurrentWikiId();
+        boolean isWiki = login == null;
+        boolean isCurrentWiki = (currentWikiId.equals(wikiName));
+
+        if (isWiki && isCurrentWiki) {
+            prefix = String.format(fullPrefixFormat, WIKI_IDENTIFIER, WIKI_IDENTIFIER);
+        } else if (isWiki) {
+            prefix = String.format(fullPrefixFormat, wikiName, WIKI_IDENTIFIER);
+        } else if (!isCurrentWiki) {
+            prefix = String.format(fullPrefixFormat, login, wikiName);
+        } else {
+            prefix = login;
+        }
+
+        return prefix;
+    }
+
+    @Override
+    public String getWebFingerIdentifier(AbstractActor actor) throws WebfingerException
+    {
+        try {
+            String identifier = String.format("%%s@%s", this.urlHandler.getServerUrl().getHost());
+            if (this.urlHandler.belongsToCurrentInstance(actor.getId())) {
+                String prefix;
+
+                if (actor instanceof Person) {
+                    UserReference xWikiUserReference = this.actorHandler.getXWikiUserReference((Person) actor);
+                    DocumentReference documentReference = this.xWikiUserBridge.getDocumentReference(xWikiUserReference);
+                    String userWiki = documentReference.getWikiReference().getName();
+
+                    prefix = this.getPrefixIdentifier(actor.getPreferredUsername(), userWiki);
+                } else if (actor instanceof Service) {
+                    WikiReference xWikiWikiReference = this.actorHandler.getXWikiWikiReference((Service) actor);
+
+                    prefix = this.getPrefixIdentifier(null, xWikiWikiReference.getName());
+                } else {
+                    throw new IllegalArgumentException(String.format(ACTOR_TYPE_ERROR, actor.getType()));
+                }
+                return String.format(identifier, prefix);
+            } else {
+                throw new IllegalArgumentException(
+                    String.format(
+                        "We only resolve WebFinger identifier for the current instance, and [%s] does not belong "
+                            + "to it.", actor.getId()));
+            }
+        } catch (MalformedURLException | IllegalArgumentException | ActivityPubException e) {
+            throw new WebfingerException(String.format("Cannot resolve the WebFinger identifier for user [%s]", actor),
+                e);
+        }
     }
 }

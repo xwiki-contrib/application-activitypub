@@ -137,6 +137,9 @@ public class DefaultActorHandlerTest
     @MockComponent
     private EntityReferenceSerializer<String> entityReferenceSerializer;
 
+    @MockComponent
+    private DefaultURLHandler defaultURLHandler;
+
     @Mock
     private UserReference fooUserReference;
 
@@ -309,9 +312,9 @@ public class DefaultActorHandlerTest
         assertFalse(this.actorHandler.isLocalActor(new Person().setPreferredUsername("XWiki.Bar")));
 
         URI actorId = new URI("http://myId");
-        when(this.activityPubStorage.belongsToCurrentInstance(actorId)).thenReturn(true);
+        when(this.defaultURLHandler.belongsToCurrentInstance(actorId)).thenReturn(true);
         assertTrue(this.actorHandler.isLocalActor(new Person().setId(actorId)));
-        verify(this.activityPubStorage).belongsToCurrentInstance(actorId);
+        verify(this.defaultURLHandler).belongsToCurrentInstance(actorId);
     }
 
     @Test

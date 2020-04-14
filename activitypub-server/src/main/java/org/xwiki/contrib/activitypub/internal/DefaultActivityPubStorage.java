@@ -20,11 +20,8 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 import java.util.Date;
-import java.util.Objects;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -108,31 +105,6 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         }
     }
 
-    @Override
-    public boolean belongsToCurrentInstance(URI id)
-    {
-        try {
-            URL serverUrl = this.urlHandler.getServerUrl();
-            URL idUrl = id.toURL();
-            return Objects.equals(serverUrl.getHost(), idUrl.getHost())
-                       && this.normalizePort(serverUrl.getPort()) == this.normalizePort(idUrl.getPort());
-        } catch (MalformedURLException e) {
-            this.logger.error("Error while comparing server URL and actor ID", e);
-        }
-        return false;
-    }
-
-    private int normalizePort(int sup)
-    {
-        int serverUrlPort;
-        if (sup == -1) {
-            serverUrlPort = 80;
-        } else {
-            serverUrlPort = sup;
-        }
-        return serverUrlPort;
-    }
-
     private void storeInformation(ActivityPubObject entity)
         throws ActivityPubException, SolrException, IOException, SolrServerException
     {
@@ -194,13 +166,13 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
             // then we need to refresh it.
             Date updatedDate = (Date) solrDocument.getFieldValue(UPDATEDDATE_FIELD);
             URI id = URI.create((String) solrDocument.getFieldValue(ID_FIELD));
-            result = this.belongsToCurrentInstance(id) || new Date().before(DateUtils.addDays(updatedDate, 1));
+            result = this.urlHandler.belongsToCurrentInstance(id)
+                || new Date().before(DateUtils.addDays(updatedDate, 1));
         }
         return result;
     }
 
     @Override
-    //FIXME: If the informations are about an actor who is not local, we should refresh them after some time.
     public <T extends ActivityPubObject> T retrieveEntity(URI id) throws ActivityPubException
     {
         T result = null;

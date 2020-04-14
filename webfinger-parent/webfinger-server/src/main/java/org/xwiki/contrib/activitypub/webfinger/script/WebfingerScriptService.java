@@ -19,7 +19,6 @@
  */
 package org.xwiki.contrib.activitypub.webfinger.script;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.inject.Inject;
@@ -27,12 +26,12 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
-import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerClient;
+import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
+import org.xwiki.contrib.activitypub.webfinger.WebfingerService;
 import org.xwiki.script.service.ScriptService;
 
 import com.xpn.xwiki.XWikiContext;
@@ -54,7 +53,7 @@ public class WebfingerScriptService implements ScriptService
     private Provider<XWikiContext> contextProvider;
 
     @Inject
-    private XWikiUserBridge userBridge;
+    private WebfingerService webfingerService;
 
     @Inject
     private Logger logger;
@@ -101,17 +100,9 @@ public class WebfingerScriptService implements ScriptService
     public String getWebfingerId(AbstractActor actor)
     {
         try {
-            String userLogin = actor.getPreferredUsername();
-            XWikiContext context = this.contextProvider.get();
-            URL url = context.getURLFactory().getServerURL(context);
-            int port = url.getPort();
-            if (port != 80 && port > 0) {
-                return String.format("%s@%s:%d", userLogin, url.getHost(), port);
-            } else {
-                return String.format("%s@%s", userLogin, url.getHost());
-            }
-        } catch (MalformedURLException e) {
-            this.logger.warn("Can't resolve the server URL. Cause [{}]", ExceptionUtils.getRootCauseMessage(e));
+            return this.webfingerService.getWebFingerIdentifier(actor);
+        } catch (WebfingerException e) {
+            logger.error("Error while getting WebFinger id", e);
             return null;
         }
     }

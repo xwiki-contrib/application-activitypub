@@ -105,6 +105,9 @@ public class DefaultActivityPubStorageTest
     @MockComponent
     private Solr solrInstance;
 
+    @MockComponent
+    private DefaultURLHandler urlHandler;
+
     @Mock
     private SolrClient solrClient;
 
@@ -115,7 +118,6 @@ public class DefaultActivityPubStorageTest
     @BeforeComponent
     public void setup(MockitoComponentManager componentManager) throws Exception
     {
-        DefaultURLHandler urlHandler = componentManager.registerMockComponent(DefaultURLHandler.class);
         when(urlHandler.getServerUrl()).thenReturn(new URL(DEFAULT_URL));
     }
 
@@ -252,6 +254,7 @@ public class DefaultActivityPubStorageTest
         Person person = mock(Person.class);
         SolrDocument solrDocument = mock(SolrDocument.class);
         URI uri = URI.create("http://www.xwiki.org/person/foo");
+        when(this.urlHandler.belongsToCurrentInstance(uri)).thenReturn(true);
         when(this.solrClient.getById(uri.toASCIIString())).thenReturn(solrDocument);
         when(solrDocument.isEmpty()).thenReturn(false);
         when(solrDocument.getFieldValue("content")).thenReturn("{person:foo}");

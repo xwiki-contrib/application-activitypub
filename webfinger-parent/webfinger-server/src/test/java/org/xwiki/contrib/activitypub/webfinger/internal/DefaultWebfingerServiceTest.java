@@ -32,6 +32,7 @@ import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.Service;
+import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.model.reference.DocumentReference;
@@ -83,6 +84,9 @@ class DefaultWebfingerServiceTest
 
     @MockComponent
     private DocumentAccessBridge documentAccessBridge;
+
+    @MockComponent
+    private DefaultURLHandler urlHandler;
 
     @Mock
     private XWikiContext context;
@@ -207,5 +211,63 @@ class DefaultWebfingerServiceTest
         when(xWikiDocument.getExternalURL("view", context)).thenReturn("http://service/profile");
 
         assertEquals(URI.create("http://service/profile"), this.defaultWebfingerService.resolveXWikiUserUrl(service));
+    }
+
+    @Test
+    void getWebfingerIdentifierPerson() throws Exception
+    {
+        URL serverUrl = new URL("http://www.xwiki.org/xwiki/bin/view/Main/WebHome");
+        Person person = mock(Person.class);
+        UserReference userReference = mock(UserReference.class);
+        DocumentReference documentReference = mock(DocumentReference.class);
+
+        when(person.toString()).thenReturn("Foo");
+        when(this.actorHandler.getXWikiUserReference(person)).thenReturn(userReference);
+        when(this.xWikiUserBridge.getDocumentReference(userReference)).thenReturn(documentReference);
+        String currentWikiId = "foobar";
+        when(this.wikiDescriptorManager.getCurrentWikiId()).thenReturn(currentWikiId);
+        WikiReference wikiReference = new WikiReference(currentWikiId);
+        when(documentReference.getWikiReference()).thenReturn(wikiReference);
+
+        URI personId = URI.create("http://www.xwiki.org/person/foo");
+        when(person.getId()).thenReturn(personId);
+        when(person.getPreferredUsername()).thenReturn("Foo");
+        when(this.urlHandler.getServerUrl()).thenReturn(serverUrl);
+        when(this.urlHandler.belongsToCurrentInstance(personId)).thenReturn(true);
+        assertEquals("Foo@www.xwiki.org", this.defaultWebfingerService.getWebFingerIdentifier(person));
+
+        when(this.wikiDescriptorManager.getCurrentWikiId()).thenReturn("xwiki");
+        assertEquals("Foo.foobar@www.xwiki.org", this.defaultWebfingerService.getWebFingerIdentifier(person));
+
+        when(this.urlHandler.belongsToCurrentInstance(personId)).thenReturn(false);
+        WebfingerException webfingerException =
+            assertThrows(WebfingerException.class, () -> this.defaultWebfingerService.getWebFingerIdentifier(person));
+        assertEquals("Cannot resolve the WebFinger identifier for user [Foo]", webfingerException.getMessage());
+    }
+
+    @Test
+    void getWebfingerIdentifierService() throws Exception
+    {
+        URL serverUrl = new URL("http://www.xwiki.org/xwiki/bin/view/Main/WebHome");
+        Service service = mock(Service.class);
+        URI serviceId = URI.create("http://www.xwiki.org/service/foobar");
+        String currentWikiId = "foobar";
+        WikiReference wikiReference = new WikiReference(currentWikiId);
+
+        when(service.getId()).thenReturn(serviceId);
+        when(service.toString()).thenReturn("Service Foo");
+        when(this.urlHandler.getServerUrl()).thenReturn(serverUrl);
+        when(this.wikiDescriptorManager.getCurrentWikiId()).thenReturn(currentWikiId);
+        when(this.actorHandler.getXWikiWikiReference(service)).thenReturn(wikiReference);
+        when(this.urlHandler.belongsToCurrentInstance(serviceId)).thenReturn(true);
+        assertEquals("xwiki.xwiki@www.xwiki.org", this.defaultWebfingerService.getWebFingerIdentifier(service));
+
+        when(this.wikiDescriptorManager.getCurrentWikiId()).thenReturn("xwiki");
+        assertEquals("foobar.xwiki@www.xwiki.org", this.defaultWebfingerService.getWebFingerIdentifier(service));
+
+        when(this.urlHandler.belongsToCurrentInstance(serviceId)).thenReturn(false);
+        WebfingerException webfingerException =
+            assertThrows(WebfingerException.class, () -> this.defaultWebfingerService.getWebFingerIdentifier(service));
+        assertEquals("Cannot resolve the WebFinger identifier for user [Service Foo]", webfingerException.getMessage());
     }
 }

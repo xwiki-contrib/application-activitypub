@@ -62,6 +62,16 @@ public class WebfingerException extends Exception
     }
 
     /**
+     * Handling of a technical error.
+     * @param message The detailed message of the exception.
+     */
+    public WebfingerException(String message)
+    {
+        super(message);
+        this.errorCode = 500;
+    }
+
+    /**
      *
      * @return the error code.
      */
