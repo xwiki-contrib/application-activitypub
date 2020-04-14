@@ -36,15 +36,15 @@
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
-  <content>k{{velocity}}
+  <content>{{velocity}}
 #if ($services.csrf.isTokenValid($request.form_token))
     #set ($pageShared = $services.activitypub.sharePage($request.getParameterValues('messageTarget'), $request.sharedPage))
     #if ($pageShared)
       #set ($pageShared = true)
-      #set ($pageSharedMessage = "Page shared successfuly")
+      #set ($pageSharedMessage = $services.localization.render('activitypub.shareDocument.success')))
     #else
       #set ($pageShared = false)
-      #set ($pageSharedMessage = "Page share failed")
+      #set ($pageSharedMessage = $services.localization.render('activitypub.shareDocument.failure')))
     #end
     #setVariable("$json" { "success": $pageShared, "message": "$pageSharedMessage" })
     #jsonResponse($json)
@@ -141,7 +141,8 @@
     <property>
       <code>require(['jquery', 'xwiki-meta'], function($, xm) {
   $(document).ready(function() {
-    $("#activitypub-link-share-page").click(function() {
+    $("#activitypub-link-share-page").click(function() { 
+      $("#activitypub-form-share-page select")[0].selectize.clear();
       $('#activitypub-modal-share-page').modal('show');
     });
 
@@ -301,6 +302,7 @@
     </property>
     <property>
       <content>{{include reference="ActivityPub.UserDashboard"/}}
+
 {{velocity}}
 {{html clean="false"}}
 #set($discard = $xwiki.jsx.use('ActivityPub.ShareDocument'))
@@ -312,7 +314,7 @@
     &lt;div class="modal-content"&gt;
       &lt;div class="modal-header"&gt;
         &lt;button type="button" class="close" data-dismiss="modal" aria-label="Close"&gt;&lt;span aria-hidden="true"&gt;&amp;times;&lt;/span&gt;&lt;/button&gt;
-        &lt;h4 class="modal-title"&gt;Share document TODO&lt;/h4&gt;
+        &lt;h4 class="modal-title"&gt;$services.localization.render('activitypub.shareDocument.modalTitle')&lt;/h4&gt;
       &lt;/div&gt;
       &lt;div class="modal-body"&gt;
         &lt;form id="activitypub-form-share-page" class='xform'&gt;
