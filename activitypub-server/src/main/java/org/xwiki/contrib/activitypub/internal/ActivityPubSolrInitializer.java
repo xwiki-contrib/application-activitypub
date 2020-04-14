@@ -28,8 +28,11 @@ import javax.inject.Singleton;
 
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.request.schema.FieldTypeDefinition;
 import org.apache.solr.client.solrj.request.schema.SchemaRequest;
 import org.apache.solr.client.solrj.response.schema.SchemaResponse;
+import org.apache.solr.schema.DatePointField;
+import org.apache.solr.schema.FieldType;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.search.solr.SolrCoreInitializer;
 import org.xwiki.search.solr.SolrException;
@@ -62,6 +65,7 @@ public class ActivityPubSolrInitializer implements SolrCoreInitializer
         try {
             SchemaResponse.FieldsResponse response = new SchemaRequest.Fields().process(client);
             if (!schemaAlreadyExists(response)) {
+                createFieldTypes(client);
                 createField(client, CONTENT, STRING_TYPE);
                 createField(client, TYPE, STRING_TYPE);
                 // FIXME: we should rely on the constant introduced by the new SolR API once it will be released.
@@ -71,6 +75,18 @@ public class ActivityPubSolrInitializer implements SolrCoreInitializer
         {
             throw new SolrException("Error when initializing activitypub Solr schema", e);
         }
+    }
+
+    // FIXME: This needs to be removed after the release of XWiki 12.3RC1
+    private void createFieldTypes(SolrClient client) throws IOException, SolrServerException
+    {
+        FieldTypeDefinition definition = new FieldTypeDefinition();
+        Map<String, Object> typeAttributes = new HashMap<>();
+        typeAttributes.put(FieldType.TYPE_NAME, "pdate");
+        typeAttributes.put(FieldType.CLASS_NAME, DatePointField.class.getName());
+        typeAttributes.put("docValues", true);
+        definition.setAttributes(typeAttributes);
+        new SchemaRequest.AddFieldType(definition).process(client);
     }
 
     private void createField(SolrClient client, String name, String type) throws IOException, SolrServerException
