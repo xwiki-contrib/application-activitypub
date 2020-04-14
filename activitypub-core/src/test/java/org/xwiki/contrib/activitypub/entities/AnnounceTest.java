@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * Test of {@link Announce}.
  *
  * @version $Id$
- * @since 1.2RC1
+ * @since 1.2
  */
 public class AnnounceTest extends AbstractEntityTest
 {

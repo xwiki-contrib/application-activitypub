@@ -29,7 +29,7 @@ import org.xwiki.contrib.activitypub.events.AnnounceEvent;
  * Event descriptor for {@link AnnounceEvent}.
  *
  * @version $Id$
- * @since 1.2RC1
+ * @since 1.2
  */
 @Component
 @Singleton

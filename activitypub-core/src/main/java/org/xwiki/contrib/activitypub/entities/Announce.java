@@ -27,7 +27,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * Represents an Announce activity as defined by ActivityStream.
  * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-announce">ActivityStream Announce definition</a>
  * @version $Id$
- * @since 1.2RC1
+ * @since 1.2
  */
 @Unstable
 @JsonDeserialize(as = Announce.class)

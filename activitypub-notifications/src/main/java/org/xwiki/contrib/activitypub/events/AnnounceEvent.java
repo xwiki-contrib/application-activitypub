@@ -28,7 +28,7 @@ import org.xwiki.stability.Unstable;
  * A specific event type of {@link Announce} activities.
  *
  * @version $Id$
- * @since 1.2RC1
+ * @since 1.2
  */
 @Unstable
 public class AnnounceEvent extends AbstractActivityPubEvent<Announce>

@@ -51,11 +51,13 @@ public class AnnounceActivityHandler extends AbstractActivityHandler<Announce>
     public void handleInboxRequest(ActivityRequest<Announce> activityRequest) throws IOException, ActivityPubException
     {
         Announce announce = activityRequest.getActivity();
-        announce.getObject().setExpand(true);
         if (announce.getId() == null) {
             this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_BAD_REQUEST,
                     "The ID of the activity must not be null.");
         } else {
+            if (announce.getObject() != null) {
+                announce.getObject().setExpand(true);
+            }
             AbstractActor actor = activityRequest.getActor();
             Inbox inbox = this.getInbox(actor);
             inbox.addActivity(announce);
