@@ -30,6 +30,7 @@ import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
+import org.xwiki.model.reference.WikiReference;
 import org.xwiki.user.UserManager;
 import org.xwiki.user.UserProperties;
 import org.xwiki.user.UserPropertiesResolver;
@@ -107,6 +108,18 @@ public class XWikiUserBridge
     public String getUserLogin(UserReference userReference)
     {
         return this.userReferenceSerializer.serialize(userReference);
+    }
+
+    /**
+     * Converts an username to an {@link UserReference} on a specific wiki.
+     *
+     * @param username the username.
+     * @param wikiReference the reference to the wiki this user should belongs to.
+     * @return the user reference.
+     */
+    public UserReference resolveUser(String username, WikiReference wikiReference)
+    {
+        return this.userReferenceResolver.resolve(username, wikiReference);
     }
 
     /**

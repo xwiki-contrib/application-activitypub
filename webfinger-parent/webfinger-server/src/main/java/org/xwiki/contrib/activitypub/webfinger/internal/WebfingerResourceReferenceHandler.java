@@ -40,6 +40,7 @@ import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.container.Container;
 import org.xwiki.container.servlet.ServletResponse;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonSerializer;
@@ -52,7 +53,6 @@ import org.xwiki.resource.ResourceReference;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
 import org.xwiki.resource.ResourceReferenceHandlerException;
 import org.xwiki.resource.ResourceType;
-import org.xwiki.user.UserReference;
 
 /**
  *
@@ -118,7 +118,7 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
         chain.handleNext(reference);
     }
 
-    private void proceed(WebfingerResourceReference reference, HttpServletResponse response)
+    private <T extends AbstractActor> void proceed(WebfingerResourceReference reference, HttpServletResponse response)
     {
         try {
             this.validateReference(reference);
@@ -139,8 +139,8 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
                 throw new WebfingerException(String.format("There's no known user with username [%s].", username), 404);
             }
 
-            UserReference userReference = this.xWikiUserBridge.resolveUser(username);
-            URI apUserURI = this.webfingerService.resolveActivityPubUserUrl(username);
+            AbstractActor actor = this.webfingerService.resolveActivityPubUser(username);
+            URI apUserURI = actor.getId();
 
             /*
              * Check if the request domain matches the domain of the server:
@@ -157,7 +157,7 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
                 throw new WebfingerException("No user found for the given domain", 404);
             }
 
-            this.sendValidResponse(response, userReference, apUserURI, resource, rels);
+            this.sendValidResponse(response, actor, resource, rels);
         } catch (WebfingerException e) {
             this.handleException(response, e);
         } catch (URISyntaxException | IOException e) {
@@ -217,12 +217,12 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
         return new URI(ACCT_PARAM_KEY + "//" + cleanedResource);
     }
 
-    private void sendValidResponse(HttpServletResponse response, UserReference user, URI apUserURI, String resource,
+    private void sendValidResponse(HttpServletResponse response, AbstractActor actor, String resource,
         List<String> rels) throws IOException, WebfingerException
     {
         response.setContentType("application/jrd+json");
 
-        URI xWikiUserURI = this.webfingerService.resolveXWikiUserUrl(user);
+        URI xWikiUserURI = this.webfingerService.resolveXWikiUserUrl(actor);
         Link xWikiUserLink = new Link()
                                  .setRel("http://webfinger.net/rel/profile-page")
                                  .setType("text/html")
@@ -231,7 +231,7 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
         Link apUserLink = new Link()
                               .setRel("self")
                               .setType("application/activity+json")
-                              .setHref(apUserURI);
+                              .setHref(actor.getId());
 
         List<Link> links = this.filterLinks(rels, xWikiUserLink, apUserLink);
 

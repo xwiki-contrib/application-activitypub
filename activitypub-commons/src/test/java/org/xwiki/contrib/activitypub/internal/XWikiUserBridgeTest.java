@@ -29,6 +29,7 @@ import org.mockito.Mock;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
+import org.xwiki.model.reference.WikiReference;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
@@ -116,6 +117,14 @@ public class XWikiUserBridgeTest
     {
         when(this.userReferenceResolver.resolve("foo")).thenReturn(userReference);
         assertSame(this.userReference, this.xWikiUserBridge.resolveUser("foo"));
+    }
+
+    @Test
+    public void resolveUserReferenceWithWiki()
+    {
+        WikiReference wikiReference = new WikiReference("subwiki");
+        when(this.userReferenceResolver.resolve("foo", wikiReference)).thenReturn(userReference);
+        assertSame(this.userReference, this.xWikiUserBridge.resolveUser("foo", wikiReference));
     }
 
     @Test

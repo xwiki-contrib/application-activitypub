@@ -249,6 +249,12 @@ public class DefaultActorHandler implements ActorHandler
     }
 
     @Override
+    public WikiReference getXWikiWikiReference(Service actor)
+    {
+        return new WikiReference(actor.getPreferredUsername());
+    }
+
+    @Override
     public boolean isExistingUser(String username)
     {
         return this.xWikiUserBridge.isExistingUser(username);

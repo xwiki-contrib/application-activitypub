@@ -22,8 +22,8 @@ package org.xwiki.contrib.activitypub.webfinger;
 import java.net.URI;
 
 import org.xwiki.component.annotation.Role;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.stability.Unstable;
-import org.xwiki.user.UserReference;
 
 /**
  *
@@ -36,17 +36,22 @@ import org.xwiki.user.UserReference;
 public interface WebfingerService
 {
     /**
-     * Resolve to user of the profile page of the user.
-     * @param username The username of the user.
-     * @return the resolve {@link URI} of the username.
+     * Resolve a username to an actual ActivityPub Actor.
+     * The following formats are supported for username resolutioon:
+     *   - {@code identifier}: the user named identifier will be looked in the current wiki
+     *   - {@code identifier.otherwiki}: the user named identifier will be looked in the subwiki named otherwiki.
+     *   - {@code identifier.xwiki}: the sub wiki named identifier will be looked.
+     *   - {@code xwiki.xwiki}: it returns always the current wiki actor.
+     * @param username The username of the actor to find.
+     * @return the resolve {@link AbstractActor} corresponding of the username.
      * @throws WebfingerException in case of serialization error
      */
-    URI resolveActivityPubUserUrl(String username) throws WebfingerException;
+    AbstractActor resolveActivityPubUser(String username) throws WebfingerException;
 
     /**
      * Resolve the activitypub resource of the user. 
-     * @param user the user reference.
+     * @param actor the actor URL to obtain.
      * @return the url of the activitypub resource of the user
      */
-    URI resolveXWikiUserUrl(UserReference user) throws WebfingerException;
+    URI resolveXWikiUserUrl(AbstractActor actor) throws WebfingerException;
 }

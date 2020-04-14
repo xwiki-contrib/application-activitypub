@@ -20,18 +20,30 @@
 package org.xwiki.contrib.activitypub.webfinger.internal;
 
 import java.net.URI;
+import java.net.URL;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
-import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
+import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.contrib.activitypub.ActorHandler;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
+import org.xwiki.contrib.activitypub.entities.Person;
+import org.xwiki.contrib.activitypub.entities.Service;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerService;
-import org.xwiki.resource.ResourceReferenceSerializer;
+import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.WikiReference;
 import org.xwiki.user.UserReference;
+import org.xwiki.wiki.descriptor.WikiDescriptorManager;
+import org.xwiki.wiki.manager.WikiManagerException;
+
+import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.doc.XWikiDocument;
 
 /**
  *
@@ -44,36 +56,117 @@ import org.xwiki.user.UserReference;
 @Singleton
 public class DefaultWebfingerService implements WebfingerService
 {
+    private static final String WIKI_IDENTIFIER = "xwiki";
+
+    private static final String WIKI_SEPARATOR = ".";
+
+    private static final String WIKI_SEPARATOR_SPLIT_REGEX = "\\.";
+
     @Inject
     private XWikiUserBridge xWikiUserBridge;
 
     @Inject
-    private DefaultURLHandler defaultURLHandler;
+    private ActorHandler actorHandler;
 
     @Inject
-    private ResourceReferenceSerializer<ActivityPubResourceReference, URI> serializer;
+    private Provider<XWikiContext> contextProvider;
 
-    @Override
-    public URI resolveActivityPubUserUrl(String username) throws WebfingerException
+    @Inject
+    private WikiDescriptorManager wikiDescriptorManager;
+
+    @Inject
+    private DocumentAccessBridge documentAccess;
+
+    private Service resolveWikiActor(String wikiName) throws WikiManagerException, ActivityPubException
     {
-        UserReference user = this.xWikiUserBridge.resolveUser(username);
-        String login = this.xWikiUserBridge.getUserLogin(user);
-        ActivityPubResourceReference aprr = new ActivityPubResourceReference("Person", login);
-        try {
-            return this.defaultURLHandler.getAbsoluteURI(this.serializer.serialize(aprr));
-        } catch (Exception e) {
-            throw new WebfingerException(String.format("Error while serializing reference for user [%s]", username), e);
+        boolean wikiExist;
+        WikiReference wikiReference;
+        Service result = null;
+
+        // we are in the case xwiki.xwiki: we return the current wiki actor
+        if (WIKI_IDENTIFIER.equals(wikiName)) {
+            wikiExist = true;
+            wikiReference = contextProvider.get().getWikiReference();
+        // we are in the case subwiki.wiki: we check if the subwiki exist before returning it.
+        } else {
+            wikiExist = wikiDescriptorManager.exists(wikiName);
+            wikiReference = new WikiReference(wikiName);
         }
+        if (wikiExist) {
+            result = this.actorHandler.getActor(wikiReference);
+        }
+        return result;
+    }
+
+    private Person resolveUserActor(String username, String wikiName) throws WikiManagerException, ActivityPubException
+    {
+        Person result = null;
+        UserReference userReference = null;
+        if (wikiName != null && this.wikiDescriptorManager.exists(wikiName)) {
+            WikiReference otherWiki = new WikiReference(wikiName);
+            userReference = this.xWikiUserBridge.resolveUser(username, otherWiki);
+        } else {
+            userReference = this.xWikiUserBridge.resolveUser(username);
+        }
+        if (userReference != null && this.xWikiUserBridge.isExistingUser(userReference)) {
+            result = this.actorHandler.getActor(userReference);
+        }
+        return result;
     }
 
     @Override
-    public URI resolveXWikiUserUrl(UserReference userReference) throws WebfingerException
+    public AbstractActor resolveActivityPubUser(String username) throws WebfingerException
     {
+        AbstractActor result = null;
+        XWikiContext context = this.contextProvider.get();
         try {
-            return this.xWikiUserBridge.getUserProfileURL(userReference).toURI();
+            if (username.contains(WIKI_SEPARATOR)) {
+                String[] split = username.split(WIKI_SEPARATOR_SPLIT_REGEX);
+                if (split.length == 2) {
+                    String firstPart = split[0];
+                    String secondPart = split[1];
+
+                    // we are in a case foo.xwiki: we need to resolve a subwiki actor
+                    if (WIKI_IDENTIFIER.equals(secondPart)) {
+                        result = this.resolveWikiActor(firstPart);
+                    // we are in the case identifier.subwiki: we look for the subwiki and then for the actor in it
+                    } else {
+                        result = this.resolveUserActor(firstPart, secondPart);
+                    }
+                }
+            } else {
+                result = this.resolveUserActor(username, null);
+            }
+        } catch (ActivityPubException | WikiManagerException e) {
+            throw new WebfingerException(String.format("Error while resolving username [%s].", username), e);
+        }
+
+        return result;
+    }
+
+    @Override
+    public URI resolveXWikiUserUrl(AbstractActor actor) throws WebfingerException
+    {
+        URI uri = null;
+        try {
+            if (actor instanceof Person) {
+                UserReference xWikiUserReference = this.actorHandler.getXWikiUserReference((Person) actor);
+                uri = this.xWikiUserBridge.getUserProfileURL(xWikiUserReference).toURI();
+            } else if (actor instanceof Service) {
+                WikiReference wikiReference = this.actorHandler.getXWikiWikiReference((Service) actor);
+                DocumentReference mainPageReference =
+                    this.wikiDescriptorManager.getById(wikiReference.getName()).getMainPageReference();
+                uri = new URL(((XWikiDocument) this.documentAccess.getDocumentInstance(mainPageReference))
+                    .getExternalURL("view", this.contextProvider.get())).toURI();
+            } else {
+                throw new IllegalArgumentException(String.format("This actor type is not supported yet [%s]",
+                    actor.getType()));
+            }
         } catch (Exception e) {
-            throw new WebfingerException(String.format("Error while getting profile URL for user [%s]", userReference),
+            throw new WebfingerException(String.format("Error while getting profile URL for user [%s]", actor),
                 e);
         }
+
+        return uri;
     }
 }

@@ -71,6 +71,13 @@ public interface ActorHandler
     UserReference getXWikiUserReference(Person actor) throws ActivityPubException;
 
     /**
+     * Retrieve the XWiki Wiki reference related to the given actor.
+     * @param actor the ActivityPub actor for which to retrieve the reference.
+     * @return a WikiReference.
+     */
+    WikiReference getXWikiWikiReference(Service actor);
+
+    /**
      * Retrieve an actor based on a {@link ActivityPubResourceReference}: this reference type must be necessarily a
      * Person or a Service.
      * @param resourceReference the reference to resolve as an actor.
