@@ -64,6 +64,8 @@ public class ActivityPubSolrInitializer implements SolrCoreInitializer
             if (!schemaAlreadyExists(response)) {
                 createField(client, CONTENT, STRING_TYPE);
                 createField(client, TYPE, STRING_TYPE);
+                // FIXME: we should rely on the constant introduced by the new SolR API once it will be released.
+                createField(client, "updatedDate", "pdate");
             }
         } catch (SolrServerException | IOException | org.apache.solr.common.SolrException e)
         {

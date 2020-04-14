@@ -23,12 +23,14 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocument;
@@ -62,9 +64,12 @@ import org.xwiki.search.solr.SolrException;
 public class DefaultActivityPubStorage implements ActivityPubStorage
 {
     private static final String INBOX_SUFFIX_ID = "inbox";
-
     private static final String OUTBOX_SUFFIX_ID = "outbox";
-    private static final String CONTENT = "content";
+
+    private static final String ID_FIELD = "id";
+    private static final String CONTENT_FIELD = "content";
+    private static final String UPDATEDDATE_FIELD = "updatedDate";
+    private static final String TYPE_FIELD = "type";
 
     @Inject
     private ResourceReferenceSerializer<ActivityPubResourceReference, URI> serializer;
@@ -132,9 +137,10 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         throws ActivityPubException, SolrException, IOException, SolrServerException
     {
         SolrInputDocument inputDocument = new SolrInputDocument();
-        inputDocument.addField("id", entity.getId().toASCIIString());
-        inputDocument.addField("type", entity.getType());
-        inputDocument.addField(CONTENT, this.jsonSerializer.serialize(entity));
+        inputDocument.addField(ID_FIELD, entity.getId().toASCIIString());
+        inputDocument.addField(TYPE_FIELD, entity.getType());
+        inputDocument.addField(CONTENT_FIELD, this.jsonSerializer.serialize(entity));
+        inputDocument.addField(UPDATEDDATE_FIELD, new Date());
         this.getSolrClient().add(inputDocument);
         this.getSolrClient().commit();
     }
@@ -179,17 +185,31 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         }
     }
 
+    private boolean retrieveSolrDocument(SolrDocument solrDocument)
+    {
+        boolean result = true;
+        if ("person".equalsIgnoreCase((String) solrDocument.getFieldValue(TYPE_FIELD))) {
+
+            // if the document is older than one day, and does not belongs to the current instance
+            // then we need to refresh it.
+            Date updatedDate = (Date) solrDocument.getFieldValue(UPDATEDDATE_FIELD);
+            URI id = URI.create((String) solrDocument.getFieldValue(ID_FIELD));
+            result = this.belongsToCurrentInstance(id) || new Date().before(DateUtils.addDays(updatedDate, 1));
+        }
+        return result;
+    }
+
     @Override
     //FIXME: If the informations are about an actor who is not local, we should refresh them after some time.
     public <T extends ActivityPubObject> T retrieveEntity(URI id) throws ActivityPubException
     {
+        T result = null;
         try {
             SolrDocument solrDocument = this.getSolrClient().getById(id.toASCIIString());
-            if (solrDocument == null || solrDocument.isEmpty()) {
-                return null;
-            } else {
-                return (T) this.jsonParser.parse((String) solrDocument.getFieldValue(CONTENT));
+            if (solrDocument != null && !solrDocument.isEmpty() && retrieveSolrDocument(solrDocument)) {
+                result = (T) this.jsonParser.parse((String) solrDocument.getFieldValue(CONTENT_FIELD));
             }
+            return result;
         } catch (IOException | SolrServerException | SolrException e) {
             throw new ActivityPubException(
                 String.format("Error when trying to retrieve the entity of id [%s]", id), e);

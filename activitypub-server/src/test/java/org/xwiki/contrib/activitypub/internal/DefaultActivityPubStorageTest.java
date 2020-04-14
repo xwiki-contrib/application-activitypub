@@ -23,11 +23,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.inject.Named;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocument;
@@ -70,6 +72,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -241,5 +244,41 @@ public class DefaultActivityPubStorageTest
         assertEquals(uid, outbox.getId());
         verifySolrPutAndPrepareGet(uid.toASCIIString(), content, 2);
         assertSame(outbox, this.activityPubStorage.retrieveEntity(uid));
+    }
+
+    @Test
+    public void retrieveActor() throws Exception
+    {
+        Person person = mock(Person.class);
+        SolrDocument solrDocument = mock(SolrDocument.class);
+        URI uri = URI.create("http://www.xwiki.org/person/foo");
+        when(this.solrClient.getById(uri.toASCIIString())).thenReturn(solrDocument);
+        when(solrDocument.isEmpty()).thenReturn(false);
+        when(solrDocument.getFieldValue("content")).thenReturn("{person:foo}");
+        when(this.jsonParser.parse("{person:foo}")).thenReturn(person);
+
+        // A person from same domain, recently updated is always retrieved.
+        when(solrDocument.getFieldValue("id")).thenReturn(uri.toASCIIString());
+        when(solrDocument.getFieldValue("type")).thenReturn("person");
+        when(solrDocument.getFieldValue("updatedDate")).thenReturn(new Date());
+        assertSame(person, this.activityPubStorage.retrieveEntity(uri));
+
+        // If it comes from another domain but it's recent enough it's still retrieved.
+        when(solrDocument.getFieldValue("id")).thenReturn("http://anotherdomain.fr/person/foo");
+        assertSame(person, this.activityPubStorage.retrieveEntity(uri));
+
+        // Now it comes from another domain but it's two days old: we don't retrieve it.
+        Date oldDate = DateUtils.addDays(new Date(), -2);
+        when(solrDocument.getFieldValue("updatedDate")).thenReturn(oldDate);
+        assertNull(this.activityPubStorage.retrieveEntity(uri));
+
+        // We consider it back on the same domain, even if two days old we retrieve it.
+        when(solrDocument.getFieldValue("id")).thenReturn(uri.toASCIIString());
+        assertSame(person, this.activityPubStorage.retrieveEntity(uri));
+
+        // Now if it comes from another domain but it's not a person, we retrieve the data, even if it's old.
+        when(solrDocument.getFieldValue("id")).thenReturn("http://anotherdomain.fr/person/foo");
+        when(solrDocument.getFieldValue("type")).thenReturn("something");
+        assertSame(person, this.activityPubStorage.retrieveEntity(uri));
     }
 }
