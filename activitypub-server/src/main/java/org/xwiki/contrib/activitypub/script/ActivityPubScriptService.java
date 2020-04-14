@@ -388,7 +388,7 @@ public class ActivityPubScriptService implements ScriptService
             DocumentReference dr = this.documentReferenceResolver.resolve(page);
             XWikiDocument xwikiDoc =
                     this.contextProvider.get().getWiki().getDocument(dr, this.contextProvider.get());
-            String content = this.htmlRenderer.render(xwikiDoc.getXDOM());
+            String content = this.htmlRenderer.render(xwikiDoc.getXDOM(), dr);
             Document document = new Document()
                     .setName(xwikiDoc.getTitle())
                     .setAttributedTo(Collections.singletonList(currentActor.getReference()))

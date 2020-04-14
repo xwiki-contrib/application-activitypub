@@ -20,13 +20,14 @@
 package org.xwiki.contrib.activitypub;
 
 import org.xwiki.component.annotation.Role;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.rendering.block.XDOM;
 import org.xwiki.stability.Unstable;
 
 /**
  * Provides operations to render pages content in HTML.
  *
- * @version \$Id$
+ * @version $Id$
  * @since 1.2
  */
 @Unstable
@@ -35,8 +36,9 @@ public interface HTMLRenderer
 {
     /**
      * @param content The content to be rendered in xhtml/1.0.
+     * @param documentReference The document reference of the rendered page. 
      * @return the content rendered in xhtml/1.0.
      * @throws ActivityPubException In case of error during the rendering.
      */
-    String render(XDOM content) throws ActivityPubException;
+    String render(XDOM content, DocumentReference documentReference) throws ActivityPubException;
 }

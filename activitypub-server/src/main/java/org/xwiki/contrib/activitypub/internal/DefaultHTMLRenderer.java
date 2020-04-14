@@ -27,11 +27,15 @@ import javax.inject.Singleton;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.HTMLRenderer;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.rendering.block.XDOM;
 import org.xwiki.rendering.renderer.BlockRenderer;
 import org.xwiki.rendering.renderer.printer.DefaultWikiPrinter;
+import org.xwiki.rendering.transformation.Transformation;
+import org.xwiki.rendering.transformation.TransformationContext;
 
 import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.web.ExternalServletURLFactory;
 import com.xpn.xwiki.web.XWikiURLFactory;
 
@@ -52,15 +56,26 @@ public class DefaultHTMLRenderer implements HTMLRenderer
 
     @Inject
     private Provider<XWikiContext> xwikiContextProvider;
+    
+    @Inject
+    @Named("macro")
+    private Transformation macroTransformation;
 
     @Override
-    public String render(XDOM content) throws ActivityPubException
+    public String render(XDOM content, DocumentReference documentReference) throws ActivityPubException
     {
         XWikiContext xWikiContext = this.xwikiContextProvider.get();
         XWikiURLFactory currentURLFactory = xWikiContext.getURLFactory();
+        XWikiDocument currentXWikiDocument = xWikiContext.getDoc();
         try {
             xWikiContext.setURLFactory(new ExternalServletURLFactory(xWikiContext));
+            
+            
+            xWikiContext.setDoc(new XWikiDocument(documentReference));
+            TransformationContext macroTransformationContext = new TransformationContext(content, null);
+
             try {
+                this.macroTransformation.transform(content, macroTransformationContext);
                 DefaultWikiPrinter printer = new DefaultWikiPrinter();
                 this.renderer.render(content, printer);
                 return printer.toString();
@@ -69,6 +84,7 @@ public class DefaultHTMLRenderer implements HTMLRenderer
             }
         } finally {
             xWikiContext.setURLFactory(currentURLFactory);
+            xWikiContext.setDoc(currentXWikiDocument);
         }
     }
 }

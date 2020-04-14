@@ -141,15 +141,15 @@ public class PageCreatedNotificationJob extends AbstractJob<PageCreatedRequest, 
         URI documentUrl = this.urlHandler.getAbsoluteURI(new URI(view));
 
         Document document = new Document()
-                                .setName(title)
-                                .setAttributedTo(
-                                    Collections.singletonList(
-                                        new ActivityPubObjectReference<AbstractActor>().setObject(author)))
-                                .setPublished(creationDate)
-                                .setContent(this.htmlRenderer.render(content))
-                                // We cannot put it as a document id, since we need to be able to resolve it 
-                                // with an activitypub answer.
-                                .setUrl(Collections.singletonList(documentUrl));
+                .setName(title)
+                .setAttributedTo(
+                        Collections.singletonList(
+                                new ActivityPubObjectReference<AbstractActor>().setObject(author)))
+                .setPublished(creationDate)
+                .setContent(this.htmlRenderer.render(content, this.request.getDocumentReference()))
+                // We cannot put it as a document id, since we need to be able to resolve it 
+                // with an activitypub answer.
+                .setUrl(Collections.singletonList(documentUrl));
 
         // Make sure it's stored so it can be resolved later.
         this.storage.storeEntity(document);
