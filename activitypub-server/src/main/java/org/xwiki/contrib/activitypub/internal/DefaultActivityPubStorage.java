@@ -33,10 +33,10 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
-import org.apache.solr.common.params.CommonParams;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
@@ -234,13 +234,14 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         try {
             String queryString = String.format("filter(type:%s) AND id:*%s*", WEBFINGER_TYPE, query);
             SolrQuery solrQuery = new SolrQuery(queryString).setRows(limit);
-            SolrDocumentList results = this.getSolrClient().query(solrQuery).getResults();
+            QueryResponse queryResponse = this.getSolrClient().query(solrQuery);
+            SolrDocumentList results = queryResponse.getResults();
             for (SolrDocument solrDocument : results) {
-                result.add(this.webfingerJsonParser.parse((String)solrDocument.getFieldValue(CONTENT_FIELD)));
+                result.add(this.webfingerJsonParser.parse((String) solrDocument.getFieldValue(CONTENT_FIELD)));
             }
         } catch (SolrException | SolrServerException | IOException | WebfingerException e) {
-            throw new ActivityPubException(String.format("Error while performing the query [%s] for WebFinger.", query)
-                , e);
+            throw new ActivityPubException(
+                String.format("Error while performing the query [%s] for WebFinger.", query), e);
         }
         return result;
     }

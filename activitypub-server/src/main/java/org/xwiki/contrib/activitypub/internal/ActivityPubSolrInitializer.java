@@ -79,7 +79,8 @@ public class ActivityPubSolrInitializer implements SolrCoreInitializer
     }
 
     // FIXME: This needs to be removed after the release of XWiki 12.3RC1
-    // Note that we also need the change from https://github.com/xwiki/xwiki-platform/commit/4fc3a7102ee2ea2beae612ebd67f9089a52aa7c4
+    // Note that we also need the change from
+    // https://github.com/xwiki/xwiki-platform/commit/4fc3a7102ee2ea2beae612ebd67f9089a52aa7c4
     private void createFieldTypes(SolrClient client) throws IOException, SolrServerException
     {
         FieldTypeDefinition definition = new FieldTypeDefinition();

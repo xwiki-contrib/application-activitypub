@@ -22,6 +22,7 @@ package org.xwiki.contrib.activitypub.internal;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -31,8 +32,11 @@ import javax.inject.Named;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,6 +53,9 @@ import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
+import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonParser;
+import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonSerializer;
+import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 import org.xwiki.resource.ResourceReferenceResolver;
 import org.xwiki.resource.ResourceReferenceSerializer;
 import org.xwiki.resource.ResourceType;
@@ -107,6 +114,12 @@ public class DefaultActivityPubStorageTest
 
     @MockComponent
     private DefaultURLHandler urlHandler;
+
+    @MockComponent
+    private WebfingerJsonParser webfingerJsonParser;
+
+    @MockComponent
+    private WebfingerJsonSerializer webfingerJsonSerializer;
 
     @Mock
     private SolrClient solrClient;
@@ -283,5 +296,51 @@ public class DefaultActivityPubStorageTest
         when(solrDocument.getFieldValue("id")).thenReturn("http://anotherdomain.fr/person/foo");
         when(solrDocument.getFieldValue("type")).thenReturn("something");
         assertSame(person, this.activityPubStorage.retrieveEntity(uri));
+    }
+
+    @Test
+    public void storeWebfinger() throws Exception
+    {
+        JSONResourceDescriptor jsonResourceDescriptor = mock(JSONResourceDescriptor.class);
+        String subject = "acct:foo@xwiki.org";
+        String content = "{webfinger:foo}";
+        when(jsonResourceDescriptor.getSubject()).thenReturn(subject);
+        when(this.webfingerJsonSerializer.serialize(jsonResourceDescriptor)).thenReturn(content);
+
+        this.activityPubStorage.storeWebFinger(jsonResourceDescriptor);
+        ArgumentCaptor<SolrInputDocument> argumentCaptor =
+            ArgumentCaptor.forClass(SolrInputDocument.class);
+        verify(this.solrClient).add(argumentCaptor.capture());
+        assertEquals(subject, argumentCaptor.getValue().getFieldValue("id"));
+        assertEquals(content, argumentCaptor.getValue().getFieldValue("content"));
+        assertEquals("webfinger", argumentCaptor.getValue().getFieldValue("type"));
+    }
+
+    @Test
+    public void searchWebfinger() throws Exception
+    {
+        String queryParam = "foo";
+        int limit = 42;
+        String queryString = "filter(type:webfinger) AND id:*foo*";
+        SolrQuery solrQuery = new SolrQuery(queryString).setRows(limit);
+        SolrDocumentList solrDocumentList = mock(SolrDocumentList.class);
+        QueryResponse queryResponse = mock(QueryResponse.class);
+        when(this.solrClient.query(any())).thenReturn(queryResponse);
+        when(queryResponse.getResults()).thenReturn(solrDocumentList);
+        SolrDocument document1 = mock(SolrDocument.class);
+        SolrDocument document2 = mock(SolrDocument.class);
+        when(solrDocumentList.iterator()).thenReturn(Arrays.asList(document1, document2).iterator());
+        String content1 = "{foo1}";
+        String content2 = "{foo2}";
+        when(document1.getFieldValue("content")).thenReturn(content1);
+        when(document2.getFieldValue("content")).thenReturn(content2);
+        JSONResourceDescriptor json1 = mock(JSONResourceDescriptor.class);
+        JSONResourceDescriptor json2 = mock(JSONResourceDescriptor.class);
+        when(this.webfingerJsonParser.parse(content1)).thenReturn(json1);
+        when(this.webfingerJsonParser.parse(content2)).thenReturn(json2);
+        assertEquals(Arrays.asList(json1, json2), this.activityPubStorage.searchWebFinger(queryParam, limit));
+        ArgumentCaptor<SolrQuery> argumentCaptor = ArgumentCaptor.forClass(SolrQuery.class);
+        verify(this.solrClient).query(argumentCaptor.capture());
+        assertEquals(solrQuery.toString(), argumentCaptor.getValue().toString());
     }
 }
