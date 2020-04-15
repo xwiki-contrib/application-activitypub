@@ -31,4 +31,5 @@
   <suppress checks="ClassFanOutComplexity" files="ActivityPubResourceReferenceHandler.java"/>
   <suppress checks="ClassFanOutComplexity" files="PageCreatedNotificationJob.java"/>
   <suppress checks="ClassFanOutComplexity" files="ActivityPubScriptService.java"/>
+  <suppress checks="ClassFanOutComplexity" files="DefaultSignatureService.java"/>
 </suppressions>

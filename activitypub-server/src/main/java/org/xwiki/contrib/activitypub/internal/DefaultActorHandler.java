@@ -225,12 +225,7 @@ public class DefaultActorHandler implements ActorHandler
         // TODO: this would need to be improved, for example by directly storing the publickey in the DB.
         this.activityPubStorage.storeEntity(actor);
 
-        String pubKey = this.signatureService.getPublicKeyPEM(actor);
-
-        PublicKey publicKey = new PublicKey()
-                                .setId(actor.getId() + "#main-key")
-                                .setOwner(actor.getId().toASCIIString())
-                                .setPublicKeyPem(pubKey);
+        PublicKey publicKey = this.initPublicKey(actor);
         actor.setPublicKey(publicKey);
 
         this.activityPubStorage.storeEntity(actor);
@@ -457,5 +452,17 @@ public class DefaultActorHandler implements ActorHandler
         } else {
             return null;
         }
+    }
+
+    @Override
+    public PublicKey initPublicKey(AbstractActor actor) throws ActivityPubException
+    {
+        String pubKey = this.signatureService.getPublicKeyPEM(actor);
+
+        String idStr = actor.getId().toASCIIString();
+        return new PublicKey()
+                .setId(idStr + "#main-key")
+                .setOwner(idStr)
+                .setPublicKeyPem(pubKey);
     }
 }

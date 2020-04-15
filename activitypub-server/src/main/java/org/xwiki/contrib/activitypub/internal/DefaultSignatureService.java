@@ -19,6 +19,7 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
+import java.io.File;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -47,12 +48,13 @@ import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.CryptoService;
 import org.xwiki.contrib.activitypub.SignatureService;
-import org.xwiki.crypto.params.cipher.asymmetric.PrivateKeyParameters;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
+import org.xwiki.crypto.params.cipher.asymmetric.PrivateKeyParameters;
 import org.xwiki.crypto.pkix.params.CertifiedKeyPair;
+import org.xwiki.crypto.store.FileStoreReference;
 import org.xwiki.crypto.store.KeyStore;
 import org.xwiki.crypto.store.KeyStoreException;
-import org.xwiki.crypto.store.WikiStoreReference;
+import org.xwiki.environment.Environment;
 import org.xwiki.model.reference.DocumentReference;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -88,8 +90,8 @@ public class DefaultSignatureService implements SignatureService
     private DateProvider dateProvider = new DateProvider();
 
     @Inject
-    @Named("X509wiki")
-    private KeyStore x509WikiKeyStore;
+    @Named("X509file")
+    private KeyStore keyStore;
 
     @Inject
     private Provider<ActorHandler> actorHandlerProvider;
@@ -97,9 +99,12 @@ public class DefaultSignatureService implements SignatureService
     @Inject
     private CryptoService cryptoService;
 
+    @Inject
+    private Environment environment;
+
     @Override
     public void generateSignature(HttpMethod postMethod, AbstractActor actor)
-        throws ActivityPubException
+            throws ActivityPubException
     {
         String date = this.dateProvider.getFormatedDate();
 
@@ -124,19 +129,22 @@ public class DefaultSignatureService implements SignatureService
 
     private CertifiedKeyPair getCertifiedKeyPair(AbstractActor actor) throws ActivityPubException
     {
+        DocumentReference dr = this.actorHandlerProvider
+                .get()
+                .getStoreDocument(actor);
+
+        CertifiedKeyPair stored;
         try {
-            DocumentReference dr = this.actorHandlerProvider.get().getStoreDocument(actor);
-            CertifiedKeyPair stored = this.x509WikiKeyStore.retrieve(new WikiStoreReference(dr));
-
-            if (stored != null) {
-                return stored;
-            }
-
-            return this.initKeys(dr);
+            stored = this.keyStore.retrieve(this.buildFileStoreReference(dr));
         } catch (KeyStoreException e) {
-            throw new ActivityPubException(String.format("Error while retrieving the private key for user [%s]", actor),
-                e);
+            stored = null;
         }
+
+        if (stored != null) {
+            return stored;
+        }
+
+        return this.initKeys(dr);
     }
 
     private byte[] sign(AbstractActor actor, String signedString)
@@ -161,22 +169,35 @@ public class DefaultSignatureService implements SignatureService
     {
         try {
             CertifiedKeyPair ret = this.cryptoService.generateCertifiedKeyPair();
-            // FIXME: We should ensure that the permissions of the wiki store reference are properly set.
-            this.x509WikiKeyStore.store(new WikiStoreReference(user), ret);
+            this.keyStore.store(this.buildFileStoreReference(user), ret);
             return ret;
         } catch (KeyStoreException e) {
             throw new ActivityPubException(
-                String.format("Error while initializing the cryptographic keys for [%s]", user), e);
+                    String.format("Error while initializing the cryptographic keys for [%s]", user), e);
         }
+    }
+
+    private FileStoreReference buildFileStoreReference(DocumentReference user)
+    {
+        File permDir = this.environment.getPermanentDirectory();
+        File apKeysDir = new File(permDir, "activitypub");
+        apKeysDir.mkdirs();
+        File activitypub = new File(apKeysDir, String.format("%s.key", user.toString()));
+        return new FileStoreReference(activitypub);
     }
 
     @Override
     public String getPublicKeyPEM(AbstractActor actor) throws ActivityPubException
     {
-        byte[] encoded = this.getCertifiedKeyPair(actor).getPublicKey().getEncoded();
+        byte[] encoded = this
+                .getCertifiedKeyPair(actor)
+                .getPublicKey()
+                .getEncoded();
 
-        return String.format("-----BEGIN PUBLIC KEY-----\n%s\n-----END PUBLIC KEY-----\n",
-            Base64.getEncoder().encodeToString(encoded));
+        return String.format("-----BEGIN PUBLIC KEY-----\n"
+                        + "%s\n"
+                        + "-----END PUBLIC KEY-----\n",
+                Base64.getEncoder().encodeToString(encoded));
     }
 
     /**

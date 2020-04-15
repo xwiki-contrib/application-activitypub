@@ -21,6 +21,7 @@ package org.xwiki.contrib.activitypub.internal;
 
 import java.net.URI;
 import java.security.KeyPairGenerator;
+import java.util.Objects;
 
 import javax.inject.Named;
 
@@ -32,8 +33,8 @@ import org.xwiki.contrib.activitypub.CryptoService;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.crypto.params.cipher.asymmetric.PrivateKeyParameters;
 import org.xwiki.crypto.pkix.params.CertifiedKeyPair;
+import org.xwiki.crypto.store.FileStoreReference;
 import org.xwiki.crypto.store.KeyStore;
-import org.xwiki.crypto.store.WikiStoreReference;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
@@ -60,8 +61,8 @@ class DefaultSignatureServiceTest
     private DefaultSignatureService signatureService;
 
     @MockComponent
-    @Named("X509wiki")
-    private KeyStore x509WikiKeyStore;
+    @Named("X509file")
+    private KeyStore keyStore;
 
     @MockComponent
     private CryptoService cryptoService;
@@ -153,7 +154,6 @@ class DefaultSignatureServiceTest
         when(dateProvider.getFormatedDate()).thenReturn("Mon, 06 Apr 2020 08:39:20 GMT");
 
         HttpMethod postMethod = mock(HttpMethod.class);
-        String targetURI = "http://targeturi/";
         org.apache.commons.httpclient.URI postURI = mock(org.apache.commons.httpclient.URI.class);
         when(postURI.getPath()).thenReturn("/");
         when(postURI.getHost()).thenReturn("targeturi");
@@ -165,10 +165,11 @@ class DefaultSignatureServiceTest
         when(this.actorHandler.getStoreDocument(actor)).thenReturn(documentReference);
 
         CertifiedKeyPair certifiedKeyPair = mock(CertifiedKeyPair.class);
-        when(this.x509WikiKeyStore.retrieve(argThat(
-            storeReference -> (storeReference instanceof WikiStoreReference) &&
-                                  ((WikiStoreReference) storeReference).getReference().equals(documentReference))))
-            .thenReturn(certifiedKeyPair);
+        when(this.keyStore.retrieve(argThat(
+                storeReference -> (storeReference instanceof FileStoreReference) &&
+                        Objects.equals(((FileStoreReference) storeReference).getFile().getName(),
+                                documentReference.toString() + ".key"))))
+                .thenReturn(certifiedKeyPair);
         PrivateKeyParameters privateKeyParameters = mock(PrivateKeyParameters.class);
         when(certifiedKeyPair.getPrivateKey()).thenReturn(privateKeyParameters);
         when(privateKeyParameters.getEncoded()).thenReturn(PK);
@@ -176,8 +177,8 @@ class DefaultSignatureServiceTest
         this.signatureService.generateSignature(postMethod, actor);
         InOrder inOrder = inOrder(postMethod, postMethod);
         inOrder.verify(postMethod).addRequestHeader(eq("Signature"),
-            eq("keyId=\"http://actoruri/\",headers=\"(request-target) host date\""
-                   + ",signature=\"bdNHx5ahaz5D4SybbFcR/X97b7IdE7umC77+IeJI26ZmM7QqSs09T0wzYQWil8FDJDejepg2WfzW6OGXDDVM0Q==\""));
+                eq("keyId=\"http://actoruri/\",headers=\"(request-target) host date\""
+                        + ",signature=\"bdNHx5ahaz5D4SybbFcR/X97b7IdE7umC77+IeJI26ZmM7QqSs09T0wzYQWil8FDJDejepg2WfzW6OGXDDVM0Q==\""));
         inOrder.verify(postMethod).addRequestHeader(eq("Date"), anyString());
     }
 }

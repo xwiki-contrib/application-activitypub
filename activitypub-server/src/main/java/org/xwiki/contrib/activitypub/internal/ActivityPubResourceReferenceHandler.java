@@ -45,15 +45,15 @@ import org.xwiki.container.servlet.ServletResponse;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.ActorHandler;
-import org.xwiki.contrib.activitypub.entities.AbstractActor;
-import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.model.reference.DocumentReference;
@@ -137,7 +137,9 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
         try {
             ActivityPubObject entity =
-                this.activityPubStorage.retrieveEntity(new URI(request.getRequestURL().toString()));
+                    this.activityPubStorage.retrieveEntity(new URI(request.getRequestURL().toString()));
+
+            this.issueMissingPublicKey(entity);
 
             // We didn't manage to retrieve the entity from storage, but it's about an Actor: we lazily create it.
             if (entity == null && isAboutActor(resourceReference)) {
@@ -147,8 +149,8 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
             // if the entity is still null, then it's a 404: we don't know about it.
             if (entity == null) {
                 this.sendErrorResponse(HttpServletResponse.SC_NOT_FOUND,
-                    String.format("The entity of type [%s] and uid [%s] cannot be found.",
-                        resourceReference.getEntityType(), resourceReference.getUuid()));
+                        String.format("The entity of type [%s] and uid [%s] cannot be found.",
+                                resourceReference.getEntityType(), resourceReference.getUuid()));
 
             // FIXME: we should check the Content-Type and Accept headers
             // See: https://www.w3.org/TR/activitypub/#client-to-server-interactions for POST and
@@ -186,12 +188,29 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
     }
 
     /**
+     * Generates and store a public key for an {@link AbstractActor} if she/it does not already hvae one.
+     *
+     * @param entity The entity to possibly update.
+     * @throws ActivityPubException In case of error during the public key generation or the entity storage.
+     */
+    private void issueMissingPublicKey(ActivityPubObject entity) throws ActivityPubException
+    {
+        if (entity instanceof AbstractActor) {
+            AbstractActor abstractActor = (AbstractActor) entity;
+            if (abstractActor.getPublicKey() == null) {
+                abstractActor.setPublicKey(this.actorHandler.initPublicKey(abstractActor));
+                this.activityPubStorage.storeEntity(abstractActor);
+            }
+        }
+    }
+
+    /**
      * Handle the POST made on the given box: this methods parse the body of the request, perform some checks on it,
      * build an {@link ActivityRequest}, retrieve the right {@link ActivityHandler} and delegates to it the request.
      *
      * @param box the box where the POST was performed
      * @throws ActivityPubException in case of error during the checks on the body
-     * @throws IOException in case of error during an HTTP response.
+     * @throws IOException          in case of error during an HTTP response.
      */
     private void handleBox(ActivityPubObject box) throws ActivityPubException, IOException
     {
