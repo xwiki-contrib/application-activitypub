@@ -22,6 +22,7 @@ package org.xwiki.contrib.activitypub;
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Person;
+import org.xwiki.contrib.activitypub.entities.PublicKey;
 import org.xwiki.contrib.activitypub.entities.Service;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.WikiReference;
@@ -56,17 +57,20 @@ public interface ActorHandler
 
     /**
      * Retrieve or create an ActivityPub {@link Service} corresponding to the given wiki reference.
+     *
      * @param wikiReference the reference to a wiki.
      * @return an actor corresponding to that wiki.
-     * @throws ActivityPubException
+     * @throws ActivityPubException in case of error when retrieving or creating the {@link Service}.
      * @since 1.2
      */
     Service getActor(WikiReference wikiReference) throws ActivityPubException;
 
     /**
      * Retrieve the XWiki User reference related to the given actor.
+     *
      * @param actor an ActivityPub actor for which to retrieve the reference.
      * @return an entity reference or null if the actor does not belong to the current wiki.
+     * @throws ActivityPubException In case of error when retrieving the user reference.
      */
     UserReference getXWikiUserReference(Person actor) throws ActivityPubException;
 
@@ -126,6 +130,7 @@ public interface ActorHandler
      *      manages the service (see {@link ActivityPubConfiguration#getWikiGroup()}).
      * @param authenticatedUser a logged-in XWiki User.
      * @param targetActor an ActivityPub actor
+     * @throws ActivityPubException In case of error during the verification of the user's rights.
      * @return {@code true} if the authenticated user is authorized to act for the given actor.
      * @since 1.2
      */
@@ -138,6 +143,7 @@ public interface ActorHandler
      *
      * @param targetedActor the actor who needs to receive a notification
      * @return a serialized reference that will be used in XWiki notification mechanism.
+     * @throws ActivityPubException In case of error during the retrieval of the notification targets.
      * @since 1.2
      */
     @Unstable
@@ -151,8 +157,19 @@ public interface ActorHandler
      *
      * @param actor the actor for which we want to store informations.
      * @return a reference that can be used for storing data.
+     * @throws ActivityPubException In case of error during the query of the stored document.
      * @since 1.2
      */
     @Unstable
     DocumentReference getStoreDocument(AbstractActor actor) throws ActivityPubException;
+
+    /**
+     * Generates a public key for the actor.
+     *
+     * @param actor An XWiki actor.
+     * @return A public key for this actor.
+     * @throws ActivityPubException In case of error during the public key generation.
+     * @since 1.2
+     */
+    PublicKey initPublicKey(AbstractActor actor) throws ActivityPubException;
 }
