@@ -32,7 +32,6 @@
   <name>XWiki ActivityPub - Core</name>
   <packaging>jar</packaging>
   <properties>
-    <jackson.version>2.10.2</jackson.version>
     <xwiki.jacoco.instructionRatio>0.71</xwiki.jacoco.instructionRatio>
   </properties>
   <dependencies>
@@ -64,6 +63,11 @@
       <groupId>org.xwiki.platform</groupId>
       <artifactId>xwiki-platform-user-api</artifactId>
       <version>${platform.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.xwiki.contrib</groupId>
+      <artifactId>webfinger-core</artifactId>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
 </project>

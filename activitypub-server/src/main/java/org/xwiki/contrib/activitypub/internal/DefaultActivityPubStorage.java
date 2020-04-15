@@ -21,7 +21,9 @@ package org.xwiki.contrib.activitypub.internal;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -29,9 +31,12 @@ import javax.inject.Singleton;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.common.params.CommonParams;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
@@ -44,6 +49,10 @@ import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.Outbox;
+import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
+import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonParser;
+import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonSerializer;
+import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 import org.xwiki.resource.ResourceReferenceSerializer;
 import org.xwiki.resource.SerializeResourceReferenceException;
 import org.xwiki.resource.UnsupportedResourceReferenceException;
@@ -68,6 +77,8 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     private static final String UPDATEDDATE_FIELD = "updatedDate";
     private static final String TYPE_FIELD = "type";
 
+    private static final String WEBFINGER_TYPE = "webfinger";
+
     @Inject
     private ResourceReferenceSerializer<ActivityPubResourceReference, URI> serializer;
 
@@ -79,6 +90,12 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
 
     @Inject
     private ActivityPubObjectReferenceResolver resolver;
+
+    @Inject
+    private WebfingerJsonSerializer webfingerJsonSerializer;
+
+    @Inject
+    private WebfingerJsonParser webfingerJsonParser;
 
     @Inject
     private Logger logger;
@@ -157,6 +174,11 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         }
     }
 
+    private String getActorEntityUID(AbstractActor actor, String entitySuffix)
+    {
+        return String.format("%s-%s", actor.getPreferredUsername(), entitySuffix);
+    }
+
     private boolean retrieveSolrDocument(SolrDocument solrDocument)
     {
         boolean result = true;
@@ -188,8 +210,38 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         }
     }
 
-    private String getActorEntityUID(AbstractActor actor, String entitySuffix)
+    @Override
+    public void storeWebFinger(JSONResourceDescriptor jsonResourceDescriptor) throws ActivityPubException
     {
-        return String.format("%s-%s", actor.getPreferredUsername(), entitySuffix);
+        try {
+            SolrInputDocument inputDocument = new SolrInputDocument();
+            inputDocument.addField(ID_FIELD, jsonResourceDescriptor.getSubject());
+            inputDocument.addField(TYPE_FIELD, WEBFINGER_TYPE);
+            inputDocument.addField(CONTENT_FIELD, this.webfingerJsonSerializer.serialize(jsonResourceDescriptor));
+            inputDocument.addField(UPDATEDDATE_FIELD, new Date());
+            this.getSolrClient().add(inputDocument);
+            this.getSolrClient().commit();
+        } catch (IOException | SolrException | SolrServerException e) {
+            throw new ActivityPubException(
+                String.format("Error while storing WebFinger record [%s]", jsonResourceDescriptor), e);
+        }
+    }
+
+    @Override
+    public List<JSONResourceDescriptor> searchWebFinger(String query, int limit) throws ActivityPubException
+    {
+        List<JSONResourceDescriptor> result = new ArrayList<>();
+        try {
+            String queryString = String.format("filter(type:%s) AND id:*%s*", WEBFINGER_TYPE, query);
+            SolrQuery solrQuery = new SolrQuery(queryString).setRows(limit);
+            SolrDocumentList results = this.getSolrClient().query(solrQuery).getResults();
+            for (SolrDocument solrDocument : results) {
+                result.add(this.webfingerJsonParser.parse((String)solrDocument.getFieldValue(CONTENT_FIELD)));
+            }
+        } catch (SolrException | SolrServerException | IOException | WebfingerException e) {
+            throw new ActivityPubException(String.format("Error while performing the query [%s] for WebFinger.", query)
+                , e);
+        }
+        return result;
     }
 }

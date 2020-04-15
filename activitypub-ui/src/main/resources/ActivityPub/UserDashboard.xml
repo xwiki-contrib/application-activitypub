@@ -36,41 +36,8 @@
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
-  <content>{{velocity}}
-#set ($defaultValues = [
-  "public",
-  "followers"
-])
-#macro (apPicker_displayOptions $selectedValues)
-  #foreach ($defaultValue in $defaultValues)
-    &lt;option value="$!escapetool.xml($defaultValue)"#if ($selectedValues.contains($defaultValue)) selected="selected"#end
-      &gt;$!escapetool.xml($defaultValue)&lt;/option&gt;
-  #end
-#end
-#macro (apTargetPicker_import)
-  #picker_import
-  #set ($discard = $xwiki.jsfx.use('uicomponents/suggest/xwiki.selectize.js', true))
-  #set ($discard = $xwiki.jsfx.use('uicomponents/suggest/suggestPropertyValues.js',
-  {'forceSkinAction': true, 'language': $xcontext.locale}))
-#end
-#macro (activityPubUserPicker $parameters)
-  #apTargetPicker_import
-  #if ("$!parameters" == "")
-    #set ($parameters = {
-      'name': 'messageTarget',
-      'multiple': 'multiple',
-      'data-freeText': 'allowed',
-      'data-xwiki-selectize': {
-         'create': true
-      }
-    })
-  #end
-  #set ($discard = $parameters.put('class', "$!parameters.get('class') xwiki-selectize suggest-apusers"))
-  #if (!$parameters.containsKey('placeholder'))
-    #set ($parameters.placeholder = $services.localization.render('activitypub.message.target.placeholder'))
-  #end
-  #suggestInput($parameters 'apPicker_displayOptions')
-#end
+  <content>{{include reference="ActivityPub.ActivityPubUserPicker"/}}
+{{velocity}}
 ## Display the ActivityPub Dashboard for the actor given in parameter.
 #macro(activitypubDashboard $actor)
 #set ($discard = $xwiki.jsx.use('ActivityPub.UserDashboard'))
@@ -141,7 +108,12 @@ $services.localization.render('activitypub.webfinger.notconfigured')
             &lt;span class='xHint'&gt;$services.localization.render('activitypub.follow.input.hint')&lt;/span&gt;
           &lt;/dt&gt;
           &lt;dd&gt;
-            &lt;input type="text" name="followInput" id="followInput" class="form-control" placeholder="$services.localization.render('activitypub.follow.input.placeholder')" /&gt;
+            #set ($APUsersPickerParams = {
+             'name': 'followInput',
+             'multiple': 'false',
+             'placeholder': $services.localization.render('activitypub.follow.input.placeholder')
+          })
+          #APUsersPicker($APUsersPickerParams)
           &lt;/dd&gt;
         &lt;/dl&gt;
         &lt;div class='buttonwrapper'&gt;
@@ -157,7 +129,13 @@ $services.localization.render('activitypub.webfinger.notconfigured')
           &lt;span class='xHint'&gt;$services.localization.render('activitypub.message.target.hint')&lt;/span&gt;
         &lt;/dt&gt;
         &lt;dd&gt;
-          #activityPubUserPicker("")
+          #set ($APUsersPickerParams = {
+             'name': 'messageTarget',
+             'public': 'allowed',
+             'followers': 'allowed',
+             'placeholder': $services.localization.render('activitypub.message.target.placeholder')
+          })
+          #APUsersPicker($APUsersPickerParams)
         &lt;/dd&gt;
       &lt;/dl&gt;
       &lt;dl&gt;

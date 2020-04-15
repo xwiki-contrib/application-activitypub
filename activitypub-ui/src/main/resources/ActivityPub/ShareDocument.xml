@@ -325,7 +325,13 @@
               &lt;span class='xHint'&gt;$services.localization.render('activitypub.message.target.hint')&lt;/span&gt;
             &lt;/dt&gt;
             &lt;dd&gt;
-                #activityPubUserPicker("")
+                #set ($APUsersPickerParams = {
+                   'name': 'messageTarget',
+                   'public': 'allowed',
+                   'followers': 'allowed',
+                   'placeholder': $services.localization.render('activitypub.message.target.placeholder')
+                })
+                #APUsersPicker($APUsersPickerParams)
             &lt;/dd&gt;
           &lt;/dl&gt;
         &lt;/form&gt;

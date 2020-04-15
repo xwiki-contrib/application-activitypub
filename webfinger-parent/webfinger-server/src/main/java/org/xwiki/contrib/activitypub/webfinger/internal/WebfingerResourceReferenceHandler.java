@@ -40,6 +40,8 @@ import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.container.Container;
 import org.xwiki.container.servlet.ServletResponse;
+import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
@@ -97,6 +99,9 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
 
     @Inject
     private WebfingerJsonSerializer webfingerJsonSerializer;
+
+    @Inject
+    private ActivityPubStorage activityPubStorage;
 
     @Override
     public List<ResourceType> getSupportedResourceReferences()
@@ -158,7 +163,7 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
             this.sendValidResponse(response, actor, resource, rels);
         } catch (WebfingerException e) {
             this.handleException(response, e);
-        } catch (URISyntaxException | IOException e) {
+        } catch (URISyntaxException | IOException | ActivityPubException e) {
             this.handleError(response, 500, e.getMessage());
         }
     }
@@ -216,7 +221,7 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
     }
 
     private void sendValidResponse(HttpServletResponse response, AbstractActor actor, String resource,
-        List<String> rels) throws IOException, WebfingerException
+        List<String> rels) throws IOException, WebfingerException, ActivityPubException
     {
         response.setContentType("application/jrd+json");
 
@@ -235,6 +240,8 @@ public class WebfingerResourceReferenceHandler extends AbstractResourceReference
 
         JSONResourceDescriptor object =
             new JSONResourceDescriptor().setSubject(normalizeSubject(resource)).setLinks(links);
+
+        this.activityPubStorage.storeWebFinger(object);
         this.webfingerJsonSerializer.serialize(response.getOutputStream(), object);
     }
 

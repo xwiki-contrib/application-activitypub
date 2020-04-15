@@ -1,0 +1,246 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.4" reference="ActivityPub.ActivityPubUserPicker" locale="">
+  <web>ActivityPub</web>
+  <name>ActivityPubUserPicker</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>ActivityPubUserPicker</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>false</hidden>
+  <content>{{velocity output="false"}}
+#macro (APUsersPicker_import)
+  #picker_import
+  #set ($discard = $xwiki.jsx.use('ActivityPub.ActivityPubUserPicker'))
+#end
+
+#macro (APUsersPicker_displayOptions $selectedValues)
+  #foreach ($defaultValue in $APUsersPickerdefaultValues)
+    &lt;option value="$!escapetool.xml($defaultValue)"#if ($selectedValues.contains($defaultValue)) selected="selected"#end
+      &gt;$!escapetool.xml($defaultValue)&lt;/option&gt;
+  #end
+#end
+
+#macro (APUsersPicker $parameters)
+  #APUsersPicker_import
+  #if ("$!parameters" == "")
+    #set ($parameters = {})
+  #end
+  #set ($discard = $parameters.put('class', "$!parameters.get('class') suggest-apusers"))
+  #set ($APUsersPickerdefaultValues = [])
+  #if ($parameters.public == 'allowed')
+    #set($discard = $APUsersPickerdefaultValues.add('public'))
+  #end
+  #if ($parameters.followers == 'allowed')
+    #set($discard = $APUsersPickerdefaultValues.add('followers'))
+  #end
+  #if (!$parameters.containsKey('placeholder'))
+    #set ($parameters.placeholder = $services.localization.render('activitypub.userpicker.placeholder'))
+  #end
+  #if (!$parameters.containsKey('data-freeText'))
+    #set ($discard = $parameters.put('data-freeText', 'allowed'))
+    #set ($discard = $parameters.put('data-xwiki-selectize', { 'create': true}))
+  #end
+  #if ($parameters.containsKey('multiple') &amp;&amp; $parameters.multiple != 'multiple')
+    #set ($discard = $parameters.remove('multiple'))
+  #elseif (!$parameters.containsKey('multiple'))
+    #set ($discard = $parameters.put('multiple', 'multiple'))
+  #end
+  #suggestInput($parameters 'APUsersPicker_displayOptions')
+#end
+{{/velocity}}
+
+{{velocity}}
+#if ("$!request.query" != "" &amp;&amp; $request.outputSyntax == 'plain')
+  #set($solrResult = $services.webfinger.queryExistingIdentifier($request.query,10))
+  #set ($jsonAnswer = [])
+  #foreach ($solrInfo in $solrResult)
+    #foreach ($link in $solrInfo.links)
+      #if ($link.rel == "self")
+        #set ($apURL = $link.href)
+      #end
+    #end
+    #set ($label = $solrInfo.subject)
+    #if ($label.contains('acct:'))
+      #set ($label = $label.split('acct:')[1])
+    #end
+    #set ($discard = $jsonAnswer.add({
+      'label': $label,
+      'value': $apURL,
+      'url': $apURL,
+      'icon': $services.icon.getMetaData('branch'),
+      'hint': $solrInfo.subject
+    }))
+  #end
+  #jsonResponse($jsonAnswer)
+#end
+{{/velocity}}</content>
+  <object>
+    <name>ActivityPub.ActivityPubUserPicker</name>
+    <number>0</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>18e82747-32de-495d-8bf2-f46feb82398c</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>require.config({
+  paths: {
+    'xwiki-selectize': "$xwiki.getSkinFile('uicomponents/suggest/xwiki.selectize.js', true)" +
+      "?v=$escapetool.url($xwiki.version)"
+  }
+});
+
+define('xwiki-suggestAPUsers', ['jquery', 'xwiki-selectize'], function($) {
+  var getSettings = function(select) {
+    return {
+      load: function(typedText, callback) {
+        $.getJSON(new XWiki.Document('ActivityPubUserPicker', 'ActivityPub').getURL('get'), {
+          query: typedText,
+          outputSyntax: 'plain'
+        }).done(callback).fail(callback);
+      },
+      loadSelected: function(selectedValue, callback) {
+        $.getJSON(new XWiki.Document('ActivityPubUserPicker', 'ActivityPub').getURL('get'), {
+          text: typedText,
+          exactMatch: true,
+          outputSyntax: 'plain'
+        }).done(callback).fail(callback);
+      }
+    };
+  };
+
+  $.fn.suggestAPUsers = function(settings) {
+    return this.each(function() {
+      $(this).xwikiSelectize($.extend(getSettings($(this)), settings));
+    });
+  };
+});
+
+require(['jquery', 'xwiki-suggestAPUsers', 'xwiki-events-bridge'], function($) {
+  var init = function(event, data) {
+    var container = $((data &amp;&amp; data.elements) || document);
+    container.find('.suggest-apusers').suggestAPUsers();
+  };
+
+  $(document).on('xwiki:dom:loaded xwiki:dom:updated', init);
+  XWiki.domIsLoaded &amp;&amp; init();
+});</code>
+    </property>
+    <property>
+      <name>user picker</name>
+    </property>
+    <property>
+      <parse>1</parse>
+    </property>
+    <property>
+      <use>always</use>
+    </property>
+  </object>
+</xwikidoc>

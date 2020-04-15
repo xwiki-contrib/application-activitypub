@@ -20,9 +20,11 @@
 package org.xwiki.contrib.activitypub;
 
 import java.net.URI;
+import java.util.List;
 
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
+import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 import org.xwiki.stability.Unstable;
 
 /**
@@ -66,4 +68,27 @@ public interface ActivityPubStorage
      * @throws ActivityPubException if the parsing of the entity failed.
      */
     <T extends ActivityPubObject> T retrieveEntity(URI id) throws ActivityPubException;
+
+    /**
+     * Store information about WebFinger.
+     *
+     * @param jsonResourceDescriptor a representation of a WebFinger record.
+     * @throws ActivityPubException in case of problem during the storage.
+     * @since 1.2
+     */
+    @Unstable
+    void storeWebFinger(JSONResourceDescriptor jsonResourceDescriptor) throws ActivityPubException;
+
+    /**
+     * Perform a search in the DB for WebFinger records.
+     * Only the WebFinger identifiers will be used to perform the search.
+     *
+     * @param query the string to look for.
+     * @param limit the maximum number of results to return.
+     * @return a list of WebFinger records matching the query.
+     * @throws ActivityPubException in case of problem when performing the query.
+     * @since 1.2
+     */
+    @Unstable
+    List<JSONResourceDescriptor> searchWebFinger(String query, int limit) throws ActivityPubException;
 }

@@ -20,6 +20,8 @@
 package org.xwiki.contrib.activitypub.webfinger.script;
 
 import java.net.URL;
+import java.util.Collections;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -28,11 +30,15 @@ import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerClient;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerService;
+import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 import org.xwiki.script.service.ScriptService;
+import org.xwiki.stability.Unstable;
 
 import com.xpn.xwiki.XWikiContext;
 
@@ -54,6 +60,9 @@ public class WebfingerScriptService implements ScriptService
 
     @Inject
     private WebfingerService webfingerService;
+
+    @Inject
+    private ActivityPubStorage activityPubStorage;
 
     @Inject
     private Logger logger;
@@ -104,6 +113,25 @@ public class WebfingerScriptService implements ScriptService
         } catch (WebfingerException e) {
             logger.error("Error while getting WebFinger id", e);
             return null;
+        }
+    }
+
+    /**
+     * Search for existing Webfinger identifiers.
+     *
+     * @param partialId a partial identifier use to perform a request.
+     * @param limit a limit number of result.
+     * @return the list of matching Webfinger records stored locally.
+     * @since 1.2
+     */
+    @Unstable
+    public List<JSONResourceDescriptor> queryExistingIdentifier(String partialId, int limit)
+    {
+        try {
+            return this.activityPubStorage.searchWebFinger(partialId, limit);
+        } catch (ActivityPubException e) {
+            logger.error("Error while performing Webfinger query", e);
+            return Collections.emptyList();
         }
     }
 }

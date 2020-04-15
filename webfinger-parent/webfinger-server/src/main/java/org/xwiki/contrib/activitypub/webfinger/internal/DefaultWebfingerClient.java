@@ -33,6 +33,8 @@ import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerClient;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonParser;
@@ -54,6 +56,9 @@ public class DefaultWebfingerClient implements WebfingerClient
 
     @Inject
     private WebfingerJsonParser parser;
+
+    @Inject
+    private ActivityPubStorage activityPubStorage;
 
     /**
      * Default constructor for {@link DefaultWebfingerClient}.
@@ -89,8 +94,10 @@ public class DefaultWebfingerClient implements WebfingerClient
                 this.httpClient.executeMethod(get);
 
                 InputStream responseBodyAsStream = get.getResponseBodyAsStream();
-                return this.parser.parse(responseBodyAsStream);
-            } catch (IOException e) {
+                JSONResourceDescriptor jsonResourceDescriptor = this.parser.parse(responseBodyAsStream);
+                this.activityPubStorage.storeWebFinger(jsonResourceDescriptor);
+                return jsonResourceDescriptor;
+            } catch (IOException | ActivityPubException e) {
                 throw new WebfingerException(
                     String.format("Error while querying the webfinger resource for %s", webfingerResource), e);
             } finally {
