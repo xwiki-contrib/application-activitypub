@@ -88,7 +88,7 @@ $services.localization.render('activitypub.storage.needrestart')
 #else
 ## The various interactions needs to send the actor id, so we put it in the document directly.
 {{html}}
-&lt;input type="hidden" id="actorId" value="actor.id" /&gt;
+&lt;input type="hidden" id="actorId" value="$actor.id" /&gt;
 {{/html}}
   #if ($services.webfinger.isWebfingerConfigured())
     #set ($userIdentifier = $services.webfinger.getWebfingerId($actor))

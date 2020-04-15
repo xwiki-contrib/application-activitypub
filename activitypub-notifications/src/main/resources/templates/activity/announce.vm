@@ -18,8 +18,8 @@
 ## 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 ## ---------------------------------------------------------------------------
 #template('notification/macros.vm')
-#set ($smallIcon = "bell")
-#set ($mainIcon = "bell")
+#set ($smallIcon = "branch")
+#set ($mainIcon = "branch")
 #define ($content)
 <div class="notification-description">
   #set ($actor = $services.activitypub.resolve($activity.actor))

@@ -62,6 +62,8 @@ import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.script.service.ScriptService;
+import org.xwiki.security.authorization.AuthorizationManager;
+import org.xwiki.security.authorization.Right;
 import org.xwiki.stability.Unstable;
 import org.xwiki.user.CurrentUserReference;
 import org.xwiki.user.GuestUserReference;
@@ -71,6 +73,7 @@ import org.xwiki.user.UserReferenceResolver;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
+import com.xpn.xwiki.user.api.XWikiRightService;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -90,6 +93,9 @@ public class ActivityPubScriptService implements ScriptService
 
     private static final String GET_CURRENT_ACTOR_UNEXPECTED_ERR_MSG =
         "Failed to retrieve the current actor. Unexpected Cause [{}].";
+
+    private static final DocumentReference GUEST_USER =
+        new DocumentReference("xwiki", "XWiki", XWikiRightService.GUEST_USER);
 
     @Inject
     private ActivityPubClient activityPubClient;
@@ -126,6 +132,9 @@ public class ActivityPubScriptService implements ScriptService
 
     @Inject
     private DocumentReferenceResolver<String> documentReferenceResolver;
+
+    @Inject
+    private AuthorizationManager authorizationManager;
 
     private void checkAuthentication() throws ActivityPubException
     {
@@ -329,7 +338,7 @@ public class ActivityPubScriptService implements ScriptService
      */
     public boolean publishNote(List<String> targets, String content)
     {
-        return publishNote(targets, content, null);
+        return this.publishNote(targets, content, null);
     }
 
     /**
@@ -386,26 +395,37 @@ public class ActivityPubScriptService implements ScriptService
             AbstractActor currentActor = this.getSourceActor(null);
 
             DocumentReference dr = this.documentReferenceResolver.resolve(page);
-            XWikiDocument xwikiDoc =
+            boolean guestAccess =
+                this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, dr);
+
+            /*
+             * Pages that cannot be viewed by the guest user are not allowed to be shared.
+             * Additionally, sharing a page can only be realized by logged in users.
+             */
+            if (guestAccess && currentActor != null) {
+                XWikiDocument xwikiDoc =
                     this.contextProvider.get().getWiki().getDocument(dr, this.contextProvider.get());
-            String content = this.htmlRenderer.render(xwikiDoc.getXDOM(), dr);
-            Document document = new Document()
+                String content = this.htmlRenderer.render(xwikiDoc.getXDOM(), dr);
+                Document document = new Document()
                     .setName(xwikiDoc.getTitle())
                     .setAttributedTo(Collections.singletonList(currentActor.getReference()))
                     .setContent(content);
-            this.fillRecipients(targets, currentActor, document);
-            this.activityPubStorage.storeEntity(document);
+                this.fillRecipients(targets, currentActor, document);
+                this.activityPubStorage.storeEntity(document);
 
-            Announce announce = new Announce()
+                Announce announce = new Announce()
                     .setActor(currentActor)
                     .setObject(document)
                     .setAttributedTo(document.getAttributedTo())
                     .setTo(document.getTo())
                     .setPublished(new Date());
-            this.activityPubStorage.storeEntity(announce);
+                this.activityPubStorage.storeEntity(announce);
 
-            this.announceActivityHandler.handleOutboxRequest(new ActivityRequest<>(currentActor, announce));
-            return true;
+                this.announceActivityHandler.handleOutboxRequest(new ActivityRequest<>(currentActor, announce));
+                return true;
+            } else {
+                return false;
+            }
         } catch (IOException | ActivityPubException | XWikiException e) {
             this.logger.error("Error while sharing a page.", e);
             return false;
