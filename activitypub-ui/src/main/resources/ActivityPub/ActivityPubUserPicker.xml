@@ -50,7 +50,7 @@
 #end
 
 #macro (APUsersPicker $parameters)
-  #APUsersPicker_import
+  #APUsersPicker_import()
   #if ("$!parameters" == "")
     #set ($parameters = {})
   #end

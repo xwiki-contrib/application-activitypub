@@ -321,15 +321,15 @@
         &lt;form id="activitypub-form-share-page" class='xform'&gt;
           &lt;dl&gt;
             &lt;dt&gt;
-              &lt;label for="messageTarget"&gt;$services.localization.render('activitypub.message.target.label')&lt;/label&gt;
-              &lt;span class='xHint'&gt;$services.localization.render('activitypub.message.target.hint')&lt;/span&gt;
+              &lt;label for="messageTarget"&gt;$services.localization.render('activitypub.shareDocument.target.label')&lt;/label&gt;
+              &lt;span class='xHint'&gt;$services.localization.render('activitypub.shareDocument.target.hint')&lt;/span&gt;
             &lt;/dt&gt;
             &lt;dd&gt;
                 #set ($APUsersPickerParams = {
                    'name': 'messageTarget',
                    'public': 'allowed',
                    'followers': 'allowed',
-                   'placeholder': $services.localization.render('activitypub.message.target.placeholder')
+                   'placeholder': $services.localization.render('activitypub.shareDocument.target.placeholder')
                 })
                 #APUsersPicker($APUsersPickerParams)
             &lt;/dd&gt;

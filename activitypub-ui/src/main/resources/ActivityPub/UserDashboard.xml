@@ -108,10 +108,10 @@ $services.localization.render('activitypub.webfinger.notconfigured')
             &lt;span class='xHint'&gt;$services.localization.render('activitypub.follow.input.hint')&lt;/span&gt;
           &lt;/dt&gt;
           &lt;dd&gt;
-            #set ($APUsersPickerParams = {
-             'name': 'followInput',
-             'multiple': 'false',
-             'placeholder': $services.localization.render('activitypub.follow.input.placeholder')
+          #set ($APUsersPickerParams = {
+            'name': 'followInput',
+            'multiple': 'false',
+            'placeholder': $services.localization.render('activitypub.follow.target.placeholder')
           })
           #APUsersPicker($APUsersPickerParams)
           &lt;/dd&gt;
@@ -306,7 +306,7 @@ $services.localization.render('activitypub.webfinger.notconfigured')
 
       const data = {
         'form_token': xm.form_token,
-        'followInput': $('#followInput').val(),
+        'followInput': $('#followForm select[name=followInput]').val(),
         'actorId': actorId
       };
       $.post(followUserDoc.getURL("view") + '?outputSyntax=plain', data, function(data) {
