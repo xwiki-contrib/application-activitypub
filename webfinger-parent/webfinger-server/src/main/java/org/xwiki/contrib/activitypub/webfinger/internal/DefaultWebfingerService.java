@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.StringUtils;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
@@ -40,6 +41,7 @@ import org.xwiki.contrib.activitypub.webfinger.WebfingerService;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.user.UserReference;
+import org.xwiki.wiki.descriptor.WikiDescriptor;
 import org.xwiki.wiki.descriptor.WikiDescriptorManager;
 import org.xwiki.wiki.manager.WikiManagerException;
 
@@ -155,8 +157,9 @@ public class DefaultWebfingerService implements WebfingerService
                 uri = this.xWikiUserBridge.getUserProfileURL(xWikiUserReference).toURI();
             } else if (actor instanceof Service) {
                 WikiReference wikiReference = this.actorHandler.getXWikiWikiReference((Service) actor);
-                DocumentReference mainPageReference =
-                    this.wikiDescriptorManager.getById(wikiReference.getName()).getMainPageReference();
+                String wikiName = StringUtils.substringBeforeLast(wikiReference.getName(), ".");
+                WikiDescriptor byId = this.wikiDescriptorManager.getById(wikiName);
+                DocumentReference mainPageReference = byId.getMainPageReference();
                 uri = new URL(((XWikiDocument) this.documentAccess.getDocumentInstance(mainPageReference))
                     .getExternalURL("view", this.contextProvider.get())).toURI();
             } else {

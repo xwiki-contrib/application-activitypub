@@ -19,6 +19,7 @@
  */
 package org.xwiki.contrib.activitypub.webfinger.script;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
@@ -32,6 +33,7 @@ import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerClient;
 import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 import org.xwiki.script.service.ScriptService;
@@ -69,13 +71,7 @@ public class WebfingerScriptService implements ScriptService
         try {
             XWikiContext context = this.contextProvider.get();
             URL url = context.getURLFactory().getServerURL(context);
-            int port = url.getPort();
-            String domain;
-            if (port != 80 && port > 0) {
-                domain = String.format("%s:%d", url.getHost(), port);
-            } else {
-                domain = String.format("%s", url.getHost());
-            }
+            String domain = this.formatUrl(url);
             webfingerConfigured = this.webfingerClient.testWebFingerConfiguration(domain);
         } catch (Exception e) {
             logger.debug("Error while testing webfinger configuration.", e);
@@ -96,6 +92,23 @@ public class WebfingerScriptService implements ScriptService
     }
 
     /**
+     * Return the webfinger id of the actor on the current server.
+     *
+     * @param actor the AP actor for which to retrieve the ID
+     * @return The webfinger id.
+     */
+    public String getWebfingerId(AbstractActor actor)
+    {
+        try {
+            URL url = actor.getId().toURL();
+            return actor.getPreferredUsername() + "@" + this.formatUrl(url);
+        } catch (MalformedURLException e) {
+            this.logger.error("Error while getting WebFinger id", e);
+            return null;
+        }
+    }
+
+    /**
      * Search for existing Webfinger identifiers.
      *
      * @param partialId a partial identifier use to perform a request.
@@ -112,5 +125,23 @@ public class WebfingerScriptService implements ScriptService
             logger.error("Error while performing Webfinger query", e);
             return Collections.emptyList();
         }
+    }
+
+    /**
+     * Format an url with its port if it's not 80.
+     *
+     * @param url The domain.
+     * @return The formated url.
+     */
+    private String formatUrl(URL url)
+    {
+        int port = url.getPort();
+        String domain;
+        if (port != 80 && port > 0) {
+            domain = String.format("%s:%d", url.getHost(), port);
+        } else {
+            domain = String.format("%s", url.getHost());
+        }
+        return domain;
     }
 }
