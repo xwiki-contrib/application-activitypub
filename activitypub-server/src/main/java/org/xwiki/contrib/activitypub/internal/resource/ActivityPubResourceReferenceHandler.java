@@ -29,7 +29,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -56,8 +55,10 @@ import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Inbox;
+import org.xwiki.contrib.activitypub.entities.OrderedCollection;
+import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
-import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.contrib.activitypub.internal.filters.CollectionFilter;
 import org.xwiki.resource.AbstractResourceReferenceHandler;
 import org.xwiki.resource.ResourceReference;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
@@ -65,8 +66,6 @@ import org.xwiki.resource.ResourceReferenceHandlerException;
 import org.xwiki.resource.ResourceType;
 import org.xwiki.resource.annotations.Authenticate;
 import org.xwiki.user.UserReference;
-
-import com.xpn.xwiki.XWikiContext;
 
 /**
  * Main handler for ActivityPub.
@@ -115,10 +114,10 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
     private ActivityPubStorage activityPubStorage;
 
     @Inject
-    private Provider<XWikiContext> contextProvider;
+    private ActivityPubObjectReferenceResolver objectReferenceResolver;
 
     @Inject
-    private ActivityPubObjectReferenceResolver objectReferenceResolver;
+    private CollectionFilter<OrderedCollection<AbstractActivity>> publicActivityCollectionFilter;
 
     @Inject
     private XWikiUserBridge xWikiUserBridge;
@@ -233,15 +232,13 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
             handler.handleInboxRequest(activityRequest);
         } else {
             // Perform some authorization checks
-            XWikiContext xWikiContext = this.contextProvider.get();
-            DocumentReference userDocumentReference = xWikiContext.getUserReference();
-            UserReference userReference = this.xWikiUserBridge.resolveDocumentReference(userDocumentReference);
+            UserReference userReference = this.xWikiUserBridge.getCurrentUserReference();
             if (this.actorHandler.isAuthorizedToActFor(userReference, actor)) {
                 handler.handleOutboxRequest(activityRequest);
             } else {
                 this.sendErrorResponse(HttpServletResponse.SC_FORBIDDEN,
                     String.format("The session user [%s] cannot post to [%s] outbox.",
-                        userDocumentReference, actor.getPreferredUsername()));
+                        userReference, actor.getPreferredUsername()));
             }
         }
     }
@@ -291,9 +288,35 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         response.setContentType(ActivityPubClient.CONTENT_TYPE_STRICT);
         response.setCharacterEncoding(StandardCharsets.UTF_8.toString());
 
-        // FIXME: This should be more complicated, we'd need to check authorization etc.
-        // We probably need an entity handler component to manage the various kind of entities to retrieve.
-        this.activityPubJsonSerializer.serialize(response.getOutputStream(), entity);
+        // FIXME: check if the entity is an actor and redirect if the content type is not activitypub compliant
+        // if the entity is an inbox or an outbox we filtered out some content
+        if (entity instanceof Inbox) {
+            this.handleGetOnBox(response, (Inbox) entity);
+        } else if (entity instanceof Outbox) {
+            this.handleGetOnBox(response, (Outbox) entity);
+        // else we directly serialize the entity
+        } else {
+            this.activityPubJsonSerializer.serialize(response.getOutputStream(), entity);
+        }
+    }
+
+    /**
+     * Filter to keep only public activities if the logged-in users is not an owner of the inbox/outbox.
+     */
+    private void handleGetOnBox(HttpServletResponse response, OrderedCollection<AbstractActivity> box)
+        throws ActivityPubException, IOException
+    {
+        OrderedCollection<AbstractActivity> filteredBox;
+        // resolve the actor with the attributed to reference
+        AbstractActor actor = this.objectReferenceResolver.resolveReference(box.getAttributedTo().get(0));
+        UserReference userReference = this.xWikiUserBridge.getCurrentUserReference();
+
+        if (this.actorHandler.isAuthorizedToActFor(userReference, actor)) {
+            filteredBox = box;
+        } else {
+            filteredBox = this.publicActivityCollectionFilter.filter(box);
+        }
+        this.activityPubJsonSerializer.serialize(response.getOutputStream(), filteredBox);
     }
 
     /**

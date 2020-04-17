@@ -19,3 +19,5 @@ org.xwiki.contrib.activitypub.internal.signature.DefaultSignatureService
 org.xwiki.contrib.activitypub.internal.storage.ActivityPubSolrInitializer
 org.xwiki.contrib.activitypub.internal.async.PageCreatedNotificationJob
 org.xwiki.contrib.activitypub.internal.DefaultHTMLRenderer
+org.xwiki.contrib.activitypub.internal.filters.PublicActivityCollectionFilter
+org.xwiki.contrib.activitypub.internal.filters.PublicActivityFilter

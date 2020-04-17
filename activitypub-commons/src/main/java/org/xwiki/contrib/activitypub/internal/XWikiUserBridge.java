@@ -123,6 +123,17 @@ public class XWikiUserBridge
     }
 
     /**
+     * @return the current user reference.
+     * @since 1.2
+     */
+    public UserReference getCurrentUserReference()
+    {
+        XWikiContext xWikiContext = this.contextProvider.get();
+        DocumentReference userDocumentReference = xWikiContext.getUserReference();
+        return this.resolveDocumentReference(userDocumentReference);
+    }
+
+    /**
      * Converts an username to an {@link UserReference}.
      *
      * @param username the username.

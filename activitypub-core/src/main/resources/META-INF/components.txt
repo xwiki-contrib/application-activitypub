@@ -5,3 +5,5 @@ org.xwiki.contrib.activitypub.internal.json.ObjectMapperConfiguration
 org.xwiki.contrib.activitypub.internal.json.JSONLDContextDeserializer
 org.xwiki.contrib.activitypub.internal.DefaultActivityPubObjectReferenceResolver
 org.xwiki.contrib.activitypub.internal.DefaultActivityPubIdentifierService
+org.xwiki.contrib.activitypub.internal.stream.StreamActivityPubObjectReferenceResolver
+org.xwiki.contrib.activitypub.internal.stream.StreamActivityPubObjectReferenceSerializer

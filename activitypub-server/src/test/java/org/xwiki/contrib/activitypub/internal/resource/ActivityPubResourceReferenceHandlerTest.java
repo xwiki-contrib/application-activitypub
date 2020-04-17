@@ -25,6 +25,7 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 
 import javax.inject.Provider;
@@ -49,15 +50,17 @@ import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.ActorHandler;
+import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Inbox;
+import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
-import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.contrib.activitypub.internal.filters.CollectionFilter;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
 import org.xwiki.test.annotation.BeforeComponent;
 import org.xwiki.test.junit5.mockito.ComponentTest;
@@ -68,6 +71,7 @@ import org.xwiki.test.mockito.MockitoComponentManager;
 import org.xwiki.user.UserReference;
 
 import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.api.User;
 
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import static org.mockito.ArgumentMatchers.*;
@@ -109,6 +113,9 @@ public class ActivityPubResourceReferenceHandlerTest
 
     @InjectComponentManager
     private MockitoComponentManager componentManager;
+
+    @MockComponent
+    private CollectionFilter<OrderedCollection<AbstractActivity>> publicActivityCollectionFilter;
 
     @Mock
     private ResourceReferenceHandlerChain handlerChain;
@@ -303,10 +310,7 @@ public class ActivityPubResourceReferenceHandlerTest
         Person person = new Person().setPreferredUsername("Foo");
         UserReference fooUserReference = mock(UserReference.class);
         when(this.actorHandler.getXWikiUserReference(person)).thenReturn(fooUserReference);
-
-        DocumentReference userDocumentReference = mock(DocumentReference.class);
-        when(this.xWikiUserBridge.resolveDocumentReference(userDocumentReference)).thenReturn(fooUserReference);
-        when(this.xWikiContext.getUserReference()).thenReturn(userDocumentReference);
+        when(this.xWikiUserBridge.getCurrentUserReference()).thenReturn(fooUserReference);
         ActivityPubObjectReference<AbstractActor> actorReference =
             new ActivityPubObjectReference<AbstractActor>().setObject(person);
         when(this.objectReferenceResolver.resolveReference(actorReference)).thenReturn(person);
@@ -342,5 +346,87 @@ public class ActivityPubResourceReferenceHandlerTest
         verify(this.servletResponse).setStatus(SC_INTERNAL_SERVER_ERROR);
         verify(this.servletResponse).setContentType("text/plain");
         verify(ape).printStackTrace(nullable(PrintWriter.class));
+    }
+
+    @Test
+    public void handleGetInboxGuest() throws Exception
+    {
+        Inbox inbox = new Inbox()
+            .setName("Inbox 42");
+        inbox.setAttributedTo(Arrays.asList(mock(ActivityPubObjectReference.class)));
+        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("inbox", "42");
+        String requestURL = "http://domain.org/xwiki/activitypub/inbox/42";
+        when(this.servletRequest.getRequestURL()).thenReturn(new StringBuffer(requestURL));
+        when(this.activityPubStorage.retrieveEntity(new URI(requestURL))).thenReturn(inbox);
+        when(servletRequest.getMethod()).thenReturn("GET");
+        when(this.publicActivityCollectionFilter.filter(inbox)).thenReturn(inbox);
+        this.handler.handle(resourceReference, this.handlerChain);
+        this.verifyResponse(inbox);
+        verify(handlerChain, times(1)).handleNext(resourceReference);
+        verify(this.publicActivityCollectionFilter).filter(inbox);
+    }
+
+    @Test
+    public void handleGetOutboxGuest() throws Exception
+    {
+        Outbox outbox = new Outbox()
+            .setName("Outbox 42");
+        outbox.setAttributedTo(Arrays.asList(mock(ActivityPubObjectReference.class)));
+        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("outbox", "42");
+        String requestURL = "http://domain.org/xwiki/activitypub/outbox/42";
+        when(this.servletRequest.getRequestURL()).thenReturn(new StringBuffer(requestURL));
+        when(this.activityPubStorage.retrieveEntity(new URI(requestURL))).thenReturn(outbox);
+        when(servletRequest.getMethod()).thenReturn("GET");
+        when(this.publicActivityCollectionFilter.filter(outbox)).thenReturn(outbox);
+        this.handler.handle(resourceReference, this.handlerChain);
+        this.verifyResponse(outbox);
+        verify(handlerChain, times(1)).handleNext(resourceReference);
+        verify(this.publicActivityCollectionFilter).filter(outbox);
+    }
+
+    @Test
+    public void handleGetInboxOwner() throws Exception
+    {
+        Inbox inbox = new Inbox()
+            .setName("Inbox 42");
+        ActivityPubObjectReference reference = mock(ActivityPubObjectReference.class);
+        inbox.setAttributedTo(Arrays.asList(reference));
+        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("inbox", "42");
+        String requestURL = "http://domain.org/xwiki/activitypub/inbox/42";
+        when(this.servletRequest.getRequestURL()).thenReturn(new StringBuffer(requestURL));
+        when(this.activityPubStorage.retrieveEntity(new URI(requestURL))).thenReturn(inbox);
+        AbstractActor actor = mock(AbstractActor.class);
+        UserReference userReference = mock(UserReference.class);
+        when(this.xWikiUserBridge.getCurrentUserReference()).thenReturn(userReference);
+        when(this.objectReferenceResolver.resolveReference(reference)).thenReturn(actor);
+        when(this.actorHandler.isAuthorizedToActFor(userReference, actor)).thenReturn(true);
+        when(servletRequest.getMethod()).thenReturn("GET");
+        this.handler.handle(resourceReference, this.handlerChain);
+        this.verifyResponse(inbox);
+        verify(handlerChain, times(1)).handleNext(resourceReference);
+        verify(this.publicActivityCollectionFilter, never()).filter(inbox);
+    }
+
+    @Test
+    public void handleGetOutboxOwner() throws Exception
+    {
+        Outbox outbox = new Outbox()
+            .setName("outbox 42");
+        ActivityPubObjectReference reference = mock(ActivityPubObjectReference.class);
+        outbox.setAttributedTo(Arrays.asList(reference));
+        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("outbox", "42");
+        String requestURL = "http://domain.org/xwiki/activitypub/outbox/42";
+        when(this.servletRequest.getRequestURL()).thenReturn(new StringBuffer(requestURL));
+        when(this.activityPubStorage.retrieveEntity(new URI(requestURL))).thenReturn(outbox);
+        AbstractActor actor = mock(AbstractActor.class);
+        UserReference userReference = mock(UserReference.class);
+        when(this.xWikiUserBridge.getCurrentUserReference()).thenReturn(userReference);
+        when(this.objectReferenceResolver.resolveReference(reference)).thenReturn(actor);
+        when(this.actorHandler.isAuthorizedToActFor(userReference, actor)).thenReturn(true);
+        when(servletRequest.getMethod()).thenReturn("GET");
+        this.handler.handle(resourceReference, this.handlerChain);
+        this.verifyResponse(outbox);
+        verify(handlerChain, times(1)).handleNext(resourceReference);
+        verify(this.publicActivityCollectionFilter, never()).filter(outbox);
     }
 }

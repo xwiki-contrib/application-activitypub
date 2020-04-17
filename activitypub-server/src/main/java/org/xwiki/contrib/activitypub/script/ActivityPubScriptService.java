@@ -59,6 +59,7 @@ import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Service;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
+import org.xwiki.contrib.activitypub.internal.stream.StreamActivityPubObjectReferenceResolver;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.script.service.ScriptService;
@@ -135,6 +136,9 @@ public class ActivityPubScriptService implements ScriptService
 
     @Inject
     private AuthorizationManager authorizationManager;
+
+    @Inject
+    private StreamActivityPubObjectReferenceResolver streamActivityPubObjectReferenceResolver;
 
     private void checkAuthentication() throws ActivityPubException
     {
@@ -492,19 +496,10 @@ public class ActivityPubScriptService implements ScriptService
         if (following != null) {
             OrderedCollection<AbstractActor> activityPubObjectReferences =
                 this.activityPubObjectReferenceResolver.resolveReference(following);
-            abstractActorStream = activityPubObjectReferences.getOrderedItems().stream().map(this::resolveActor);
+            abstractActorStream = activityPubObjectReferences.getOrderedItems().stream()
+                .map(this.streamActivityPubObjectReferenceResolver.getFunction());
         }
         return Optional.ofNullable(abstractActorStream);
-    }
-
-    
-    private AbstractActor resolveActor(ActivityPubObjectReference<AbstractActor> it)
-    {
-        try {
-            return this.activityPubObjectReferenceResolver.resolveReference(it);
-        } catch (ActivityPubException e) {
-            return null;
-        }
     }
 
     /**
@@ -518,8 +513,9 @@ public class ActivityPubScriptService implements ScriptService
             if (followers != null) {
                 OrderedCollection<AbstractActor> activityPubObjectReferences =
                     this.activityPubObjectReferenceResolver.resolveReference(followers);
-                return activityPubObjectReferences.getOrderedItems().stream().map(this::resolveActor)
-                           .filter(Objects::nonNull).collect(Collectors.toList());
+                return activityPubObjectReferences.getOrderedItems().stream()
+                    .map(this.streamActivityPubObjectReferenceResolver.getFunction())
+                    .filter(Objects::nonNull).collect(Collectors.toList());
             }
         } catch (ActivityPubException e) {
             this.logger.warn(GET_CURRENT_ACTOR_ERR_MSG, ExceptionUtils.getRootCauseMessage(e));

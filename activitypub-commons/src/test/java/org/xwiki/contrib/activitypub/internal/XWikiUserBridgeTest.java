@@ -162,4 +162,16 @@ public class XWikiUserBridgeTest
         when(xWikiDocument.getExternalURL("view", xWikiContext)).thenReturn("http://foo");
         assertEquals(new URL("http://foo"), this.xWikiUserBridge.getUserProfileURL(userReference));
     }
+
+    @Test
+    public void getCurrentUserReference() throws Exception
+    {
+        XWikiContext xWikiContext = mock(XWikiContext.class);
+        when(this.contextProvider.get()).thenReturn(xWikiContext);
+        DocumentReference documentReference = mock(DocumentReference.class);
+        when(xWikiContext.getUserReference()).thenReturn(documentReference);
+        UserReference userReference = mock(UserReference.class);
+        when(this.userFromDocumentReferenceResolver.resolve(documentReference)).thenReturn(userReference);
+        assertSame(userReference, this.xWikiUserBridge.getCurrentUserReference());
+    }
 }
