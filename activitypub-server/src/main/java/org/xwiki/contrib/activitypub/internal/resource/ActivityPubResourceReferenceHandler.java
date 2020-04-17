@@ -17,7 +17,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.internal;
+package org.xwiki.contrib.activitypub.internal.resource;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -56,6 +56,7 @@ import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Inbox;
+import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.resource.AbstractResourceReferenceHandler;
 import org.xwiki.resource.ResourceReference;

@@ -17,7 +17,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.internal;
+package org.xwiki.contrib.activitypub.internal.storage;
 
 import java.io.IOException;
 import java.net.URI;
@@ -53,6 +53,7 @@ import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
+import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonParser;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonSerializer;
 import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
@@ -61,15 +62,12 @@ import org.xwiki.resource.ResourceReferenceSerializer;
 import org.xwiki.resource.ResourceType;
 import org.xwiki.search.solr.Solr;
 import org.xwiki.search.solr.SolrException;
-import org.xwiki.search.solr.internal.api.SolrInstance;
 import org.xwiki.test.annotation.BeforeComponent;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
 import org.xwiki.test.mockito.MockitoComponentManager;
 import org.xwiki.url.ExtendedURL;
-
-import liquibase.util.StringUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

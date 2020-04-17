@@ -17,7 +17,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.internal;
+package org.xwiki.contrib.activitypub.internal.resource;
 
 import java.lang.reflect.Type;
 import java.net.URI;
@@ -26,6 +26,7 @@ import java.net.URL;
 import org.junit.jupiter.api.Test;
 import org.xwiki.component.util.DefaultParameterizedType;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
+import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.test.annotation.BeforeComponent;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
