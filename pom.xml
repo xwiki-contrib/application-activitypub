@@ -248,6 +248,10 @@
                     "code": "java.method.addedToInterface",
                     "new": "method void org.xwiki.contrib.activitypub.ActivityPubStorage::storeWebFinger(org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor) throws org.xwiki.contrib.activitypub.ActivityPubException",
                     "justification": "Not breaking: Unstable API."
+                  }, {
+                    "code": "java.method.removed",
+                    "old": "method java.lang.String org.xwiki.contrib.activitypub.webfinger.script.WebfingerScriptService::getWebfingerId(org.xwiki.model.reference.DocumentReference)",
+                    "justification": "The method wasn't needed anymore"
                   }
                 ]
               }

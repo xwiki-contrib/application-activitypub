@@ -20,7 +20,6 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,6 +38,7 @@ import org.mockito.Mock;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
 import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.contrib.activitypub.ActivityPubIdentifierService;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
@@ -140,6 +140,9 @@ public class DefaultActorHandlerTest
     @MockComponent
     private DefaultURLHandler defaultURLHandler;
 
+    @MockComponent
+    private ActivityPubIdentifierService activityPubIdentifierService;
+
     @Mock
     private UserReference fooUserReference;
 
@@ -165,7 +168,7 @@ public class DefaultActorHandlerTest
         when(fooUser.getFirstName()).thenReturn("Foo");
         when(fooUser.getLastName()).thenReturn("Foo");
         when(this.xWikiUserBridge.getUserLogin(this.fooUserReference)).thenReturn("XWiki.Foo");
-        this.fooUserURI = new URI("http://domain.org/xwiki/activitypub/Person/XWiki.Foo");
+        this.fooUserURI = new URI("http://domain.org/xwiki/activitypub/Person/Foo");
         when(this.serializer.serialize(new ActivityPubResourceReference("Person", "XWiki.Foo"))).thenReturn(fooUserURI);
 
         // Bar does not exist.
@@ -196,11 +199,17 @@ public class DefaultActorHandlerTest
     public void getActorWithNotStoredButExistingPerson() throws Exception
     {
         when(this.signatureService.getPublicKeyPEM(any())).thenReturn("...");
+        when(this.xWikiUserBridge.getDocumentReference(this.fooUserReference))
+            .thenReturn(new DocumentReference("xwiki", "XWiki", "Foo"));
+        when(this.activityPubIdentifierService
+            .createIdentifier(eq(new Person().setName("Foo Foo")), eq("Foo"), eq("xwiki")))
+            .thenReturn("Foo");
+
         PublicKey publicKey = new PublicKey().setPublicKeyPem("...")
-                .setId(GENERIC_ACTOR_ID + "#main-key")
-                .setOwner(GENERIC_ACTOR_ID);
+            .setId(GENERIC_ACTOR_ID + "#main-key")
+            .setOwner(GENERIC_ACTOR_ID);
         AbstractActor expectedActor = new Person();
-        expectedActor.setPreferredUsername("XWiki.Foo")
+        expectedActor.setPreferredUsername("Foo")
             .setPublicKey(publicKey)
             .setInbox(new ActivityPubObjectReference<Inbox>().setObject(
                 new Inbox().setAttributedTo(Collections.singletonList(
@@ -248,11 +257,15 @@ public class DefaultActorHandlerTest
     {
         WikiReference wikiReference = new WikiReference("FooWiki");
         when(this.signatureService.getPublicKeyPEM(any())).thenReturn("...");
+        when(this.activityPubIdentifierService
+            .createIdentifier(eq(new Service().setName("Wiki FooWiki")), eq(null), eq("FooWiki")))
+            .thenReturn("FooWiki.xwiki");
+
         PublicKey publicKey = new PublicKey().setPublicKeyPem("...")
             .setId(GENERIC_ACTOR_ID + "#main-key")
             .setOwner(GENERIC_ACTOR_ID);
         AbstractActor expectedActor = new Service();
-        expectedActor.setPreferredUsername("FooWiki")
+        expectedActor.setPreferredUsername("FooWiki.xwiki")
             .setPublicKey(publicKey)
             .setInbox(new ActivityPubObjectReference<Inbox>().setObject(
                 new Inbox().setAttributedTo(Collections.singletonList(
@@ -321,12 +334,18 @@ public class DefaultActorHandlerTest
     public void getLocalActor() throws Exception
     {
         when(this.signatureService.getPublicKeyPEM(any())).thenReturn("...");
+        when(this.xWikiUserBridge.getDocumentReference(this.fooUserReference))
+            .thenReturn(new DocumentReference("xwiki", "XWiki", "Foo"));
+        when(this.activityPubIdentifierService
+            .createIdentifier(eq(new Person().setName("Foo Foo")), eq("Foo"), eq("xwiki")))
+            .thenReturn("Foo");
+
         PublicKey publicKey = new PublicKey().setPublicKeyPem("...")
-                .setId(GENERIC_ACTOR_ID + "#main-key")
-                .setOwner(GENERIC_ACTOR_ID);
+            .setId(GENERIC_ACTOR_ID + "#main-key")
+            .setOwner(GENERIC_ACTOR_ID);
 
         AbstractActor expectedActor = new Person();
-        expectedActor.setPreferredUsername("XWiki.Foo")
+        expectedActor.setPreferredUsername("Foo")
             .setPublicKey(publicKey)
             .setInbox(new ActivityPubObjectReference<Inbox>().setObject(
                 new Inbox().setAttributedTo(Collections.singletonList(
@@ -408,7 +427,7 @@ public class DefaultActorHandlerTest
     {
         when(this.xWikiUserBridge.isExistingUser(CurrentUserReference.INSTANCE)).thenReturn(true);
         when(this.xWikiUserBridge.getUserLogin(CurrentUserReference.INSTANCE)).thenReturn("XWiki.Foo");
-        AbstractActor expectedActor = new Person().setPreferredUsername("XWiki.Foo");
+        AbstractActor expectedActor = new Person().setPreferredUsername("XWiki.Foo").setPreferredUsername("FooWiki");
         when(this.activityPubStorage.retrieveEntity(this.fooUserURI)).thenReturn(expectedActor);
 
         assertSame(expectedActor, this.actorHandler.getCurrentActor());

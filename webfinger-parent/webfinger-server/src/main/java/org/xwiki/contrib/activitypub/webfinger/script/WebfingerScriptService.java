@@ -32,10 +32,7 @@ import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
-import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerClient;
-import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
-import org.xwiki.contrib.activitypub.webfinger.WebfingerService;
 import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 import org.xwiki.script.service.ScriptService;
 import org.xwiki.stability.Unstable;
@@ -57,10 +54,7 @@ public class WebfingerScriptService implements ScriptService
 
     @Inject
     private Provider<XWikiContext> contextProvider;
-
-    @Inject
-    private WebfingerService webfingerService;
-
+    
     @Inject
     private ActivityPubStorage activityPubStorage;
 
@@ -99,21 +93,6 @@ public class WebfingerScriptService implements ScriptService
         }
 
         return webfingerConfigured;
-    }
-
-    /**
-     * Return the webfinger id of the actor on the current server.
-     * @param actor the AP actor for which to retrieve the ID
-     * @return The webfinger id.
-     */
-    public String getWebfingerId(AbstractActor actor)
-    {
-        try {
-            return this.webfingerService.getWebFingerIdentifier(actor);
-        } catch (WebfingerException e) {
-            logger.error("Error while getting WebFinger id", e);
-            return null;
-        }
     }
 
     /**

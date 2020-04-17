@@ -54,11 +54,4 @@ public interface WebfingerService
      * @return the url of the activitypub resource of the user
      */
     URI resolveXWikiUserUrl(AbstractActor actor) throws WebfingerException;
-
-    /**
-     * Compute the WebFinger identifier of an actor.
-     * @param actor the actor for which to return an identifier.
-     * @return an identifier that can be requested on this WebFinger server.
-     */
-    String getWebFingerIdentifier(AbstractActor actor) throws WebfingerException;
 }

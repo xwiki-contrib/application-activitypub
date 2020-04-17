@@ -326,7 +326,7 @@ $services.localization.render('activitypub.webfinger.notconfigured')
 
       const data = {
         'form_token': xm.form_token,
-        'messageTarget': $('select[name=messageTarget]').first().val(),
+        'messageTarget': $('#messageForm select[name=messageTarget]').first().val(),
         'messageContent': $('#messageContent').val(),
         'actorId': actorId
       };

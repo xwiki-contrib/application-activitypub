@@ -42,6 +42,7 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
 import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.contrib.activitypub.ActivityPubIdentifierService;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
@@ -84,7 +85,10 @@ import com.xpn.xwiki.XWikiContext;
 public class DefaultActorHandler implements ActorHandler
 {
     private static final List<String> SERVICE_USER_SPACE_REFERENCE = Arrays.asList("ActivityPub", "ServiceActors");
+
     private static final String STANDARD_ERROR_MESSAGE = "This type of actor is not supported yet [%s]";
+
+    private static final String WEBFINGER_SEPARATOR = "@";
 
     @Inject
     private ActivityPubStorage activityPubStorage;
@@ -128,6 +132,9 @@ public class DefaultActorHandler implements ActorHandler
     @Inject
     private Logger logger;
 
+    @Inject
+    private ActivityPubIdentifierService activityPubIdentifierService;
+
     private HttpConnection jsoupConnection;
 
     private HttpConnection getJsoupConnection()
@@ -169,7 +176,8 @@ public class DefaultActorHandler implements ActorHandler
             if (actor == null) {
                 UserProperties userProperties = this.xWikiUserBridge.resolveUser(userReference);
                 String fullname = String.format("%s %s", userProperties.getFirstName(), userProperties.getLastName());
-                actor = createActor(new Person(), fullname, login);
+                DocumentReference dr = this.xWikiUserBridge.getDocumentReference(userReference);
+                actor = this.createActor(new Person(), fullname, dr.getName(), dr.getWikiReference().getName());
             }
             return actor;
         } else {
@@ -191,15 +199,18 @@ public class DefaultActorHandler implements ActorHandler
         }
         if (actor == null) {
             String name = String.format("Wiki %s", login);
-            actor = createActor(new Service(), name, login);
+            actor = this.createActor(new Service(), name, null, login);
         }
         return actor;
     }
 
-    private <T extends AbstractActor> T createActor(T actor, String fullName, String login) throws ActivityPubException
+    private <T extends AbstractActor> T createActor(T actor, String fullName, String username,
+        String wikiName)
+        throws ActivityPubException
     {
         actor.setName(fullName);
-        actor.setPreferredUsername(login);
+
+        actor.setPreferredUsername(this.activityPubIdentifierService.createIdentifier(actor, username, wikiName));
 
         Inbox inbox = new Inbox();
         inbox.setAttributedTo(
@@ -238,8 +249,14 @@ public class DefaultActorHandler implements ActorHandler
         if (actor == null) {
             throw new ActivityPubException("Cannot find user reference from actor, actor is null");
         }
-        String userName = actor.getPreferredUsername();
-        if (isLocalActor(actor) && isExistingUser(userName)) {
+
+        return this.getUserReference(actor);
+    }
+
+    private UserReference getUserReference(Person actor)
+    {
+        String userName = actor.getPreferredUsername().split(WEBFINGER_SEPARATOR)[0];
+        if (this.isLocalActor(actor)) {
             return this.xWikiUserBridge.resolveUser(userName);
         } else {
             return null;
@@ -264,8 +281,8 @@ public class DefaultActorHandler implements ActorHandler
         if (actor.getId() != null) {
             return this.defaultURLHandler.belongsToCurrentInstance(actor.getId());
         } else {
-            String userName = actor.getPreferredUsername();
-            return isExistingUser(userName);
+            String userName = actor.getPreferredUsername().split(WEBFINGER_SEPARATOR)[0];
+            return this.isExistingUser(userName);
         }
     }
 
@@ -357,7 +374,7 @@ public class DefaultActorHandler implements ActorHandler
             URI actorURI = new URI(username);
 
             // A URI with a scheme (absolute) or containing a @ cannot be an XWiki identifier
-            if (actorURI.isAbsolute() || username.contains("@")) {
+            if (actorURI.isAbsolute() || username.contains(WEBFINGER_SEPARATOR)) {
                 // FIXME: we need to ensure to discard remote Actor info after some time for it to be efficient.
                 ret = this.activityPubStorage.retrieveEntity(actorURI);
                 boolean isAlreadyStored = (ret != null);

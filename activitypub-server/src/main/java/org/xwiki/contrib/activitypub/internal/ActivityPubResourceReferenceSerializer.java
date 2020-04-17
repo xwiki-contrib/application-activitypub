@@ -30,6 +30,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
@@ -66,7 +67,13 @@ public class ActivityPubResourceReferenceSerializer implements
         // Add the resource type segment.
         segments.add("activitypub");
         segments.add(resource.getEntityType());
-        segments.add(resource.getUuid());
+        String uuid = resource.getUuid();
+        String dot = ".";
+        if (uuid.contains(dot)) {
+            segments.add(StringUtils.substringAfterLast(uuid, dot));
+        } else {
+            segments.add(uuid);
+        }
 
         // Add all optional parameters
         ExtendedURL extendedURL = new ExtendedURL(segments, resource.getParameters());

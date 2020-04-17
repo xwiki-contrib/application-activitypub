@@ -69,5 +69,15 @@
       <artifactId>webfinger-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.xwiki.platform</groupId>
+      <artifactId>xwiki-platform-wiki-api</artifactId>
+      <version>${platform.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.xwiki.contrib</groupId>
+      <artifactId>activitypub-commons</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 </project>
