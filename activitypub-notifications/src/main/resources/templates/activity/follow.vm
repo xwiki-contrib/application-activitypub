@@ -24,7 +24,7 @@
 #define ($content)
 <div class="notification-description">
   #set ($actor = $services.activitypub.resolve($activity.actor))
-  #set ($username = $actor.preferredUsername)
+  #set ($username = $services.webfinger.getWebfingerId($actor))
   <div class="activity-type">$activity.type</div>
   <div class="activity-summary">$username wants to follow you.</div>
   <div class="action">

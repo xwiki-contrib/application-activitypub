@@ -23,7 +23,7 @@
 #define ($content)
 <div class="notification-description">
   #set ($actor = $services.activitypub.resolve($activity.actor))
-  #set ($username = $actor.preferredUsername)
+  #set ($username = $services.webfinger.getWebfingerId($actor))
   #set ($object = $services.activitypub.resolve($activity.object))
   #if ($object.type == "Document")
       #define($summary)

@@ -24,14 +24,16 @@
 #define ($content)
 <div class="notification-description">
     #set ($acceptActor = $services.activitypub.resolve($activity.actor))
-    #if ($services.activitypub.isCurrentUser($acceptActor))
+    #if ($services.activitypub.isCurrentUser($acceptActor) || $services.activitypub.currentUserCanActFor($acceptActor))
         #set ($object = $services.activitypub.resolve($activity.object))
         #set ($actor = $services.activitypub.resolve($object.actor))
-        #set ($summary = "$actor.preferredUsername is now following you.")
+        #set ($username = $services.webfinger.getWebfingerId($actor))
+        #set ($summary = "$username is now following you.")
     #else
-        #set ($summary = "$acceptActor.preferredUsername accepted your follow request.")
+        #set ($username = $services.webfinger.getWebfingerId($acceptActor))
+        #set ($summary = "$username accepted your follow request.")
     #end
-    #set ($username = $actor.preferredUsername)
+    
   <div class="activity-type">Follow</div>
   <div class="activity-summary">$summary</div>
   <div><small class="text-muted">$escapetool.xml($services.date.displayTimeAgo($event.date))</small></div>
