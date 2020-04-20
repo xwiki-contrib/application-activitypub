@@ -35,6 +35,7 @@ import org.xwiki.contrib.activitypub.events.AnnounceEvent;
 import org.xwiki.contrib.activitypub.events.CreateEvent;
 import org.xwiki.contrib.activitypub.events.FollowEvent;
 import org.xwiki.contrib.activitypub.events.MessageEvent;
+import org.xwiki.contrib.activitypub.events.UpdateEvent;
 import org.xwiki.eventstream.internal.DefaultEvent;
 import org.xwiki.notifications.CompositeEvent;
 import org.xwiki.notifications.NotificationException;
@@ -52,7 +53,6 @@ import org.xwiki.test.junit5.mockito.MockComponent;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -133,7 +133,7 @@ public class ActivityPubNotificationDisplayerTest
         NotificationException expt = assertThrows(NotificationException.class,
             () -> this.activityPubNotificationDisplayer.renderNotification(compositeEvent));
 
-        assertEquals("Error while getting the activity of the event [null at null by null on null]", expt.getMessage());
+        assertEquals("Error while getting the activity of an event", expt.getMessage());
     }
 
     @Test
@@ -144,7 +144,8 @@ public class ActivityPubNotificationDisplayerTest
             CreateEvent.EVENT_TYPE,
             FollowEvent.EVENT_TYPE,
             AnnounceEvent.EVENT_TYPE,
-            MessageEvent.EVENT_TYPE),
-                supportedEvents);
+            MessageEvent.EVENT_TYPE,
+            UpdateEvent.EVENT_TYPE
+        ), supportedEvents);
     }
 }

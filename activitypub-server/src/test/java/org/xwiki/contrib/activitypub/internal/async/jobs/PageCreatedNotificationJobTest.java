@@ -17,7 +17,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.internal.async;
+package org.xwiki.contrib.activitypub.internal.async.jobs;
 
 import java.io.IOException;
 import java.net.URI;
@@ -43,6 +43,8 @@ import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
+import org.xwiki.contrib.activitypub.internal.async.PageChangedRequest;
+import org.xwiki.contrib.activitypub.internal.async.jobs.PageCreatedNotificationJob;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.security.authorization.AuthorizationManager;
 import org.xwiki.security.authorization.Right;
@@ -141,7 +143,7 @@ class PageCreatedNotificationJobTest
     @Test
     void runInternalNoFollowers() throws Exception
     {
-        PageCreatedRequest t = mock(PageCreatedRequest.class);
+        PageChangedRequest t = mock(PageChangedRequest.class);
         when(this.xWikiUserBridge.resolveDocumentReference(t.getAuthorReference()))
             .thenReturn(this.authorReference);
 
@@ -155,7 +157,7 @@ class PageCreatedNotificationJobTest
     @Test
     void runInternalOneFollowerNoRight() throws Exception
     {
-        PageCreatedRequest t = mock(PageCreatedRequest.class);
+        PageChangedRequest t = mock(PageChangedRequest.class);
         when(this.xWikiUserBridge.resolveDocumentReference(t.getAuthorReference()))
             .thenReturn(this.authorReference);
 
@@ -205,8 +207,8 @@ class PageCreatedNotificationJobTest
                             .setTo(Collections.singletonList(new ProxyActor(this.person.getFollowers().getLink())));
         ActivityRequest<Create> activityRequest = new ActivityRequest<>(this.person, create);
 
-        PageCreatedRequest request =
-            new PageCreatedRequest()
+        PageChangedRequest request =
+            new PageChangedRequest()
                 .setDocumentReference(this.document.getDocumentReference())
                 .setAuthorReference(this.document.getAuthorReference())
                 .setDocumentTitle(this.document.getTitle())
@@ -215,7 +217,7 @@ class PageCreatedNotificationJobTest
                 .setViewURL(this.document.getURL("view", this.context));
         request.setId("activitypub-create-page", this.document.getKey());
 
-        PageCreatedRequest t = mock(PageCreatedRequest.class);
+        PageChangedRequest t = mock(PageChangedRequest.class);
         when(t.getViewURL()).thenReturn("http://pageurl");
 
         DocumentReference documentReference = new DocumentReference("xwiki", "XWiki", "TEST");
@@ -253,8 +255,8 @@ class PageCreatedNotificationJobTest
         when(this.document.getCreationDate()).thenReturn(creationDate);
         when(this.document.getTitle()).thenReturn(documentTile);
 
-        PageCreatedRequest request =
-            new PageCreatedRequest()
+        PageChangedRequest request =
+            new PageChangedRequest()
                 .setDocumentReference(this.document.getDocumentReference())
                 .setAuthorReference(this.document.getAuthorReference())
                 .setDocumentTitle(this.document.getTitle())
@@ -263,7 +265,7 @@ class PageCreatedNotificationJobTest
                 .setViewURL(this.document.getURL("view", this.context));
         request.setId("activitypub-create-page", this.document.getKey());
 
-        PageCreatedRequest t = mock(PageCreatedRequest.class);
+        PageChangedRequest t = mock(PageChangedRequest.class);
         when(t.getViewURL()).thenReturn("http://pageurl");
 
         DocumentReference documentReference = new DocumentReference("xwiki", "XWiki", "TEST");
@@ -281,7 +283,7 @@ class PageCreatedNotificationJobTest
 
         assertEquals(1, this.logCapture.size());
         assertEquals(Level.ERROR, this.logCapture.getLogEvent(0).getLevel());
-        assertEquals("Error while trying to handle DocumentCreatedEvent for document [xwiki:XWiki.TEST]",
+        assertEquals("Error while trying to handle notifications for document [xwiki:XWiki.TEST]",
             this.logCapture.getMessage(0));
     }
 
@@ -303,8 +305,8 @@ class PageCreatedNotificationJobTest
         when(this.document.getCreationDate()).thenReturn(creationDate);
         when(this.document.getTitle()).thenReturn(documentTile);
 
-        PageCreatedRequest request =
-            new PageCreatedRequest()
+        PageChangedRequest request =
+            new PageChangedRequest()
                 .setDocumentReference(this.document.getDocumentReference())
                 .setAuthorReference(this.document.getAuthorReference())
                 .setDocumentTitle(this.document.getTitle())
@@ -313,7 +315,7 @@ class PageCreatedNotificationJobTest
                 .setViewURL(this.document.getURL("view", this.context));
         request.setId("activitypub-create-page", this.document.getKey());
 
-        PageCreatedRequest t = mock(PageCreatedRequest.class);
+        PageChangedRequest t = mock(PageChangedRequest.class);
         when(t.getViewURL()).thenReturn("http://pageurl");
 
         DocumentReference documentReference = new DocumentReference("xwiki", "XWiki", "TEST");
@@ -331,7 +333,7 @@ class PageCreatedNotificationJobTest
 
         assertEquals(1, this.logCapture.size());
         assertEquals(Level.DEBUG, this.logCapture.getLogEvent(0).getLevel());
-        assertEquals("Error while trying to handle DocumentCreatedEvent for document [xwiki:XWiki.TEST]",
+        assertEquals("Error while trying to handle notifications for document [xwiki:XWiki.TEST]",
             this.logCapture.getMessage(0));
     }
 
@@ -371,8 +373,8 @@ class PageCreatedNotificationJobTest
                             .setPublished(creationDate)
                             .setTo(Collections.singletonList(new ProxyActor(this.person.getFollowers().getLink())));
         ActivityRequest<Create> activityRequest = new ActivityRequest<>(this.person, create);
-        PageCreatedRequest request =
-            new PageCreatedRequest()
+        PageChangedRequest request =
+            new PageChangedRequest()
                 .setDocumentReference(this.document.getDocumentReference())
                 .setAuthorReference(this.document.getAuthorReference())
                 .setDocumentTitle(this.document.getTitle())
@@ -381,7 +383,7 @@ class PageCreatedNotificationJobTest
                 .setViewURL(this.document.getURL("view", this.context));
         request.setId("activitypub-create-page", this.document.getKey());
 
-        PageCreatedRequest t = mock(PageCreatedRequest.class);
+        PageChangedRequest t = mock(PageChangedRequest.class);
         when(t.getViewURL()).thenReturn("http://pageurl");
 
         DocumentReference documentReference = new DocumentReference("xwiki", "XWiki", "TEST");
@@ -403,7 +405,7 @@ class PageCreatedNotificationJobTest
 
         assertEquals(1, this.logCapture.size());
         assertEquals(Level.ERROR, this.logCapture.getLogEvent(0).getLevel());
-        assertEquals("Error while trying to handle DocumentCreatedEvent for document [xwiki:XWiki.TEST]",
+        assertEquals("Error while trying to handle notifications for document [xwiki:XWiki.TEST]",
             this.logCapture.getMessage(0));
     }
 }

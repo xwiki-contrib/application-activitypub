@@ -30,9 +30,10 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
-import org.xwiki.contrib.activitypub.entities.AbstractActor;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.Reject;
@@ -56,7 +57,13 @@ public class FollowActivityHandler extends AbstractActivityHandler<Follow>
         throws ActivityPubException, IOException
     {
         ActivityPubObject followedObject = this.activityPubObjectReferenceResolver.resolveReference(follow.getObject());
-        AbstractActor followingActor = this.activityPubObjectReferenceResolver.resolveReference(follow.getActor());
+        
+        ActivityPubObjectReference<AbstractActor> actor = follow.getActor();
+        if (actor.getLink() == null) {
+            throw new ActivityPubException(
+                String.format("Malformed Follow object [%s]. The actor is not a valid url", follow));
+        }
+        AbstractActor followingActor = this.activityPubObjectReferenceResolver.resolveReference(actor);
 
         if (!(followedObject instanceof AbstractActor)) {
             this.answerError(servletResponse, HttpServletResponse.SC_NOT_IMPLEMENTED,

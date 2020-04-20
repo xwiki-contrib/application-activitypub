@@ -6,3 +6,4 @@ org.xwiki.contrib.activitypub.internal.descriptors.AnnounceEventDescriptor
 org.xwiki.contrib.activitypub.internal.descriptors.CreateEventDescriptor
 org.xwiki.contrib.activitypub.internal.descriptors.FollowEventDescriptor
 org.xwiki.contrib.activitypub.internal.descriptors.MessageEventDescriptor
+org.xwiki.contrib.activitypub.internal.descriptors.UpdateEventDescriptor

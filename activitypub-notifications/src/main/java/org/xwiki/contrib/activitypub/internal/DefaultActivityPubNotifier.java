@@ -39,11 +39,13 @@ import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.Reject;
+import org.xwiki.contrib.activitypub.entities.Update;
 import org.xwiki.contrib.activitypub.events.AbstractActivityPubEvent;
 import org.xwiki.contrib.activitypub.events.AnnounceEvent;
 import org.xwiki.contrib.activitypub.events.CreateEvent;
 import org.xwiki.contrib.activitypub.events.FollowEvent;
 import org.xwiki.contrib.activitypub.events.MessageEvent;
+import org.xwiki.contrib.activitypub.events.UpdateEvent;
 import org.xwiki.observation.ObservationManager;
 
 /**
@@ -76,6 +78,8 @@ public class DefaultActivityPubNotifier implements ActivityPubNotifier
             event = new MessageEvent((Create) activity, serializedTargets);
         } else if (activity instanceof Create) {
             event = new CreateEvent((Create) activity, serializedTargets);
+        } else if (activity instanceof Update) {
+            event = new UpdateEvent((Update) activity, serializedTargets);
         } else if (activity instanceof Announce) {
             event = new AnnounceEvent((Announce) activity, serializedTargets);
         } else if (activity instanceof Follow || activity instanceof Reject || activity instanceof Accept) {

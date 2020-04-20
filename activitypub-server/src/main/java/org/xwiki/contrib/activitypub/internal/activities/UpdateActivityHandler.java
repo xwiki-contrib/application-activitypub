@@ -31,57 +31,58 @@ import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
-import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.Outbox;
+import org.xwiki.contrib.activitypub.entities.Update;
 
 /**
- * Specific handler for {@link Create} activities.
+ * Specific handler for {@link Update} activities.
  *
  * @version $Id$
+ * @since 1.2
  */
 @Component
 @Singleton
-public class CreateActivityHandler extends AbstractActivityHandler<Create>
+public class UpdateActivityHandler extends AbstractActivityHandler<Update>
 {
     @Override
-    public void handleInboxRequest(ActivityRequest<Create> activityRequest) throws IOException, ActivityPubException
+    public void handleInboxRequest(ActivityRequest<Update> activityRequest) throws IOException, ActivityPubException
     {
-        Create create = activityRequest.getActivity();
-        if (create.getId() == null) {
+        Update update = activityRequest.getActivity();
+        if (update.getId() == null) {
             this.answerError(activityRequest.getResponse(), HttpServletResponse.SC_BAD_REQUEST,
                 "The ID of the activity must not be null.");
         } else {
             AbstractActor actor = activityRequest.getActor();
             Inbox inbox = this.getInbox(actor);
-            inbox.addActivity(create);
+            inbox.addActivity(update);
             this.activityPubStorage.storeEntity(inbox);
-            ActivityPubObject entity = this.activityPubObjectReferenceResolver.resolveReference(create.getObject());
+            ActivityPubObject entity = this.activityPubObjectReferenceResolver.resolveReference(update.getObject());
             this.activityPubStorage.storeEntity(entity);
-            this.notifier.notify(create, Collections.singleton(actor));
-            this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, create);
+            this.notifier.notify(update, Collections.singleton(actor));
+            this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, update);
         }
     }
 
     @Override
-    public void handleOutboxRequest(ActivityRequest<Create> activityRequest)
+    public void handleOutboxRequest(ActivityRequest<Update> activityRequest)
         throws IOException, ActivityPubException
     {
-        Create create = activityRequest.getActivity();
-        if (create.getId() == null) {
-            this.activityPubStorage.storeEntity(create);
+        Update update = activityRequest.getActivity();
+        if (update.getId() == null) {
+            this.activityPubStorage.storeEntity(update);
         }
 
         AbstractActor actor = activityRequest.getActor();
         Outbox outbox = this.getOutbox(actor);
-        outbox.addActivity(create);
+        outbox.addActivity(update);
         this.activityPubStorage.storeEntity(outbox);
 
-        ResolvedTargets resolvedTargets = this.getTargets(create);
+        ResolvedTargets resolvedTargets = this.getTargets(update);
 
         for (AbstractActor targetActor : resolvedTargets.getActorTargets()) {
-            create.getObject().setExpand(true);
-            HttpMethod postMethod = this.activityPubClient.postInbox(targetActor, create);
+            update.getObject().setExpand(true);
+            HttpMethod postMethod = this.activityPubClient.postInbox(targetActor, update);
 
             try {
                 this.activityPubClient.checkAnswer(postMethod);
@@ -92,6 +93,6 @@ public class CreateActivityHandler extends AbstractActivityHandler<Create>
                 postMethod.releaseConnection();
             }
         }
-        this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, create);
+        this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, update);
     }
 }

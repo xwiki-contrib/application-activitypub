@@ -377,7 +377,7 @@ public class DefaultActorHandler implements ActorHandler
             if (actorURI.isAbsolute() || username.contains(WEBFINGER_SEPARATOR)) {
                 // FIXME: we need to ensure to discard remote Actor info after some time for it to be efficient.
                 ret = this.activityPubStorage.retrieveEntity(actorURI);
-                boolean isAlreadyStored = (ret != null);
+                boolean isAlreadyStored = ret != null;
 
                 // if it is not stored, try to resolve it as a WebFinger
                 if (ret == null) {

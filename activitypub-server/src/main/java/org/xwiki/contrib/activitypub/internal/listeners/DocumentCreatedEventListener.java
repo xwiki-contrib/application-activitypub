@@ -19,7 +19,6 @@
  */
 package org.xwiki.contrib.activitypub.internal.listeners;
 
-import java.util.Arrays;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -30,7 +29,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.xwiki.bridge.event.DocumentCreatedEvent;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.activitypub.internal.async.PageCreatedRequest;
+import org.xwiki.contrib.activitypub.internal.async.PageChangedRequest;
 import org.xwiki.job.JobException;
 import org.xwiki.job.JobExecutor;
 import org.xwiki.job.Request;
@@ -40,7 +39,8 @@ import org.xwiki.observation.event.Event;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
 
-import static org.xwiki.contrib.activitypub.internal.async.PageCreatedNotificationJob.ASYNC_REQUEST_TYPE;
+import static java.util.Collections.singletonList;
+import static org.xwiki.contrib.activitypub.internal.async.jobs.PageCreatedNotificationJob.ASYNC_REQUEST_TYPE;
 
 /**
  * Listen for {@link DocumentCreatedEvent} and notify the followers of the creator with ActivityPub protocol.
@@ -52,7 +52,7 @@ import static org.xwiki.contrib.activitypub.internal.async.PageCreatedNotificati
 @Named("ActivityPubDocumentCreatedEventListener")
 public class DocumentCreatedEventListener extends AbstractEventListener
 {
-    private static final List<Event> EVENTS = Arrays.asList(new DocumentCreatedEvent());
+    private static final List<Event> EVENTS = singletonList(new DocumentCreatedEvent());
 
     @Inject
     private Logger logger;
@@ -71,9 +71,8 @@ public class DocumentCreatedEventListener extends AbstractEventListener
     @Override
     public void onEvent(Event event, Object source, Object data)
     {
-        // FIXME: this action will later be activated by a configuration.
-        if (false) {
-            XWikiDocument document = (XWikiDocument) source;
+        XWikiDocument document = (XWikiDocument) source;
+        if (!Boolean.TRUE.equals(document.isHidden())) {
             XWikiContext context = (XWikiContext) data;
 
             Request createJob = this.newRequest(document, context);
@@ -82,7 +81,7 @@ public class DocumentCreatedEventListener extends AbstractEventListener
                 this.jobExecutor.execute(ASYNC_REQUEST_TYPE, createJob);
             } catch (JobException e) {
                 this.logger.warn("ActivityPub page creation [{}] event task failed. Cause [{}]", document,
-                        ExceptionUtils.getRootCauseMessage(e));
+                    ExceptionUtils.getRootCauseMessage(e));
             }
         }
     }
@@ -93,9 +92,8 @@ public class DocumentCreatedEventListener extends AbstractEventListener
          * XWikiDocument is not serializable and cannot be passed safely to the job executor.
          * Only interesting parameters are passed explicitly on the request.
          */
-
-        PageCreatedRequest ret =
-            new PageCreatedRequest()
+        PageChangedRequest ret =
+            new PageChangedRequest()
                 .setDocumentReference(document.getDocumentReference())
                 .setAuthorReference(document.getAuthorReference())
                 .setDocumentTitle(document.getTitle())

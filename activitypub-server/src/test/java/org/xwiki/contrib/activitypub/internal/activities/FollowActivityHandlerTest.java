@@ -19,7 +19,6 @@
  */
 package org.xwiki.contrib.activitypub.internal.activities;
 
-import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
 
@@ -36,17 +35,13 @@ import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.Reject;
-import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.test.LogLevel;
 import org.xwiki.test.junit5.LogCaptureExtension;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
-import org.xwiki.user.UserReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -91,9 +86,12 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
     @Test
     public void handleInboxFollowNoActor() throws Exception
     {
-        Follow follow = new Follow().setObject(new Document()).setId(new URI("http://www.xwiki.org"));
+        Follow follow = new Follow()
+            .setActor(new Person().setId(URI.create("http://person/1")))
+            .setObject(new Document())
+            .setId(new URI("http://www.xwiki.org"));
         when(this.activityPubObjectReferenceResolver
-            .resolveReference((ActivityPubObjectReference<Document>)follow.getObject())).thenReturn(new Document());
+            .resolveReference((ActivityPubObjectReference<Document>) follow.getObject())).thenReturn(new Document());
         this.handler.handleInboxRequest(
             new ActivityRequest<>(null, follow, this.servletRequest, this.servletResponse));
         this.verifyResponse(501, "Only following actors is implemented.");
@@ -102,14 +100,16 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
     @Test
     public void handleInboxAsk() throws Exception
     {
-        Person followingActor = new Person().setPreferredUsername("Following");
+        Person followingActor = new Person()
+            .setPreferredUsername("Following")
+            .setId(URI.create("http://person1/1"));
         Person followedActor = new Person().setPreferredUsername("Followed");
         Follow follow = new Follow()
             .setObject(followedActor)
             .setActor(followingActor)
             .setId(new URI("http://www.xwiki.org"));
         when(this.activityPubObjectReferenceResolver
-            .resolveReference((ActivityPubObjectReference<Person>)follow.getObject())).thenReturn(followedActor);
+            .resolveReference((ActivityPubObjectReference<Person>) follow.getObject())).thenReturn(followedActor);
         when(this.activityPubObjectReferenceResolver
             .resolveReference(follow.getActor())).thenReturn(followingActor);
         Inbox followedActorInbox = new Inbox();
@@ -195,9 +195,11 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
     @Test
     public void handleOutboxFollowNoActorNoId() throws Exception
     {
-        Follow follow = new Follow().setObject(new Document());
+        Follow follow = new Follow()
+            .setActor(new Person().setId(URI.create("http://person/1")))
+            .setObject(new Document());
         when(this.activityPubObjectReferenceResolver
-            .resolveReference((ActivityPubObjectReference<Document>)follow.getObject())).thenReturn(new Document());
+            .resolveReference((ActivityPubObjectReference<Document>) follow.getObject())).thenReturn(new Document());
         this.handler.handleOutboxRequest(
             new ActivityRequest<>(null, follow, this.servletRequest, this.servletResponse));
         this.verifyResponse(501, "Only following actors is implemented.");
@@ -207,14 +209,16 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
     @Test
     public void handleOutboxAsk() throws Exception
     {
-        Person followingActor = new Person().setPreferredUsername("Following");
+        Person followingActor = new Person()
+            .setPreferredUsername("Following")
+            .setId(URI.create("http://person/1"));
         Person followedActor = new Person().setPreferredUsername("Followed");
         Follow follow = new Follow()
             .setObject(followedActor)
             .setActor(followingActor)
             .setId(new URI("http://www.xwiki.org"));
         when(this.activityPubObjectReferenceResolver
-            .resolveReference((ActivityPubObjectReference<Person>)follow.getObject())).thenReturn(followedActor);
+            .resolveReference((ActivityPubObjectReference<Person>) follow.getObject())).thenReturn(followedActor);
         when(this.activityPubObjectReferenceResolver
             .resolveReference(follow.getActor())).thenReturn(followingActor);
         Inbox followedActorInbox = new Inbox();

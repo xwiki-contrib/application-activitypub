@@ -19,6 +19,7 @@
  */
 package org.xwiki.contrib.activitypub.internal.async;
 
+import org.xwiki.contrib.activitypub.internal.async.jobs.PageCreatedNotificationJob;
 import org.xwiki.job.AbstractJobStatus;
 import org.xwiki.job.event.status.JobStatus;
 import org.xwiki.logging.LoggerManager;
@@ -30,20 +31,19 @@ import org.xwiki.observation.ObservationManager;
  * @version $Id$
  * @since 1.2
  */
-public class PageCreatedStatus extends AbstractJobStatus<PageCreatedRequest>
+public class PageChangedStatus extends AbstractJobStatus<PageChangedRequest>
 {
     /**
      * Default constructor.
      *
-     * @param jobType            the type of the job
-     * @param request            the request provided when started the job
-     * @param parentJobStatus    the status of the parent job (i.e. the status of the job that started this one); pass
-     *                           {@code null} if this job hasn't been started by another job (i.e. if this is not a
-     *                           sub-job).
+     * @param jobType the type of the job
+     * @param request the request provided when started the job
+     * @param parentJobStatus the status of the parent job (i.e. the status of the job that started this one); pass
+     *     {@code null} if this job hasn't been started by another job (i.e. if this is not a sub-job).
      * @param observationManager the observation manager component
-     * @param loggerManager      the logger manager component
+     * @param loggerManager the logger manager component
      */
-    public PageCreatedStatus(String jobType, PageCreatedRequest request, JobStatus parentJobStatus,
+    public PageChangedStatus(String jobType, PageChangedRequest request, JobStatus parentJobStatus,
         ObservationManager observationManager, LoggerManager loggerManager)
     {
         super(jobType, request, parentJobStatus, observationManager, loggerManager);

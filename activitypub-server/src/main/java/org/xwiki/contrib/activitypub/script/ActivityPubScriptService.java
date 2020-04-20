@@ -377,6 +377,7 @@ public class ActivityPubScriptService implements ScriptService
                     .setPublished(new Date());
             this.activityPubStorage.storeEntity(create);
 
+            create.getObject().setExpand(true);
             this.createActivityHandler.handleOutboxRequest(new ActivityRequest<>(currentActor, create));
             return true;
         } catch (IOException | ActivityPubException e) {

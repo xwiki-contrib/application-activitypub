@@ -33,7 +33,7 @@ import org.xwiki.rendering.block.XDOM;
  * @version $Id$
  * @since 1.2
  */
-public class PageCreatedRequest extends AbstractRequest
+public class PageChangedRequest extends AbstractRequest
 {
     private DocumentReference documentReference;
 
@@ -100,7 +100,7 @@ public class PageCreatedRequest extends AbstractRequest
      * @param documentReference Set the document reference.
      * @return The current object.
      */
-    public PageCreatedRequest setDocumentReference(DocumentReference documentReference)
+    public PageChangedRequest setDocumentReference(DocumentReference documentReference)
     {
         this.documentReference = documentReference;
         return this;
@@ -111,7 +111,7 @@ public class PageCreatedRequest extends AbstractRequest
      * @param authorReference The author reference.
      * @return The current object.
      */
-    public PageCreatedRequest setAuthorReference(DocumentReference authorReference)
+    public PageChangedRequest setAuthorReference(DocumentReference authorReference)
     {
         this.authorReference = authorReference;
         return this;
@@ -122,7 +122,7 @@ public class PageCreatedRequest extends AbstractRequest
      * @param documentTitle the document title.
      * @return The current object.
      */
-    public PageCreatedRequest setDocumentTitle(String documentTitle)
+    public PageChangedRequest setDocumentTitle(String documentTitle)
     {
         this.documentTitle = documentTitle;
         return this;
@@ -133,7 +133,7 @@ public class PageCreatedRequest extends AbstractRequest
      * @param content The content of the page.
      * @return The current object.
      */
-    public PageCreatedRequest setContent(XDOM content)
+    public PageChangedRequest setContent(XDOM content)
     {
         this.content = content;
         return this;
@@ -144,7 +144,7 @@ public class PageCreatedRequest extends AbstractRequest
      * @param creationDate the creation date of the page.
      * @return The current object.
      */ 
-    public PageCreatedRequest setCreationDate(Date creationDate)
+    public PageChangedRequest setCreationDate(Date creationDate)
     {
         this.creationDate = creationDate;
         return this;
@@ -155,7 +155,7 @@ public class PageCreatedRequest extends AbstractRequest
      * @param viewURL The url of the page.
      * @return The current object.
      */
-    public PageCreatedRequest setViewURL(String viewURL)
+    public PageChangedRequest setViewURL(String viewURL)
     {
         this.viewURL = viewURL;
         return this;
@@ -172,7 +172,7 @@ public class PageCreatedRequest extends AbstractRequest
             return false;
         }
 
-        PageCreatedRequest that = (PageCreatedRequest) o;
+        PageChangedRequest that = (PageChangedRequest) o;
 
         return new EqualsBuilder()
                    .append(this.documentReference, that.documentReference)
