@@ -67,7 +67,7 @@ public class DefaultActivityPubNotifierTest
             .notify(ArgumentMatchers.argThat(
                 (AbstractActivityPubEvent<? extends AbstractActivity> activityPubEvent) -> activityPubEvent.getTarget()
                                                                                        .isEmpty()),
-                eq("org.xwiki.contrib:activitypub-notifications"), eq("Accept"));
+                eq("org.xwiki.contrib:activitypub-notifications"), eq("activitypub.follow"));
     }
 
     @Test
@@ -82,6 +82,6 @@ public class DefaultActivityPubNotifierTest
                     .argThat((AbstractActivityPubEvent<? extends AbstractActivity> activityPubEvent) ->
                         activityPubEvent.getTarget().size() == 1
                             && activityPubEvent.getTarget().contains("Foobar")),
-                eq("org.xwiki.contrib:activitypub-notifications"), eq("Accept"));
+                eq("org.xwiki.contrib:activitypub-notifications"), eq("activitypub.follow"));
     }
 }

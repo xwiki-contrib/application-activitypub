@@ -17,23 +17,31 @@
 ## Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 ## 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 ## ---------------------------------------------------------------------------
-#template('notification/macros.vm')
-## FIXME: Check how to use JSX there
-#set ($smallIcon = "branch")
-#set ($mainIcon = "branch")
+## Default activity renderer for any kind of activity notification.
+#template('activitypub/macros.vm')
+
 #define ($content)
 <div class="notification-description">
-  #set ($actor = $services.activitypub.resolve($activity.actor))
-  #set ($username = $services.webfinger.getWebfingerId($actor))
-  <div class="activity-type">$activity.type</div>
-  <div class="activity-summary">$username wants to follow you.</div>
-  <div class="action">
-    <input type="hidden" name="follow-id" value="$activity.id" />
-    <input type="button" name="follow-answer" id="$activity.id" value="Accept" class="btn-primary" />
-    <input type="button" name="follow-answer" id="$activity.id" value="Reject" class="btn-primary" />
-  </div>
-  <div><small class="text-muted">$escapetool.xml($services.date.displayTimeAgo($event.date))</small></div>
+  <div class="activity-type">$services.localization.render('activitypub.event.activity.type')</div>
+  <div class="activity-summary">#getAPEventSummary('activitypub.event.activity.summary')</div>
+  <div><small class="text-muted">$compositeEventDate</small></div>
 </div>
 #end
-#set ($details = "")
+
+#define ($details)
+  #define($rows)
+    #foreach($event in $compositeEvent.events)
+      #set ($activity = $eventActivities.get($event))
+      #set ($actor = $services.activitypub.resolve($activity.actor))
+      #set ($object = $services.activitypub.resolve($activity.object))
+
+      #define($description)
+        $services.localization.render('activitypub.event.activity.description') $activity.type.
+      #end
+      #displayAPEventDetail($event $actor $description)
+    #end
+  #end
+  #displayNotificationEventDetailsSkeletons($events.size(), $rows)
+#end
+
 #displayNotificationEventSkeleton($mainIcon $smallIcon $content $details)

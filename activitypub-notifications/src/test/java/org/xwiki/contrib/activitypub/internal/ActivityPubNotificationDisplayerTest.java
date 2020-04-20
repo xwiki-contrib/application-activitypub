@@ -34,6 +34,7 @@ import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.contrib.activitypub.events.AnnounceEvent;
 import org.xwiki.contrib.activitypub.events.CreateEvent;
 import org.xwiki.contrib.activitypub.events.FollowEvent;
+import org.xwiki.contrib.activitypub.events.MessageEvent;
 import org.xwiki.eventstream.internal.DefaultEvent;
 import org.xwiki.notifications.CompositeEvent;
 import org.xwiki.notifications.NotificationException;
@@ -88,10 +89,11 @@ public class ActivityPubNotificationDisplayerTest
     {
         DefaultEvent event = new DefaultEvent();
         CompositeEvent compositeEvent = new CompositeEvent(event);
-        Block actual = this.activityPubNotificationDisplayer.renderNotification(compositeEvent);
-        assertTrue(actual.getChildren().isEmpty());
-        assertEquals(String.format("The event [%s] cannot be processed.", event.toString()),
-            this.logCapture.getMessage(0));
+
+        NotificationException expt = assertThrows(NotificationException.class,
+            () -> this.activityPubNotificationDisplayer.renderNotification(compositeEvent));
+
+        assertEquals("Error while getting the activity of the event [null at null by null on null]", expt.getMessage());
     }
 
     @Test
@@ -100,7 +102,7 @@ public class ActivityPubNotificationDisplayerTest
         when(this.activityPubJsonParser.parse("my content")).thenReturn(new Accept());
         when(this.scriptContextManager.getScriptContext()).thenReturn(new SimpleScriptContext());
         Template t = mock(Template.class);
-        when(this.templateManager.getTemplate("activity/accept.vm")).thenReturn(t);
+        when(this.templateManager.getTemplate("activitypub/follow.vm")).thenReturn(t);
         ArrayList<Block> childBlocks = new ArrayList<>();
         childBlocks.add(new IdBlock("ok"));
         when(this.templateManager.execute(t)).thenReturn(new XDOM(childBlocks));
@@ -109,11 +111,12 @@ public class ActivityPubNotificationDisplayerTest
         HashMap<String, String> parameters = new HashMap<>();
         parameters.put(ACTIVITY_PARAMETER_KEY, "my content");
         event.setParameters(parameters);
+        event.setType(FollowEvent.EVENT_TYPE);
         CompositeEvent compositeEvent = new CompositeEvent(event);
         Block actual = this.activityPubNotificationDisplayer.renderNotification(compositeEvent);
         assertEquals(1, actual.getChildren().size());
-        assertEquals("ok", ((IdBlock) actual.getChildren().get(0).getChildren().get(0)).getName());
-        verify(this.templateManager, times(1)).getTemplate("activity/accept.vm");
+        assertEquals("ok", ((IdBlock) actual.getChildren().get(0)).getName());
+        verify(this.templateManager, times(1)).getTemplate("activitypub/follow.vm");
     }
 
     @Test
@@ -130,14 +133,18 @@ public class ActivityPubNotificationDisplayerTest
         NotificationException expt = assertThrows(NotificationException.class,
             () -> this.activityPubNotificationDisplayer.renderNotification(compositeEvent));
 
-        assertEquals("Error while getting the activity of an event", expt.getMessage());
+        assertEquals("Error while getting the activity of the event [null at null by null on null]", expt.getMessage());
     }
 
     @Test
     void getSuppotedEventsDefault()
     {
         List<String> supportedEvents = this.activityPubNotificationDisplayer.getSupportedEvents();
-        assertEquals(Arrays.asList(CreateEvent.EVENT_TYPE, FollowEvent.EVENT_TYPE, AnnounceEvent.EVENT_TYPE),
+        assertEquals(Arrays.asList(
+            CreateEvent.EVENT_TYPE,
+            FollowEvent.EVENT_TYPE,
+            AnnounceEvent.EVENT_TYPE,
+            MessageEvent.EVENT_TYPE),
                 supportedEvents);
     }
 }

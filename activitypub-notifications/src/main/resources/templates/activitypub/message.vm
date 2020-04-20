@@ -17,27 +17,31 @@
 ## Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 ## 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 ## ---------------------------------------------------------------------------
-#template('notification/macros.vm')
-## FIXME: Check how to use JSX there
-#set ($smallIcon = "branch")
-#set ($mainIcon = "branch")
+#template('activitypub/macros.vm')
+
 #define ($content)
 <div class="notification-description">
-    #set ($acceptActor = $services.activitypub.resolve($activity.actor))
-    #if ($services.activitypub.isCurrentUser($acceptActor) || $services.activitypub.currentUserCanActFor($acceptActor))
-        #set ($object = $services.activitypub.resolve($activity.object))
-        #set ($actor = $services.activitypub.resolve($object.actor))
-        #set ($username = $services.webfinger.getWebfingerId($actor))
-        #set ($summary = "$username is now following you.")
-    #else
-        #set ($username = $services.webfinger.getWebfingerId($acceptActor))
-        #set ($summary = "$username accepted your follow request.")
-    #end
-    
-  <div class="activity-type">Follow</div>
-  <div class="activity-summary">$summary</div>
-  <div><small class="text-muted">$escapetool.xml($services.date.displayTimeAgo($event.date))</small></div>
+  <div class="activity-type">$services.localization.render('activitypub.event.message.type')</div>
+  <div class="activity-summary">#getAPEventSummary('activitypub.event.message.summary')</div>
+  <div><small class="text-muted">$compositeEventDate</small></div>
 </div>
 #end
-#set ($details = "")
+
+#define ($details)
+    #define($rows)
+        #foreach($event in $compositeEvent.events)
+            #set ($activity = $eventActivities.get($event))
+            #set ($actor = $services.activitypub.resolve($activity.actor))
+            #set ($object = $services.activitypub.resolve($activity.object))
+
+            #define($description)
+                $services.localization.render('activitypub.event.message.description')
+                <div class="activitypub-message">$object.content</div>
+            #end
+            #displayAPEventDetail($event $actor $description)
+        #end
+    #end
+    #displayNotificationEventDetailsSkeletons($events.size(), $rows)
+#end
+
 #displayNotificationEventSkeleton($mainIcon $smallIcon $content $details)

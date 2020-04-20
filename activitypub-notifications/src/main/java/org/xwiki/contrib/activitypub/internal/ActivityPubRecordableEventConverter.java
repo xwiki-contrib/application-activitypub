@@ -34,6 +34,7 @@ import org.xwiki.contrib.activitypub.events.AbstractActivityPubEvent;
 import org.xwiki.contrib.activitypub.events.AnnounceEvent;
 import org.xwiki.contrib.activitypub.events.CreateEvent;
 import org.xwiki.contrib.activitypub.events.FollowEvent;
+import org.xwiki.contrib.activitypub.events.MessageEvent;
 import org.xwiki.eventstream.Event;
 import org.xwiki.eventstream.RecordableEvent;
 import org.xwiki.eventstream.RecordableEventConverter;
@@ -85,7 +86,10 @@ public class ActivityPubRecordableEventConverter implements RecordableEventConve
     @Override
     public List<RecordableEvent> getSupportedEvents()
     {
-        return Arrays.asList(new CreateEvent(null, null), new FollowEvent<>(null, null),
-                new AnnounceEvent(null, null));
+        return Arrays.asList(
+            new CreateEvent(null, null),
+            new FollowEvent<>(null, null),
+            new AnnounceEvent(null, null),
+            new MessageEvent(null, null));
     }
 }

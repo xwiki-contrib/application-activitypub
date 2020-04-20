@@ -17,48 +17,34 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.events;
+package org.xwiki.contrib.activitypub.internal.descriptors;
 
-import java.util.Set;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
-import org.xwiki.contrib.activitypub.entities.Create;
-import org.xwiki.stability.Unstable;
+import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.events.MessageEvent;
 
 /**
- * A specific event type for Create activities that concerns every other type than Notes.
- * Create activities about Notes are handled by a {@link MessageEvent}.
+ * Event descriptor for {@link MessageEvent}.
  *
- * @since 1.1
+ * @since 1.2
  * @version $Id$
  */
-@Unstable
-public class CreateEvent extends AbstractActivityPubEvent<Create>
+@Component
+@Singleton
+@Named(MessageEvent.EVENT_TYPE)
+public class MessageEventDescriptor extends AbstractActivityPubEventDescriptor
 {
-    /**
-     * Default name for those events.
-     */
-    public static final String EVENT_TYPE = "activitypub.create";
-
-    /**
-     * Default constructor.
-     *
-     * @param activity the activity to notify about
-     * @param target the serialized references of users to notify to
-     */
-    public CreateEvent(Create activity, Set<String> target)
+    @Override
+    public String getEventType()
     {
-        super(activity, target);
+        return MessageEvent.EVENT_TYPE;
     }
 
     @Override
-    public String getType()
+    public String getDescription()
     {
-        return EVENT_TYPE;
-    }
-
-    @Override
-    public boolean matches(Object otherEvent)
-    {
-        return otherEvent instanceof CreateEvent;
+        return "activitypub.message.event.description";
     }
 }

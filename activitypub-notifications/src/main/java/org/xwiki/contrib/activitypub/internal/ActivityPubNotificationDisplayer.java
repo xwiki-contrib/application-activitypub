@@ -19,16 +19,16 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.script.ScriptContext;
 
-import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
@@ -36,6 +36,7 @@ import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.events.AnnounceEvent;
 import org.xwiki.contrib.activitypub.events.CreateEvent;
 import org.xwiki.contrib.activitypub.events.FollowEvent;
+import org.xwiki.contrib.activitypub.events.MessageEvent;
 import org.xwiki.eventstream.Event;
 import org.xwiki.notifications.CompositeEvent;
 import org.xwiki.notifications.NotificationException;
@@ -60,11 +61,11 @@ import static org.xwiki.contrib.activitypub.internal.ActivityPubRecordableEventC
 @Named("activitypub")
 public class ActivityPubNotificationDisplayer implements NotificationDisplayer
 {
-    private static final String EVENT_BINDING_NAME = "event";
-    private static final String ACTIVITY_BINDING_NAME = "activity";
-
-    @Inject
-    private Logger logger;
+    private static final String EVENT_BINDING_NAME = "compositeEvent";
+    private static final String ACTIVITY_BINDING_NAME = "eventActivities";
+    private static final String EVENT_TYPE_PREFIX = "activitypub.";
+    private static final String TEMPLATE_FALLBACK = "activity";
+    private static final String TEMPLATE_PATH = "activitypub/%s.vm";
 
     @Inject
     private ActivityPubJsonParser activityPubJsonParser;
@@ -79,60 +80,70 @@ public class ActivityPubNotificationDisplayer implements NotificationDisplayer
     public Block renderNotification(CompositeEvent compositeEvent) throws NotificationException
     {
         Block result = new GroupBlock();
-        result.addChildren(this.processEvents(compositeEvent.getEvents()));
-        return result;
-    }
-
-    private List<Block> processEvents(List<Event> events) throws NotificationException
-    {
-        List<Block> result = new ArrayList<>();
-        for (Event event : events) {
-            if (event.getParameters().containsKey(ACTIVITY_PARAMETER_KEY)) {
-                AbstractActivity activity = null;
-                try {
-                    activity = this.getActivity(event);
-                } catch (ActivityPubException e) {
-                    throw new NotificationException("Error while getting the activity of an event", e);
-                }
-                result.add(this.displayActivityNotification(event, activity));
-            } else {
-                this.logger.error("The event [{}] cannot be processed.", event);
-            }
-        }
-        return result;
-    }
-
-    private AbstractActivity getActivity(Event event) throws ActivityPubException
-    {
-        String activity = event.getParameters().get(ACTIVITY_PARAMETER_KEY);
-        return this.activityPubJsonParser.parse(activity);
-    }
-
-    private Block displayActivityNotification(Event event, AbstractActivity activity)
-        throws NotificationException
-    {
         ScriptContext scriptContext = scriptContextManager.getScriptContext();
+        Map<Event, AbstractActivity> activities = getActivities(compositeEvent);
+        if (activities.isEmpty()) {
+            throw new NotificationException("No activity found on the activity composite event.");
+        }
+
+        String eventType = compositeEvent.getType();
+        if (eventType.contains(EVENT_TYPE_PREFIX)) {
+            eventType = eventType.substring(EVENT_TYPE_PREFIX.length());
+        } else {
+            eventType = TEMPLATE_FALLBACK;
+        }
+        String templateName = String.format(TEMPLATE_PATH, eventType);
+
         try {
-            scriptContext.setAttribute(EVENT_BINDING_NAME, event, ScriptContext.ENGINE_SCOPE);
-            scriptContext.setAttribute(ACTIVITY_BINDING_NAME, activity, ScriptContext.ENGINE_SCOPE);
+            scriptContext.setAttribute(EVENT_BINDING_NAME, compositeEvent, ScriptContext.ENGINE_SCOPE);
+            scriptContext.setAttribute(ACTIVITY_BINDING_NAME, activities, ScriptContext.ENGINE_SCOPE);
 
-            String templateName = String.format("activity/%s.vm", activity.getType().toLowerCase());
             Template template = templateManager.getTemplate(templateName);
-
-            return (template != null) ? templateManager.execute(template)
-                : templateManager.execute("activity/activity.vm");
-
+            if (template != null) {
+                result.addChildren(templateManager.execute(template).getChildren());
+            } else {
+                result.addChildren(templateManager.execute(
+                    String.format(TEMPLATE_PATH, TEMPLATE_FALLBACK)
+                ).getChildren());
+            }
         } catch (Exception e) {
             throw new NotificationException("Failed to render the notification.", e);
         } finally {
             scriptContext.removeAttribute(EVENT_BINDING_NAME, ScriptContext.ENGINE_SCOPE);
             scriptContext.removeAttribute(ACTIVITY_BINDING_NAME, ScriptContext.ENGINE_SCOPE);
         }
+        return result;
+    }
+
+    private Map<Event, AbstractActivity> getActivities(CompositeEvent compositeEvent)
+        throws NotificationException
+    {
+        String errorMessage = "Error while getting the activity of the event [%s]";
+        Map<Event, AbstractActivity> result = new HashMap<>();
+        for (Event event : compositeEvent.getEvents()) {
+            if (event.getParameters().containsKey(ACTIVITY_PARAMETER_KEY)) {
+                try {
+                    String activity = event.getParameters().get(ACTIVITY_PARAMETER_KEY);
+                    result.put(event, this.activityPubJsonParser.parse(activity));
+                } catch (ActivityPubException e) {
+                    throw new NotificationException(String.format(errorMessage, event), e);
+                }
+            } else {
+                throw new NotificationException(String.format(errorMessage, event));
+            }
+        }
+
+        return result;
     }
 
     @Override
     public List<String> getSupportedEvents()
     {
-        return Arrays.asList(CreateEvent.EVENT_TYPE, FollowEvent.EVENT_TYPE, AnnounceEvent.EVENT_TYPE);
+        return Arrays.asList(
+            CreateEvent.EVENT_TYPE,
+            FollowEvent.EVENT_TYPE,
+            AnnounceEvent.EVENT_TYPE,
+            MessageEvent.EVENT_TYPE
+        );
     }
 }

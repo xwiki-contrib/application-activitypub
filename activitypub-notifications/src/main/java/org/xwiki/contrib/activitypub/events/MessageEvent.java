@@ -25,19 +25,19 @@ import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.stability.Unstable;
 
 /**
- * A specific event type for Create activities that concerns every other type than Notes.
- * Create activities about Notes are handled by a {@link MessageEvent}.
+ * A specific event type for Create activities of Note only.
+ * All other Create events are handled by {@link CreateEvent}.
  *
- * @since 1.1
+ * @since 1.2
  * @version $Id$
  */
 @Unstable
-public class CreateEvent extends AbstractActivityPubEvent<Create>
+public class MessageEvent  extends AbstractActivityPubEvent<Create>
 {
     /**
      * Default name for those events.
      */
-    public static final String EVENT_TYPE = "activitypub.create";
+    public static final String EVENT_TYPE = "activitypub.message";
 
     /**
      * Default constructor.
@@ -45,7 +45,7 @@ public class CreateEvent extends AbstractActivityPubEvent<Create>
      * @param activity the activity to notify about
      * @param target the serialized references of users to notify to
      */
-    public CreateEvent(Create activity, Set<String> target)
+    public MessageEvent(Create activity, Set<String> target)
     {
         super(activity, target);
     }
@@ -59,6 +59,6 @@ public class CreateEvent extends AbstractActivityPubEvent<Create>
     @Override
     public boolean matches(Object otherEvent)
     {
-        return otherEvent instanceof CreateEvent;
+        return otherEvent instanceof MessageEvent;
     }
 }

@@ -17,16 +17,33 @@
 ## Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 ## 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 ## ---------------------------------------------------------------------------
-## Default activity renderer for any kind of activity notification.
+## Helper macros for ActivityPub notifications.
 #template('notification/macros.vm')
+
 #set ($smallIcon = "branch")
 #set ($mainIcon = "branch")
-#define ($content)
-<div class="notification-description">
-  <div class="activity-type">$activity.type</div>
-  <div class="activity-summary">$activity.summary</div>
-  <div><small class="text-muted">$escapetool.xml($services.date.displayTimeAgo($event.date))</small></div>
-</div>
+#set ($eventNumber = $compositeEvent.events.size())
+#set ($compositeEventDate = $escapetool.xml($services.date.displayTimeAgo($compositeEvent.dates.get(0))))
+
+#macro (insertEventDate $event)
+  <td class="text-right text-muted">$escapetool.xml($services.date.displayTimeAgo($event.date))</td>
 #end
-#set ($details = "")
-#displayNotificationEventSkeleton($mainIcon $smallIcon $content $details)
+
+#macro (displayAPEventDetail $event $actor $summary)
+  #set ($username = $services.webfinger.getWebfingerId($actor))
+<tr>
+  <td><span class="notification-event-user"><a href="$actor.id">$username</a></span></td>
+  <td class="description">$summary</td>
+  #insertEventDate($event)
+</tr>
+#end
+
+#macro (getAPEventSummary $translationPrefix)
+  #if ($eventNumber > 1)
+    #set($translationKey = "$translationPrefix.singular")
+    $services.localization.render($translationKey)
+  #else
+    #set($translationKey = "$translationPrefix.plural")
+    $services.localization.render($translationKey, [$eventNumber])
+  #end
+#end

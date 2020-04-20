@@ -28,18 +28,22 @@ import javax.inject.Singleton;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubNotifier;
+import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Accept;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Announce;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Follow;
+import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.Reject;
 import org.xwiki.contrib.activitypub.events.AbstractActivityPubEvent;
 import org.xwiki.contrib.activitypub.events.AnnounceEvent;
 import org.xwiki.contrib.activitypub.events.CreateEvent;
 import org.xwiki.contrib.activitypub.events.FollowEvent;
+import org.xwiki.contrib.activitypub.events.MessageEvent;
 import org.xwiki.observation.ObservationManager;
 
 /**
@@ -58,13 +62,19 @@ public class DefaultActivityPubNotifier implements ActivityPubNotifier
     @Inject
     private ObservationManager observationManager;
 
+    @Inject
+    private ActivityPubObjectReferenceResolver resolver;
+
     @Override
     public <T extends AbstractActivity> void notify(T activity, Set<AbstractActor> targetedActors)
         throws ActivityPubException
     {
         AbstractActivityPubEvent<? extends AbstractActivity> event;
         Set<String> serializedTargets = this.serializeTargets(targetedActors);
-        if (activity instanceof Create) {
+        ActivityPubObject activityObject = this.resolver.resolveReference(activity.getObject());
+        if (activity instanceof Create && activityObject instanceof Note) {
+            event = new MessageEvent((Create) activity, serializedTargets);
+        } else if (activity instanceof Create) {
             event = new CreateEvent((Create) activity, serializedTargets);
         } else if (activity instanceof Announce) {
             event = new AnnounceEvent((Announce) activity, serializedTargets);
@@ -73,7 +83,7 @@ public class DefaultActivityPubNotifier implements ActivityPubNotifier
         } else {
             throw new ActivityPubException(String.format("Cannot find the right event to notify about [%s]", activity));
         }
-        this.observationManager.notify(event, "org.xwiki.contrib:activitypub-notifications", activity.getType());
+        this.observationManager.notify(event, "org.xwiki.contrib:activitypub-notifications", event.getType());
     }
 
     private Set<String> serializeTargets(Set<AbstractActor> targets) throws ActivityPubException
