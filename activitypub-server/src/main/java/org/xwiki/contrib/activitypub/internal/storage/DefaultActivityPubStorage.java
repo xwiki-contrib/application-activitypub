@@ -183,7 +183,12 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     private boolean retrieveSolrDocument(SolrDocument solrDocument)
     {
         boolean result = true;
-        if ("person".equalsIgnoreCase((String) solrDocument.getFieldValue(TYPE_FIELD))) {
+        String type = (String) solrDocument.getFieldValue(TYPE_FIELD);
+
+        // We only refresh person or collections, since it's the types the more likely to change
+        if ("person".equalsIgnoreCase(type)
+            || "collection".equalsIgnoreCase(type)
+            || "orderedcollection".equalsIgnoreCase(type)) {
 
             // if the document is older than one day, and does not belongs to the current instance
             // then we need to refresh it.
