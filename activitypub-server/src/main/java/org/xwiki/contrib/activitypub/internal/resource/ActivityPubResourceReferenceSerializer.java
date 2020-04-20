@@ -96,6 +96,10 @@ public class ActivityPubResourceReferenceSerializer implements
                     }
                 }
             }
+            // We remove the ":80" part of the server URL to avoid problem with the storage.
+            if (uriBuilder.getPort() == 80) {
+                uriBuilder.setPort(-1);
+            }
             return uriBuilder.build();
         } catch (MalformedURLException | URISyntaxException e) {
             throw new SerializeResourceReferenceException(
