@@ -49,10 +49,14 @@ public class ActivityPubResourceReferenceResolver extends AbstractResourceRefere
     {
         ActivityPubResourceReference reference;
         List<String> segments = extendedURL.getSegments();
-        if (segments.size() > 1) {
+        if (segments.size() == 2) {
             String type = segments.get(0);
             String uuid = segments.get(1);
-
+            reference = new ActivityPubResourceReference(type, uuid);
+            copyParameters(extendedURL, reference);
+        } else if (segments.size() == 3 && "activitypub".equals(segments.get(0))) {
+            String type = segments.get(1);
+            String uuid = segments.get(2);
             reference = new ActivityPubResourceReference(type, uuid);
             copyParameters(extendedURL, reference);
         } else {

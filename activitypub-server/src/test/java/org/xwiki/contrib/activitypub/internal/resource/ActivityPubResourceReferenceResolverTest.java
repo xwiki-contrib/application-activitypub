@@ -45,9 +45,26 @@ public class ActivityPubResourceReferenceResolverTest
     private ActivityPubResourceReferenceResolver resourceReferenceResolver;
 
     @Test
-    public void resolve() throws CreateResourceReferenceException, UnsupportedResourceReferenceException
+    public void resolveWithAPSegment() throws CreateResourceReferenceException, UnsupportedResourceReferenceException
     {
         ExtendedURL extendedURL = new ExtendedURL(Arrays.asList("activitypub", "foo", "bar"),
+            Collections.singletonMap("test", Arrays.asList("42", "43")));
+
+        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("foo", "bar");
+        resourceReference.addParameter("test", "42");
+        resourceReference.addParameter("test", "43");
+
+        assertEquals(resourceReference,
+            this.resourceReferenceResolver.resolve(
+                extendedURL,
+                new ResourceType("activitypub"),
+                Collections.emptyMap()));
+    }
+
+    @Test
+    public void resolve() throws CreateResourceReferenceException, UnsupportedResourceReferenceException
+    {
+        ExtendedURL extendedURL = new ExtendedURL(Arrays.asList("foo", "bar"),
             Collections.singletonMap("test", Arrays.asList("42", "43")));
 
         ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("foo", "bar");

@@ -19,9 +19,12 @@
  */
 package org.xwiki.contrib.activitypub;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.xwiki.resource.AbstractResourceReference;
 import org.xwiki.resource.ResourceType;
 import org.xwiki.stability.Unstable;
+import org.xwiki.text.XWikiToStringBuilder;
 
 /**
  * A resource reference to be able to identify and retrieve any stored ActivityPub entity.
@@ -67,5 +70,44 @@ public class ActivityPubResourceReference extends AbstractResourceReference
     public String getUuid()
     {
         return uuid;
+    }
+
+    @Override
+    public String toString()
+    {
+        return new XWikiToStringBuilder(this)
+            .append("entityType", entityType)
+            .append("uuid", uuid)
+            .toString();
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        ActivityPubResourceReference that = (ActivityPubResourceReference) o;
+
+        return new EqualsBuilder()
+            .appendSuper(super.equals(o))
+            .append(entityType, that.entityType)
+            .append(uuid, that.uuid)
+            .isEquals();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return new HashCodeBuilder(17, 37)
+            .appendSuper(super.hashCode())
+            .append(entityType)
+            .append(uuid)
+            .toHashCode();
     }
 }
