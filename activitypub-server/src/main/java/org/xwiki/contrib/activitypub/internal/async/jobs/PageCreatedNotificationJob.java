@@ -41,6 +41,7 @@ import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
+import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.rendering.block.XDOM;
 
 /**
@@ -69,6 +70,9 @@ public class PageCreatedNotificationJob extends AbstractPageNotificationJob
 
     @Inject
     private HTMLRenderer htmlRenderer;
+
+    @Inject
+    private EntityReferenceSerializer<String> stringEntityReferenceSerializer;
 
     @Override
     protected void proceed(AbstractActor author)
@@ -99,7 +103,8 @@ public class PageCreatedNotificationJob extends AbstractPageNotificationJob
             .setContent(this.htmlRenderer.render(content, this.request.getDocumentReference()))
             // We cannot put it as a document id, since we need to be able to resolve it 
             // with an activitypub answer.
-            .setUrl(Collections.singletonList(documentUrl));
+            .setUrl(Collections.singletonList(documentUrl))
+            .setXwikiReference(this.stringEntityReferenceSerializer.serialize(this.request.getDocumentReference()));
 
         // Make sure it's stored so it can be resolved later.
         this.storage.storeEntity(document);

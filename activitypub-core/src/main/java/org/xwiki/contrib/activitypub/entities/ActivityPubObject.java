@@ -66,6 +66,8 @@ public class ActivityPubObject extends JSONLDObjects
 
     private ActivityPubObjectReference<OrderedCollection<Announce>> shares;
 
+    private String xwikiReference;
+
     /**
      * The type is not stored as a property but instead we rely on the class name to return it.
      *
@@ -283,6 +285,31 @@ public class ActivityPubObject extends JSONLDObjects
         return this;
     }
 
+    /**
+     * An XWiki specific field that allows to retrieve an entity on the wiki instance.
+     * This can be use for example to retrieve a XWikiDocument easily.
+     *
+     * @return a specific XWiki reference to the current entity.
+     */
+    public String getXwikiReference()
+    {
+        return xwikiReference;
+    }
+
+    /**
+     * Specify the XWiki reference of an entity (a document, a user, ...).
+     * The reference should serialized as an absolute reference to be stored.
+     *
+     * @param xwikiReference the absolute reference of the entity.
+     * @param <T> the concrete type of the current instance.
+     * @return a reference for the current instance.
+     */
+    public <T extends ActivityPubObject> T setXwikiReference(String xwikiReference)
+    {
+        this.xwikiReference = xwikiReference;
+        return (T) this;
+    }
+
     @Override
     public boolean equals(Object o)
     {
@@ -306,6 +333,7 @@ public class ActivityPubObject extends JSONLDObjects
                 .append(attributedTo, object.attributedTo)
                 .append(url, object.url)
                 .append(shares, object.shares)
+                .append(xwikiReference, object.xwikiReference)
                 .isEquals();
     }
 
@@ -323,6 +351,7 @@ public class ActivityPubObject extends JSONLDObjects
                 .append(attributedTo)
                 .append(url)
                 .append(shares)
+                .append(xwikiReference)
                 .toHashCode();
     }
 

@@ -38,6 +38,27 @@ import org.xwiki.stability.Unstable;
 public interface ActivityPubStorage
 {
     /**
+     * Storage field used to store ID of the documents.
+     */
+    String ID_FIELD = "id";
+    /**
+     * Storage field used to store the type of the documents.
+     */
+    String TYPE_FIELD = "type";
+    /**
+     * Storage field used to store the serialized content of the documents.
+     */
+    String CONTENT_FIELD = "content";
+    /**
+     * Storage field used to store the XWiki Reference of the documents.
+     */
+    String XWIKI_REFERENCE_FIELD = "xwikiReference";
+    /**
+     * Storage field used to store the Updated Date of the documents.
+     */
+    String UPDATED_DATE_FIELD = "updatedDate";
+
+    /**
      * Check if the current storage is ready to be used.
      * @return {@code true} if the storage is ready.
      * @since 1.1
@@ -91,4 +112,18 @@ public interface ActivityPubStorage
      */
     @Unstable
     List<JSONResourceDescriptor> searchWebFinger(String query, int limit) throws ActivityPubException;
+
+    /**
+     * Allow to perform a query of type T in the DB.
+     *
+     * @param type the type of element to retrieve: only concrete types should be used.
+     * @param query a SolR query to find an element.
+     * @param limit the limit number of result to get.
+     * @param <T> the concrete type of element to get.
+     * @return a list of stored elements matching the query
+     * @throws ActivityPubException in case of problem during the query.
+     * @since 1.2
+     */
+    @Unstable
+    <T extends ActivityPubObject> List<T> query(Class<T> type, String query, int limit) throws ActivityPubException;
 }

@@ -248,6 +248,11 @@
                     "code": "java.method.addedToInterface",
                     "new": "method void org.xwiki.contrib.activitypub.ActivityPubStorage::storeWebFinger(org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor) throws org.xwiki.contrib.activitypub.ActivityPubException",
                     "justification": "Not breaking: Unstable API."
+                  },
+                  {
+                    "code": "java.method.addedToInterface",
+                    "new": "method <T extends org.xwiki.contrib.activitypub.entities.ActivityPubObject> java.util.List<T> org.xwiki.contrib.activitypub.ActivityPubStorage::query(java.lang.Class<T>, java.lang.String, int) throws org.xwiki.contrib.activitypub.ActivityPubException",
+                    "justification": "Not breaking: Unstable API."
                   }
                 ]
               }

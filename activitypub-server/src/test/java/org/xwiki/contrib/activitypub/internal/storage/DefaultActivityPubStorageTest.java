@@ -50,6 +50,7 @@ import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
+import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
@@ -320,7 +321,7 @@ public class DefaultActivityPubStorageTest
         String queryParam = "foo";
         int limit = 42;
         String queryString = "filter(type:webfinger) AND id:*foo*";
-        SolrQuery solrQuery = new SolrQuery(queryString).setRows(limit);
+        SolrQuery solrQuery = new SolrQuery("*").addFilterQuery(queryString).setRows(limit);
         SolrDocumentList solrDocumentList = mock(SolrDocumentList.class);
         QueryResponse queryResponse = mock(QueryResponse.class);
         when(this.solrClient.query(any())).thenReturn(queryResponse);
@@ -337,6 +338,31 @@ public class DefaultActivityPubStorageTest
         when(this.webfingerJsonParser.parse(content1)).thenReturn(json1);
         when(this.webfingerJsonParser.parse(content2)).thenReturn(json2);
         assertEquals(Arrays.asList(json1, json2), this.activityPubStorage.searchWebFinger(queryParam, limit));
+        ArgumentCaptor<SolrQuery> argumentCaptor = ArgumentCaptor.forClass(SolrQuery.class);
+        verify(this.solrClient).query(argumentCaptor.capture());
+        assertEquals(solrQuery.toString(), argumentCaptor.getValue().toString());
+    }
+
+    @Test
+    public void query() throws Exception
+    {
+        String query = "wikiReference:\"xwiki:MySpace.MyDoc\"";
+        int limit = 42;
+        SolrQuery solrQuery = new SolrQuery("*")
+            .addFilterQuery("filter(type:Document)")
+            .addFilterQuery(query)
+            .setRows(limit);
+        Document document = mock(Document.class);
+        SolrDocumentList solrDocumentList = mock(SolrDocumentList.class);
+        QueryResponse queryResponse = mock(QueryResponse.class);
+        when(this.solrClient.query(any())).thenReturn(queryResponse);
+        when(queryResponse.getResults()).thenReturn(solrDocumentList);
+        SolrDocument document1 = mock(SolrDocument.class);
+        when(solrDocumentList.iterator()).thenReturn(Arrays.asList(document1).iterator());
+        String content1 = "{doc1}";
+        when(document1.getFieldValue("content")).thenReturn(content1);
+        when(this.jsonParser.parse(content1)).thenReturn(document);
+        assertEquals(Collections.singletonList(document), this.activityPubStorage.query(Document.class, query, limit));
         ArgumentCaptor<SolrQuery> argumentCaptor = ArgumentCaptor.forClass(SolrQuery.class);
         verify(this.solrClient).query(argumentCaptor.capture());
         assertEquals(solrQuery.toString(), argumentCaptor.getValue().toString());

@@ -34,6 +34,7 @@ import org.apache.solr.client.solrj.response.schema.SchemaResponse;
 import org.apache.solr.schema.DatePointField;
 import org.apache.solr.schema.FieldType;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.search.solr.SolrCoreInitializer;
 import org.xwiki.search.solr.SolrException;
 
@@ -50,7 +51,6 @@ public class ActivityPubSolrInitializer implements SolrCoreInitializer
 {
     private static final String NAME = "name";
     private static final String TYPE = "type";
-    private static final String CONTENT = "content";
     private static final String STRING_TYPE = "string";
     private static final String DATE_TYPE = "pdate";
 
@@ -67,10 +67,11 @@ public class ActivityPubSolrInitializer implements SolrCoreInitializer
             SchemaResponse.FieldsResponse response = new SchemaRequest.Fields().process(client);
             if (!schemaAlreadyExists(response)) {
                 createFieldTypes(client);
-                createField(client, CONTENT, STRING_TYPE);
-                createField(client, TYPE, STRING_TYPE);
+                createField(client, ActivityPubStorage.CONTENT_FIELD, STRING_TYPE);
+                createField(client, ActivityPubStorage.TYPE_FIELD, STRING_TYPE);
                 // FIXME: we should rely on the constant introduced by the new SolR API once it will be released.
-                createField(client, "updatedDate", DATE_TYPE);
+                createField(client, ActivityPubStorage.UPDATED_DATE_FIELD, DATE_TYPE);
+                createField(client, ActivityPubStorage.XWIKI_REFERENCE_FIELD, STRING_TYPE);
             }
         } catch (SolrServerException | IOException | org.apache.solr.common.SolrException e)
         {
@@ -104,7 +105,7 @@ public class ActivityPubSolrInitializer implements SolrCoreInitializer
     {
         if (response != null) {
             for (Map<String, Object> field : response.getFields()) {
-                if (CONTENT.equals(field.get(NAME))) {
+                if (ActivityPubStorage.CONTENT_FIELD.equals(field.get(NAME))) {
                     return true;
                 }
             }

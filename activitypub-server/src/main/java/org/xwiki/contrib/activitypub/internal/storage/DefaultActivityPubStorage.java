@@ -72,13 +72,8 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
 {
     private static final String INBOX_SUFFIX_ID = "inbox";
     private static final String OUTBOX_SUFFIX_ID = "outbox";
-
-    private static final String ID_FIELD = "id";
-    private static final String CONTENT_FIELD = "content";
-    private static final String UPDATEDDATE_FIELD = "updatedDate";
-    private static final String TYPE_FIELD = "type";
-
     private static final String WEBFINGER_TYPE = "webfinger";
+    private static final String DEFAULT_QUERY = "*";
 
     @Inject
     private ResourceReferenceSerializer<ActivityPubResourceReference, URI> serializer;
@@ -130,7 +125,8 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         inputDocument.addField(ID_FIELD, entity.getId().toASCIIString());
         inputDocument.addField(TYPE_FIELD, entity.getType());
         inputDocument.addField(CONTENT_FIELD, this.jsonSerializer.serialize(entity));
-        inputDocument.addField(UPDATEDDATE_FIELD, new Date());
+        inputDocument.addField(UPDATED_DATE_FIELD, new Date());
+        inputDocument.addField(XWIKI_REFERENCE_FIELD, entity.getXwikiReference());
         this.getSolrClient().add(inputDocument);
         this.getSolrClient().commit();
     }
@@ -192,7 +188,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
 
             // if the document is older than one day, and does not belongs to the current instance
             // then we need to refresh it.
-            Date updatedDate = (Date) solrDocument.getFieldValue(UPDATEDDATE_FIELD);
+            Date updatedDate = (Date) solrDocument.getFieldValue(UPDATED_DATE_FIELD);
             URI id = URI.create((String) solrDocument.getFieldValue(ID_FIELD));
             result = this.urlHandler.belongsToCurrentInstance(id)
                 || new Date().before(DateUtils.addDays(updatedDate, 1));
@@ -224,7 +220,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
             inputDocument.addField(ID_FIELD, jsonResourceDescriptor.getSubject());
             inputDocument.addField(TYPE_FIELD, WEBFINGER_TYPE);
             inputDocument.addField(CONTENT_FIELD, this.webfingerJsonSerializer.serialize(jsonResourceDescriptor));
-            inputDocument.addField(UPDATEDDATE_FIELD, new Date());
+            inputDocument.addField(UPDATED_DATE_FIELD, new Date());
             this.getSolrClient().add(inputDocument);
             this.getSolrClient().commit();
         } catch (IOException | SolrException | SolrServerException e) {
@@ -239,7 +235,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         List<JSONResourceDescriptor> result = new ArrayList<>();
         try {
             String queryString = String.format("filter(type:%s) AND id:*%s*", WEBFINGER_TYPE, query);
-            SolrQuery solrQuery = new SolrQuery(queryString).setRows(limit);
+            SolrQuery solrQuery = new SolrQuery(DEFAULT_QUERY).addFilterQuery(queryString).setRows(limit);
             QueryResponse queryResponse = this.getSolrClient().query(solrQuery);
             SolrDocumentList results = queryResponse.getResults();
             for (SolrDocument solrDocument : results) {
@@ -248,6 +244,32 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         } catch (SolrException | SolrServerException | IOException | WebfingerException e) {
             throw new ActivityPubException(
                 String.format("Error while performing the query [%s] for WebFinger.", query), e);
+        }
+        return result;
+    }
+
+    @Override
+    public <T extends ActivityPubObject> List<T> query(Class<T> type, String query, int limit)
+        throws ActivityPubException
+    {
+        List<T> result = new ArrayList<>();
+
+        String typeQueryString = String.format("filter(type:%s)", type.getSimpleName());
+        SolrQuery solrQuery = new SolrQuery(DEFAULT_QUERY)
+            .addFilterQuery(typeQueryString)
+            .addFilterQuery(query)
+            .setRows(limit);
+
+        try {
+            QueryResponse queryResponse = this.getSolrClient().query(solrQuery);
+            SolrDocumentList queryResults = queryResponse.getResults();
+            for (SolrDocument queryResult : queryResults) {
+                result.add(this.jsonParser.parse((String) queryResult.getFieldValue(CONTENT_FIELD)));
+            }
+        } catch (SolrException | SolrServerException | IOException e) {
+            throw new ActivityPubException(
+                String.format("Error while performing query [%s] for type [%s] with limit [%s]",
+                    query, type.getSimpleName(), limit), e);
         }
         return result;
     }
