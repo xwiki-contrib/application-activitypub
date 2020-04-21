@@ -71,6 +71,36 @@
       <values>accept=Accept|reject=Reject|ask=Ask</values>
       <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
     </followPolicy>
+    <pagesNotification>
+      <customDisplay/>
+      <defaultValue>1</defaultValue>
+      <disabled>0</disabled>
+      <displayFormType>select</displayFormType>
+      <displayType/>
+      <hint/>
+      <name>pagesNotification</name>
+      <number>3</number>
+      <prettyName>Pages notifications</prettyName>
+      <unmodifiable>0</unmodifiable>
+      <validationMessage/>
+      <validationRegExp/>
+      <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+    </pagesNotification>
+    <userPagesNotification>
+      <customDisplay/>
+      <defaultValue>1</defaultValue>
+      <disabled>0</disabled>
+      <displayFormType>select</displayFormType>
+      <displayType/>
+      <hint/>
+      <name>userPagesNotification</name>
+      <number>4</number>
+      <prettyName>User Pages Notifications</prettyName>
+      <unmodifiable>0</unmodifiable>
+      <validationMessage/>
+      <validationRegExp/>
+      <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+    </userPagesNotification>
     <wikiGroup>
       <cache>0</cache>
       <customDisplay/>

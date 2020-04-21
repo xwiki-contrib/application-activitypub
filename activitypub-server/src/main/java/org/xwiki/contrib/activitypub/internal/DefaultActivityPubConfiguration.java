@@ -64,4 +64,18 @@ public class DefaultActivityPubConfiguration implements ActivityPubConfiguration
         String group = this.configuration.getProperty("wikiGroup", ADMIN_GROUP);
         return this.stringEntityReferenceResolver.resolve(group);
     }
+
+    @Override
+    public boolean getPagesNotification()
+    {
+        String value = this.configuration.getProperty("pagesNotification", "");
+        return Boolean.parseBoolean(value);
+    }
+
+    @Override
+    public boolean getUserPagesNotification()
+    {
+        String value = this.configuration.getProperty("userPagesNotification", "");
+        return Boolean.parseBoolean(value);
+    }
 }

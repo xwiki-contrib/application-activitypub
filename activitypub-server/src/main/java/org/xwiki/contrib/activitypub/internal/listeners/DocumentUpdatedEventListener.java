@@ -20,7 +20,6 @@
 package org.xwiki.contrib.activitypub.internal.listeners;
 
 import java.util.List;
-import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -32,7 +31,6 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.internal.async.PageChangedRequest;
 import org.xwiki.job.JobException;
 import org.xwiki.job.JobExecutor;
-import org.xwiki.job.Request;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.Event;
 
@@ -82,40 +80,32 @@ public class DocumentUpdatedEventListener extends AbstractEventListener
             XWikiContext context = (XWikiContext) data;
 
             try {
-                this.newRequest(document, context).ifPresent(it -> {
-                    try {
-                        this.jobExecutor.execute(ASYNC_REQUEST_TYPE, it);
-                    } catch (JobException e) {
-                        this.logger.warn(ERROR_MSG, document, getRootCauseMessage(e));
-                    }
-                });
-            } catch (XWikiException e) {
+                XWikiRCSNodeInfo revisionInfo = document.getRevisionInfo(document.getVersion(), context);
+                if (!revisionInfo.isMinorEdit()) {
+                    PageChangedRequest ret = this.newRequest(document, context);
+                    this.jobExecutor.execute(ASYNC_REQUEST_TYPE, ret);
+                }
+            } catch (XWikiException | JobException e) {
                 this.logger.warn(ERROR_MSG, document, getRootCauseMessage(e));
             }
         }
     }
 
-    private Optional<Request> newRequest(XWikiDocument document, XWikiContext context) throws XWikiException
+    private PageChangedRequest newRequest(XWikiDocument document, XWikiContext context)
     {
-        XWikiRCSNodeInfo revisionInfo = document.getRevisionInfo(document.getVersion(), context);
-
-        if (!revisionInfo.isMinorEdit()) {
-            /*
-             * XWikiDocument is not serializable and cannot be passed safely to the job executor.
-             * Only interesting parameters are passed explicitly on the request.
-             */
-            PageChangedRequest ret =
-                new PageChangedRequest()
-                    .setDocumentReference(document.getDocumentReference())
-                    .setAuthorReference(document.getAuthorReference())
-                    .setDocumentTitle(document.getTitle())
-                    .setContent(document.getXDOM())
-                    .setCreationDate(document.getCreationDate())
-                    .setViewURL(document.getURL("view", context));
-            ret.setId(ASYNC_REQUEST_TYPE, document.getKey());
-            return Optional.of(ret);
-        } else {
-            return Optional.empty();
-        }
+        /*
+         * XWikiDocument is not serializable and cannot be passed safely to the job executor.
+         * Only interesting parameters are passed explicitly on the request.
+         */
+        PageChangedRequest ret =
+            new PageChangedRequest()
+                .setDocumentReference(document.getDocumentReference())
+                .setAuthorReference(document.getAuthorReference())
+                .setDocumentTitle(document.getTitle())
+                .setContent(document.getXDOM())
+                .setCreationDate(document.getCreationDate())
+                .setViewURL(document.getURL("view", context));
+        ret.setId(ASYNC_REQUEST_TYPE, document.getKey());
+        return ret;
     }
 }
