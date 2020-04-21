@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.xwiki.bridge.event.DocumentCreatedEvent;
 import org.xwiki.contrib.activitypub.ActivityHandler;
+import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
@@ -101,6 +102,10 @@ public class DocumentCreatedEventListenerTest
 
     @MockComponent
     private JobExecutor jobExecutor;
+
+    @MockComponent
+    private ActivityPubConfiguration configuration;
+
 
     @Mock
     private XWikiDocument document;
@@ -182,6 +187,9 @@ public class DocumentCreatedEventListenerTest
                             .setPublished(creationDate)
                             .setTo(Collections.singletonList(new ProxyActor(this.person.getFollowers().getLink())));
         ActivityRequest<Create> activityRequest = new ActivityRequest<>(this.person, create);
+        
+        when(this.configuration.isPagesNotification()).thenReturn(true);
+        
         this.listener.onEvent(new DocumentCreatedEvent(), this.document, this.context);
 
         PageChangedRequest request =

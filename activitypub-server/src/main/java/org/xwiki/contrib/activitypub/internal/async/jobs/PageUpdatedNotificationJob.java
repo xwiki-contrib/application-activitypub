@@ -25,6 +25,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -90,10 +91,10 @@ public class PageUpdatedNotificationJob extends AbstractPageNotificationJob
 
         URI documentUrl = this.urlHandler.getAbsoluteURI(new URI(view));
 
+        List<ActivityPubObjectReference<AbstractActor>> attributedTo = this.emmiters(author);
         Document document = new Document()
             .setName(title)
-            .setAttributedTo(
-                Collections.singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(author)))
+            .setAttributedTo(attributedTo)
             .setPublished(creationDate)
             .setContent(this.htmlRenderer.render(content, this.request.getDocumentReference()))
             // We cannot put it as a document id, since we need to be able to resolve it 

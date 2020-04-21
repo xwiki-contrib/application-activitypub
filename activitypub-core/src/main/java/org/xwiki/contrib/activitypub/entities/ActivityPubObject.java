@@ -278,12 +278,14 @@ public class ActivityPubObject extends JSONLDObjects
     /**
      * @param shares The list of shares of the object.
      * @return The current object.
+     * @param <T> The runtime type of the chained object.
      */
-    public ActivityPubObject setShares(ActivityPubObjectReference<OrderedCollection<Announce>> shares)
+    public <T extends ActivityPubObject> T setShares(ActivityPubObjectReference<OrderedCollection<Announce>> shares)
     {
         this.shares = shares;
-        return this;
+        return (T) this;
     }
+    
 
     /**
      * An XWiki specific field that allows to retrieve an entity on the wiki instance.

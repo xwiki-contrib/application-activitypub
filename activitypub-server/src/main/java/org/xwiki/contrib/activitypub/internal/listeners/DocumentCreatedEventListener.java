@@ -29,6 +29,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.xwiki.bridge.event.DocumentCreatedEvent;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
 import org.xwiki.contrib.activitypub.internal.async.PageChangedRequest;
 import org.xwiki.job.JobException;
 import org.xwiki.job.JobExecutor;
@@ -60,6 +61,9 @@ public class DocumentCreatedEventListener extends AbstractEventListener
     @Inject
     private JobExecutor jobExecutor;
 
+    @Inject
+    private ActivityPubConfiguration configuration;
+
     /**
      * Default constructor.
      */
@@ -71,17 +75,19 @@ public class DocumentCreatedEventListener extends AbstractEventListener
     @Override
     public void onEvent(Event event, Object source, Object data)
     {
-        XWikiDocument document = (XWikiDocument) source;
-        if (!Boolean.TRUE.equals(document.isHidden())) {
-            XWikiContext context = (XWikiContext) data;
-
-            Request createJob = this.newRequest(document, context);
-
-            try {
-                this.jobExecutor.execute(ASYNC_REQUEST_TYPE, createJob);
-            } catch (JobException e) {
-                this.logger.warn("ActivityPub page creation [{}] event task failed. Cause [{}]", document,
-                    ExceptionUtils.getRootCauseMessage(e));
+        if (this.configuration.isPagesNotification()) {
+            XWikiDocument document = (XWikiDocument) source;
+            if (!Boolean.TRUE.equals(document.isHidden())) {
+                XWikiContext context = (XWikiContext) data;
+    
+                Request createJob = this.newRequest(document, context);
+    
+                try {
+                    this.jobExecutor.execute(ASYNC_REQUEST_TYPE, createJob);
+                } catch (JobException e) {
+                    this.logger.warn("ActivityPub page creation [{}] event task failed. Cause [{}]", document,
+                        ExceptionUtils.getRootCauseMessage(e));
+                }
             }
         }
     }

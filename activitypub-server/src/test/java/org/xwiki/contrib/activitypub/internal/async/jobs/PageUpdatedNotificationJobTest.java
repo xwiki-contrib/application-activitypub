@@ -40,6 +40,7 @@ import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
+import org.xwiki.contrib.activitypub.entities.Service;
 import org.xwiki.contrib.activitypub.entities.Update;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
@@ -194,7 +195,8 @@ class PageUpdatedNotificationJobTest
             .setName(documentTile)
             .setAttributedTo(
                 Collections.singletonList(
-                    new ActivityPubObjectReference<AbstractActor>().setObject(this.person))
+                    new ActivityPubObjectReference<AbstractActor>()
+                        .setObject(new Service().setId(URI.create("http://domain.tld/xwiki/1"))))
             )
             .setPublished(creationDate)
             .setUrl(Collections.singletonList(new URI(absoluteDocumentUrl)));
@@ -224,6 +226,8 @@ class PageUpdatedNotificationJobTest
         when(t.getDocumentTitle()).thenReturn("A document title");
         when(t.getCreationDate()).thenReturn(creationDate);
         when(t.getViewURL()).thenReturn(absoluteDocumentUrl);
+        when(this.actorHandler.getActor(documentReference.getWikiReference()))
+            .thenReturn(new Service().setId(URI.create("http://domain.tld/xwiki/1")));
 
         when(this.urlHandler.getAbsoluteURI(new URI(absoluteDocumentUrl))).thenReturn(URI.create(absoluteDocumentUrl));
 
@@ -361,7 +365,8 @@ class PageUpdatedNotificationJobTest
             .setName(documentTile)
             .setAttributedTo(
                 Collections.singletonList(
-                    new ActivityPubObjectReference<AbstractActor>().setObject(this.person))
+                    new ActivityPubObjectReference<AbstractActor>()
+                        .setObject(new Service().setId(URI.create("http://domain.tld/xwiki/1"))))
             )
             .setPublished(creationDate)
             .setUrl(Collections.singletonList(new URI(absoluteDocumentUrl)));
@@ -382,14 +387,16 @@ class PageUpdatedNotificationJobTest
                 .setViewURL(this.document.getURL("view", this.context));
         request.setId("activitypub-update-page", this.document.getKey());
 
+        DocumentReference documentReference = new DocumentReference("xwiki", "XWiki", "TEST");
         PageChangedRequest t = mock(PageChangedRequest.class);
         when(t.getViewURL()).thenReturn("http://pageurl");
 
-        DocumentReference documentReference = new DocumentReference("xwiki", "XWiki", "TEST");
         when(t.getDocumentReference()).thenReturn(documentReference);
         when(t.getDocumentTitle()).thenReturn("A document title");
         when(t.getCreationDate()).thenReturn(creationDate);
         when(t.getViewURL()).thenReturn(absoluteDocumentUrl);
+        when(this.actorHandler.getActor(documentReference.getWikiReference()))
+            .thenReturn(new Service().setId(URI.create("http://domain.tld/xwiki/1")));
 
         when(this.urlHandler.getAbsoluteURI(new URI(absoluteDocumentUrl))).thenReturn(URI.create(absoluteDocumentUrl));
 

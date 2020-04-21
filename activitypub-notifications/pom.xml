@@ -32,7 +32,7 @@
   <name>XWiki ActivityPub - Notifications</name>
   <packaging>jar</packaging>
   <properties>
-    <xwiki.jacoco.instructionRatio>0.81</xwiki.jacoco.instructionRatio>
+    <xwiki.jacoco.instructionRatio>0.77</xwiki.jacoco.instructionRatio>
   </properties>
   <dependencies>
     <dependency>
@@ -56,4 +56,23 @@
       <version>${project.version}</version>
     </dependency>
   </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <!-- Apply the Checkstyle configurations defined in the top level pom.xml file -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <executions>
+          <execution>
+            <!-- Specify the "default" execution id so that the "blocker" one is always executed -->
+            <id>default</id>
+            <configuration>
+              <suppressionsLocation>${basedir}/src/main/checkstyle/checkstyle-suppressions.xml</suppressionsLocation>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>

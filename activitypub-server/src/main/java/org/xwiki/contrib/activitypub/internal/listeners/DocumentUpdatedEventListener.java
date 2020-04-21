@@ -28,6 +28,7 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.xwiki.bridge.event.DocumentUpdatedEvent;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
 import org.xwiki.contrib.activitypub.internal.async.PageChangedRequest;
 import org.xwiki.job.JobException;
 import org.xwiki.job.JobExecutor;
@@ -64,6 +65,9 @@ public class DocumentUpdatedEventListener extends AbstractEventListener
     @Inject
     private JobExecutor jobExecutor;
 
+    @Inject
+    private ActivityPubConfiguration configuration;
+
     /**
      * Default constructor.
      */
@@ -75,18 +79,20 @@ public class DocumentUpdatedEventListener extends AbstractEventListener
     @Override
     public void onEvent(Event event, Object source, Object data)
     {
-        XWikiDocument document = (XWikiDocument) source;
-        if (!Boolean.TRUE.equals(document.isHidden())) {
-            XWikiContext context = (XWikiContext) data;
+        if (this.configuration.isPagesNotification()) {
+            XWikiDocument document = (XWikiDocument) source;
+            if (!Boolean.TRUE.equals(document.isHidden())) {
+                XWikiContext context = (XWikiContext) data;
 
-            try {
-                XWikiRCSNodeInfo revisionInfo = document.getRevisionInfo(document.getVersion(), context);
-                if (!revisionInfo.isMinorEdit()) {
-                    PageChangedRequest ret = this.newRequest(document, context);
-                    this.jobExecutor.execute(ASYNC_REQUEST_TYPE, ret);
+                try {
+                    XWikiRCSNodeInfo revisionInfo = document.getRevisionInfo(document.getVersion(), context);
+                    if (!revisionInfo.isMinorEdit()) {
+                        PageChangedRequest ret = this.newRequest(document, context);
+                        this.jobExecutor.execute(ASYNC_REQUEST_TYPE, ret);
+                    }
+                } catch (XWikiException | JobException e) {
+                    this.logger.warn(ERROR_MSG, document, getRootCauseMessage(e));
                 }
-            } catch (XWikiException | JobException e) {
-                this.logger.warn(ERROR_MSG, document, getRootCauseMessage(e));
             }
         }
     }

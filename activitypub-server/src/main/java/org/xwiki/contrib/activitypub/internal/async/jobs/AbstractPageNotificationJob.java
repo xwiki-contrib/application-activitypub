@@ -21,14 +21,18 @@ package org.xwiki.contrib.activitypub.internal.async.jobs;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.List;
 
 import javax.inject.Inject;
 
+import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
+import org.xwiki.contrib.activitypub.entities.Service;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.contrib.activitypub.internal.async.PageChangedRequest;
 import org.xwiki.contrib.activitypub.internal.async.PageChangedStatus;
@@ -39,6 +43,9 @@ import org.xwiki.security.authorization.Right;
 import org.xwiki.user.UserReference;
 
 import com.xpn.xwiki.user.api.XWikiRightService;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 /**
  * Please document me.
@@ -62,6 +69,9 @@ public abstract class AbstractPageNotificationJob extends AbstractJob<PageChange
 
     @Inject
     private ActorHandler actorHandler;
+
+    @Inject
+    private ActivityPubConfiguration configuration;
 
     @Override
     protected void runInternal()
@@ -94,4 +104,21 @@ public abstract class AbstractPageNotificationJob extends AbstractJob<PageChange
     }
 
     protected abstract void proceed(AbstractActor author) throws URISyntaxException, IOException, ActivityPubException;
+
+    protected List<ActivityPubObjectReference<AbstractActor>> emmiters(AbstractActor author) throws ActivityPubException
+    {
+        PageChangedRequest request = this.getRequest();
+        DocumentReference dr = request.getDocumentReference();
+        Service wikiActor = this.actorHandler.getActor(dr.getWikiReference());
+        ActivityPubObjectReference<AbstractActor> wiki = new ActivityPubObjectReference<AbstractActor>()
+            .setObject(wikiActor);
+        
+        List<ActivityPubObjectReference<AbstractActor>> ret;
+        if (this.configuration.isUserPagesNotification()) {
+            ret = asList(wiki, new ActivityPubObjectReference<AbstractActor>().setObject(author));
+        } else {
+            ret = singletonList(wiki);
+        }
+        return ret;
+    }
 }

@@ -37,6 +37,7 @@ import org.xwiki.contrib.activitypub.events.FollowEvent;
 import org.xwiki.contrib.activitypub.events.MessageEvent;
 import org.xwiki.contrib.activitypub.events.UpdateEvent;
 import org.xwiki.eventstream.internal.DefaultEvent;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.notifications.CompositeEvent;
 import org.xwiki.notifications.NotificationException;
 import org.xwiki.rendering.block.Block;
@@ -125,6 +126,9 @@ public class ActivityPubNotificationDisplayerTest
         when(this.activityPubJsonParser.parse(anyString())).thenThrow(new ActivityPubException("throwed"));
 
         DefaultEvent event = new DefaultEvent();
+        event.setType("evtType");
+        event.setUser(new DocumentReference("xwiki", "XWiki", "U1"));
+        event.setDocument(new DocumentReference("xwiki", "XWiki", "D1"));
         HashMap<String, String> parameters = new HashMap<>();
         parameters.put(ACTIVITY_PARAMETER_KEY, "my content");
         event.setParameters(parameters);
@@ -133,7 +137,10 @@ public class ActivityPubNotificationDisplayerTest
         NotificationException expt = assertThrows(NotificationException.class,
             () -> this.activityPubNotificationDisplayer.renderNotification(compositeEvent));
 
-        assertEquals("Error while getting the activity of an event", expt.getMessage());
+        assertEquals(
+            "Error while getting the activity of the event "
+                + "[evtType at null by xwiki:XWiki.U1 on xwiki:XWiki.D1]",
+            expt.getMessage());
     }
 
     @Test

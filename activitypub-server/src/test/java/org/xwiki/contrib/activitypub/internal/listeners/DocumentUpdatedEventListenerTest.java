@@ -29,6 +29,7 @@ import org.mockito.Mock;
 import org.suigeneris.jrcs.rcs.Version;
 import org.xwiki.bridge.event.DocumentUpdatedEvent;
 import org.xwiki.contrib.activitypub.ActivityHandler;
+import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActivityRequest;
@@ -105,6 +106,9 @@ public class DocumentUpdatedEventListenerTest
     @MockComponent
     private JobExecutor jobExecutor;
 
+    @MockComponent
+    private ActivityPubConfiguration configuration;
+
     @Mock
     private XWikiDocument document;
 
@@ -133,7 +137,7 @@ public class DocumentUpdatedEventListenerTest
     {
         when(this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, this.document.getDocumentReference()))
             .thenReturn(false);
-        this.defineMajorRevision();
+        this.defineMinorRevision();
 
         this.listener.onEvent(new DocumentUpdatedEvent(), this.document, this.context);
 
@@ -147,7 +151,7 @@ public class DocumentUpdatedEventListenerTest
             .thenReturn(true);
         when(this.objectReferenceResolver.resolveReference(this.person.getFollowers()))
             .thenReturn(new OrderedCollection<>());
-        this.defineMajorRevision();
+        this.defineMinorRevision();
         
         this.listener.onEvent(new DocumentUpdatedEvent(), this.document, this.context);
 
@@ -174,7 +178,7 @@ public class DocumentUpdatedEventListenerTest
         when(this.urlHandler.getAbsoluteURI(new URI(relativeDocumentUrl))).thenReturn(new URI(absoluteDocumentUrl));
         when(this.document.getCreationDate()).thenReturn(creationDate);
         when(this.document.getTitle()).thenReturn(documentTile);
-        defineMajorRevision(1);
+        this.defineMajorRevision();
 
         Document apDoc = new Document()
             .setName(documentTile)
@@ -191,6 +195,9 @@ public class DocumentUpdatedEventListenerTest
             .setPublished(creationDate)
             .setTo(Collections.singletonList(new ProxyActor(this.person.getFollowers().getLink())));
         ActivityRequest<Update> activityRequest = new ActivityRequest<>(this.person, update);
+
+        when(this.configuration.isPagesNotification()).thenReturn(true);
+
         this.listener.onEvent(new DocumentUpdatedEvent(), this.document, this.context);
 
         PageChangedRequest request =
@@ -207,15 +214,6 @@ public class DocumentUpdatedEventListenerTest
         verify(this.jobExecutor).execute(eq("activitypub-update-page"), eq(request));
         verify(this.activityPubStorage, never()).storeEntity(apDoc);
         verify(this.updateActivityHandler, never()).handleOutboxRequest(activityRequest);
-    }
-
-    private void defineMajorRevision(int i) throws XWikiException
-    {
-        XWikiRCSNodeInfo value = new XWikiRCSNodeInfo();
-        XWikiRCSNodeId id = new XWikiRCSNodeId(1, new Version(1, i));
-        value.setId(id);
-        when(this.document.getRevisionInfo(this.document.getVersion(), this.context))
-            .thenReturn(value);
     }
 
     @Test
@@ -238,7 +236,7 @@ public class DocumentUpdatedEventListenerTest
         when(this.urlHandler.getAbsoluteURI(new URI(relativeDocumentUrl))).thenReturn(new URI(absoluteDocumentUrl));
         when(this.document.getCreationDate()).thenReturn(creationDate);
         when(this.document.getTitle()).thenReturn(documentTile);
-        this.defineMajorRevision();
+        this.defineMinorRevision();
 
         Document apDoc = new Document()
             .setName(documentTile)
@@ -274,6 +272,15 @@ public class DocumentUpdatedEventListenerTest
     }
 
     private void defineMajorRevision() throws XWikiException
+    {
+        XWikiRCSNodeInfo value = new XWikiRCSNodeInfo();
+        XWikiRCSNodeId id = new XWikiRCSNodeId(1, new Version(1, 1));
+        value.setId(id);
+        when(this.document.getRevisionInfo(this.document.getVersion(), this.context))
+            .thenReturn(value);
+    }
+
+    private void defineMinorRevision() throws XWikiException
     {
         XWikiRCSNodeInfo value = new XWikiRCSNodeInfo();
         // the revision of the document is minor.
