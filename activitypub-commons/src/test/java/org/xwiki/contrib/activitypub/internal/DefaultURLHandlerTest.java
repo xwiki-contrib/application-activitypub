@@ -35,6 +35,7 @@ import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
 import org.xwiki.url.ExtendedURL;
 
+import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.web.XWikiRequest;
 import com.xpn.xwiki.web.XWikiURLFactory;
@@ -106,9 +107,9 @@ public class DefaultURLHandlerTest
     {
         URI absoluteURI = URI.create("http://xwiki.org/xwiki/activitypub/foo/something");
         ExtendedURL extendedURL = new ExtendedURL(Arrays.asList("activitypub", "foo", "something"));
-        XWikiRequest xWikiRequest = mock(XWikiRequest.class);
-        when(context.getRequest()).thenReturn(xWikiRequest);
-        when(xWikiRequest.getContextPath()).thenReturn("/xwiki");
+        XWiki xwiki = mock(XWiki.class);
+        when(context.getWiki()).thenReturn(xwiki);
+        when(xwiki.getWebAppPath(context)).thenReturn("xwiki/");
         ExtendedURL obtainedURL = this.urlHandler.getExtendedURL(absoluteURI);
         assertEquals(extendedURL.getSegments(), obtainedURL.getSegments());
     }

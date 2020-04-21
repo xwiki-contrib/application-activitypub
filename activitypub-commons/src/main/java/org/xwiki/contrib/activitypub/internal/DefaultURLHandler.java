@@ -108,7 +108,9 @@ public class DefaultURLHandler
     @Unstable
     public ExtendedURL getExtendedURL(URI id) throws MalformedURLException, CreateResourceReferenceException
     {
-        return new ExtendedURL(id.toURL(), this.contextProvider.get().getRequest().getContextPath());
+        XWikiContext context = contextProvider.get();
+        String webAppPath = context.getWiki().getWebAppPath(context);
+        return new ExtendedURL(id.toURL(), webAppPath);
     }
 
     private int normalizePort(int sup)
