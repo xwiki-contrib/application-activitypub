@@ -94,9 +94,11 @@ public class DefaultActivityPubStorageTest
     private DefaultActivityPubStorage activityPubStorage;
 
     @MockComponent
+    @Named("relative")
     private ActivityPubJsonParser jsonParser;
 
     @MockComponent
+    @Named("relative")
     private ActivityPubJsonSerializer jsonSerializer;
 
     @MockComponent

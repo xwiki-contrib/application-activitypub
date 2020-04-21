@@ -253,6 +253,13 @@
                     "code": "java.method.addedToInterface",
                     "new": "method <T extends org.xwiki.contrib.activitypub.entities.ActivityPubObject> java.util.List<T> org.xwiki.contrib.activitypub.ActivityPubStorage::query(java.lang.Class<T>, java.lang.String, int) throws org.xwiki.contrib.activitypub.ActivityPubException",
                     "justification": "Not breaking: Unstable API."
+                  },
+                  {
+                    "code": "java.annotation.removed",
+                    "old": "class org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference<T extends org.xwiki.contrib.activitypub.entities.ActivityPubObject>",
+                    "new": "class org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference<T extends org.xwiki.contrib.activitypub.entities.ActivityPubObject>",
+                    "annotation": "@com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = org.xwiki.contrib.activitypub.internal.json.ActivityPubObjectReferenceDeserializer.class)",
+                    "justification": "Not breaking: Unstable API."
                   }
                 ]
               }

@@ -24,9 +24,7 @@ import java.net.URI;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Singleton;
 
-import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.contrib.activitypub.ActivityPubException;
@@ -41,16 +39,20 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
 /**
- * A custom Jackson Serializer for {@link ActivityPubObjectReference}.
+ * An abstract Jackson Serializer for {@link ActivityPubObjectReference}.
  * This serializer only serialize the references with the objects IDs, which means that it also performs the storage
  * when no ID is found for the object to serialize.
  * The idea here is to avoid serializing big JSON and to avoid having to deal with self-referenced objects by only
  * serializing the references.
+ * That abstract class allows to transform the obtained URI to relativize or make it absolute depending on the concrete
+ * implementation.
+ *
  * @version $Id$
+ * @since 1.2
  */
-@Component(roles = ActivityPubObjectReferenceSerializer.class)
-@Singleton
-public class ActivityPubObjectReferenceSerializer extends JsonSerializer<ActivityPubObjectReference>
+public abstract class AbstractActivityPubObjectReferenceSerializer
+    // it is expected that the ActivityPubObjectReference is the raw type, using it with <?> breaks Jackson typing
+    extends JsonSerializer<ActivityPubObjectReference>
 {
     // We don't inject it since it might need the serializer itself.
     private ActivityPubStorage activityPubStorage;
@@ -74,29 +76,40 @@ public class ActivityPubObjectReferenceSerializer extends JsonSerializer<Activit
     public void serialize(ActivityPubObjectReference objectReference, JsonGenerator jsonGenerator,
         SerializerProvider serializerProvider) throws IOException
     {
-        if (objectReference.isLink()) {
-            jsonGenerator.writeString(objectReference.getLink().toASCIIString());
-        } else {
-            if (objectReference.isExpand()) {
-                jsonGenerator.writeObject(objectReference.getObject());
+        try {
+            if (objectReference.isLink()) {
+                jsonGenerator.writeString(this.transformURI(objectReference.getLink()).toASCIIString());
             } else {
-                ActivityPubObject object = objectReference.getObject();
-
-                // the ID wasn't null, but for some reason it wasn't a link, we kept it as an object in the 
-                // serialization.
-                if (object.getId() != null) {
-                    jsonGenerator.writeString(object.getId().toString());
-                    // it doesn't have an ID: we need to store it and we serialize it as a link to avoid big JSON 
-                    // answers.
+                if (objectReference.isExpand()) {
+                    jsonGenerator.writeObject(objectReference.getObject());
                 } else {
-                    try {
+                    ActivityPubObject object = objectReference.getObject();
+
+                    // the ID wasn't null, but for some reason it wasn't a link, we kept it as an object in the
+                    // serialization.
+                    if (object.getId() != null) {
+                        jsonGenerator.writeString(this.transformURI(object.getId()).toString());
+                        // it doesn't have an ID: we need to store it and we serialize it as a link to avoid big JSON
+                        // answers.
+                    } else {
                         URI uri = this.getActivityPubStorage().storeEntity(object);
-                        jsonGenerator.writeString(uri.toASCIIString());
-                    } catch (ActivityPubException | ComponentLookupException e) {
-                        throw new IOException(String.format("Error when serializing [%s]", object.toString()), e);
+                        jsonGenerator.writeString(this.transformURI(uri).toASCIIString());
                     }
                 }
             }
+        } catch (ComponentLookupException | ActivityPubException e) {
+            throw new IOException(
+                String.format("Error when serializing reference [%s]", objectReference.toString()), e);
         }
     }
+
+    /**
+     * Transform the provided URI before the serialization. This can be useful in particular to resolve relative URI,
+     * or in contrary to relativize absolute URI.
+     *
+     * @param inputURI the URI to transform.
+     * @return a transformed URI.
+     * @throws ActivityPubException in case of problem during the transformation.
+     */
+    public abstract URI transformURI(URI inputURI) throws ActivityPubException;
 }

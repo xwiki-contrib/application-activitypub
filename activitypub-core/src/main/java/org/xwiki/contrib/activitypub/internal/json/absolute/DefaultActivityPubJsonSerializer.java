@@ -17,49 +17,35 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.internal.json;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
+package org.xwiki.contrib.activitypub.internal.json.absolute;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.contrib.activitypub.ActivityPubException;
-import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
+import org.xwiki.contrib.activitypub.internal.json.AbstractActivityPubJsonSerializer;
+import org.xwiki.contrib.activitypub.internal.json.ObjectMapperConfiguration;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Default implementation of {@link ActivityPubJsonSerializer}.
- * This implementation relies on {@link ObjectMapperConfiguration}.
+ * This implementation will keep all URI absolute when serializing the information.
+ *
  * @version $Id$
+ * @since 1.2
  */
 @Component
 @Singleton
-public class DefaultActivityPubJsonSerializer implements ActivityPubJsonSerializer
+public class DefaultActivityPubJsonSerializer extends AbstractActivityPubJsonSerializer
 {
     @Inject
     private ObjectMapperConfiguration objectMapperConfiguration;
 
     @Override
-    public <T extends ActivityPubObject> String serialize(T object) throws ActivityPubException
+    public ObjectMapper getObjectMapper()
     {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        this.serialize(byteArrayOutputStream, object);
-        return new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8);
-    }
-
-    @Override
-    public <T extends ActivityPubObject> void serialize(OutputStream stream, T object) throws ActivityPubException
-    {
-        try {
-            this.objectMapperConfiguration.getObjectMapper().writeValue(stream, object);
-        } catch (IOException e) {
-            throw new ActivityPubException(
-                String.format("Error while serializing the stream to type [%s]", object.getClass()), e);
-        }
+        return this.objectMapperConfiguration.getObjectMapper();
     }
 }

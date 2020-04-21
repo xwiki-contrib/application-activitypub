@@ -23,30 +23,34 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
-import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Default implementation of {@link ActivityPubJsonParser}.
- * This implementation directly use {@link ObjectMapperConfiguration}.
+ * Abstract implementation of {@link ActivityPubJsonParser}.
+ * This class provides almost everything to for parsing, it just needs an {@link ObjectMapper} to work, which is
+ * generally provided by {@link ObjectMapperConfiguration}.
+ *
  * @version $Id$
+ * @since 1.2
  */
-@Component
-@Singleton
-public class DefaultActivityPubJsonParser implements ActivityPubJsonParser
+public abstract class AbstractActivityPubJsonParser implements ActivityPubJsonParser
 {
     private static final String ERROR_MSG_KNOWN_TYPE = "Error while parsing request with type [%s].";
     private static final String ERROR_MSG_UNKNOWN_TYPE = "Error while parsing request with unknown type.";
-    @Inject
-    private ObjectMapperConfiguration objectMapperConfiguration;
-    
+
+    /**
+     * Retrieve an object mapper for the parsing operations: this is generally provided by
+     * a {@link ObjectMapperConfiguration}.
+     *
+     * @return the object mapper to be used for the parsing.
+     */
+    public abstract ObjectMapper getObjectMapper();
+
     @Override
     public <T extends ActivityPubObject> T parse(String requestBody) throws ActivityPubException
     {
@@ -57,7 +61,7 @@ public class DefaultActivityPubJsonParser implements ActivityPubJsonParser
     public <T extends ActivityPubObject> T parse(String requestBody, Class<T> type) throws ActivityPubException
     {
         try {
-            return this.objectMapperConfiguration.getObjectMapper().readValue(requestBody, type);
+            return this.getObjectMapper().readValue(requestBody, type);
         } catch (JsonProcessingException e) {
             throw new ActivityPubException(String.format(ERROR_MSG_KNOWN_TYPE, type), e);
         } catch (RuntimeException e) {
@@ -75,7 +79,7 @@ public class DefaultActivityPubJsonParser implements ActivityPubJsonParser
     public <T extends ActivityPubObject> T parse(Reader requestBodyReader, Class<T> type) throws ActivityPubException
     {
         try {
-            return this.objectMapperConfiguration.getObjectMapper().readValue(requestBodyReader, type);
+            return this.getObjectMapper().readValue(requestBodyReader, type);
         } catch (IOException e) {
             throw new ActivityPubException(String.format(ERROR_MSG_KNOWN_TYPE, type), e);
         }
@@ -92,7 +96,7 @@ public class DefaultActivityPubJsonParser implements ActivityPubJsonParser
         throws ActivityPubException
     {
         try {
-            return this.objectMapperConfiguration.getObjectMapper().readValue(requestBodyInputStream, type);
+            return this.getObjectMapper().readValue(requestBodyInputStream, type);
         } catch (IOException e) {
             throw new ActivityPubException(String.format(ERROR_MSG_KNOWN_TYPE, type), e);
         }

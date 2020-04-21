@@ -23,11 +23,8 @@ import java.net.URI;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.xwiki.contrib.activitypub.internal.json.ActivityPubObjectReferenceDeserializer;
 import org.xwiki.stability.Unstable;
 import org.xwiki.text.XWikiToStringBuilder;
-
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
  * Defines a reference towards an {@link ActivityPubObject}.
@@ -41,7 +38,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * @since 1.0
  */
 @Unstable
-@JsonDeserialize(using = ActivityPubObjectReferenceDeserializer.class)
 public class ActivityPubObjectReference<T extends ActivityPubObject>
 {
     private boolean isLink;

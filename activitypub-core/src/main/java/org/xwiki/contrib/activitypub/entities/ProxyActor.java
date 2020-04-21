@@ -69,6 +69,16 @@ public class ProxyActor extends ActivityPubObjectReference<ActivityPubObject>
     }
 
     /**
+     * Helper constructor for Jackson serialization.
+     * It's basically build an URI and calls {@link #ProxyActor(URI)}
+     * @param reference a serialized URI as a string.
+     */
+    public ProxyActor(String reference)
+    {
+        this(URI.create(reference));
+    }
+
+    /**
      * @return a singleton instance to the public actor.
      */
     public static ProxyActor getPublicActor()

@@ -17,25 +17,29 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.internal.json;
+package org.xwiki.contrib.activitypub.internal.json.absolute;
 
-import org.xwiki.component.annotation.Role;
+import java.net.URI;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import javax.inject.Singleton;
+
+import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.internal.json.AbstractActivityPubObjectReferenceSerializer;
 
 /**
- * A generic component to return an {@link ObjectMapper} to be used in the
- * {@link org.xwiki.contrib.activitypub.ActivityPubJsonParser} and
- * {@link org.xwiki.contrib.activitypub.ActivityPubJsonSerializer}.
+ * Default implementation of the JsonSerializer for ActivityPubObjectReference.
+ * This implementation doesn't transform the URI and keep them absolute.
  *
  * @since 1.2
  * @version $Id$
  */
-@Role
-public interface ObjectMapperConfiguration
+@Component(roles = DefaultActivityPubObjectReferenceSerializer.class)
+@Singleton
+public class DefaultActivityPubObjectReferenceSerializer extends AbstractActivityPubObjectReferenceSerializer
 {
-    /**
-     * @return the actual object mapper to be used in a Jackson parser/serializer.
-     */
-    ObjectMapper getObjectMapper();
+    @Override
+    public URI transformURI(URI inputURI)
+    {
+        return inputURI;
+    }
 }

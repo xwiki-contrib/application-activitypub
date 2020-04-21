@@ -17,25 +17,37 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.internal.json;
+package org.xwiki.contrib.activitypub.internal.json.relative;
 
-import org.xwiki.component.annotation.Role;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
+import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
+import org.xwiki.contrib.activitypub.internal.json.AbstractActivityPubJsonSerializer;
+import org.xwiki.contrib.activitypub.internal.json.ObjectMapperConfiguration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * A generic component to return an {@link ObjectMapper} to be used in the
- * {@link org.xwiki.contrib.activitypub.ActivityPubJsonParser} and
- * {@link org.xwiki.contrib.activitypub.ActivityPubJsonSerializer}.
+ * An implementation of {@link ActivityPubJsonSerializer} that relies on the {@link RelativeObjectMapperConfiguration}.
  *
  * @since 1.2
  * @version $Id$
  */
-@Role
-public interface ObjectMapperConfiguration
+@Component
+@Named("relative")
+@Singleton
+public class RelativeActivityPubJsonSerializer extends AbstractActivityPubJsonSerializer
 {
-    /**
-     * @return the actual object mapper to be used in a Jackson parser/serializer.
-     */
-    ObjectMapper getObjectMapper();
+    @Inject
+    @Named("relative")
+    private ObjectMapperConfiguration objectMapperConfiguration;
+
+    @Override
+    public ObjectMapper getObjectMapper()
+    {
+        return this.objectMapperConfiguration.getObjectMapper();
+    }
 }

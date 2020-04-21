@@ -26,16 +26,22 @@ import java.io.FileReader;
 import java.net.URI;
 import java.util.stream.Collectors;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.component.util.DefaultParameterizedType;
+import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
+import org.xwiki.contrib.activitypub.ActivityPubJsonSerializer;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
-import org.xwiki.contrib.activitypub.internal.json.ActivityPubObjectReferenceSerializer;
-import org.xwiki.contrib.activitypub.internal.json.DefaultActivityPubJsonParser;
-import org.xwiki.contrib.activitypub.internal.json.DefaultActivityPubJsonSerializer;
-import org.xwiki.contrib.activitypub.internal.json.JSONLDContextDeserializer;
 import org.xwiki.contrib.activitypub.internal.json.ObjectMapperConfiguration;
+import org.xwiki.contrib.activitypub.internal.json.absolute.DefaultActivityPubJsonParser;
+import org.xwiki.contrib.activitypub.internal.json.absolute.DefaultActivityPubJsonSerializer;
+import org.xwiki.contrib.activitypub.internal.json.JSONLDContextDeserializer;
+import org.xwiki.contrib.activitypub.internal.json.absolute.DefaultActivityPubObjectReferenceDeserializer;
+import org.xwiki.contrib.activitypub.internal.json.absolute.DefaultActivityPubObjectReferenceSerializer;
+import org.xwiki.contrib.activitypub.internal.json.absolute.DefaultObjectMapperConfiguration;
 import org.xwiki.resource.ResourceReferenceSerializer;
+import org.xwiki.test.annotation.AfterComponent;
 import org.xwiki.test.annotation.BeforeComponent;
 import org.xwiki.test.annotation.ComponentList;
 import org.xwiki.test.junit5.mockito.ComponentTest;
@@ -54,8 +60,12 @@ import static org.mockito.Mockito.when;
  * @version $Id$
  */
 @ComponentTest
-@ComponentList({ ObjectMapperConfiguration.class, ActivityPubObjectReferenceSerializer.class,
-    JSONLDContextDeserializer.class })
+@ComponentList({
+    DefaultObjectMapperConfiguration.class,
+    DefaultActivityPubObjectReferenceSerializer.class,
+    DefaultActivityPubObjectReferenceDeserializer.class,
+    JSONLDContextDeserializer.class
+})
 public class AbstractEntityTest
 {
     @InjectMockComponents
@@ -65,7 +75,7 @@ public class AbstractEntityTest
     protected DefaultActivityPubJsonSerializer serializer;
 
     @BeforeComponent
-    public void setup(MockitoComponentManager componentManager) throws Exception
+    public void beforeComponent(MockitoComponentManager componentManager) throws Exception
     {
         componentManager.registerMockComponent(ActivityPubStorage.class);
         ResourceReferenceSerializer<ActivityPubResourceReference, URI> activityPubResourceReferenceSerializerMock =

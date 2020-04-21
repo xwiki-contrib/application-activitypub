@@ -24,8 +24,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
-import org.xwiki.contrib.activitypub.internal.json.DefaultActivityPubJsonParser;
-import org.xwiki.contrib.activitypub.internal.json.DefaultActivityPubJsonSerializer;
+import org.xwiki.contrib.activitypub.internal.json.absolute.DefaultActivityPubJsonParser;
+import org.xwiki.contrib.activitypub.internal.json.absolute.DefaultActivityPubJsonSerializer;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
