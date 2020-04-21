@@ -175,7 +175,14 @@ public class DefaultActorHandler implements ActorHandler
             }
             if (actor == null) {
                 UserProperties userProperties = this.xWikiUserBridge.resolveUser(userReference);
-                String fullname = String.format("%s %s", userProperties.getFirstName(), userProperties.getLastName());
+                String fullname;
+                String firstName = userProperties.getFirstName();
+                String lastName = userProperties.getLastName();
+                if (lastName != null) {
+                    fullname = String.format("%s %s", firstName, lastName);
+                } else {
+                    fullname = firstName;
+                }
                 DocumentReference dr = this.xWikiUserBridge.getDocumentReference(userReference);
                 actor = this.createActor(new Person(), fullname, dr.getName(), dr.getWikiReference().getName());
             }

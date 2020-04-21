@@ -29,6 +29,7 @@ import org.xwiki.contrib.activitypub.events.AnnounceEvent;
 import org.xwiki.contrib.activitypub.events.CreateEvent;
 import org.xwiki.contrib.activitypub.events.FollowEvent;
 import org.xwiki.contrib.activitypub.events.MessageEvent;
+import org.xwiki.contrib.activitypub.events.UpdateEvent;
 import org.xwiki.eventstream.Event;
 import org.xwiki.eventstream.store.internal.AbstractLegacyEventConverter;
 import org.xwiki.eventstream.store.internal.LegacyEvent;
@@ -48,7 +49,8 @@ import static org.xwiki.contrib.activitypub.internal.ActivityPubRecordableEventC
     CreateEvent.EVENT_TYPE,
     FollowEvent.EVENT_TYPE,
     AnnounceEvent.EVENT_TYPE,
-    MessageEvent.EVENT_TYPE
+    MessageEvent.EVENT_TYPE,
+    UpdateEvent.EVENT_TYPE
 })
 @Singleton
 public class ActivityPubLegacyEventConverter extends AbstractLegacyEventConverter

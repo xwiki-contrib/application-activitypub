@@ -40,10 +40,10 @@
 
 #macro (getAPEventSummary $translationPrefix)
   #if ($eventNumber > 1)
-    #set($translationKey = "$translationPrefix.singular")
+    #set($translationKey = $translationPrefix + ".singular")
     $services.localization.render($translationKey)
   #else
-    #set($translationKey = "$translationPrefix.plural")
+    #set($translationKey = $translationPrefix + ".plural")
     $services.localization.render($translationKey, [$eventNumber])
   #end
 #end
