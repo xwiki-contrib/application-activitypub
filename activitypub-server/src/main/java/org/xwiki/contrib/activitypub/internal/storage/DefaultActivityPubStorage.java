@@ -156,7 +156,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
                     if (inbox.getAttributedTo() == null || inbox.getAttributedTo().isEmpty()) {
                         throw new ActivityPubException("Cannot store an inbox without owner.");
                     }
-                    AbstractActor owner = this.  resolver.resolveReference(inbox.getAttributedTo().get(0));
+                    AbstractActor owner = this.resolver.resolveReference(inbox.getAttributedTo().get(0));
                     uuid = getActorEntityUID(owner, INBOX_SUFFIX_ID);
                 } else if (entity instanceof Outbox) {
                     Outbox outbox = (Outbox) entity;
