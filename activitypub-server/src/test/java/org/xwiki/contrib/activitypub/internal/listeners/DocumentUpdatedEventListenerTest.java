@@ -217,6 +217,64 @@ public class DocumentUpdatedEventListenerTest
     }
 
     @Test
+    public void onEventDeactivated() throws Exception
+    {
+        when(this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, this.document.getDocumentReference()))
+            .thenReturn(true);
+        when(this.objectReferenceResolver.resolveReference(this.person.getFollowers())).thenReturn(
+            new OrderedCollection<AbstractActor>()
+                .addItem(new Person())
+                .setId(new URI("http://followers"))
+        );
+
+        String absoluteDocumentUrl = "http://www.xwiki.org/xwiki/bin/view/Main";
+        String relativeDocumentUrl = "/xwiki/bin/view/Main";
+        String documentTile = "A document title";
+        Date creationDate = new Date();
+
+        when(this.document.getURL("view", this.context)).thenReturn(relativeDocumentUrl);
+        when(this.urlHandler.getAbsoluteURI(new URI(relativeDocumentUrl))).thenReturn(new URI(absoluteDocumentUrl));
+        when(this.document.getCreationDate()).thenReturn(creationDate);
+        when(this.document.getTitle()).thenReturn(documentTile);
+        this.defineMajorRevision();
+
+        Document apDoc = new Document()
+            .setName(documentTile)
+            .setAttributedTo(
+                Collections.singletonList(
+                    new ActivityPubObjectReference<AbstractActor>().setObject(this.person))
+            )
+            .setPublished(creationDate)
+            .setUrl(Collections.singletonList(new URI(absoluteDocumentUrl)));
+        Update update = new Update()
+            .setActor(this.person)
+            .setObject(apDoc)
+            .setName("Creation of document [A document title]")
+            .setPublished(creationDate)
+            .setTo(Collections.singletonList(new ProxyActor(this.person.getFollowers().getLink())));
+        ActivityRequest<Update> activityRequest = new ActivityRequest<>(this.person, update);
+
+        when(this.configuration.isPagesNotification()).thenReturn(false);
+
+        this.listener.onEvent(new DocumentUpdatedEvent(), this.document, this.context);
+
+        PageChangedRequest request =
+            new PageChangedRequest()
+                .setDocumentReference(this.document.getDocumentReference())
+                .setAuthorReference(this.document.getAuthorReference())
+                .setDocumentTitle(this.document.getTitle())
+                .setContent(this.document.getXDOM())
+                .setCreationDate(this.document.getCreationDate())
+                .setViewURL(this.document.getURL("view", this.context));
+        request.setId("activitypub-update-page", this.document.getKey());
+
+        // FIXME: update when a configuration is added to the creation event handler
+        verify(this.jobExecutor, never()).execute(eq("activitypub-update-page"), eq(request));
+        verify(this.activityPubStorage, never()).storeEntity(apDoc);
+        verify(this.updateActivityHandler, never()).handleOutboxRequest(activityRequest);
+    }
+
+    @Test
     public void onEventMinor() throws Exception
     {
         when(this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, this.document.getDocumentReference()))

@@ -106,7 +106,6 @@ public class DocumentCreatedEventListenerTest
     @MockComponent
     private ActivityPubConfiguration configuration;
 
-
     @Mock
     private XWikiDocument document;
 
@@ -127,7 +126,7 @@ public class DocumentCreatedEventListenerTest
         UserReference userReference = mock(UserReference.class);
         when(this.xWikiUserBridge.resolveDocumentReference(this.document.getAuthorReference()))
             .thenReturn(userReference);
-        when(this.actorHandler.getActor(userReference)).thenReturn(person);
+        when(this.actorHandler.getActor(userReference)).thenReturn(this.person);
     }
 
     @Test
@@ -201,9 +200,66 @@ public class DocumentCreatedEventListenerTest
                 .setCreationDate(this.document.getCreationDate())
                 .setViewURL(this.document.getURL("view", this.context));
         request.setId("activitypub-create-page", this.document.getKey());
-        
+
         // FIXME: update when a configuration is added to the creation event handler
         verify(this.jobExecutor).execute(eq("activitypub-create-page"), eq(request));
+        verify(this.activityPubStorage, never()).storeEntity(apDoc);
+        verify(this.createActivityHandler, never()).handleOutboxRequest(activityRequest);
+    }
+
+    @Test
+    public void onEventDeactivated() throws Exception
+    {
+        when(this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, this.document.getDocumentReference()))
+            .thenReturn(true);
+        when(this.objectReferenceResolver.resolveReference(this.person.getFollowers())).thenReturn(
+            new OrderedCollection<AbstractActor>()
+                .addItem(new Person())
+                .setId(new URI("http://followers"))
+        );
+
+        String absoluteDocumentUrl = "http://www.xwiki.org/xwiki/bin/view/Main";
+        String relativeDocumentUrl = "/xwiki/bin/view/Main";
+        String documentTile = "A document title";
+        Date creationDate = new Date();
+
+        when(this.document.getURL("view", this.context)).thenReturn(relativeDocumentUrl);
+        when(this.urlHandler.getAbsoluteURI(new URI(relativeDocumentUrl))).thenReturn(new URI(absoluteDocumentUrl));
+        when(this.document.getCreationDate()).thenReturn(creationDate);
+        when(this.document.getTitle()).thenReturn(documentTile);
+
+        Document apDoc = new Document()
+            .setName(documentTile)
+            .setAttributedTo(
+                Collections.singletonList(
+                    new ActivityPubObjectReference<AbstractActor>().setObject(this.person))
+            )
+            .setPublished(creationDate)
+            .setUrl(Collections.singletonList(new URI(absoluteDocumentUrl)));
+        Create create = new Create()
+            .setActor(this.person)
+            .setObject(apDoc)
+            .setName("Creation of document [A document title]")
+            .setPublished(creationDate)
+            .setTo(Collections.singletonList(new ProxyActor(this.person.getFollowers().getLink())));
+        ActivityRequest<Create> activityRequest = new ActivityRequest<>(this.person, create);
+
+        when(this.configuration.isPagesNotification()).thenReturn(false);
+
+        this.listener.onEvent(new DocumentCreatedEvent(), this.document, this.context);
+
+        PageChangedRequest request =
+            new PageChangedRequest()
+                .setDocumentReference(this.document.getDocumentReference())
+                .setAuthorReference(this.document.getAuthorReference())
+                .setDocumentTitle(this.document.getTitle())
+                .setContent(this.document.getXDOM())
+                .setCreationDate(this.document.getCreationDate())
+                .setViewURL(this.document.getURL("view", this.context));
+        request.setId("activitypub-create-page", this.document.getKey());
+
+        // FIXME: update when a configuration is added to the creation event handler
+        verify(this.jobExecutor, never()).execute(eq("activitypub-create-page"), eq(request));
         verify(this.activityPubStorage, never()).storeEntity(apDoc);
         verify(this.createActivityHandler, never()).handleOutboxRequest(activityRequest);
     }

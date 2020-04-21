@@ -20,13 +20,16 @@
 package org.xwiki.contrib.activitypub.internal.signature;
 
 import java.net.URI;
+import java.nio.file.Path;
 import java.security.KeyPairGenerator;
 import java.util.Objects;
 
 import javax.inject.Named;
 
 import org.apache.commons.httpclient.HttpMethod;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InOrder;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.CryptoService;
@@ -35,6 +38,7 @@ import org.xwiki.crypto.params.cipher.asymmetric.PrivateKeyParameters;
 import org.xwiki.crypto.pkix.params.CertifiedKeyPair;
 import org.xwiki.crypto.store.FileStoreReference;
 import org.xwiki.crypto.store.KeyStore;
+import org.xwiki.environment.Environment;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
@@ -68,9 +72,12 @@ class DefaultSignatureServiceTest
     private CryptoService cryptoService;
 
     @MockComponent
+    private Environment environment;
+
+    @MockComponent
     private ActorHandler actorHandler;
 
-    private final static byte[] PK = new byte[]{
+    private final static byte[] PK = new byte[] {
         48, -126, 1, 84, 2, 1, 0, 48, 13, 6, 9, 42, -122, 72, -122, -9, 13, 1, 1, 1, 5, 0, 4, -126, 1, 62, 48, -126, 1,
         58, 2, 1, 0, 2, 65, 0, -87, 4, -97, -82, -98, -34, -40, 31, 42, -65, 28, -117, -122, 113, 7, -58, 95, -7, -44,
         -47, -109, 83, -17, -36, -48, 100, -38, 35, -100, 75, -81, -94, -10, -49, 5, 63, -32, 5, -4, -47, -67, -113,
@@ -86,6 +93,12 @@ class DefaultSignatureServiceTest
         -14, -37, -11, 33, 24, 38, -16, -120, 105, -73, 2, 32, 30, -84, 13, 117, 79, -28, -117, 5, -112, -40, -119, 71,
         -85, 86, 27, 125, 16, 64, 12, 27, -21, -24, -15, 24, 54, 113, -26, -99, 123, 115, -57, 116
     };
+
+    @BeforeEach
+    void setUp(@TempDir Path tempDir)
+    {
+        when(this.environment.getPermanentDirectory()).thenReturn(tempDir.toFile());
+    }
 
     @Test
     void generateSignature() throws Exception
