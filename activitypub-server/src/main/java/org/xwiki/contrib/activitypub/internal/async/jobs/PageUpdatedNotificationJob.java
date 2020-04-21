@@ -42,7 +42,10 @@ import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Update;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.rendering.block.XDOM;
+
+import static org.apache.solr.client.solrj.util.ClientUtils.escapeQueryChars;
 
 /**
  * Handles asynchronous ActivityPub tasks on page update events.
@@ -88,18 +91,33 @@ public class PageUpdatedNotificationJob extends AbstractPageNotificationJob
         String title = this.request.getDocumentTitle();
         Date creationDate = this.request.getCreationDate();
         XDOM content = this.request.getContent();
+        DocumentReference documentReference = this.request.getDocumentReference();
 
         URI documentUrl = this.urlHandler.getAbsoluteURI(new URI(view));
 
         List<ActivityPubObjectReference<AbstractActor>> attributedTo = this.emmiters(author);
-        Document document = new Document()
-            .setName(title)
-            .setAttributedTo(attributedTo)
-            .setPublished(creationDate)
-            .setContent(this.htmlRenderer.render(content, this.request.getDocumentReference()))
-            // We cannot put it as a document id, since we need to be able to resolve it 
-            // with an activitypub answer.
-            .setUrl(Collections.singletonList(documentUrl));
+
+        String docIdSolr = this.stringEntityReferenceSerializer.serialize(documentReference);
+
+        List<Document> documents = this.storage.query(Document.class, String.format("filter(xwikiReference:%s)",
+            escapeQueryChars(docIdSolr)), 1);
+        String contentRendered = this.htmlRenderer.render(content, documentReference);
+        Document document;
+        if (documents.isEmpty()) {
+            // the document was created before the installation of this extension.
+            document = new Document()
+                .setName(title)
+                .setAttributedTo(attributedTo)
+                .setPublished(creationDate)
+                .setContent(contentRendered)
+                .setUrl(Collections.singletonList(documentUrl))
+                .setXwikiReference(docIdSolr);
+        } else {
+            // if the document was already existing in storage, we update it
+            document = documents.get(0)
+                .setContent(contentRendered)
+                .setAttributedTo(attributedTo);
+        }
 
         // Make sure it's stored so it can be resolved later.
         this.storage.storeEntity(document);

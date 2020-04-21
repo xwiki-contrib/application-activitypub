@@ -69,13 +69,13 @@ public class DefaultActivityPubConfiguration implements ActivityPubConfiguration
     public boolean isPagesNotification()
     {
         String value = this.configuration.getProperty("pagesNotification", "");
-        return Boolean.parseBoolean(value);
+        return !"0".equals(value);
     }
 
     @Override
     public boolean isUserPagesNotification()
     {
         String value = this.configuration.getProperty("userPagesNotification", "");
-        return Boolean.parseBoolean(value);
+        return !"0".equals(value);
     }
 }
