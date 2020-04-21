@@ -23,6 +23,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Arrays;
 
 import javax.inject.Provider;
 
@@ -32,8 +33,10 @@ import org.mockito.Mock;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
+import org.xwiki.url.ExtendedURL;
 
 import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.web.XWikiRequest;
 import com.xpn.xwiki.web.XWikiURLFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -96,5 +99,17 @@ public class DefaultURLHandlerTest
         assertTrue(this.urlHandler.belongsToCurrentInstance(URI.create("http://xwiki.org")));
         assertFalse(this.urlHandler.belongsToCurrentInstance(URI.create("http://xwiki.com/foo/something")));
         assertFalse(this.urlHandler.belongsToCurrentInstance(URI.create("/foo/something")));
+    }
+
+    @Test
+    public void getExtendedURL() throws Exception
+    {
+        URI absoluteURI = URI.create("http://xwiki.org/xwiki/activitypub/foo/something");
+        ExtendedURL extendedURL = new ExtendedURL(Arrays.asList("activitypub", "foo", "something"));
+        XWikiRequest xWikiRequest = mock(XWikiRequest.class);
+        when(context.getRequest()).thenReturn(xWikiRequest);
+        when(xWikiRequest.getContextPath()).thenReturn("/xwiki");
+        ExtendedURL obtainedURL = this.urlHandler.getExtendedURL(absoluteURI);
+        assertEquals(extendedURL.getSegments(), obtainedURL.getSegments());
     }
 }

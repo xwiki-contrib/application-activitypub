@@ -31,6 +31,9 @@ import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.resource.CreateResourceReferenceException;
+import org.xwiki.stability.Unstable;
+import org.xwiki.url.ExtendedURL;
 
 import com.xpn.xwiki.XWikiContext;
 
@@ -90,6 +93,22 @@ public class DefaultURLHandler
             }
         }
         return false;
+    }
+
+    /**
+     * Create a new {@link ExtendedURL} that can be used in a {@link org.xwiki.resource.ResourceReferenceResolver}
+     * from an absolute URI.
+     *
+     * @param id an absolute URI of the current instance.
+     * @return an ExtendedURL to be used in a {@link org.xwiki.resource.ResourceReferenceResolver}.
+     * @throws MalformedURLException in case the given URI is not absolute.
+     * @throws CreateResourceReferenceException in case of problem to create the ExtendedURL.
+     * @since 1.2
+     */
+    @Unstable
+    public ExtendedURL getExtendedURL(URI id) throws MalformedURLException, CreateResourceReferenceException
+    {
+        return new ExtendedURL(id.toURL(), this.contextProvider.get().getRequest().getContextPath());
     }
 
     private int normalizePort(int sup)

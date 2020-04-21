@@ -22,11 +22,13 @@ package org.xwiki.contrib.activitypub.internal.storage;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.commons.lang3.time.DateUtils;
@@ -54,11 +56,12 @@ import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonParser;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonSerializer;
 import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
+import org.xwiki.resource.ResourceReferenceResolver;
 import org.xwiki.resource.ResourceReferenceSerializer;
-import org.xwiki.resource.SerializeResourceReferenceException;
-import org.xwiki.resource.UnsupportedResourceReferenceException;
+import org.xwiki.resource.ResourceType;
 import org.xwiki.search.solr.Solr;
 import org.xwiki.search.solr.SolrException;
+import org.xwiki.url.ExtendedURL;
 
 /**
  * Default implementation of {@link ActivityPubStorage}.
@@ -74,6 +77,8 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     private static final String OUTBOX_SUFFIX_ID = "outbox";
     private static final String WEBFINGER_TYPE = "webfinger";
     private static final String DEFAULT_QUERY = "*";
+    private static final String ACTIVITYPUB = "activitypub";
+    private static final ResourceType ACTIVITYPUB_RESOURCE_TYPE = new ResourceType(ACTIVITYPUB);
 
     @Inject
     private ResourceReferenceSerializer<ActivityPubResourceReference, URI> serializer;
@@ -94,6 +99,10 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     private WebfingerJsonParser webfingerJsonParser;
 
     @Inject
+    @Named(ACTIVITYPUB)
+    private ResourceReferenceResolver<ExtendedURL> resourceReferenceResolver;
+
+    @Inject
     private Logger logger;
 
     @Inject
@@ -104,7 +113,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
 
     private SolrClient getSolrClient() throws SolrException
     {
-        return this.solr.getClient("activitypub");
+        return this.solr.getClient(ACTIVITYPUB);
     }
 
     @Override
@@ -118,11 +127,11 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         }
     }
 
-    private void storeInformation(ActivityPubObject entity)
+    private void storeInformation(ActivityPubObject entity, String id)
         throws ActivityPubException, SolrException, IOException, SolrServerException
     {
         SolrInputDocument inputDocument = new SolrInputDocument();
-        inputDocument.addField(ID_FIELD, entity.getId().toASCIIString());
+        inputDocument.addField(ID_FIELD, id);
         inputDocument.addField(TYPE_FIELD, entity.getType());
         inputDocument.addField(CONTENT_FIELD, this.jsonSerializer.serialize(entity));
         inputDocument.addField(UPDATED_DATE_FIELD, new Date());
@@ -136,6 +145,9 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     {
         String uuid;
         try {
+            // the entity doesn't have any URI ID yet: we'll create an UID, and store the entity only using this UID
+            // So we can retrieve the entity even in case of server URL change.
+            // The URI ID will be then computed with this UID.
             if (entity.getId() == null) {
                 if (entity instanceof Inbox) {
                     Inbox inbox = (Inbox) entity;
@@ -161,12 +173,24 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
                 ActivityPubResourceReference resourceReference =
                     new ActivityPubResourceReference(entity.getType(), uuid);
                 entity.setId(this.serializer.serialize(resourceReference));
+            // If the entity already have an URI ID but that one doesn't belong to the current instance
+            // then we use the URI ID as UID
+            } else if (!this.urlHandler.belongsToCurrentInstance(entity.getId())) {
+                uuid = entity.getId().toASCIIString();
+            // If the entity already haven an URI ID that belongs to the current instance, then we compute back the
+            // UID from this URI ID, so that we can reuse it to store information.
+            } else {
+                ActivityPubResourceReference resourceReference = (ActivityPubResourceReference)
+                    this.resourceReferenceResolver.resolve(
+                    this.urlHandler.getExtendedURL(entity.getId()),
+                    ACTIVITYPUB_RESOURCE_TYPE,
+                    Collections.emptyMap());
+                uuid = resourceReference.getUuid();
             }
 
-            this.storeInformation(entity);
+            this.storeInformation(entity, uuid);
             return entity.getId();
-        } catch (SolrException | SerializeResourceReferenceException | UnsupportedResourceReferenceException
-                     | SolrServerException | IOException e) {
+        } catch (Exception e) {
             throw new ActivityPubException(String.format("Error while storing [%s].", entity), e);
         }
     }
@@ -197,18 +221,26 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     }
 
     @Override
-    public <T extends ActivityPubObject> T retrieveEntity(URI id) throws ActivityPubException
+    public <T extends ActivityPubObject> T retrieveEntity(URI uri) throws ActivityPubException
     {
         T result = null;
+        String uuid;
         try {
-            SolrDocument solrDocument = this.getSolrClient().getById(id.toASCIIString());
+            if (this.urlHandler.belongsToCurrentInstance(uri)) {
+                ActivityPubResourceReference reference = (ActivityPubResourceReference) this.resourceReferenceResolver
+                    .resolve(this.urlHandler.getExtendedURL(uri), ACTIVITYPUB_RESOURCE_TYPE, Collections.emptyMap());
+                uuid = reference.getUuid();
+            } else {
+                uuid = uri.toASCIIString();
+            }
+            SolrDocument solrDocument = this.getSolrClient().getById(uuid);
             if (solrDocument != null && !solrDocument.isEmpty() && retrieveSolrDocument(solrDocument)) {
                 result = (T) this.jsonParser.parse((String) solrDocument.getFieldValue(CONTENT_FIELD));
             }
             return result;
-        } catch (IOException | SolrServerException | SolrException e) {
+        } catch (Exception e) {
             throw new ActivityPubException(
-                String.format("Error when trying to retrieve the entity of id [%s]", id), e);
+                String.format("Error when trying to retrieve the entity of id [%s]", uri), e);
         }
     }
 

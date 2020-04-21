@@ -47,7 +47,7 @@ public class ActivityPubResourceReferenceResolverTest
     @Test
     public void resolve() throws CreateResourceReferenceException, UnsupportedResourceReferenceException
     {
-        ExtendedURL extendedURL = new ExtendedURL(Arrays.asList("foo", "bar"),
+        ExtendedURL extendedURL = new ExtendedURL(Arrays.asList("activitypub", "foo", "bar"),
             Collections.singletonMap("test", Arrays.asList("42", "43")));
 
         ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("foo", "bar");
