@@ -61,6 +61,7 @@ import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.contrib.activitypub.internal.filters.CollectionFilter;
+import org.xwiki.contrib.activitypub.webfinger.WebfingerService;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
 import org.xwiki.test.annotation.BeforeComponent;
 import org.xwiki.test.junit5.mockito.ComponentTest;
@@ -71,11 +72,10 @@ import org.xwiki.test.mockito.MockitoComponentManager;
 import org.xwiki.user.UserReference;
 
 import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.api.User;
 
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -117,12 +117,18 @@ public class ActivityPubResourceReferenceHandlerTest
     @MockComponent
     private CollectionFilter<OrderedCollection<AbstractActivity>> publicActivityCollectionFilter;
 
+    @MockComponent
+    private WebfingerService webfingerService;
+
     @Mock
     private ResourceReferenceHandlerChain handlerChain;
 
     private HttpServletRequest servletRequest;
+
     private HttpServletResponse servletResponse;
+
     private ServletOutputStream responseOutput;
+
     private XWikiContext xWikiContext;
 
     @BeforeComponent
@@ -189,15 +195,36 @@ public class ActivityPubResourceReferenceHandlerTest
     }
 
     @Test
+    void handleGetNotStoredExistingActorFromBrowser() throws Exception
+    {
+        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("person", "Foo");
+        Person person = new Person().setPreferredUsername("Foo");
+        when(this.actorHandler.getActor(resourceReference)).thenReturn(person);
+        when(this.servletRequest.getMethod()).thenReturn("GET");
+        when(this.servletRequest.getHeader("Accept")).thenReturn("...,text/html,...");
+        URI webURI = URI.create("http://wiki.tld/web/view/1");
+        when(this.webfingerService.resolveXWikiUserUrl(person)).thenReturn(webURI);
+        this.handler.handle(resourceReference, this.handlerChain);
+        verify(this.activityPubJsonSerializer, never()).serialize(this.responseOutput, person);
+        verify(this.handlerChain).handleNext(resourceReference);
+        verify(this.servletResponse).sendRedirect(webURI.toASCIIString());
+    }
+
+    @Test
     void handleGetNotStoredExistingActor() throws Exception
     {
         ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("person", "Foo");
         Person person = new Person().setPreferredUsername("Foo");
-        when(actorHandler.getActor(resourceReference)).thenReturn(person);
-        when(servletRequest.getMethod()).thenReturn("GET");
+        when(this.actorHandler.getActor(resourceReference)).thenReturn(person);
+        when(this.servletRequest.getMethod()).thenReturn("GET");
+        when(this.servletRequest.getHeader("Accept")).thenReturn("application/json");
         this.handler.handle(resourceReference, this.handlerChain);
-        this.verifyResponse(person);
-        verify(handlerChain, times(1)).handleNext(resourceReference);
+        verify(this.servletResponse, times(1)).setStatus(200);
+        verify(this.servletResponse, times(1)).setContentType(ActivityPubClient.CONTENT_TYPE_STRICT);
+        verify(this.servletResponse, times(1)).setCharacterEncoding(StandardCharsets.UTF_8.toString());
+        verify(this.activityPubJsonSerializer, times(1)).serialize(this.responseOutput, person);
+        verify(this.handlerChain, times(1)).handleNext(resourceReference);
+        verify(this.servletResponse, never()).sendRedirect(any());
     }
 
     @Test
@@ -210,7 +237,10 @@ public class ActivityPubResourceReferenceHandlerTest
         when(this.activityPubStorage.retrieveEntity(new URI(requestURL))).thenReturn(create);
         when(servletRequest.getMethod()).thenReturn("GET");
         this.handler.handle(resourceReference, this.handlerChain);
-        this.verifyResponse(create);
+        verify(this.servletResponse, times(1)).setStatus(200);
+        verify(this.servletResponse, times(1)).setContentType(ActivityPubClient.CONTENT_TYPE_STRICT);
+        verify(this.servletResponse, times(1)).setCharacterEncoding(StandardCharsets.UTF_8.toString());
+        verify(this.activityPubJsonSerializer, times(1)).serialize(this.responseOutput, create);
         verify(handlerChain, times(1)).handleNext(resourceReference);
     }
 
@@ -361,7 +391,10 @@ public class ActivityPubResourceReferenceHandlerTest
         when(servletRequest.getMethod()).thenReturn("GET");
         when(this.publicActivityCollectionFilter.filter(inbox)).thenReturn(inbox);
         this.handler.handle(resourceReference, this.handlerChain);
-        this.verifyResponse(inbox);
+        verify(this.servletResponse, times(1)).setStatus(200);
+        verify(this.servletResponse, times(1)).setContentType(ActivityPubClient.CONTENT_TYPE_STRICT);
+        verify(this.servletResponse, times(1)).setCharacterEncoding(StandardCharsets.UTF_8.toString());
+        verify(this.activityPubJsonSerializer, times(1)).serialize(this.responseOutput, inbox);
         verify(handlerChain, times(1)).handleNext(resourceReference);
         verify(this.publicActivityCollectionFilter).filter(inbox);
     }
@@ -379,7 +412,10 @@ public class ActivityPubResourceReferenceHandlerTest
         when(servletRequest.getMethod()).thenReturn("GET");
         when(this.publicActivityCollectionFilter.filter(outbox)).thenReturn(outbox);
         this.handler.handle(resourceReference, this.handlerChain);
-        this.verifyResponse(outbox);
+        verify(this.servletResponse, times(1)).setStatus(200);
+        verify(this.servletResponse, times(1)).setContentType(ActivityPubClient.CONTENT_TYPE_STRICT);
+        verify(this.servletResponse, times(1)).setCharacterEncoding(StandardCharsets.UTF_8.toString());
+        verify(this.activityPubJsonSerializer, times(1)).serialize(this.responseOutput, outbox);
         verify(handlerChain, times(1)).handleNext(resourceReference);
         verify(this.publicActivityCollectionFilter).filter(outbox);
     }
@@ -402,7 +438,10 @@ public class ActivityPubResourceReferenceHandlerTest
         when(this.actorHandler.isAuthorizedToActFor(userReference, actor)).thenReturn(true);
         when(servletRequest.getMethod()).thenReturn("GET");
         this.handler.handle(resourceReference, this.handlerChain);
-        this.verifyResponse(inbox);
+        verify(this.servletResponse, times(1)).setStatus(200);
+        verify(this.servletResponse, times(1)).setContentType(ActivityPubClient.CONTENT_TYPE_STRICT);
+        verify(this.servletResponse, times(1)).setCharacterEncoding(StandardCharsets.UTF_8.toString());
+        verify(this.activityPubJsonSerializer, times(1)).serialize(this.responseOutput, inbox);
         verify(handlerChain, times(1)).handleNext(resourceReference);
         verify(this.publicActivityCollectionFilter, never()).filter(inbox);
     }
@@ -425,7 +464,10 @@ public class ActivityPubResourceReferenceHandlerTest
         when(this.actorHandler.isAuthorizedToActFor(userReference, actor)).thenReturn(true);
         when(servletRequest.getMethod()).thenReturn("GET");
         this.handler.handle(resourceReference, this.handlerChain);
-        this.verifyResponse(outbox);
+        verify(this.servletResponse, times(1)).setStatus(200);
+        verify(this.servletResponse, times(1)).setContentType(ActivityPubClient.CONTENT_TYPE_STRICT);
+        verify(this.servletResponse, times(1)).setCharacterEncoding(StandardCharsets.UTF_8.toString());
+        verify(this.activityPubJsonSerializer, times(1)).serialize(this.responseOutput, outbox);
         verify(handlerChain, times(1)).handleNext(resourceReference);
         verify(this.publicActivityCollectionFilter, never()).filter(outbox);
     }
