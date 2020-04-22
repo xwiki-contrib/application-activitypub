@@ -22,6 +22,7 @@ package org.xwiki.contrib.activitypub.entities;
 import java.net.URI;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -67,6 +68,8 @@ public class ActivityPubObject extends JSONLDObjects
     private ActivityPubObjectReference<OrderedCollection<Announce>> shares;
 
     private String xwikiReference;
+
+    private Set<AbstractActor> computedTargets;
 
     /**
      * The type is not stored as a property but instead we rely on the class name to return it.
@@ -310,6 +313,41 @@ public class ActivityPubObject extends JSONLDObjects
     {
         this.xwikiReference = xwikiReference;
         return (T) this;
+    }
+
+    /**
+     * Computed targets is the real list of targeted AbstractActor references, computed when an activity is delivered.
+     *
+     * @return the set of deduplicated concrete actors targets.
+     */
+    @JsonIgnore
+    public Set<AbstractActor> getComputedTargets()
+    {
+        return computedTargets;
+    }
+
+    /**
+     * Computed targets is the real list of targeted AbstractActor references, computed when an activity is delivered.
+     *
+     * @param computedTargets the list of concrete actors targets.
+     * @param <T> the concrete type of this object.
+     * @return the current instance.
+     */
+    @JsonIgnore
+    public <T extends ActivityPubObject> T setComputedTargets(Set<AbstractActor> computedTargets)
+    {
+        this.computedTargets = computedTargets;
+        return (T) this;
+    }
+
+    /**
+     * @return {@code true} iff the {@link #getTo()} attribute contains a reference to public
+     *          (see {@link ProxyActor#getPublicActor()}).
+     */
+    @JsonIgnore
+    public boolean isPublic()
+    {
+        return this.to != null && this.to.contains(ProxyActor.getPublicActor());
     }
 
     @Override

@@ -118,9 +118,7 @@ public class AnnounceActivityHandler extends AbstractActivityHandler<Announce>
         outbox.addActivity(announce);
         this.activityPubStorage.storeEntity(outbox);
 
-        ResolvedTargets resolvedTargets = this.getTargets(announce);
-
-        for (AbstractActor targetActor : resolvedTargets.getActorTargets()) {
+        for (AbstractActor targetActor : this.activityPubObjectReferenceResolver.resolveTargets(announce)) {
             announce.getObject().setExpand(true);
             HttpMethod postMethod = this.activityPubClient.postInbox(targetActor, announce);
 

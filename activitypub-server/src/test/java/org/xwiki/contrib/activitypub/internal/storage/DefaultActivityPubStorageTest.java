@@ -55,6 +55,7 @@ import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
+import org.xwiki.contrib.activitypub.internal.InternalURINormalizer;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonParser;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonSerializer;
 import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
@@ -119,6 +120,9 @@ public class DefaultActivityPubStorageTest
     @MockComponent
     private WebfingerJsonSerializer webfingerJsonSerializer;
 
+    @MockComponent
+    private InternalURINormalizer internalURINormalizer;
+
     @Mock
     private SolrClient solrClient;
 
@@ -168,21 +172,15 @@ public class DefaultActivityPubStorageTest
         when(this.jsonSerializer.serialize(object1)).thenReturn("{foo}");
         when(this.jsonParser.parse("{foo}")).thenReturn(object1);
         when(this.serializer.serialize(any())).thenReturn(uri);
+        URI relativeURI = URI.create("object/foo");
+        when(this.internalURINormalizer.retrieveRelativeURI(any())).thenReturn(relativeURI);
 
         URI uid = this.activityPubStorage.storeEntity(object1);
         assertEquals(uid, uri);
         assertEquals(uri, object1.getId());
-        ArgumentCaptor<ActivityPubResourceReference> argumentCaptor =
-            ArgumentCaptor.forClass(ActivityPubResourceReference.class);
-        verify(this.serializer).serialize(argumentCaptor.capture());
-        verifySolrPutAndPrepareGet(argumentCaptor.getValue().getUuid(), "{foo}");
+        verifySolrPutAndPrepareGet(relativeURI.toASCIIString(), "{foo}");
 
-        when(this.urlHandler.belongsToCurrentInstance(uri)).thenReturn(true);
-        ExtendedURL extendedURL = mock(ExtendedURL.class);
-        when(this.urlHandler.getExtendedURL(uri)).thenReturn(extendedURL);
-        when(this.urlResolver.resolve(extendedURL, new ResourceType("activitypub"), Collections.emptyMap()))
-            .thenReturn(argumentCaptor.getValue());
-
+        when(this.internalURINormalizer.relativizeURI(uri)).thenReturn(relativeURI);
         assertSame(object1, this.activityPubStorage.retrieveEntity(uid));
     }
 
@@ -190,47 +188,44 @@ public class DefaultActivityPubStorageTest
     public void storeEntityWithIDRemoteInstance() throws Exception
     {
         // Test store of an entity with ID
-        URL object2URL = new URL("http://www.xwiki.org/xwiki/activitypub/object/42");
+        URI object2URL = URI.create("http://www.xwiki.org/xwiki/activitypub/object/42");
         ActivityPubObject object2 = mock(ActivityPubObject.class);
-        when(object2.getId()).thenReturn(object2URL.toURI());
+        when(object2.getId()).thenReturn(object2URL);
         String content = "{foobar}";
         when(this.jsonSerializer.serialize(object2)).thenReturn(content);
         when(this.jsonParser.parse(content)).thenReturn(object2);
-        when(this.urlHandler.belongsToCurrentInstance(object2URL.toURI())).thenReturn(false);
+        when(this.internalURINormalizer.relativizeURI(object2URL)).thenReturn(object2URL);
 
         // ID match server URL
-        assertEquals(object2URL.toURI(), this.activityPubStorage.storeEntity(object2));
-        verifySolrPutAndPrepareGet(object2URL.toString(), content);
+        assertEquals(object2URL, this.activityPubStorage.storeEntity(object2));
+        verifySolrPutAndPrepareGet(object2URL.toASCIIString(), content);
         verify(object2).setId(null);
-        verify(object2).setId(object2URL.toURI());
+        verify(object2).setId(object2URL);
 
-        assertSame(object2, this.activityPubStorage.retrieveEntity(object2URL.toURI()));
-        verify(object2, times(2)).setId(object2URL.toURI());
+        assertSame(object2, this.activityPubStorage.retrieveEntity(object2URL));
+        verify(object2, times(2)).setId(object2URL);
     }
 
     @Test
     public void storeEntityWithIDLocalInstance() throws Exception
     {
         // Test store of an entity with ID
-        URL object2URL = new URL("http://www.xwiki.org/xwiki/activitypub/object/42");
+        URI object2URL = URI.create("http://www.xwiki.org/xwiki/activitypub/object/42");
         ActivityPubObject object2 = mock(ActivityPubObject.class);
-        when(object2.getId()).thenReturn(object2URL.toURI());
+        when(object2.getId()).thenReturn(object2URL);
         String content = "{foobar}";
         when(this.jsonSerializer.serialize(object2)).thenReturn(content);
         when(this.jsonParser.parse(content)).thenReturn(object2);
-        when(this.urlHandler.belongsToCurrentInstance(object2URL.toURI())).thenReturn(true);
-        ExtendedURL object2ExtendedURL = new ExtendedURL(Arrays.asList("activitypub", "object", "42"));
-        when(this.urlHandler.getExtendedURL(object2URL.toURI())).thenReturn(object2ExtendedURL);
-        when(this.urlResolver.resolve(object2ExtendedURL, new ResourceType("activitypub"), Collections.emptyMap()))
-            .thenReturn(new ActivityPubResourceReference("object", "42"));
+        URI relativeURI = URI.create("object/42");
+        when(this.internalURINormalizer.relativizeURI(object2URL)).thenReturn(relativeURI);
 
         // ID match server URL
-        assertEquals(object2URL.toURI(), this.activityPubStorage.storeEntity(object2));
-        verifySolrPutAndPrepareGet("42", content);
+        assertEquals(object2URL, this.activityPubStorage.storeEntity(object2));
+        verifySolrPutAndPrepareGet(relativeURI.toASCIIString(), content);
         verify(object2).setId(null);
-        verify(object2).setId(object2URL.toURI());
-        assertSame(object2, this.activityPubStorage.retrieveEntity(object2URL.toURI()));
-        verify(object2, times(2)).setId(object2URL.toURI());
+        verify(object2).setId(object2URL);
+        assertSame(object2, this.activityPubStorage.retrieveEntity(object2URL));
+        verify(object2, times(2)).setId(object2URL);
     }
 
     @Test
@@ -246,17 +241,15 @@ public class DefaultActivityPubStorageTest
         when(this.jsonParser.parse(content)).thenReturn(actor);
         ActivityPubResourceReference resourceReference =
             new ActivityPubResourceReference("Person", "wiki:XWiki.FooBar");
+        URI relativeURI = URI.create("Person/wiki:XWiki.Foobar");
+        when(this.internalURINormalizer.retrieveRelativeURI(resourceReference)).thenReturn(relativeURI);
         when(this.serializer.serialize(resourceReference)).thenReturn(uid);
 
         assertEquals(uid, this.activityPubStorage.storeEntity(actor));
         assertEquals(uid, actor.getId());
-        verifySolrPutAndPrepareGet("wiki:XWiki.FooBar", content);
+        verifySolrPutAndPrepareGet("Person/wiki:XWiki.Foobar", content);
 
-        when(this.urlHandler.belongsToCurrentInstance(uid)).thenReturn(true);
-        ExtendedURL extendedURL = mock(ExtendedURL.class);
-        when(this.urlHandler.getExtendedURL(uid)).thenReturn(extendedURL);
-        when(this.urlResolver.resolve(extendedURL, new ResourceType("activitypub"), Collections.emptyMap()))
-            .thenReturn(resourceReference);
+        when(this.internalURINormalizer.relativizeURI(uid)).thenReturn(relativeURI);
         assertSame(actor, this.activityPubStorage.retrieveEntity(uid));
     }
 
@@ -284,16 +277,14 @@ public class DefaultActivityPubStorageTest
         ActivityPubResourceReference resourceReference =
             new ActivityPubResourceReference("Inbox", "xwiki:XWiki.FooBar-inbox");
         when(this.serializer.serialize(resourceReference)).thenReturn(uid);
+        URI relativeURI = URI.create("Inbox/xwiki:XWiki.FooBar-inbox");
+        when(this.internalURINormalizer.retrieveRelativeURI(resourceReference)).thenReturn(relativeURI);
 
         assertEquals(uid, this.activityPubStorage.storeEntity(inbox));
         assertEquals(uid, inbox.getId());
-        verifySolrPutAndPrepareGet(resourceReference.getUuid(), content);
+        verifySolrPutAndPrepareGet(relativeURI.toASCIIString(), content);
 
-        when(this.urlHandler.belongsToCurrentInstance(uid)).thenReturn(true);
-        ExtendedURL extendedURL = mock(ExtendedURL.class);
-        when(this.urlHandler.getExtendedURL(uid)).thenReturn(extendedURL);
-        when(this.urlResolver.resolve(extendedURL, new ResourceType("activitypub"), Collections.emptyMap()))
-            .thenReturn(resourceReference);
+        when(this.internalURINormalizer.relativizeURI(uid)).thenReturn(relativeURI);
         assertSame(inbox, this.activityPubStorage.retrieveEntity(uid));
 
         // Test store of an Outbox
@@ -309,14 +300,14 @@ public class DefaultActivityPubStorageTest
         when(this.jsonParser.parse(content)).thenReturn(outbox);
         resourceReference = new ActivityPubResourceReference("Outbox", "xwiki:XWiki.FooBar-outbox");
         when(this.serializer.serialize(resourceReference)).thenReturn(uid);
+        relativeURI = URI.create("Outbox/xwiki:XWiki.FooBar-outbox");
+        when(this.internalURINormalizer.retrieveRelativeURI(resourceReference)).thenReturn(relativeURI);
 
         assertEquals(uid, this.activityPubStorage.storeEntity(outbox));
         assertEquals(uid, outbox.getId());
-        verifySolrPutAndPrepareGet(resourceReference.getUuid(), content, 2);
-        when(this.urlHandler.belongsToCurrentInstance(uid)).thenReturn(true);
-        when(this.urlHandler.getExtendedURL(uid)).thenReturn(extendedURL);
-        when(this.urlResolver.resolve(extendedURL, new ResourceType("activitypub"), Collections.emptyMap()))
-            .thenReturn(resourceReference);
+        verifySolrPutAndPrepareGet(relativeURI.toASCIIString(), content, 2);
+
+        when(this.internalURINormalizer.relativizeURI(uid)).thenReturn(relativeURI);
         assertSame(outbox, this.activityPubStorage.retrieveEntity(uid));
     }
 
@@ -327,12 +318,9 @@ public class DefaultActivityPubStorageTest
         SolrDocument solrDocument = mock(SolrDocument.class);
         URI uri = URI.create("http://www.xwiki.org/person/foo");
         when(this.urlHandler.belongsToCurrentInstance(uri)).thenReturn(true);
-        ExtendedURL extendedURL = mock(ExtendedURL.class);
-        when(this.urlHandler.getExtendedURL(uri)).thenReturn(extendedURL);
-        ActivityPubResourceReference activityPubResourceReference = new ActivityPubResourceReference("person", "foo");
-        when(this.urlResolver.resolve(extendedURL, new ResourceType("activitypub"), Collections.emptyMap()))
-            .thenReturn(activityPubResourceReference);
-        when(this.solrClient.getById("foo")).thenReturn(solrDocument);
+        when(this.internalURINormalizer.relativizeURI(uri)).thenReturn(URI.create("person/foo"));
+
+        when(this.solrClient.getById("person/foo")).thenReturn(solrDocument);
         when(solrDocument.isEmpty()).thenReturn(false);
         when(solrDocument.getFieldValue("content")).thenReturn("{person:foo}");
         when(this.jsonParser.parse("{person:foo}")).thenReturn(person);

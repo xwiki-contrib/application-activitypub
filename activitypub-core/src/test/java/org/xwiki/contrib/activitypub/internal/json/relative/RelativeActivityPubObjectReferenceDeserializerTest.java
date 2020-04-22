@@ -27,6 +27,7 @@ import org.mockito.Mock;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
+import org.xwiki.contrib.activitypub.internal.InternalURINormalizer;
 import org.xwiki.contrib.activitypub.internal.json.absolute.DefaultActivityPubObjectReferenceDeserializer;
 import org.xwiki.resource.ResourceReferenceSerializer;
 import org.xwiki.test.junit5.mockito.ComponentTest;
@@ -54,7 +55,7 @@ public class RelativeActivityPubObjectReferenceDeserializerTest
     private RelativeActivityPubObjectReferenceDeserializer objectReferenceDeserializer;
 
     @MockComponent
-    private ResourceReferenceSerializer<ActivityPubResourceReference, URI> serializer;
+    private InternalURINormalizer internalURINormalizer;
 
     @Mock
     private JsonParser jsonParser;
@@ -77,7 +78,7 @@ public class RelativeActivityPubObjectReferenceDeserializerTest
         URI serializedUri = URI.create("http://xwiki.org/foo");
         ActivityPubObjectReference<ActivityPubObject> expectedReference = new ActivityPubObjectReference<>()
             .setLink(serializedUri);
-
+        when(this.internalURINormalizer.retrieveAbsoluteURI(serializedUri)).thenReturn(serializedUri);
         when(this.jsonParser.currentToken()).thenReturn(JsonToken.VALUE_STRING);
         when(this.objectMapper.readValue(this.jsonParser, URI.class)).thenReturn(serializedUri);
 
@@ -96,7 +97,7 @@ public class RelativeActivityPubObjectReferenceDeserializerTest
 
         when(this.jsonParser.currentToken()).thenReturn(JsonToken.VALUE_STRING);
         when(this.objectMapper.readValue(this.jsonParser, URI.class)).thenReturn(serializedUri);
-        when(this.serializer.serialize(new ActivityPubResourceReference("foo", "bar"))).thenReturn(absoluteURI);
+        when(this.internalURINormalizer.retrieveAbsoluteURI(serializedUri)).thenReturn(absoluteURI);
 
         ActivityPubObjectReference<ActivityPubObject> obtained =
             objectReferenceDeserializer.deserialize(this.jsonParser, this.deserializationContext);

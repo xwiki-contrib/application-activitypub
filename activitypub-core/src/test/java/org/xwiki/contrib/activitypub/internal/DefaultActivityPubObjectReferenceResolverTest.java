@@ -21,11 +21,17 @@ package org.xwiki.contrib.activitypub.internal;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import javax.inject.Named;
 import javax.inject.Provider;
 
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.math3.analysis.function.Abs;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
@@ -36,9 +42,12 @@ import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
+import org.xwiki.contrib.activitypub.entities.OrderedCollection;
+import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.test.annotation.BeforeComponent;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
@@ -145,5 +154,62 @@ public class DefaultActivityPubObjectReferenceResolverTest
         ActivityPubException e = assertThrows(ActivityPubException.class,
             () -> this.defaultActivityPubObjectReferenceResolver.resolveReference(reference));
         assertEquals("Error when retrieving the ActivityPub information from [http://test/create/1]", e.getMessage());
+    }
+
+    @Test
+    public void resolveTargetsWithComputedTargets()
+    {
+        ActivityPubObject activityPubObject = mock(ActivityPubObject.class);
+        Set<AbstractActor> result = Collections.singleton(mock(AbstractActor.class));
+        when(activityPubObject.getComputedTargets()).thenReturn(result);
+        assertEquals(result, this.defaultActivityPubObjectReferenceResolver.resolveTargets(activityPubObject));
+    }
+
+    @Test
+    public void resolveTargetsNotComputed() throws Exception
+    {
+        ActivityPubObject activityPubObject = mock(ActivityPubObject.class);
+        when(activityPubObject.getComputedTargets()).thenReturn(null);
+
+        URI followersURI = URI.create("http://foo/followers");
+        URI actorURI1 = URI.create("http://actor1");
+        URI actorURI2 = URI.create("http://actor2");
+        URI actorURI3 = URI.create("http://actor3");
+        AbstractActor actor1 = mock(AbstractActor.class);
+        AbstractActor actor2 = mock(AbstractActor.class);
+        AbstractActor actor3 = mock(AbstractActor.class);
+        when(actor1.getReference()).thenReturn(new ActivityPubObjectReference<>().setLink(actorURI1));
+        when(actor2.getReference()).thenReturn(new ActivityPubObjectReference<>().setLink(actorURI2));
+        when(actor3.getReference()).thenReturn(new ActivityPubObjectReference<>().setLink(actorURI3));
+        when(this.activityPubStorage.retrieveEntity(actorURI1)).thenReturn(actor1);
+        when(this.activityPubStorage.retrieveEntity(actorURI2)).thenReturn(actor2);
+        when(this.activityPubStorage.retrieveEntity(actorURI3)).thenReturn(actor3);
+
+        OrderedCollection<AbstractActor> followers = mock(OrderedCollection.class);
+        when(this.activityPubStorage.retrieveEntity(followersURI)).thenReturn(followers);
+        ActivityPubObjectReference<AbstractActor> reference2 = actor2.getReference();
+        ActivityPubObjectReference<AbstractActor> reference3 = actor3.getReference();
+        when(followers.getAllItems()).thenReturn(Arrays.asList(reference2, reference3));
+
+        when(activityPubObject.getTo()).thenReturn(Arrays.asList(
+            ProxyActor.getPublicActor(),
+            new ProxyActor(actorURI1),
+            new ProxyActor(followersURI),
+            new ProxyActor(actorURI2)
+        ));
+        Set<AbstractActor> expectedSet = new HashSet<>();
+        expectedSet.add(actor1);
+        expectedSet.add(actor2);
+        expectedSet.add(actor3);
+        assertEquals(expectedSet, this.defaultActivityPubObjectReferenceResolver.resolveTargets(activityPubObject));
+    }
+
+    @Test
+    public void resolveTargetsEmpty()
+    {
+        ActivityPubObject activityPubObject = mock(ActivityPubObject.class);
+        when(activityPubObject.getComputedTargets()).thenReturn(null);
+        assertEquals(Collections.emptySet(),
+            this.defaultActivityPubObjectReferenceResolver.resolveTargets(activityPubObject));
     }
 }

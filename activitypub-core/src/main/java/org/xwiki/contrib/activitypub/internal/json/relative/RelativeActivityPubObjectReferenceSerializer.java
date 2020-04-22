@@ -19,24 +19,15 @@
  */
 package org.xwiki.contrib.activitypub.internal.json.relative;
 
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.util.Collections;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
-import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
-import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
+import org.xwiki.contrib.activitypub.internal.InternalURINormalizer;
 import org.xwiki.contrib.activitypub.internal.json.AbstractActivityPubObjectReferenceSerializer;
-import org.xwiki.resource.CreateResourceReferenceException;
-import org.xwiki.resource.ResourceReferenceResolver;
-import org.xwiki.resource.ResourceType;
-import org.xwiki.resource.UnsupportedResourceReferenceException;
-import org.xwiki.url.ExtendedURL;
 
 /**
  * A custom version of {@link AbstractActivityPubObjectReferenceSerializer} that transforms local absolute URI to
@@ -49,32 +40,12 @@ import org.xwiki.url.ExtendedURL;
 @Singleton
 public class RelativeActivityPubObjectReferenceSerializer extends AbstractActivityPubObjectReferenceSerializer
 {
-    private static final ResourceType ACTIVITYPUB_RESOURCETYPE = new ResourceType("activitypub");
-
     @Inject
-    private DefaultURLHandler defaultURLHandler;
-
-    @Inject
-    @Named("activitypub")
-    private ResourceReferenceResolver<ExtendedURL> resourceReferenceResolver;
+    private InternalURINormalizer internalURINormalizer;
 
     @Override
     public URI transformURI(URI inputURI) throws ActivityPubException
     {
-        URI result;
-        if (this.defaultURLHandler.belongsToCurrentInstance(inputURI)) {
-            try {
-                ExtendedURL extendedURL = this.defaultURLHandler.getExtendedURL(inputURI);
-                ActivityPubResourceReference reference = (ActivityPubResourceReference) this.resourceReferenceResolver
-                    .resolve(extendedURL, ACTIVITYPUB_RESOURCETYPE, Collections.emptyMap());
-                result = URI.create(String.format("%s/%s", reference.getEntityType(), reference.getUuid()));
-            } catch (MalformedURLException | CreateResourceReferenceException
-                | UnsupportedResourceReferenceException e) {
-                throw new ActivityPubException(String.format("Error while transforming URI [%s]", inputURI), e);
-            }
-        } else {
-            result = inputURI;
-        }
-        return result;
+        return this.internalURINormalizer.relativizeURI(inputURI);
     }
 }

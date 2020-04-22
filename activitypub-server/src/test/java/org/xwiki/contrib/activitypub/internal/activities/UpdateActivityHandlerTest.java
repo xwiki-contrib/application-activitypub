@@ -22,6 +22,7 @@ package org.xwiki.contrib.activitypub.internal.activities;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -134,32 +135,19 @@ public class UpdateActivityHandlerTest extends AbstractHandlerTest
         UserReference userReference = mock(UserReference.class);
         Person follower1 = new Person()
             .setPreferredUsername("Bar");
-        ActivityPubObjectReference<AbstractActor> follower1Ref = new ActivityPubObjectReference<AbstractActor>()
-            .setObject(follower1);
         Person follower2 = new Person().setPreferredUsername("Baz");
-        ActivityPubObjectReference<AbstractActor> follower2Ref = new ActivityPubObjectReference<AbstractActor>()
-            .setObject(follower2);
-        when(this.activityPubObjectReferenceResolver.resolveReference(follower1Ref)).thenReturn(follower1);
-        when(this.activityPubObjectReferenceResolver.resolveReference(follower2Ref)).thenReturn(follower2);
-        OrderedCollection<AbstractActor> followers = new OrderedCollection<AbstractActor>().setOrderedItems(
-            Arrays.asList(follower1Ref, follower2Ref)
-        ).setId(new URI("http://foo/followers"));
-        ProxyActor followersProxyActor = followers.getProxyActor();
-        ProxyActor follower1Proxy = mock(ProxyActor.class);
-        when(this.activityPubObjectReferenceResolver.resolveReference(follower1Proxy)).thenReturn(follower1);
+
         Update activity = new Update()
             .setObject(new Note())
             .setId(new URI("http://www.xwiki.org"))
-            .setTo(Arrays.asList(followersProxyActor, follower1Proxy));
-        when(this.activityPubObjectReferenceResolver.resolveReference(followersProxyActor)).thenReturn(followers);
-        ActivityPubObjectReference<OrderedCollection<AbstractActor>> followersRef =
-            new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(followers);
+            .setTo(Arrays.asList(new ProxyActor(URI.create("http://followers"))));
+        
+        when(this.activityPubObjectReferenceResolver.resolveTargets(activity))
+            .thenReturn(new HashSet<>(Arrays.asList(follower1, follower2)));
 
-        when(this.activityPubObjectReferenceResolver.resolveReference(followersRef)).thenReturn(followers);
         Person actor = new Person()
             .setPreferredUsername("XWiki.Foo")
-            .setOutbox(new ActivityPubObjectReference<>())
-            .setFollowers(followersRef);
+            .setOutbox(new ActivityPubObjectReference<>());
         Outbox outbox = new Outbox();
         when(this.activityPubObjectReferenceResolver.resolveReference(actor.getOutbox())).thenReturn(outbox);
         when(this.actorHandler.getXWikiUserReference(actor)).thenReturn(userReference);

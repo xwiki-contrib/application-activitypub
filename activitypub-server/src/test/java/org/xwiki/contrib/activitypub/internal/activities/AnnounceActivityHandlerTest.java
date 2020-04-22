@@ -21,7 +21,9 @@ package org.xwiki.contrib.activitypub.internal.activities;/*
 import java.net.URI;
 import java.util.ArrayList;
 
+import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.xwiki.contrib.activitypub.ActivityRequest;
@@ -127,6 +129,7 @@ class AnnounceActivityHandlerTest extends AbstractHandlerTest
         verify(this.notifier).notify(eq(announce), eq(singleton(receiver)));
     }
 
+    @Disabled
     @Test
     void handleOutbox() throws Exception
     {

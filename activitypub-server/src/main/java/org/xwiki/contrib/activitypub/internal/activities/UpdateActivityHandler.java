@@ -78,9 +78,7 @@ public class UpdateActivityHandler extends AbstractActivityHandler<Update>
         outbox.addActivity(update);
         this.activityPubStorage.storeEntity(outbox);
 
-        ResolvedTargets resolvedTargets = this.getTargets(update);
-
-        for (AbstractActor targetActor : resolvedTargets.getActorTargets()) {
+        for (AbstractActor targetActor : this.activityPubObjectReferenceResolver.resolveTargets(update)) {
             update.getObject().setExpand(true);
             HttpMethod postMethod = this.activityPubClient.postInbox(targetActor, update);
 

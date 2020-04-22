@@ -22,7 +22,6 @@ package org.xwiki.contrib.activitypub.internal.storage;
 import java.io.IOException;
 import java.util.Map;
 
-import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
@@ -34,7 +33,6 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.search.solr.AbstractSolrCoreInitializer;
 import org.xwiki.search.solr.SolrException;
-import org.xwiki.search.solr.SolrUtils;
 
 /**
  * Initialize the ActivityPub Solr core to persist the data.
@@ -49,9 +47,6 @@ public class ActivityPubSolrInitializer extends AbstractSolrCoreInitializer
 {
     private static final String NAME = "name";
     private static final long CURRENT_VERSION = 10200000;
-
-    @Inject
-    private SolrUtils solrUtils;
 
     @Override
     protected long getVersion()
@@ -89,6 +84,9 @@ public class ActivityPubSolrInitializer extends AbstractSolrCoreInitializer
                 this.addStringField(ActivityPubStorage.CONTENT_FIELD, false, false);
                 this.addStringField(ActivityPubStorage.XWIKI_REFERENCE_FIELD, false, false);
                 this.addPDateField(ActivityPubStorage.UPDATED_DATE_FIELD, false, false);
+                this.addBooleanField(ActivityPubStorage.IS_PUBLIC_FIELD, false, false);
+                this.addStringField(ActivityPubStorage.AUTHORS_FIELD, true, false);
+                this.addStringField(ActivityPubStorage.TARGETED_FIELD, true, false);
             }
         } catch (IOException | SolrServerException e) {
             throw new SolrException("Error while checking if the schema already exist.", e);

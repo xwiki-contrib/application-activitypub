@@ -25,7 +25,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -49,19 +51,19 @@ import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
+import org.xwiki.contrib.activitypub.internal.InternalURINormalizer;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonParser;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonSerializer;
 import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
-import org.xwiki.resource.ResourceReferenceResolver;
 import org.xwiki.resource.ResourceReferenceSerializer;
-import org.xwiki.resource.ResourceType;
 import org.xwiki.search.solr.Solr;
 import org.xwiki.search.solr.SolrException;
-import org.xwiki.url.ExtendedURL;
+import org.xwiki.search.solr.SolrUtils;
 
 /**
  * Default implementation of {@link ActivityPubStorage}.
@@ -78,7 +80,6 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     private static final String WEBFINGER_TYPE = "webfinger";
     private static final String DEFAULT_QUERY = "*";
     private static final String ACTIVITYPUB = "activitypub";
-    private static final ResourceType ACTIVITYPUB_RESOURCE_TYPE = new ResourceType(ACTIVITYPUB);
 
     @Inject
     private ResourceReferenceSerializer<ActivityPubResourceReference, URI> serializer;
@@ -101,14 +102,16 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     private WebfingerJsonParser webfingerJsonParser;
 
     @Inject
-    @Named(ACTIVITYPUB)
-    private ResourceReferenceResolver<ExtendedURL> resourceReferenceResolver;
-
-    @Inject
     private Logger logger;
 
     @Inject
     private DefaultURLHandler urlHandler;
+
+    @Inject
+    private InternalURINormalizer internalURINormalizer;
+
+    @Inject
+    private SolrUtils solrUtils;
 
     @Inject
     private Solr solr;
@@ -138,6 +141,16 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         inputDocument.addField(CONTENT_FIELD, this.jsonSerializer.serialize(entity));
         inputDocument.addField(UPDATED_DATE_FIELD, new Date());
         inputDocument.addField(XWIKI_REFERENCE_FIELD, entity.getXwikiReference());
+        inputDocument.addField(IS_PUBLIC_FIELD, entity.isPublic());
+        this.solrUtils.set(AUTHORS_FIELD, Objects.isNull(entity.getAttributedTo()) ? Collections.emptyList()
+            : entity.getAttributedTo().stream()
+            .map(ActivityPubObjectReference::getLink)
+            .map(this.internalURINormalizer::relativizeURI)
+            .collect(Collectors.toSet()), inputDocument);
+        this.solrUtils.set(TARGETED_FIELD, this.resolver.resolveTargets(entity).stream()
+            .map(ActivityPubObject::getId)
+            .map(this.internalURINormalizer::relativizeURI)
+            .collect(Collectors.toSet()), inputDocument);
         this.getSolrClient().add(inputDocument);
         this.getSolrClient().commit();
     }
@@ -145,12 +158,13 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     @Override
     public URI storeEntity(ActivityPubObject entity) throws ActivityPubException
     {
-        String uuid;
+        URI storageId;
         try {
             // the entity doesn't have any URI ID yet: we'll create an UID, and store the entity only using this UID
             // So we can retrieve the entity even in case of server URL change.
             // The URI ID will be then computed with this UID.
             if (entity.getId() == null) {
+                String uuid;
                 if (entity instanceof Inbox) {
                     Inbox inbox = (Inbox) entity;
                     if (inbox.getAttributedTo() == null || inbox.getAttributedTo().isEmpty()) {
@@ -175,25 +189,15 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
                 ActivityPubResourceReference resourceReference =
                     new ActivityPubResourceReference(entity.getType(), uuid);
                 entity.setId(this.serializer.serialize(resourceReference));
-            // If the entity already have an URI ID but that one doesn't belong to the current instance
-            // then we use the URI ID as UID
-            } else if (!this.urlHandler.belongsToCurrentInstance(entity.getId())) {
-                uuid = entity.getId().toASCIIString();
-            // If the entity already haven an URI ID that belongs to the current instance, then we compute back the
-            // UID from this URI ID, so that we can reuse it to store information.
+                storageId = this.internalURINormalizer.retrieveRelativeURI(resourceReference);
             } else {
-                ActivityPubResourceReference resourceReference = (ActivityPubResourceReference)
-                    this.resourceReferenceResolver.resolve(
-                    this.urlHandler.getExtendedURL(entity.getId()),
-                    ACTIVITYPUB_RESOURCE_TYPE,
-                    Collections.emptyMap());
-                uuid = resourceReference.getUuid();
+                storageId = this.internalURINormalizer.relativizeURI(entity.getId());
             }
 
             // we don't store the entity ID in the content: instead we rely on the ID put on the document.
             URI entityID = entity.getId();
             entity.setId(null);
-            this.storeInformation(entity, uuid);
+            this.storeInformation(entity, storageId.toASCIIString());
 
             // we put back the ID in case the entity would be used afterwards
             entity.setId(entityID);
@@ -232,16 +236,9 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     public <T extends ActivityPubObject> T retrieveEntity(URI uri) throws ActivityPubException
     {
         T result = null;
-        String uuid;
         try {
-            if (this.urlHandler.belongsToCurrentInstance(uri)) {
-                ActivityPubResourceReference reference = (ActivityPubResourceReference) this.resourceReferenceResolver
-                    .resolve(this.urlHandler.getExtendedURL(uri), ACTIVITYPUB_RESOURCE_TYPE, Collections.emptyMap());
-                uuid = reference.getUuid();
-            } else {
-                uuid = uri.toASCIIString();
-            }
-            SolrDocument solrDocument = this.getSolrClient().getById(uuid);
+            URI storageId = this.internalURINormalizer.relativizeURI(uri);
+            SolrDocument solrDocument = this.getSolrClient().getById(storageId.toASCIIString());
             if (solrDocument != null && !solrDocument.isEmpty() && retrieveSolrDocument(solrDocument)) {
                 result = (T) this.jsonParser.parse((String) solrDocument.getFieldValue(CONTENT_FIELD));
                 result.setId(uri);

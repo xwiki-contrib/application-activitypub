@@ -19,7 +19,10 @@
  */
 package org.xwiki.contrib.activitypub;
 
+import java.util.Set;
+
 import org.xwiki.component.annotation.Role;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.stability.Unstable;
@@ -44,4 +47,16 @@ public interface ActivityPubObjectReferenceResolver
      */
     <T extends ActivityPubObject> T resolveReference(ActivityPubObjectReference<T> reference)
         throws ActivityPubException;
+
+    /**
+     * Resolve the targets of the given object for delivery and perform deduplication.
+     * This methods perform a first resolution of the proxy actors and then store the information with
+     * {@link ActivityPubObject#setComputedTargets(Set)} so it can be reused later.
+     *
+     * @param activityPubObject the object for which to resolve the targets
+     * @return a set of concrete targeted actors.
+     * @since 1.2
+     */
+    @Unstable
+    Set<AbstractActor> resolveTargets(ActivityPubObject activityPubObject);
 }

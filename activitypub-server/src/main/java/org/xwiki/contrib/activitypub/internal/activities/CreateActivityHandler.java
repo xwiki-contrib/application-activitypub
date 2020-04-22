@@ -77,9 +77,7 @@ public class CreateActivityHandler extends AbstractActivityHandler<Create>
         outbox.addActivity(create);
         this.activityPubStorage.storeEntity(outbox);
 
-        ResolvedTargets resolvedTargets = this.getTargets(create);
-
-        for (AbstractActor targetActor : resolvedTargets.getActorTargets()) {
+        for (AbstractActor targetActor : this.activityPubObjectReferenceResolver.resolveTargets(create)) {
             create.getObject().setExpand(true);
             HttpMethod postMethod = this.activityPubClient.postInbox(targetActor, create);
 

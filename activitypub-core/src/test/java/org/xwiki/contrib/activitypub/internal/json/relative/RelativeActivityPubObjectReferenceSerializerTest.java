@@ -21,7 +21,6 @@ package org.xwiki.contrib.activitypub.internal.json.relative;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collections;
 
 import javax.inject.Named;
 
@@ -30,19 +29,14 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.contrib.activitypub.ActivityPubException;
-import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
-import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
-import org.xwiki.contrib.activitypub.internal.json.absolute.DefaultActivityPubObjectReferenceSerializer;
-import org.xwiki.resource.ResourceReferenceResolver;
-import org.xwiki.resource.ResourceType;
+import org.xwiki.contrib.activitypub.internal.InternalURINormalizer;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
-import org.xwiki.url.ExtendedURL;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -54,6 +48,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * Tests for {@link RelativeActivityPubObjectReferenceSerializer}.
+ *
+ * @version $Id$
+ */
 @ComponentTest
 public class RelativeActivityPubObjectReferenceSerializerTest
 {
@@ -64,15 +63,11 @@ public class RelativeActivityPubObjectReferenceSerializerTest
     @Named("context")
     private ComponentManager componentManager;
 
+    @MockComponent
+    private InternalURINormalizer internalURINormalizer;
+
     @Mock
     private ActivityPubStorage activityPubStorage;
-
-    @MockComponent
-    private DefaultURLHandler defaultURLHandler;
-
-    @MockComponent
-    @Named("activitypub")
-    private ResourceReferenceResolver<ExtendedURL> resourceReferenceResolver;
 
     @BeforeEach
     public void setup() throws Exception
@@ -81,10 +76,11 @@ public class RelativeActivityPubObjectReferenceSerializerTest
     }
 
     @Test
-    void serializeIsRemoteLink() throws IOException
+    void serializeIsRemoteLink() throws Exception
     {
-        ActivityPubObjectReference<ActivityPubObject> ref =
-            new ActivityPubObjectReference<>().setLink(URI.create("http://mylink/"));
+        URI remoteLink = URI.create("http://mylink/");
+        ActivityPubObjectReference<ActivityPubObject> ref = new ActivityPubObjectReference<>().setLink(remoteLink);
+        when(this.internalURINormalizer.relativizeURI(remoteLink)).thenReturn(remoteLink);
         JsonGenerator jsonGenerator = mock(JsonGenerator.class);
         SerializerProvider serializeProvider = mock(SerializerProvider.class);
         this.activityPubObjectReferenceSerializer.serialize(ref, jsonGenerator, serializeProvider);
@@ -98,14 +94,7 @@ public class RelativeActivityPubObjectReferenceSerializerTest
         ActivityPubObjectReference<ActivityPubObject> ref = new ActivityPubObjectReference<>().setLink(uri);
         JsonGenerator jsonGenerator = mock(JsonGenerator.class);
         SerializerProvider serializeProvider = mock(SerializerProvider.class);
-        when(this.defaultURLHandler.belongsToCurrentInstance(uri)).thenReturn(true);
-        ExtendedURL extendedURL = mock(ExtendedURL.class);
-        when(this.defaultURLHandler.getExtendedURL(uri)).thenReturn(extendedURL);
-        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("foo", "bar");
-        when(this.resourceReferenceResolver
-            .resolve(extendedURL, new ResourceType("activitypub"), Collections.emptyMap()))
-            .thenReturn(resourceReference);
-
+        when(this.internalURINormalizer.relativizeURI(uri)).thenReturn(URI.create("foo/bar"));
         this.activityPubObjectReferenceSerializer.serialize(ref, jsonGenerator, serializeProvider);
         verify(jsonGenerator).writeString("foo/bar");
     }
@@ -117,11 +106,12 @@ public class RelativeActivityPubObjectReferenceSerializerTest
         ActivityPubObjectReference<ActivityPubObject> ref = new ActivityPubObjectReference<>().setObject(object);
         JsonGenerator jsonGenerator = mock(JsonGenerator.class);
         SerializerProvider serializeProvider = mock(SerializerProvider.class);
-        String uriString = "http://newuri";
-        when(this.activityPubStorage.storeEntity(object)).thenReturn(URI.create(uriString));
+        URI uri = URI.create("http://newuri");
+        when(this.activityPubStorage.storeEntity(object)).thenReturn(uri);
+        when(this.internalURINormalizer.relativizeURI(uri)).thenReturn(uri);
 
         this.activityPubObjectReferenceSerializer.serialize(ref, jsonGenerator, serializeProvider);
-        verify(jsonGenerator).writeString(uriString);
+        verify(jsonGenerator).writeString(uri.toASCIIString());
     }
 
     @Test
@@ -133,13 +123,7 @@ public class RelativeActivityPubObjectReferenceSerializerTest
         SerializerProvider serializeProvider = mock(SerializerProvider.class);
         URI uri = URI.create("http://myxwiki.org/foo/bar");
         when(this.activityPubStorage.storeEntity(object)).thenReturn(uri);
-        when(this.defaultURLHandler.belongsToCurrentInstance(uri)).thenReturn(true);
-        ExtendedURL extendedURL = mock(ExtendedURL.class);
-        when(this.defaultURLHandler.getExtendedURL(uri)).thenReturn(extendedURL);
-        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("foo", "bar");
-        when(this.resourceReferenceResolver
-            .resolve(extendedURL, new ResourceType("activitypub"), Collections.emptyMap()))
-            .thenReturn(resourceReference);
+        when(this.internalURINormalizer.relativizeURI(uri)).thenReturn(URI.create("foo/bar"));
 
         this.activityPubObjectReferenceSerializer.serialize(ref, jsonGenerator, serializeProvider);
         verify(jsonGenerator).writeString("foo/bar");

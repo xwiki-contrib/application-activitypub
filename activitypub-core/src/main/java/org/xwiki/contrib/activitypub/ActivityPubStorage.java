@@ -57,6 +57,21 @@ public interface ActivityPubStorage
      * Storage field used to store the Updated Date of the documents.
      */
     String UPDATED_DATE_FIELD = "updatedDate";
+    /**
+     * Storage field used to store the authors of an entity.
+     * (retrieved from {@link ActivityPubObject#getAttributedTo()})
+     */
+    String AUTHORS_FIELD = "authors";
+    /**
+     * Storage field used to store the targets of an entity.
+     * (retrieved from {@link ActivityPubObject#getComputedTargets()})
+     */
+    String TARGETED_FIELD = "targeted";
+    /**
+     * Storage field used to store the information if the entity is public or not.
+     * (retrieved from {@link ActivityPubObject#isPublic()})
+     */
+    String IS_PUBLIC_FIELD = "isPublic";
 
     /**
      * Check if the current storage is ready to be used.

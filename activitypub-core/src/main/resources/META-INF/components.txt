@@ -13,3 +13,4 @@ org.xwiki.contrib.activitypub.internal.json.relative.RelativeActivityPubJsonSeri
 org.xwiki.contrib.activitypub.internal.json.relative.RelativeActivityPubObjectReferenceDeserializer
 org.xwiki.contrib.activitypub.internal.json.relative.RelativeActivityPubObjectReferenceSerializer
 org.xwiki.contrib.activitypub.internal.json.relative.RelativeObjectMapperConfiguration
+org.xwiki.contrib.activitypub.internal.InternalURINormalizer
