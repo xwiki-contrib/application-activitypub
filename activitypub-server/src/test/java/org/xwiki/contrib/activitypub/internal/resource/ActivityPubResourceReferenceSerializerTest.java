@@ -74,4 +74,17 @@ public class ActivityPubResourceReferenceSerializerTest
         URI expectedURI = new URI("http://www.xwiki.org/activitypub/foobar/myuid?param1=bazbuz&param2=42");
         assertEquals(expectedURI, this.serializer.serialize(resourceReference));
     }
+
+    @Test
+    public void serializeWithXWikiReference() throws Exception
+    {
+        ActivityPubResourceReference resourceReference =
+            new ActivityPubResourceReference("Person", "xwiki:XWiki.Admin");
+        resourceReference.addParameter("param1", "bazbuz");
+        resourceReference.addParameter("param2", 42);
+
+        URI expectedURI =
+            new URI("http://www.xwiki.org/activitypub/Person/xwiki%253AXWiki.Admin?param1=bazbuz&param2=42");
+        assertEquals(expectedURI, this.serializer.serialize(resourceReference));
+    }
 }

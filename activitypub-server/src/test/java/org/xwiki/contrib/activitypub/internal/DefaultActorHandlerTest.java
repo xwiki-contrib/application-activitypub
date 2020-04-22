@@ -55,7 +55,9 @@ import org.xwiki.contrib.activitypub.webfinger.WebfingerClient;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 import org.xwiki.contrib.activitypub.webfinger.entities.Link;
+import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.EntityReferenceResolver;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.resource.ResourceReferenceSerializer;
@@ -143,6 +145,9 @@ public class DefaultActorHandlerTest
     @MockComponent
     private ActivityPubIdentifierService activityPubIdentifierService;
 
+    @MockComponent
+    private EntityReferenceResolver<String> entityReferenceResolver;
+
     @Mock
     private UserReference fooUserReference;
 
@@ -158,6 +163,7 @@ public class DefaultActorHandlerTest
     public void setup() throws Exception
     {
         // Foo is an existing user, named Foo Foo.
+        when(this.xWikiUserBridge.resolveUser("xwiki:XWiki.Foo")).thenReturn(this.fooUserReference);
         when(this.xWikiUserBridge.resolveUser("XWiki.Foo")).thenReturn(this.fooUserReference);
         when(this.xWikiUserBridge.resolveUser("Foo")).thenReturn(this.fooUserReference);
         when(this.xWikiUserBridge.isExistingUser("XWiki.Foo")).thenReturn(true);
@@ -168,8 +174,10 @@ public class DefaultActorHandlerTest
         when(fooUser.getFirstName()).thenReturn("Foo");
         when(fooUser.getLastName()).thenReturn("Foo");
         when(this.xWikiUserBridge.getUserLogin(this.fooUserReference)).thenReturn("XWiki.Foo");
-        this.fooUserURI = new URI("http://domain.org/xwiki/activitypub/Person/Foo");
-        when(this.serializer.serialize(new ActivityPubResourceReference("Person", "XWiki.Foo"))).thenReturn(fooUserURI);
+        this.fooUserURI = new URI("http://domain.org/xwiki/activitypub/Person/xwiki%3AXWiki.Foo");
+        when(this.serializer.serialize(new ActivityPubResourceReference("Person", "xwiki:XWiki.Foo")))
+            .thenReturn(fooUserURI);
+        when(this.userReferenceSerializer.serialize(fooUserReference)).thenReturn("xwiki:XWiki.Foo");
 
         // Bar does not exist.
         when(this.xWikiUserBridge.resolveUser("XWiki.Bar")).thenReturn(this.barUserReference);
@@ -222,7 +230,8 @@ public class DefaultActorHandlerTest
             .setFollowing(
                 new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(new OrderedCollection<>()))
             .setName("Foo Foo")
-            .setId(new URI(GENERIC_ACTOR_ID));
+            .setId(new URI(GENERIC_ACTOR_ID))
+            .setXwikiReference("xwiki:XWiki.Foo");
 
         AbstractActor obtainedActor = this.actorHandler.getActor(this.fooUserReference);
         assertEquals(expectedActor, obtainedActor);
@@ -243,7 +252,8 @@ public class DefaultActorHandlerTest
     public void getActorWithStoredService() throws Exception
     {
         WikiReference wikiReference = new WikiReference("FooWiki");
-        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("Service", "FooWiki");
+        when(this.entityReferenceSerializer.serialize(wikiReference)).thenReturn("wiki:FooWiki");
+        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("Service", "wiki:FooWiki");
         URI uri = URI.create("http://foowiki");
         when(this.serializer.serialize(resourceReference)).thenReturn(uri);
 
@@ -358,7 +368,8 @@ public class DefaultActorHandlerTest
             .setFollowing(
                 new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(new OrderedCollection<>()))
             .setName("Foo Foo")
-            .setId(new URI(GENERIC_ACTOR_ID));
+            .setId(new URI(GENERIC_ACTOR_ID))
+            .setXwikiReference("xwiki:XWiki.Foo");
 
         assertEquals(expectedActor, this.actorHandler.getActor("Foo"));
         assertEquals(expectedActor, this.actorHandler.getActor("XWiki.Foo"));
@@ -426,7 +437,7 @@ public class DefaultActorHandlerTest
     public void getCurrentActor() throws Exception
     {
         when(this.xWikiUserBridge.isExistingUser(CurrentUserReference.INSTANCE)).thenReturn(true);
-        when(this.xWikiUserBridge.getUserLogin(CurrentUserReference.INSTANCE)).thenReturn("XWiki.Foo");
+        when(this.userReferenceSerializer.serialize(CurrentUserReference.INSTANCE)).thenReturn("xwiki:XWiki.Foo");
         AbstractActor expectedActor = new Person().setPreferredUsername("XWiki.Foo").setPreferredUsername("FooWiki");
         when(this.activityPubStorage.retrieveEntity(this.fooUserURI)).thenReturn(expectedActor);
 
@@ -527,10 +538,13 @@ public class DefaultActorHandlerTest
     {
         Person expectedPerson = new Person().setPreferredUsername("XWiki.Foo");
         when(this.activityPubStorage.retrieveEntity(this.fooUserURI)).thenReturn(expectedPerson);
-        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("Person", "Foo");
+        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("Person", "xwiki:XWiki.Foo");
         assertSame(expectedPerson, this.actorHandler.getActor(resourceReference));
 
-        resourceReference = new ActivityPubResourceReference("Service", "SubWiki");
+        resourceReference = new ActivityPubResourceReference("Service", "wiki:SubWiki");
+        WikiReference wikiReference = new WikiReference("SubWiki");
+        when(this.entityReferenceResolver.resolve("wiki:SubWiki", EntityType.WIKI)).thenReturn(wikiReference);
+        when(this.entityReferenceSerializer.serialize(wikiReference)).thenReturn("wiki:SubWiki");
         URI subwikiURI = URI.create("http://subwiki");
         when(this.serializer.serialize(resourceReference)).thenReturn(subwikiURI);
         Service expectedService = mock(Service.class);

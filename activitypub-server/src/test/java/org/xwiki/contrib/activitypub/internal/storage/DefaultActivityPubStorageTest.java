@@ -237,17 +237,20 @@ public class DefaultActivityPubStorageTest
     public void storeActor() throws Exception
     {
         // Test store of an Actor
-        URI uid = new URI("http://domain.org/xwiki/activitypub/Person/FooBar");
+        URI uid = new URI("http://domain.org/xwiki/activitypub/Person/xwiki%3AXWiki.FooBar");
         String content = "{user:FooBar}";
-        AbstractActor actor = new Person().setPreferredUsername("FooBar");
+        AbstractActor actor = new Person()
+            .setPreferredUsername("FooBar")
+            .setXwikiReference("wiki:XWiki.FooBar");
         when(this.jsonSerializer.serialize(actor)).thenReturn(content);
         when(this.jsonParser.parse(content)).thenReturn(actor);
-        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("Person", "FooBar");
+        ActivityPubResourceReference resourceReference =
+            new ActivityPubResourceReference("Person", "wiki:XWiki.FooBar");
         when(this.serializer.serialize(resourceReference)).thenReturn(uid);
 
         assertEquals(uid, this.activityPubStorage.storeEntity(actor));
         assertEquals(uid, actor.getId());
-        verifySolrPutAndPrepareGet("FooBar", content);
+        verifySolrPutAndPrepareGet("wiki:XWiki.FooBar", content);
 
         when(this.urlHandler.belongsToCurrentInstance(uid)).thenReturn(true);
         ExtendedURL extendedURL = mock(ExtendedURL.class);
@@ -267,16 +270,19 @@ public class DefaultActivityPubStorageTest
 
         assertEquals("Cannot store an inbox without owner.", activityPubException.getCause().getMessage());
 
-        URI uid = new URI("http://domain.org/xwiki/activitypub/Inbox/FooBar-inbox");
+        URI uid = new URI("http://domain.org/xwiki/activitypub/Inbox/xwiki%3AXWiki.FooBar-inbox");
         String content = "{inbox:FooBar}";
-        Person actor = new Person().setPreferredUsername("FooBar");
+        Person actor = new Person()
+            .setPreferredUsername("FooBar")
+            .setXwikiReference("xwiki:XWiki.FooBar");
         ActivityPubObjectReference<AbstractActor> objectReference =
             new ActivityPubObjectReference<AbstractActor>().setObject(actor);
         when(this.resolver.resolveReference(objectReference)).thenReturn(actor);
         Inbox inbox = new Inbox().setAttributedTo(Collections.singletonList(objectReference));
         when(this.jsonSerializer.serialize(inbox)).thenReturn(content);
         when(this.jsonParser.parse(content)).thenReturn(inbox);
-        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("Inbox", "FooBar-inbox");
+        ActivityPubResourceReference resourceReference =
+            new ActivityPubResourceReference("Inbox", "xwiki:XWiki.FooBar-inbox");
         when(this.serializer.serialize(resourceReference)).thenReturn(uid);
 
         assertEquals(uid, this.activityPubStorage.storeEntity(inbox));
@@ -296,12 +302,12 @@ public class DefaultActivityPubStorageTest
         });
         assertEquals("Cannot store an outbox without owner.", activityPubException.getCause().getMessage());
 
-        uid = new URI("http://domain.org/xwiki/activitypub/Outbox/FooBar-outbox");
+        uid = new URI("http://domain.org/xwiki/activitypub/Outbox/xwiki%3AXWiki.FooBar-outbox");
         content = "{outbox:FooBar}";
         Outbox outbox = new Outbox().setAttributedTo(Collections.singletonList(objectReference));
         when(this.jsonSerializer.serialize(outbox)).thenReturn(content);
         when(this.jsonParser.parse(content)).thenReturn(outbox);
-        resourceReference = new ActivityPubResourceReference("Outbox", "FooBar-outbox");
+        resourceReference = new ActivityPubResourceReference("Outbox", "xwiki:XWiki.FooBar-outbox");
         when(this.serializer.serialize(resourceReference)).thenReturn(uid);
 
         assertEquals(uid, this.activityPubStorage.storeEntity(outbox));

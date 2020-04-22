@@ -19,9 +19,11 @@
  */
 package org.xwiki.contrib.activitypub.internal.resource;
 
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +32,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
@@ -65,25 +66,19 @@ public class ActivityPubResourceReferenceSerializer implements
     {
         List<String> segments = new ArrayList<>();
 
-        // Add the resource type segment.
-        segments.add("activitypub");
-        segments.add(resource.getEntityType());
-        String uuid = resource.getUuid();
-        String dot = ".";
-        if (uuid.contains(dot)) {
-            segments.add(StringUtils.substringAfterLast(uuid, dot));
-        } else {
-            segments.add(uuid);
-        }
-
-        // Add all optional parameters
-        ExtendedURL extendedURL = new ExtendedURL(segments, resource.getParameters());
-
-        extendedURL = this.extendedURLNormalizer.normalize(extendedURL);
-
-        // The following is a nasty hack, we should rely on URLURLNormarlizer once
-        // https://jira.xwiki.org/browse/XWIKI-17023 is fixed.
         try {
+            // Add the resource type segment.
+            segments.add("activitypub");
+            segments.add(resource.getEntityType());
+            segments.add(URLEncoder.encode(resource.getUuid(), "UTF-8"));
+
+            // Add all optional parameters
+            ExtendedURL extendedURL = new ExtendedURL(segments, resource.getParameters());
+
+            extendedURL = this.extendedURLNormalizer.normalize(extendedURL);
+
+            // The following is a nasty hack, we should rely on URLURLNormarlizer once
+            // https://jira.xwiki.org/browse/XWIKI-17023 is fixed.
             URIBuilder uriBuilder = new URIBuilder(this.urlHandler.getServerUrl().toURI());
             uriBuilder.setPathSegments(extendedURL.getSegments());
             for (Map.Entry<String, List<String>> parameter : extendedURL.getParameters().entrySet()) {
@@ -101,7 +96,7 @@ public class ActivityPubResourceReferenceSerializer implements
                 uriBuilder.setPort(-1);
             }
             return uriBuilder.build();
-        } catch (MalformedURLException | URISyntaxException e) {
+        } catch (MalformedURLException | URISyntaxException | UnsupportedEncodingException e) {
             throw new SerializeResourceReferenceException(
                 String.format("Error while serializing [%s] to URI.", resource), e);
         }

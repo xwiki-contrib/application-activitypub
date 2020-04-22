@@ -60,7 +60,9 @@ import org.xwiki.contrib.activitypub.webfinger.WebfingerClient;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
 import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 import org.xwiki.contrib.activitypub.webfinger.entities.Link;
+import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.EntityReferenceResolver;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.model.reference.WikiReference;
 import org.xwiki.resource.ResourceReferenceSerializer;
@@ -127,6 +129,9 @@ public class DefaultActorHandler implements ActorHandler
     private EntityReferenceSerializer<String> entityReferenceSerializer;
 
     @Inject
+    private EntityReferenceResolver<String> entityReferenceResolver;
+
+    @Inject
     private DefaultURLHandler defaultURLHandler;
 
     @Inject
@@ -165,8 +170,9 @@ public class DefaultActorHandler implements ActorHandler
     {
         String errorMessage = String.format("Cannot find any user with reference [%s]", userReference);
         if (this.xWikiUserBridge.isExistingUser(userReference)) {
-            String login = this.xWikiUserBridge.getUserLogin(userReference);
-            ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("Person", login);
+            String serializedReference = this.userReferenceSerializer.serialize(userReference);
+            ActivityPubResourceReference resourceReference =
+                new ActivityPubResourceReference("Person", serializedReference);
             Person actor;
             try {
                 actor = this.activityPubStorage.retrieveEntity(this.serializer.serialize(resourceReference));
@@ -184,7 +190,8 @@ public class DefaultActorHandler implements ActorHandler
                     fullname = firstName;
                 }
                 DocumentReference dr = this.xWikiUserBridge.getDocumentReference(userReference);
-                actor = this.createActor(new Person(), fullname, dr.getName(), dr.getWikiReference().getName());
+                actor = this.createActor(new Person(), fullname, dr.getName(), dr.getWikiReference().getName(),
+                    serializedReference);
             }
             return actor;
         } else {
@@ -195,29 +202,30 @@ public class DefaultActorHandler implements ActorHandler
     @Override
     public Service getActor(WikiReference wikiReference) throws ActivityPubException
     {
-        String login = wikiReference.getName();
-        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("Service", login);
+        String serializedReference = this.entityReferenceSerializer.serialize(wikiReference);
+        ActivityPubResourceReference resourceReference =
+            new ActivityPubResourceReference("Service", serializedReference);
         Service actor;
         try {
             actor = this.activityPubStorage.retrieveEntity(this.serializer.serialize(resourceReference));
         } catch (SerializeResourceReferenceException | UnsupportedResourceReferenceException e) {
             throw new ActivityPubException(
-                String.format("Error while serializing reference to find actor [%s]", login), e);
+                String.format("Error while serializing reference to find actor [%s]", serializedReference), e);
         }
         if (actor == null) {
-            String name = String.format("Wiki %s", login);
-            actor = this.createActor(new Service(), name, null, login);
+            String name = String.format("Wiki %s", wikiReference.getName());
+            actor = this.createActor(new Service(), name, null, wikiReference.getName(), serializedReference);
         }
         return actor;
     }
 
     private <T extends AbstractActor> T createActor(T actor, String fullName, String username,
-        String wikiName)
+        String wikiName, String serializedReference)
         throws ActivityPubException
     {
         actor.setName(fullName);
-
         actor.setPreferredUsername(this.activityPubIdentifierService.createIdentifier(actor, username, wikiName));
+        actor.setXwikiReference(serializedReference);
 
         Inbox inbox = new Inbox();
         inbox.setAttributedTo(
@@ -366,7 +374,8 @@ public class DefaultActorHandler implements ActorHandler
             UserReference userReference = this.xWikiUserBridge.resolveUser(uid);
             return this.getActor(userReference);
         } else if ("service".equalsIgnoreCase(entityType)) {
-            return this.getActor(new WikiReference(uid));
+            WikiReference wikiReference = (WikiReference) this.entityReferenceResolver.resolve(uid, EntityType.WIKI);
+            return this.getActor(wikiReference);
         } else {
             throw new ActivityPubException(String.format(STANDARD_ERROR_MESSAGE, entityType));
         }

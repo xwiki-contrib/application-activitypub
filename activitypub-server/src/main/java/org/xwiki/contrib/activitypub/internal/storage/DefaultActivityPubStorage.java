@@ -166,7 +166,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
                     AbstractActor owner = this.resolver.resolveReference(outbox.getAttributedTo().get(0));
                     uuid = getActorEntityUID(owner, OUTBOX_SUFFIX_ID);
                 } else if (entity instanceof AbstractActor) {
-                    uuid = ((AbstractActor) entity).getPreferredUsername();
+                    uuid = entity.getXwikiReference();
                 } else {
                     // FIXME: we cannot rely on hashCode because of possible collisions and size limitation,
                     //  but we shouldn't rely on total randomness because of dedup.
@@ -205,7 +205,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
 
     private String getActorEntityUID(AbstractActor actor, String entitySuffix)
     {
-        return String.format("%s-%s", actor.getPreferredUsername(), entitySuffix);
+        return String.format("%s-%s", actor.getXwikiReference(), entitySuffix);
     }
 
     private boolean retrieveSolrDocument(SolrDocument solrDocument)

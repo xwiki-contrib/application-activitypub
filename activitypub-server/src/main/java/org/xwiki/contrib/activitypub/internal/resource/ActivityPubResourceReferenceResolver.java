@@ -19,6 +19,8 @@
  */
 package org.xwiki.contrib.activitypub.internal.resource;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.List;
 import java.util.Map;
 
@@ -43,25 +45,31 @@ import org.xwiki.url.internal.AbstractResourceReferenceResolver;
 @Singleton
 public class ActivityPubResourceReferenceResolver extends AbstractResourceReferenceResolver
 {
+    private static final String DEFAULT_LOCALE = "UTF-8";
+
     @Override
     public ActivityPubResourceReference resolve(ExtendedURL extendedURL, ResourceType resourceType,
         Map<String, Object> parameters) throws CreateResourceReferenceException, UnsupportedResourceReferenceException
     {
         ActivityPubResourceReference reference;
         List<String> segments = extendedURL.getSegments();
-        if (segments.size() == 2) {
-            String type = segments.get(0);
-            String uuid = segments.get(1);
-            reference = new ActivityPubResourceReference(type, uuid);
-            copyParameters(extendedURL, reference);
-        } else if (segments.size() == 3 && "activitypub".equals(segments.get(0))) {
-            String type = segments.get(1);
-            String uuid = segments.get(2);
-            reference = new ActivityPubResourceReference(type, uuid);
-            copyParameters(extendedURL, reference);
-        } else {
-            throw new CreateResourceReferenceException(String.format("Invalid ActivityPub URL format [%s]",
-                extendedURL.toString()));
+        try {
+            if (segments.size() == 2) {
+                String type = segments.get(0);
+                String uuid = URLDecoder.decode(segments.get(1), DEFAULT_LOCALE);
+                reference = new ActivityPubResourceReference(type, uuid);
+                copyParameters(extendedURL, reference);
+            } else if (segments.size() == 3 && "activitypub".equals(segments.get(0))) {
+                String type = segments.get(1);
+                String uuid = URLDecoder.decode(segments.get(2), DEFAULT_LOCALE);
+                reference = new ActivityPubResourceReference(type, uuid);
+                copyParameters(extendedURL, reference);
+            } else {
+                throw new CreateResourceReferenceException(String.format("Invalid ActivityPub URL format [%s]",
+                    extendedURL.toString()));
+            }
+        } catch (UnsupportedEncodingException e) {
+            throw new CreateResourceReferenceException("Error while decoding the UID", e);
         }
         return reference;
     }

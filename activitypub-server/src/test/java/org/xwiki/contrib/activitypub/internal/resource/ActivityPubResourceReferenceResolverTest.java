@@ -77,4 +77,30 @@ public class ActivityPubResourceReferenceResolverTest
                 new ResourceType("activitypub"),
                 Collections.emptyMap()));
     }
+
+    @Test
+    public void resolveWithXWikiReference()
+        throws CreateResourceReferenceException, UnsupportedResourceReferenceException
+    {
+        ExtendedURL extendedURL = new ExtendedURL(Arrays.asList("Person", "xwiki%3AXWiki.Foo"),
+            Collections.singletonMap("test", Arrays.asList("42", "43")));
+
+        ActivityPubResourceReference resourceReference = new ActivityPubResourceReference("Person", "xwiki:XWiki.Foo");
+        resourceReference.addParameter("test", "42");
+        resourceReference.addParameter("test", "43");
+
+        assertEquals(resourceReference,
+            this.resourceReferenceResolver.resolve(
+                extendedURL,
+                new ResourceType("activitypub"),
+                Collections.emptyMap()));
+
+        extendedURL = new ExtendedURL(Arrays.asList("activitypub", "Person", "xwiki%3AXWiki.Foo"),
+            Collections.singletonMap("test", Arrays.asList("42", "43")));
+        assertEquals(resourceReference,
+            this.resourceReferenceResolver.resolve(
+                extendedURL,
+                new ResourceType("activitypub"),
+                Collections.emptyMap()));
+    }
 }
