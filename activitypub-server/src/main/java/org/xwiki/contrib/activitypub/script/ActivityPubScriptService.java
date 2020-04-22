@@ -249,6 +249,7 @@ public class ActivityPubScriptService implements ScriptService
      * @return {@code true} iff the request has been sent properly.
      * @since 1.2
      */
+    @Unstable
     public FollowResult follow(AbstractActor remoteActor, AbstractActor sourceActor)
     {
         FollowResult result = new FollowResult("activitypub.follow.followNotRequested");

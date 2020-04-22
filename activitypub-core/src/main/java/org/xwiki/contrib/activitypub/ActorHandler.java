@@ -63,6 +63,7 @@ public interface ActorHandler
      * @throws ActivityPubException in case of error when retrieving or creating the {@link Service}.
      * @since 1.2
      */
+    @Unstable
     Service getActor(WikiReference wikiReference) throws ActivityPubException;
 
     /**
@@ -89,6 +90,7 @@ public interface ActorHandler
      * @throws ActivityPubException in case of problem to resolve the actor.
      * @since 1.2
      */
+    @Unstable
     AbstractActor getActor(ActivityPubResourceReference resourceReference) throws ActivityPubException;
 
     /**
@@ -104,6 +106,7 @@ public interface ActorHandler
      * @throws ActivityPubException in case of error for processing the information.
      * @since 1.2
      */
+    @Unstable
     AbstractActor getActor(String actorIdentifier) throws ActivityPubException;
 
     /**
@@ -171,5 +174,6 @@ public interface ActorHandler
      * @throws ActivityPubException In case of error during the public key generation.
      * @since 1.2
      */
+    @Unstable
     PublicKey initPublicKey(AbstractActor actor) throws ActivityPubException;
 }

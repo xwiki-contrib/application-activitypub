@@ -68,11 +68,13 @@ public interface ActivityPubConfiguration
      * @return the value of the page notification configuration value.
      * @since 1.2
      */
+    @Unstable
     boolean isPagesNotification();
 
     /**
      * @return the value of the user page notificatin value.
      * @since 1.2
      */
+    @Unstable
     boolean isUserPagesNotification();
 }

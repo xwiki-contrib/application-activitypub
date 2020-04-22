@@ -20,6 +20,7 @@
 package org.xwiki.contrib.activitypub.script;
 
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
+import org.xwiki.stability.Unstable;
 
 /**
  * Result of a follow action ({@link ActivityPubScriptService#follow(AbstractActor)}).
@@ -29,6 +30,7 @@ import org.xwiki.contrib.activitypub.entities.AbstractActor;
  * @version $Id$
  * @since 1.2
  */
+@Unstable
 public class FollowResult
 {
     private boolean success;

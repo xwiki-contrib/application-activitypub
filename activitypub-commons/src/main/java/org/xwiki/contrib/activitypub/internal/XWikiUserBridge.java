@@ -31,6 +31,7 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.WikiReference;
+import org.xwiki.stability.Unstable;
 import org.xwiki.user.UserManager;
 import org.xwiki.user.UserProperties;
 import org.xwiki.user.UserPropertiesResolver;
@@ -126,6 +127,7 @@ public class XWikiUserBridge
      * @return the current user reference.
      * @since 1.2
      */
+    @Unstable
     public UserReference getCurrentUserReference()
     {
         XWikiContext xWikiContext = this.contextProvider.get();
