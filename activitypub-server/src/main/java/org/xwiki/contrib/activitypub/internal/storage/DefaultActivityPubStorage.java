@@ -190,7 +190,13 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
                 uuid = resourceReference.getUuid();
             }
 
+            // we don't store the entity ID in the content: instead we rely on the ID put on the document.
+            URI entityID = entity.getId();
+            entity.setId(null);
             this.storeInformation(entity, uuid);
+
+            // we put back the ID in case the entity would be used afterwards
+            entity.setId(entityID);
             return entity.getId();
         } catch (Exception e) {
             throw new ActivityPubException(String.format("Error while storing [%s].", entity), e);
@@ -238,6 +244,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
             SolrDocument solrDocument = this.getSolrClient().getById(uuid);
             if (solrDocument != null && !solrDocument.isEmpty() && retrieveSolrDocument(solrDocument)) {
                 result = (T) this.jsonParser.parse((String) solrDocument.getFieldValue(CONTENT_FIELD));
+                result.setId(uri);
             }
             return result;
         } catch (Exception e) {

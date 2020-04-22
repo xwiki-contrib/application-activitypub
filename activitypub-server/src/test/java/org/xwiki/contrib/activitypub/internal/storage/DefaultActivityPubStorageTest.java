@@ -191,9 +191,8 @@ public class DefaultActivityPubStorageTest
     {
         // Test store of an entity with ID
         URL object2URL = new URL("http://www.xwiki.org/xwiki/activitypub/object/42");
-        ActivityPubObject object2 = new ActivityPubObject()
-            .setName("foobar")
-            .setId(object2URL.toURI());
+        ActivityPubObject object2 = mock(ActivityPubObject.class);
+        when(object2.getId()).thenReturn(object2URL.toURI());
         String content = "{foobar}";
         when(this.jsonSerializer.serialize(object2)).thenReturn(content);
         when(this.jsonParser.parse(content)).thenReturn(object2);
@@ -202,7 +201,11 @@ public class DefaultActivityPubStorageTest
         // ID match server URL
         assertEquals(object2URL.toURI(), this.activityPubStorage.storeEntity(object2));
         verifySolrPutAndPrepareGet(object2URL.toString(), content);
+        verify(object2).setId(null);
+        verify(object2).setId(object2URL.toURI());
+
         assertSame(object2, this.activityPubStorage.retrieveEntity(object2URL.toURI()));
+        verify(object2, times(2)).setId(object2URL.toURI());
     }
 
     @Test
@@ -210,9 +213,8 @@ public class DefaultActivityPubStorageTest
     {
         // Test store of an entity with ID
         URL object2URL = new URL("http://www.xwiki.org/xwiki/activitypub/object/42");
-        ActivityPubObject object2 = new ActivityPubObject()
-            .setName("foobar")
-            .setId(object2URL.toURI());
+        ActivityPubObject object2 = mock(ActivityPubObject.class);
+        when(object2.getId()).thenReturn(object2URL.toURI());
         String content = "{foobar}";
         when(this.jsonSerializer.serialize(object2)).thenReturn(content);
         when(this.jsonParser.parse(content)).thenReturn(object2);
@@ -225,7 +227,10 @@ public class DefaultActivityPubStorageTest
         // ID match server URL
         assertEquals(object2URL.toURI(), this.activityPubStorage.storeEntity(object2));
         verifySolrPutAndPrepareGet("42", content);
+        verify(object2).setId(null);
+        verify(object2).setId(object2URL.toURI());
         assertSame(object2, this.activityPubStorage.retrieveEntity(object2URL.toURI()));
+        verify(object2, times(2)).setId(object2URL.toURI());
     }
 
     @Test
