@@ -20,23 +20,21 @@
 package org.xwiki.contrib.activitypub.internal.storage;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.request.schema.FieldTypeDefinition;
 import org.apache.solr.client.solrj.request.schema.SchemaRequest;
 import org.apache.solr.client.solrj.response.schema.SchemaResponse;
-import org.apache.solr.schema.DatePointField;
-import org.apache.solr.schema.FieldType;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
-import org.xwiki.search.solr.SolrCoreInitializer;
+import org.xwiki.search.solr.AbstractSolrCoreInitializer;
 import org.xwiki.search.solr.SolrException;
+import org.xwiki.search.solr.SolrUtils;
 
 /**
  * Initialize the ActivityPub Solr core to persist the data.
@@ -47,62 +45,26 @@ import org.xwiki.search.solr.SolrException;
 @Component
 @Named("activitypub")
 @Singleton
-public class ActivityPubSolrInitializer implements SolrCoreInitializer
+public class ActivityPubSolrInitializer extends AbstractSolrCoreInitializer
 {
     private static final String NAME = "name";
-    private static final String TYPE = "type";
-    private static final String STRING_TYPE = "string";
-    private static final String DATE_TYPE = "pdate";
+    private static final long CURRENT_VERSION = 10200000;
+
+    @Inject
+    private SolrUtils solrUtils;
 
     @Override
-    public String getCoreName()
+    protected long getVersion()
     {
-        return "activitypub";
+        return CURRENT_VERSION;
     }
 
-    @Override
-    public void initialize(SolrClient client) throws SolrException
+    /**
+     * This returns true if there's already an ActivityPub core containing a content field.
+     */
+    private boolean oldSchemaAlreadyExists(SolrClient client) throws IOException, SolrServerException
     {
-        try {
-            SchemaResponse.FieldsResponse response = new SchemaRequest.Fields().process(client);
-            if (!schemaAlreadyExists(response)) {
-                createFieldTypes(client);
-                createField(client, ActivityPubStorage.CONTENT_FIELD, STRING_TYPE);
-                createField(client, ActivityPubStorage.TYPE_FIELD, STRING_TYPE);
-                // FIXME: we should rely on the constant introduced by the new SolR API once it will be released.
-                createField(client, ActivityPubStorage.UPDATED_DATE_FIELD, DATE_TYPE);
-                createField(client, ActivityPubStorage.XWIKI_REFERENCE_FIELD, STRING_TYPE);
-            }
-        } catch (SolrServerException | IOException | org.apache.solr.common.SolrException e)
-        {
-            throw new SolrException("Error when initializing activitypub Solr schema", e);
-        }
-    }
-
-    // FIXME: This needs to be removed after the release of XWiki 12.3RC1
-    // Note that we also need the change from
-    // https://github.com/xwiki/xwiki-platform/commit/4fc3a7102ee2ea2beae612ebd67f9089a52aa7c4
-    private void createFieldTypes(SolrClient client) throws IOException, SolrServerException
-    {
-        FieldTypeDefinition definition = new FieldTypeDefinition();
-        Map<String, Object> typeAttributes = new HashMap<>();
-        typeAttributes.put(FieldType.TYPE_NAME, DATE_TYPE);
-        typeAttributes.put(FieldType.CLASS_NAME, DatePointField.class.getName());
-        typeAttributes.put("docValues", true);
-        definition.setAttributes(typeAttributes);
-        new SchemaRequest.AddFieldType(definition).process(client);
-    }
-
-    private void createField(SolrClient client, String name, String type) throws IOException, SolrServerException
-    {
-        Map<String, Object> fieldAttributes = new HashMap<>();
-        fieldAttributes.put(NAME, name);
-        fieldAttributes.put(TYPE, type);
-        new SchemaRequest.AddField(fieldAttributes).process(client);
-    }
-
-    private boolean schemaAlreadyExists(SchemaResponse.FieldsResponse response)
-    {
+        SchemaResponse.FieldsResponse response = new SchemaRequest.Fields().process(client);
         if (response != null) {
             for (Map<String, Object> field : response.getFields()) {
                 if (ActivityPubStorage.CONTENT_FIELD.equals(field.get(NAME))) {
@@ -111,5 +73,33 @@ public class ActivityPubSolrInitializer implements SolrCoreInitializer
             }
         }
         return false;
+    }
+
+    @Override
+    protected void createSchema() throws SolrException
+    {
+        try {
+            // we normally enter here only if there's no version on the core,
+            // so if there's already an existing schema it means a user installed an older version of AP.
+            if (oldSchemaAlreadyExists(this.client)) {
+                throw new SolrException("This version of ActivityPub is incompatible with previous version, "
+                    + "you need to remove the existing ActivityPub Solr core before proceeding.");
+            } else {
+                this.addStringField(ActivityPubStorage.TYPE_FIELD, false, false);
+                this.addStringField(ActivityPubStorage.CONTENT_FIELD, false, false);
+                this.addStringField(ActivityPubStorage.XWIKI_REFERENCE_FIELD, false, false);
+                this.addPDateField(ActivityPubStorage.UPDATED_DATE_FIELD, false, false);
+
+                this.addMapField();
+            }
+        } catch (IOException | SolrServerException e) {
+            throw new SolrException("Error while checking if the schema already exist.", e);
+        }
+    }
+
+    @Override
+    protected void migrateSchema(long cversion) throws SolrException
+    {
+        // no migration yet
     }
 }
