@@ -89,8 +89,6 @@ public class ActivityPubSolrInitializer extends AbstractSolrCoreInitializer
                 this.addStringField(ActivityPubStorage.CONTENT_FIELD, false, false);
                 this.addStringField(ActivityPubStorage.XWIKI_REFERENCE_FIELD, false, false);
                 this.addPDateField(ActivityPubStorage.UPDATED_DATE_FIELD, false, false);
-
-                this.addMapField();
             }
         } catch (IOException | SolrServerException e) {
             throw new SolrException("Error while checking if the schema already exist.", e);
