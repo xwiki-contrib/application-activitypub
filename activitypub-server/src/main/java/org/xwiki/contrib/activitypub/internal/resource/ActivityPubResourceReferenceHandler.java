@@ -33,6 +33,7 @@ import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.http.HttpHeaders;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentLookupException;
@@ -59,6 +60,8 @@ import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Outbox;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.contrib.activitypub.internal.filters.CollectionFilter;
+import org.xwiki.contrib.activitypub.webfinger.WebfingerException;
+import org.xwiki.contrib.activitypub.webfinger.WebfingerService;
 import org.xwiki.resource.AbstractResourceReferenceHandler;
 import org.xwiki.resource.ResourceReference;
 import org.xwiki.resource.ResourceReferenceHandlerChain;
@@ -122,6 +125,9 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
     @Inject
     private XWikiUserBridge xWikiUserBridge;
 
+    @Inject
+    private WebfingerService webfingerService;
+
     @Override
     public List<ResourceType> getSupportedResourceReferences()
     {
@@ -137,7 +143,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
         try {
             ActivityPubObject entity =
-                    this.activityPubStorage.retrieveEntity(new URI(request.getRequestURL().toString()));
+                this.activityPubStorage.retrieveEntity(new URI(request.getRequestURL().toString()));
 
             this.issueMissingPublicKey(entity);
 
@@ -157,7 +163,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
             // https://www.w3.org/TR/activitypub/#retrieving-objects for GET
             // We are in a GET request with an entity: we just serve it.
             } else if (isGet(request)) {
-                this.handleGetOnExistingEntity(response, entity);
+                this.handleGetOnExistingEntity(request, response, entity);
 
             // We are in a POST request but not in a box: we don't accept those requests.
             } else if (!isAboutBox(resourceReference)) {
@@ -276,12 +282,15 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
 
     /**
      * Serialize the given entity in the response and set the headers.
+     *
+     * @param request the request.
      * @param response the response servlet to use.
      * @param entity the entity to serialize.
      * @throws IOException in case of error during the HTTP response.
      * @throws ActivityPubException in case of error during the serialization.
      */
-    private void handleGetOnExistingEntity(HttpServletResponse response, ActivityPubObject entity)
+    private void handleGetOnExistingEntity(HttpServletRequest request, HttpServletResponse response,
+        ActivityPubObject entity)
         throws IOException, ActivityPubException
     {
         response.setStatus(HttpServletResponse.SC_OK);
@@ -294,7 +303,24 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
             this.handleGetOnBox(response, (Inbox) entity);
         } else if (entity instanceof Outbox) {
             this.handleGetOnBox(response, (Outbox) entity);
-        // else we directly serialize the entity
+            // else we directly serialize the entity
+        } else if (entity instanceof AbstractActor) {
+            this.handleGetOnAbstractActor(request, response, (AbstractActor) entity);
+        } else {
+            this.activityPubJsonSerializer.serialize(response.getOutputStream(), entity);
+        }
+    }
+
+    private void handleGetOnAbstractActor(HttpServletRequest request, HttpServletResponse response,
+        AbstractActor entity) throws IOException, ActivityPubException
+    {
+        if (request.getHeader(HttpHeaders.ACCEPT).contains("text/html")) {
+            try {
+                URI uri = this.webfingerService.resolveXWikiUserUrl(entity);
+                response.sendRedirect(uri.toASCIIString());
+            } catch (WebfingerException e) {
+                throw new ActivityPubException("Error during the redirection of [" + entity + "]", e);
+            }
         } else {
             this.activityPubJsonSerializer.serialize(response.getOutputStream(), entity);
         }
