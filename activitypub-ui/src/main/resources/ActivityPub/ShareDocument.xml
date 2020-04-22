@@ -301,7 +301,9 @@
       <async_enabled>0</async_enabled>
     </property>
     <property>
-      <content>{{include reference="ActivityPub.UserDashboard"/}}
+      <content>(% style="display: none;" %)(((
+{{include reference="ActivityPub.UserDashboard"/}}
+)))
 
 {{velocity}}
 {{html clean="false"}}
