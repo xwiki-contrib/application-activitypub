@@ -41,7 +41,7 @@
 {{velocity}}
 {{html clean="false" wiki="true"}}
 #if (!$isGuest)
-#set($actor = $services.activitypub.getActor(""))
+#set($actor = $services.activitypub.getActor($request.getParameterValues('user')))
 #listFollowing($actor)
 #end{{/html}}
 {{/velocity}}</content>

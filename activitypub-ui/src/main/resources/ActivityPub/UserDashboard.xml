@@ -295,7 +295,7 @@ $services.localization.render('activitypub.webfinger.notconfigured')
   const followingDoc = new XWiki.Document(XWiki.Model.resolve('ActivityPub.ListFollowing', XWiki.EntityType.DOCUMENT));
 
   function updateFollowing() {
-    $.get(followingDoc.getURL("get"), function(res) {
+    $.get(followingDoc.getURL("get"), { "user": actorId }, function(res) {
       $('#linkActors&gt;:first-child').replaceWith($(res)[1]);
     });
   };
