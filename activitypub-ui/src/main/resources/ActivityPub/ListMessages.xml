@@ -59,19 +59,22 @@
 
 #macro (displayMessage $message)
   {{box}}
-      Date: $message.published
-      From: #displayFrom($message)
-      To: #displayTo($message)
-      
-      Content:
-      
-      $message.content
+    **$services.localization.render('activitypub.message.display.date')** $message.published
+    **$services.localization.render('activitypub.message.display.from')** #displayFrom($message)
+    **$services.localization.render('activitypub.message.display.to')** #displayTo($message)
+
+    **$services.localization.render('activitypub.message.display.content')**
+
+    $message.content
   {{/box}}
   
 #end
 
 #macro (displaySentMessages $sourceActor $limit)
   #set ($sentMessages = $services.activitypub.getSentMessages($sourceActor, $limit))
+  #if ($sentMessages.isEmpty())
+    $services.localization.render('activitypub.message.nomessage')
+  #end
   #foreach ($message in $sentMessages)
     #displayMessage($message)
   #end
@@ -79,6 +82,9 @@
 
 #macro (displayReceivedMessages $sourceActor $limit)
   #set ($receivedMessages = $services.activitypub.getReceivedMessages($sourceActor, $limit))
+  #if ($receivedMessages.isEmpty())
+    $services.localization.render('activitypub.message.nomessage')
+  #end
   #foreach ($message in $receivedMessages)
     #displayMessage($message)
   #end

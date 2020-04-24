@@ -64,11 +64,12 @@ $services.localization.render('activitypub.dashboard.noactor')
     #set ($userIdentifier = $actor.id)
   #end
 
-  #if ($actor.type == "Person")
-    #set($dashboardTitle = "Dashboard for user " + $actor.name)
+  #if ("$!actor.name" != "")
+    #set($username = $actor.name)
   #else
-    #set($dashboardTitle = "Dashboard for wiki " + $actor.name)
+    #set($username = $actor.preferredUsername);
   #end
+  #set($dashboardTitle = $services.localization.render('activitypub.dashboard.title', [$username]))
   {{html clean='false'}}
     &lt;h2&gt;$dashboardTitle&lt;/h2&gt;
     &lt;span class="noitems"&gt;$services.localization.render('activitypub.user.identifier.tip')&lt;/span&gt;
