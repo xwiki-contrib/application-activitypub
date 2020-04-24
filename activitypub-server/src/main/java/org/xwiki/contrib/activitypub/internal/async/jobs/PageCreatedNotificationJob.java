@@ -91,7 +91,7 @@ public class PageCreatedNotificationJob extends AbstractPageNotificationJob
 
         URI documentUrl = this.urlHandler.getAbsoluteURI(new URI(view));
 
-        List<ActivityPubObjectReference<AbstractActor>> attributedTo = this.emmiters(author);
+        List<ActivityPubObjectReference<AbstractActor>> attributedTo = this.emitters(author);
         Document document = new Document()
             .setName(title)
             .setAttributedTo(attributedTo)

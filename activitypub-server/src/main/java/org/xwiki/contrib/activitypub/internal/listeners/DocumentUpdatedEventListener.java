@@ -32,6 +32,7 @@ import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
 import org.xwiki.contrib.activitypub.internal.async.PageChangedRequest;
 import org.xwiki.job.JobException;
 import org.xwiki.job.JobExecutor;
+import org.xwiki.job.Request;
 import org.xwiki.observation.AbstractEventListener;
 import org.xwiki.observation.event.Event;
 
@@ -87,8 +88,8 @@ public class DocumentUpdatedEventListener extends AbstractEventListener
                 try {
                     XWikiRCSNodeInfo revisionInfo = document.getRevisionInfo(document.getVersion(), context);
                     if (!revisionInfo.isMinorEdit()) {
-                        PageChangedRequest ret = this.newRequest(document, context);
-                        this.jobExecutor.execute(ASYNC_REQUEST_TYPE, ret);
+                        Request updateRequest = this.newRequest(document, context);
+                        this.jobExecutor.execute(ASYNC_REQUEST_TYPE, updateRequest);
                     }
                 } catch (XWikiException | JobException e) {
                     this.logger.warn(ERROR_MSG, document, getRootCauseMessage(e));

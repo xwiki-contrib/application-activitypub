@@ -109,7 +109,7 @@ public abstract class AbstractPageNotificationJob extends AbstractJob<PageChange
 
     protected abstract void proceed(AbstractActor author) throws URISyntaxException, IOException, ActivityPubException;
 
-    protected List<ActivityPubObjectReference<AbstractActor>> emmiters(AbstractActor author) throws ActivityPubException
+    protected List<ActivityPubObjectReference<AbstractActor>> emitters(AbstractActor author) throws ActivityPubException
     {
         PageChangedRequest request = this.getRequest();
         DocumentReference dr = request.getDocumentReference();

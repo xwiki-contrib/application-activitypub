@@ -95,7 +95,7 @@ public class PageUpdatedNotificationJob extends AbstractPageNotificationJob
 
         URI documentUrl = this.urlHandler.getAbsoluteURI(new URI(view));
 
-        List<ActivityPubObjectReference<AbstractActor>> attributedTo = this.emmiters(author);
+        List<ActivityPubObjectReference<AbstractActor>> attributedTo = this.emitters(author);
 
         String docIdSolr = this.stringEntityReferenceSerializer.serialize(documentReference);
 
@@ -123,14 +123,15 @@ public class PageUpdatedNotificationJob extends AbstractPageNotificationJob
         this.storage.storeEntity(document);
 
         return new Update()
-            .setActor(author)
+            .setActor(document.getAttributedTo().get(0))
             .setObject(document)
             .setName(String.format("Update of document [%s]", title))
             .setTo(Collections.singletonList(new ProxyActor(author.getFollowers().getLink())))
             .setPublished(creationDate);
     }
 
-    @Override public String getType()
+    @Override
+    public String getType()
     {
         return ASYNC_REQUEST_TYPE;
     }

@@ -25,7 +25,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.xwiki.bridge.event.DocumentCreatedEvent;
 import org.xwiki.component.annotation.Component;
@@ -41,6 +40,7 @@ import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.XWikiDocument;
 
 import static java.util.Collections.singletonList;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 import static org.xwiki.contrib.activitypub.internal.async.jobs.PageCreatedNotificationJob.ASYNC_REQUEST_TYPE;
 
 /**
@@ -54,6 +54,8 @@ import static org.xwiki.contrib.activitypub.internal.async.jobs.PageCreatedNotif
 public class DocumentCreatedEventListener extends AbstractEventListener
 {
     private static final List<Event> EVENTS = singletonList(new DocumentCreatedEvent());
+
+    private static final String ERROR_MSG = "ActivityPub page creation [{}] event task failed. Cause [{}]";
 
     @Inject
     private Logger logger;
@@ -79,20 +81,19 @@ public class DocumentCreatedEventListener extends AbstractEventListener
             XWikiDocument document = (XWikiDocument) source;
             if (!Boolean.TRUE.equals(document.isHidden())) {
                 XWikiContext context = (XWikiContext) data;
-    
-                Request createJob = this.newRequest(document, context);
-    
+
+                Request createRequest = this.newRequest(document, context);
+
                 try {
-                    this.jobExecutor.execute(ASYNC_REQUEST_TYPE, createJob);
+                    this.jobExecutor.execute(ASYNC_REQUEST_TYPE, createRequest);
                 } catch (JobException e) {
-                    this.logger.warn("ActivityPub page creation [{}] event task failed. Cause [{}]", document,
-                        ExceptionUtils.getRootCauseMessage(e));
+                    this.logger.warn(ERROR_MSG, document, getRootCauseMessage(e));
                 }
             }
         }
     }
 
-    private Request newRequest(XWikiDocument document, XWikiContext context)
+    private PageChangedRequest newRequest(XWikiDocument document, XWikiContext context)
     {
         /*
          * XWikiDocument is not serializable and cannot be passed safely to the job executor.
