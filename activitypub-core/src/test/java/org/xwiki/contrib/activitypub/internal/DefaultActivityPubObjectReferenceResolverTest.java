@@ -23,20 +23,17 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-import javax.inject.Named;
 import javax.inject.Provider;
 
 import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.math3.analysis.function.Abs;
+import org.apache.commons.lang3.time.DateUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
-import org.mockito.Mock;
-import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.component.util.DefaultParameterizedType;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
@@ -47,18 +44,19 @@ import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
+import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
-import org.xwiki.test.annotation.BeforeComponent;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
 import org.xwiki.test.mockito.MockitoComponentManager;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -74,7 +72,7 @@ import static org.mockito.Mockito.when;
 public class DefaultActivityPubObjectReferenceResolverTest
 {
     @InjectMockComponents
-    private DefaultActivityPubObjectReferenceResolver defaultActivityPubObjectReferenceResolver;
+    private DefaultActivityPubObjectReferenceResolver resolver;
 
     @MockComponent
     private ActivityPubJsonParser activityPubJsonParser;
@@ -84,6 +82,9 @@ public class DefaultActivityPubObjectReferenceResolverTest
 
     @MockComponent
     private ActivityPubStorage activityPubStorage;
+
+    @MockComponent
+    private DefaultURLHandler urlHandler;
 
     @BeforeEach
     public void setup(MockitoComponentManager componentManager) throws Exception
@@ -103,7 +104,7 @@ public class DefaultActivityPubObjectReferenceResolverTest
     public void resolveReferenceInvalidLink()
     {
         Executable executable =
-            () -> this.defaultActivityPubObjectReferenceResolver.resolveReference(new ActivityPubObjectReference<>());
+            () -> this.resolver.resolveReference(new ActivityPubObjectReference<>());
         ActivityPubException e = assertThrows(ActivityPubException.class, executable);
         assertEquals("The reference property is null and does not have any ID to follow.", e.getMessage());
     }
@@ -112,7 +113,7 @@ public class DefaultActivityPubObjectReferenceResolverTest
     public void resolveReferenceWithObject() throws Exception
     {
         ActivityPubObject object = mock(ActivityPubObject.class);
-        assertSame(object, this.defaultActivityPubObjectReferenceResolver
+        assertSame(object, this.resolver
             .resolveReference(new ActivityPubObjectReference<>().setObject(object)));
         verify(this.activityPubClient, never()).get(any());
         verify(this.activityPubStorage, never()).retrieveEntity(any());
@@ -128,7 +129,7 @@ public class DefaultActivityPubObjectReferenceResolverTest
         ActivityPubObjectReference<ActivityPubObject> reference = new ActivityPubObjectReference<>().setLink(uri);
         when(this.activityPubClient.get(uri)).thenReturn(hm);
         when(this.activityPubJsonParser.parse("{accept}")).thenReturn(t);
-        assertSame(t, this.defaultActivityPubObjectReferenceResolver.resolveReference(reference));
+        assertSame(t, this.resolver.resolveReference(reference));
         assertSame(t, reference.getObject());
         verify(this.activityPubStorage).retrieveEntity(uri);
     }
@@ -140,7 +141,7 @@ public class DefaultActivityPubObjectReferenceResolverTest
         URI uri = URI.create("http://test/create/1");
         ActivityPubObjectReference<ActivityPubObject> reference = new ActivityPubObjectReference<>().setLink(uri);
         when(this.activityPubStorage.retrieveEntity(uri)).thenReturn(t);
-        assertSame(t, this.defaultActivityPubObjectReferenceResolver.resolveReference(reference));
+        assertSame(t, this.resolver.resolveReference(reference));
         assertSame(t, reference.getObject());
         verify(this.activityPubClient, never()).get(uri);
     }
@@ -152,7 +153,7 @@ public class DefaultActivityPubObjectReferenceResolverTest
         ActivityPubObjectReference<ActivityPubObject> reference =
             new ActivityPubObjectReference<>().setLink(URI.create("http://test/create/1"));
         ActivityPubException e = assertThrows(ActivityPubException.class,
-            () -> this.defaultActivityPubObjectReferenceResolver.resolveReference(reference));
+            () -> this.resolver.resolveReference(reference));
         assertEquals("Error when retrieving the ActivityPub information from [http://test/create/1]", e.getMessage());
     }
 
@@ -162,7 +163,7 @@ public class DefaultActivityPubObjectReferenceResolverTest
         ActivityPubObject activityPubObject = mock(ActivityPubObject.class);
         Set<AbstractActor> result = Collections.singleton(mock(AbstractActor.class));
         when(activityPubObject.getComputedTargets()).thenReturn(result);
-        assertEquals(result, this.defaultActivityPubObjectReferenceResolver.resolveTargets(activityPubObject));
+        assertEquals(result, this.resolver.resolveTargets(activityPubObject));
     }
 
     @Test
@@ -201,7 +202,7 @@ public class DefaultActivityPubObjectReferenceResolverTest
         expectedSet.add(actor1);
         expectedSet.add(actor2);
         expectedSet.add(actor3);
-        assertEquals(expectedSet, this.defaultActivityPubObjectReferenceResolver.resolveTargets(activityPubObject));
+        assertEquals(expectedSet, this.resolver.resolveTargets(activityPubObject));
     }
 
     @Test
@@ -210,6 +211,71 @@ public class DefaultActivityPubObjectReferenceResolverTest
         ActivityPubObject activityPubObject = mock(ActivityPubObject.class);
         when(activityPubObject.getComputedTargets()).thenReturn(null);
         assertEquals(Collections.emptySet(),
-            this.defaultActivityPubObjectReferenceResolver.resolveTargets(activityPubObject));
+            this.resolver.resolveTargets(activityPubObject));
+    }
+
+    @Test
+    public void shouldBeRefreshed()
+    {
+        Person person = new Person();
+        assertFalse(this.resolver.shouldBeRefreshed(person));
+
+        URI currentUri = URI.create("http://foo");
+        person.setId(currentUri);
+        when(this.urlHandler.belongsToCurrentInstance(currentUri)).thenReturn(false);
+        Date twoDaysAgo = DateUtils.addDays(new Date(), -2);
+        person.setLastUpdated(twoDaysAgo);
+        assertTrue(this.resolver.shouldBeRefreshed(person));
+
+        when(this.urlHandler.belongsToCurrentInstance(currentUri)).thenReturn(true);
+        assertFalse(this.resolver.shouldBeRefreshed(person));
+
+        when(this.urlHandler.belongsToCurrentInstance(currentUri)).thenReturn(false);
+        person.setLastUpdated(new Date());
+        assertFalse(this.resolver.shouldBeRefreshed(person));
+    }
+
+    @Test
+    public void resolveReferenceObjectNullStoredButNeedRefresh() throws Exception
+    {
+        URI uri = URI.create("http://test/person/1");
+        Person person = new Person();
+        person.setId(uri);
+        Date twoDaysAgo = DateUtils.addDays(new Date(), -2);
+        person.setLastUpdated(twoDaysAgo);
+
+        HttpMethod hm = mock(HttpMethod.class);
+        when(hm.getResponseBodyAsString()).thenReturn("{1}");
+
+        ActivityPubObjectReference<ActivityPubObject> reference = new ActivityPubObjectReference<>().setLink(uri);
+        when(this.activityPubStorage.retrieveEntity(uri)).thenReturn(person);
+        when(this.activityPubClient.get(uri)).thenReturn(hm);
+        when(this.activityPubJsonParser.parse("{1}")).thenReturn(person);
+        assertSame(person, this.resolver.resolveReference(reference));
+        assertSame(person, reference.getObject());
+        verify(this.activityPubStorage).retrieveEntity(uri);
+        verify(this.activityPubClient).get(uri);
+    }
+
+    @Test
+    public void resolveReferenceObjectNullStoredNeedRefreshButNetworkError() throws Exception
+    {
+        URI uri = URI.create("http://test/person/1");
+        Person person = new Person();
+        person.setId(uri);
+        Date twoDaysAgo = DateUtils.addDays(new Date(), -2);
+        person.setLastUpdated(twoDaysAgo);
+
+        HttpMethod hm = mock(HttpMethod.class);
+        when(hm.getResponseBodyAsString()).thenReturn("{1}");
+
+        ActivityPubObjectReference<ActivityPubObject> reference = new ActivityPubObjectReference<>().setLink(uri);
+        when(this.activityPubStorage.retrieveEntity(uri)).thenReturn(person);
+        when(this.activityPubClient.get(uri)).thenThrow(new IOException("error"));
+        when(this.activityPubJsonParser.parse("{1}")).thenReturn(person);
+        assertSame(person, this.resolver.resolveReference(reference));
+        assertSame(person, reference.getObject());
+        verify(this.activityPubStorage).retrieveEntity(uri);
+        verify(this.activityPubClient).get(uri);
     }
 }

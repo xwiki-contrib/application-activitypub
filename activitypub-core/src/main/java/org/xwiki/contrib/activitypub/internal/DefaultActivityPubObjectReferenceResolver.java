@@ -21,6 +21,7 @@ package org.xwiki.contrib.activitypub.internal;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,6 +31,7 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
@@ -61,6 +63,9 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
     private Provider<ActivityPubStorage> activityPubStorageProvider;
 
     @Inject
+    private DefaultURLHandler defaultURLHandler;
+
+    @Inject
     private Logger logger;
 
     @Override
@@ -74,11 +79,16 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
         if (!reference.isLink() && result == null) {
             throw new ActivityPubException("The reference property is null and does not have any ID to follow.");
         }
+
+        // We try first to retrieve the object from the storage
         if (result == null) {
             result = this.activityPubStorageProvider.get().retrieveEntity(reference.getLink());
             reference.setObject(result);
         }
-        if (result == null) {
+
+        // If the storage didn't provide any result, or if it provided outdated result, then we need to reload the
+        // informations.
+        if (result == null || this.shouldBeRefreshed(result)) {
             try {
                 HttpMethod getMethod = this.activityPubClientProvider.get().get(reference.getLink());
                 try {
@@ -89,9 +99,14 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
                 }
                 reference.setObject(result);
             } catch (IOException e) {
-                throw new ActivityPubException(
-                    String.format("Error when retrieving the ActivityPub information from [%s]", reference.getLink()),
-                    e);
+                // We might be trying to refresh an information, in that case we just rely on the information we already
+                // manage to retrieve from the storage.
+                if (result == null) {
+                    throw new ActivityPubException(
+                        String
+                            .format("Error when retrieving the ActivityPub information from [%s]", reference.getLink()),
+                        e);
+                }
             }
         }
         return result;
@@ -109,6 +124,15 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
             resolvedTargets = activityPubObject.getComputedTargets();
         }
         return resolvedTargets;
+    }
+
+    @Override
+    public <T extends ActivityPubObject> boolean shouldBeRefreshed(T activityPubObject)
+    {
+        return (CLASSES_TO_REFRESH.contains(activityPubObject.getClass())
+            && !this.defaultURLHandler.belongsToCurrentInstance(activityPubObject.getId())
+            && activityPubObject.getLastUpdated() != null
+            && new Date().after(DateUtils.addDays(activityPubObject.getLastUpdated(), MAX_DAY_BEFORE_REFRESH)));
     }
 
     private void resolveProxyActorList(List<ProxyActor> proxyActorList, Set<AbstractActor> resolvedTargets)

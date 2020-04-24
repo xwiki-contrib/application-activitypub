@@ -330,26 +330,24 @@ public class DefaultActivityPubStorageTest
         when(solrDocument.getFieldValue("content")).thenReturn("{person:foo}");
         when(this.jsonParser.parse("{person:foo}")).thenReturn(person);
 
-        // A person from same domain, recently updated is always retrieved.
         when(solrDocument.getFieldValue("id")).thenReturn(uri.toASCIIString());
         when(solrDocument.getFieldValue("type")).thenReturn("person");
         when(solrDocument.getFieldValue("updatedDate")).thenReturn(new Date());
         assertSame(person, this.activityPubStorage.retrieveEntity(uri));
 
-        // If it comes from another domain but it's recent enough it's still retrieved.
+        // If it comes from another domain it's still retrieved.
         when(solrDocument.getFieldValue("id")).thenReturn("http://anotherdomain.fr/person/foo");
         assertSame(person, this.activityPubStorage.retrieveEntity(uri));
 
-        // Now it comes from another domain but it's two days old: we don't retrieve it.
-        Date oldDate = DateUtils.addDays(new Date(), -2);
+        // We always retrieve data and we don't care how old is it here
+        Date oldDate = new Date(0);
         when(solrDocument.getFieldValue("updatedDate")).thenReturn(oldDate);
-        assertNull(this.activityPubStorage.retrieveEntity(uri));
+        assertSame(person, this.activityPubStorage.retrieveEntity(uri));
 
-        // We consider it back on the same domain, even if two days old we retrieve it.
+        // Same whatever the domain or the type is
         when(solrDocument.getFieldValue("id")).thenReturn(uri.toASCIIString());
         assertSame(person, this.activityPubStorage.retrieveEntity(uri));
 
-        // Now if it comes from another domain but it's not a person, we retrieve the data, even if it's old.
         when(solrDocument.getFieldValue("id")).thenReturn("http://anotherdomain.fr/person/foo");
         when(solrDocument.getFieldValue("type")).thenReturn("something");
         assertSame(person, this.activityPubStorage.retrieveEntity(uri));

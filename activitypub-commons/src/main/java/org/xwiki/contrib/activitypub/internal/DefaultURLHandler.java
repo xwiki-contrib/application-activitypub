@@ -82,6 +82,9 @@ public class DefaultURLHandler
      */
     public boolean belongsToCurrentInstance(URI id)
     {
+        if (id == null) {
+            return true;
+        }
         if (id.isAbsolute()) {
             try {
                 URL idUrl = id.toURL();

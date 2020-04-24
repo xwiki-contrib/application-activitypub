@@ -94,6 +94,7 @@ public class DefaultURLHandlerTest
     @Test
     public void belongsToCurrentInstance() throws Exception
     {
+        assertTrue(this.urlHandler.belongsToCurrentInstance(null));
         assertTrue(this.urlHandler.belongsToCurrentInstance(URI.create("http://xwiki.org/foo/something")));
         assertFalse(this.urlHandler.belongsToCurrentInstance(URI.create("https://xwiki.org/foo/something")));
         assertFalse(this.urlHandler.belongsToCurrentInstance(URI.create("http://xwiki.org:4848/foo/something")));

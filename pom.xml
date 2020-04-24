@@ -270,6 +270,11 @@
                     "code": "java.method.addedToInterface",
                     "new": "method java.util.Set<org.xwiki.contrib.activitypub.entities.AbstractActor> org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver::resolveTargets(org.xwiki.contrib.activitypub.entities.ActivityPubObject)",
                     "justification": "Not breaking: Unstable API."
+                  },
+                  {
+                    "code": "java.method.addedToInterface",
+                    "new": "method <T extends org.xwiki.contrib.activitypub.entities.ActivityPubObject> boolean org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver::shouldBeRefreshed(T)",
+                    "justification": "Not breaking: Unstable API."
                   }
                 ]
               }

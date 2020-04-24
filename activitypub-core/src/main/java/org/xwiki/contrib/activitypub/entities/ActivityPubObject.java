@@ -71,6 +71,8 @@ public class ActivityPubObject extends JSONLDObjects
 
     private Set<AbstractActor> computedTargets;
 
+    private Date lastUpdated;
+
     /**
      * The type is not stored as a property but instead we rely on the class name to return it.
      *
@@ -350,6 +352,25 @@ public class ActivityPubObject extends JSONLDObjects
         return this.to != null && this.to.contains(ProxyActor.getPublicActor());
     }
 
+    /**
+     * @return the date of the last time the object was stored in DB.
+     */
+    @JsonIgnore
+    public Date getLastUpdated()
+    {
+        return lastUpdated;
+    }
+
+    /**
+     * Set the date of the last time the object was stored in DB.
+     * @param lastUpdated the date of the last time the object was stored in DB.
+     */
+    @JsonIgnore
+    public void setLastUpdated(Date lastUpdated)
+    {
+        this.lastUpdated = lastUpdated;
+    }
+
     @Override
     public boolean equals(Object o)
     {
@@ -374,6 +395,7 @@ public class ActivityPubObject extends JSONLDObjects
                 .append(url, object.url)
                 .append(shares, object.shares)
                 .append(xwikiReference, object.xwikiReference)
+                .append(lastUpdated, object.lastUpdated)
                 .isEquals();
     }
 
@@ -392,6 +414,7 @@ public class ActivityPubObject extends JSONLDObjects
                 .append(url)
                 .append(shares)
                 .append(xwikiReference)
+                .append(lastUpdated)
                 .toHashCode();
     }
 

@@ -19,12 +19,18 @@
  */
 package org.xwiki.contrib.activitypub;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import org.xwiki.component.annotation.Role;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
+import org.xwiki.contrib.activitypub.entities.Collection;
+import org.xwiki.contrib.activitypub.entities.OrderedCollection;
+import org.xwiki.contrib.activitypub.entities.Person;
+import org.xwiki.contrib.activitypub.entities.Service;
 import org.xwiki.stability.Unstable;
 
 /**
@@ -37,6 +43,22 @@ import org.xwiki.stability.Unstable;
 @Role
 public interface ActivityPubObjectReferenceResolver
 {
+    /**
+     * Define the default maximum number of day before an information might be considered outdated.
+     * See {@link #shouldBeRefreshed(ActivityPubObject)} for more information.
+     */
+    int MAX_DAY_BEFORE_REFRESH = 1;
+    /**
+     * Define the classes that should be considered as outdated after some amount of time.
+     * See {@link #shouldBeRefreshed(ActivityPubObject)} for more information.
+     */
+    List<Class<? extends ActivityPubObject>> CLASSES_TO_REFRESH = Arrays.asList(
+        Person.class,
+        Service.class,
+        Collection.class,
+        OrderedCollection.class
+    );
+
     /**
      * Resolve the given reference either by returning its concrete object if the reference is already resolved, or by
      * loading and parsing the linked entity. This never returns null.
@@ -59,4 +81,19 @@ public interface ActivityPubObjectReferenceResolver
      */
     @Unstable
     Set<AbstractActor> resolveTargets(ActivityPubObject activityPubObject);
+
+    /**
+     * Define if an information should be refreshed by requesting it from its ID.
+     * This method allows to determine if we should try to perform an Http Request even if an information is locally
+     * stored. The informations should be discard if there's a chance they have changed on their original server.
+     * Then only information containing at least an ID referring to a remote server should be refreshed and after a
+     * given amount of time (see {@link #MAX_DAY_BEFORE_REFRESH} for the default amount of time). Moreover we consider
+     * by default that only some classes should be refreshed (see {@link #CLASSES_TO_REFRESH}).
+     *
+     * @param activityPubObject the object to determine if we need to refresh it or not.
+     * @param <T> the concrete type of object.
+     * @return {@code true} if this object needs to be retrieved back with an Http request, and {@code false} to rely
+     *         on the current implementation.
+     */
+    <T extends ActivityPubObject> boolean shouldBeRefreshed(T activityPubObject);
 }

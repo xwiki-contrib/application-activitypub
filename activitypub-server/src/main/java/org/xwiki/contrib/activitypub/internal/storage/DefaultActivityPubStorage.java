@@ -33,7 +33,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -203,6 +202,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
 
             // we put back the ID in case the entity would be used afterwards
             entity.setId(entityID);
+            entity.setLastUpdated(new Date());
             return entity.getId();
         } catch (Exception e) {
             throw new ActivityPubException(String.format("Error while storing [%s].", entity), e);
@@ -214,26 +214,6 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         return String.format("%s-%s", actor.getXwikiReference(), entitySuffix);
     }
 
-    private boolean retrieveSolrDocument(SolrDocument solrDocument)
-    {
-        boolean result = true;
-        String type = (String) solrDocument.getFieldValue(TYPE_FIELD);
-
-        // We only refresh person or collections, since it's the types the more likely to change
-        if ("person".equalsIgnoreCase(type)
-            || "collection".equalsIgnoreCase(type)
-            || "orderedcollection".equalsIgnoreCase(type)) {
-
-            // if the document is older than one day, and does not belongs to the current instance
-            // then we need to refresh it.
-            Date updatedDate = (Date) solrDocument.getFieldValue(UPDATED_DATE_FIELD);
-            URI id = URI.create((String) solrDocument.getFieldValue(ID_FIELD));
-            result = this.urlHandler.belongsToCurrentInstance(id)
-                || new Date().before(DateUtils.addDays(updatedDate, 1));
-        }
-        return result;
-    }
-
     @Override
     public <T extends ActivityPubObject> T retrieveEntity(URI uri) throws ActivityPubException
     {
@@ -241,7 +221,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         try {
             URI storageId = this.internalURINormalizer.relativizeURI(uri);
             SolrDocument solrDocument = this.getSolrClient().getById(storageId.toASCIIString());
-            if (solrDocument != null && !solrDocument.isEmpty() && retrieveSolrDocument(solrDocument)) {
+            if (solrDocument != null && !solrDocument.isEmpty()) {
                 result = this.createObjectFromResult(solrDocument);
             }
             return result;
@@ -321,6 +301,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         String uid = (String) queryResult.getFieldValue(ID_FIELD);
         URI id = this.internalURINormalizer.retrieveAbsoluteURI(URI.create(uid));
         activityPubObject.setId(id);
+        activityPubObject.setLastUpdated((Date) queryResult.getFieldValue(UPDATED_DATE_FIELD));
         return activityPubObject;
     }
 }
