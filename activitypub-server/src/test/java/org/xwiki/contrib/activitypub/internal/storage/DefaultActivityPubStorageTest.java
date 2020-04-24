@@ -61,7 +61,6 @@ import org.xwiki.contrib.activitypub.webfinger.WebfingerJsonSerializer;
 import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 import org.xwiki.resource.ResourceReferenceResolver;
 import org.xwiki.resource.ResourceReferenceSerializer;
-import org.xwiki.resource.ResourceType;
 import org.xwiki.search.solr.Solr;
 import org.xwiki.search.solr.SolrException;
 import org.xwiki.test.annotation.BeforeComponent;
@@ -265,11 +264,14 @@ public class DefaultActivityPubStorageTest
 
         URI uid = new URI("http://domain.org/xwiki/activitypub/Inbox/xwiki%3AXWiki.FooBar-inbox");
         String content = "{inbox:FooBar}";
+        URI actorLink = URI.create("http://domain.org/xwiki/activitypub/Person/Foo");
         Person actor = new Person()
             .setPreferredUsername("FooBar")
-            .setXwikiReference("xwiki:XWiki.FooBar");
-        ActivityPubObjectReference<AbstractActor> objectReference =
-            new ActivityPubObjectReference<AbstractActor>().setObject(actor);
+            .setXwikiReference("xwiki:XWiki.FooBar")
+            .setId(actorLink);
+
+        ActivityPubObjectReference<AbstractActor> objectReference = new ActivityPubObjectReference<AbstractActor>()
+            .setLink(actorLink);
         when(this.resolver.resolveReference(objectReference)).thenReturn(actor);
         Inbox inbox = new Inbox().setAttributedTo(Collections.singletonList(objectReference));
         when(this.jsonSerializer.serialize(inbox)).thenReturn(content);
@@ -279,6 +281,7 @@ public class DefaultActivityPubStorageTest
         when(this.serializer.serialize(resourceReference)).thenReturn(uid);
         URI relativeURI = URI.create("Inbox/xwiki:XWiki.FooBar-inbox");
         when(this.internalURINormalizer.retrieveRelativeURI(resourceReference)).thenReturn(relativeURI);
+        when(this.internalURINormalizer.relativizeURI(actorLink)).thenReturn(actorLink);
 
         assertEquals(uid, this.activityPubStorage.storeEntity(inbox));
         assertEquals(uid, inbox.getId());
@@ -404,6 +407,7 @@ public class DefaultActivityPubStorageTest
         SolrQuery solrQuery = new SolrQuery("*")
             .addFilterQuery("filter(type:Document)")
             .addFilterQuery(query)
+            .addSort("updatedDate", SolrQuery.ORDER.desc)
             .setRows(limit);
         Document document = mock(Document.class);
         SolrDocumentList solrDocumentList = mock(SolrDocumentList.class);
@@ -414,6 +418,9 @@ public class DefaultActivityPubStorageTest
         when(solrDocumentList.iterator()).thenReturn(Arrays.asList(document1).iterator());
         String content1 = "{doc1}";
         when(document1.getFieldValue("content")).thenReturn(content1);
+        when(document1.getFieldValue("id")).thenReturn("Document/doc1");
+        when(this.internalURINormalizer.retrieveAbsoluteURI(URI.create("Document/doc1")))
+            .thenReturn(URI.create("http://xwiki.org/activitypub/Document/doc1"));
         when(this.jsonParser.parse(content1)).thenReturn(document);
         assertEquals(Collections.singletonList(document), this.activityPubStorage.query(Document.class, query, limit));
         ArgumentCaptor<SolrQuery> argumentCaptor = ArgumentCaptor.forClass(SolrQuery.class);

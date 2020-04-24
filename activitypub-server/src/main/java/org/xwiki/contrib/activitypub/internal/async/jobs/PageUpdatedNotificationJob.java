@@ -99,7 +99,8 @@ public class PageUpdatedNotificationJob extends AbstractPageNotificationJob
 
         String docIdSolr = this.stringEntityReferenceSerializer.serialize(documentReference);
 
-        List<Document> documents = this.storage.query(Document.class, String.format("filter(xwikiReference:%s)",
+        List<Document> documents = this.storage.query(Document.class, String.format("filter(%s:%s)",
+            ActivityPubStorage.XWIKI_REFERENCE_FIELD,
             escapeQueryChars(docIdSolr)), 1);
         String contentRendered = this.htmlRenderer.render(content, documentReference);
         Document document;

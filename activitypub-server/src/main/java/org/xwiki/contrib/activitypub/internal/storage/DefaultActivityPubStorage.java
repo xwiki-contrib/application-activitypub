@@ -146,10 +146,12 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
             : entity.getAttributedTo().stream()
             .map(ActivityPubObjectReference::getLink)
             .map(this.internalURINormalizer::relativizeURI)
+            .map(URI::toASCIIString)
             .collect(Collectors.toSet()), inputDocument);
         this.solrUtils.set(TARGETED_FIELD, this.resolver.resolveTargets(entity).stream()
             .map(ActivityPubObject::getId)
             .map(this.internalURINormalizer::relativizeURI)
+            .map(URI::toASCIIString)
             .collect(Collectors.toSet()), inputDocument);
         this.getSolrClient().add(inputDocument);
         this.getSolrClient().commit();
@@ -296,13 +298,19 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         SolrQuery solrQuery = new SolrQuery(DEFAULT_QUERY)
             .addFilterQuery(typeQueryString)
             .addFilterQuery(query)
+            .addSort(UPDATED_DATE_FIELD, SolrQuery.ORDER.desc)
             .setRows(limit);
 
         try {
             QueryResponse queryResponse = this.getSolrClient().query(solrQuery);
             SolrDocumentList queryResults = queryResponse.getResults();
             for (SolrDocument queryResult : queryResults) {
-                result.add(this.jsonParser.parse((String) queryResult.getFieldValue(CONTENT_FIELD)));
+                T activityPubObject =
+                    this.jsonParser.parse((String) queryResult.getFieldValue(CONTENT_FIELD));
+                String uid = (String) queryResult.getFieldValue(ID_FIELD);
+                URI id = this.internalURINormalizer.retrieveAbsoluteURI(URI.create(uid));
+                activityPubObject.setId(id);
+                result.add(activityPubObject);
             }
         } catch (SolrException | SolrServerException | IOException e) {
             throw new ActivityPubException(
