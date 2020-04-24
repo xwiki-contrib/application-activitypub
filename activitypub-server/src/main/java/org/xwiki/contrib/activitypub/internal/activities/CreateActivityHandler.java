@@ -68,9 +68,7 @@ public class CreateActivityHandler extends AbstractActivityHandler<Create>
         throws IOException, ActivityPubException
     {
         Create create = activityRequest.getActivity();
-        if (create.getId() == null) {
-            this.activityPubStorage.storeEntity(create);
-        }
+        this.activityPubStorage.storeEntity(create);
 
         AbstractActor actor = activityRequest.getActor();
         Outbox outbox = this.getOutbox(actor);

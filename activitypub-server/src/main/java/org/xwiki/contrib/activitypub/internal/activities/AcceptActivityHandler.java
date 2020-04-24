@@ -109,9 +109,7 @@ public class AcceptActivityHandler extends AbstractActivityHandler<Accept>
     public void handleOutboxRequest(ActivityRequest<Accept> activityRequest) throws IOException, ActivityPubException
     {
         Accept accept = activityRequest.getActivity();
-        if (accept.getId() == null) {
-            this.activityPubStorage.storeEntity(accept);
-        }
+        this.activityPubStorage.storeEntity(accept);
         AbstractActor acceptingActor = this.activityPubObjectReferenceResolver.resolveReference(accept.getActor());
         ActivityPubObject object = this.activityPubObjectReferenceResolver.resolveReference(accept.getObject());
 

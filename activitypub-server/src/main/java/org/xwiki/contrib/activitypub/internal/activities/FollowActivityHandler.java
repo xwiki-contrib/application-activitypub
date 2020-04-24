@@ -132,9 +132,7 @@ public class FollowActivityHandler extends AbstractActivityHandler<Follow>
     public void handleOutboxRequest(ActivityRequest<Follow> activityRequest) throws IOException, ActivityPubException
     {
         Follow follow = activityRequest.getActivity();
-        if (follow.getId() == null) {
-            this.activityPubStorage.storeEntity(follow);
-        }
+        this.activityPubStorage.storeEntity(follow);
         this.handleFollow(follow, activityRequest.getResponse());
     }
 }

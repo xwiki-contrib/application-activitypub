@@ -69,9 +69,7 @@ public class UpdateActivityHandler extends AbstractActivityHandler<Update>
         throws IOException, ActivityPubException
     {
         Update update = activityRequest.getActivity();
-        if (update.getId() == null) {
-            this.activityPubStorage.storeEntity(update);
-        }
+        this.activityPubStorage.storeEntity(update);
 
         AbstractActor actor = activityRequest.getActor();
         Outbox outbox = this.getOutbox(actor);

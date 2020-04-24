@@ -109,9 +109,7 @@ public class AnnounceActivityHandler extends AbstractActivityHandler<Announce>
             throws IOException, ActivityPubException
     {
         Announce announce = activityRequest.getActivity();
-        if (announce.getId() == null) {
-            this.activityPubStorage.storeEntity(announce);
-        }
+        this.activityPubStorage.storeEntity(announce);
 
         AbstractActor actor = activityRequest.getActor();
         Outbox outbox = this.getOutbox(actor);

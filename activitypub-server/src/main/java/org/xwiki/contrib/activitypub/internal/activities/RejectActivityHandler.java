@@ -77,9 +77,7 @@ public class RejectActivityHandler extends AbstractActivityHandler<Reject>
         throws IOException, ActivityPubException
     {
         Reject reject = activityRequest.getActivity();
-        if (reject.getId() == null) {
-            this.activityPubStorage.storeEntity(reject);
-        }
+        this.activityPubStorage.storeEntity(reject);
         AbstractActor rejectingActor = this.activityPubObjectReferenceResolver.resolveReference(reject.getActor());
         ActivityPubObject object = this.activityPubObjectReferenceResolver.resolveReference(reject.getObject());
 
