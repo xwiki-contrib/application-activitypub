@@ -37,8 +37,7 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
   <content>{{include reference="ActivityPub.ActivityPubUserPicker"/}}
-{{velocity}}
-## Display the ActivityPub Dashboard for the actor given in parameter.
+{{velocity}}## Display the ActivityPub Dashboard for the actor given in parameter.
 #macro(activitypubDashboard $actor)
 #set ($discard = $xwiki.jsx.use('ActivityPub.UserDashboard'))
 #set ($discard = $xwiki.ssx.use('ActivityPub.UserDashboard'))
@@ -174,7 +173,7 @@ $services.localization.render('activitypub.webfinger.notconfigured')
 #else
     &lt;ul&gt;
   #foreach ($factor in $following)
-    &lt;li&gt;$factor.preferredUsername@$factor.id.getHost()&lt;/li&gt;
+    &lt;li&gt;&lt;a href="$factor.id"&gt;$factor.preferredUsername@$factor.id.getHost()&lt;/a&gt;&lt;/li&gt;
   #end
     &lt;/ul&gt;
 #end
@@ -192,15 +191,13 @@ $services.localization.render('activitypub.webfinger.notconfigured')
   #else
   &lt;ul&gt;
     #foreach ($factor in $followers)
-     &lt;li&gt;$factor.preferredUsername@$factor.id.getHost()&lt;/li&gt;
+     &lt;li&gt;&lt;a href="$factor.id"&gt;$factor.preferredUsername@$factor.id.getHost()&lt;/a&gt;&lt;/li&gt;
     #end
   &lt;/ul&gt;
   #end
 &lt;/div&gt;
 {{/html}}
-#end
-{{/velocity}}
-</content>
+#end{{/velocity}}</content>
   <object>
     <name>ActivityPub.UserDashboard</name>
     <number>0</number>
