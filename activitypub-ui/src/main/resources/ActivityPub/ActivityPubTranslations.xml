@@ -72,11 +72,13 @@ activitypub.shareDocument.modalTitle=Document Share
 activitypub.shareDocument.target.label=Target users of the document sharing
 activitypub.shareDocument.target.hint=You can select your followers and/or some specif users.
 activitypub.shareDocument.target.placeholder=Insert here the identifier(s) of user(s)
-activitypub.dashboard.tab.follow=Follow users
-activitypub.dashboard.tab.message=Send messages
+activitypub.dashboard.tab.follow=Follow
+activitypub.dashboard.tab.message=New message
 activitypub.dashboard.guest=You cannot use this application as guest user, please log in.
 ActivityPub.ActivityPubConfigurationClass_pagesNotification.hint=Set to No if you don't want notifications to be send when pages are created of updated.
-ActivityPub.ActivityPubConfigurationClass_userPagesNotification.hint=Set No if you don't want notifications from the user editing documents to be sent when the document is created or updated (note: notifications will always be sent on behalf of the wiki itself).</content>
+ActivityPub.ActivityPubConfigurationClass_userPagesNotification.hint=Set No if you don't want notifications from the user editing documents to be sent when the document is created or updated (note: notifications will always be sent on behalf of the wiki itself).
+activitypub.dashboard.tab.sentMessagesList=Sent messages
+activitypub.dashboard.tab.receivedMessagesList=Received messages</content>
   <object>
     <name>ActivityPub.ActivityPubTranslations</name>
     <number>0</number>

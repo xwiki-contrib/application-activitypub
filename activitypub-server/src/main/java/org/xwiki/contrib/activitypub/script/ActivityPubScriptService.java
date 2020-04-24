@@ -20,12 +20,14 @@
 package org.xwiki.contrib.activitypub.script;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -58,6 +60,7 @@ import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Service;
+import org.xwiki.contrib.activitypub.internal.InternalURINormalizer;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.contrib.activitypub.internal.stream.StreamActivityPubObjectReferenceResolver;
 import org.xwiki.model.reference.DocumentReference;
@@ -77,6 +80,7 @@ import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.user.api.XWikiRightService;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.solr.client.solrj.util.ClientUtils.escapeQueryChars;
 
 /**
  * Script service for ActivityPub.
@@ -97,6 +101,8 @@ public class ActivityPubScriptService implements ScriptService
 
     private static final DocumentReference GUEST_USER =
         new DocumentReference("xwiki", "XWiki", XWikiRightService.GUEST_USER);
+
+    private static final String MESSAGE_QUERY_FILTER = "filter(%s:%s)";
 
     @Inject
     private ActivityPubClient activityPubClient;
@@ -136,6 +142,9 @@ public class ActivityPubScriptService implements ScriptService
 
     @Inject
     private AuthorizationManager authorizationManager;
+
+    @Inject
+    private InternalURINormalizer internalURINormalizer;
 
     @Inject
     private StreamActivityPubObjectReferenceResolver streamActivityPubObjectReferenceResolver;
@@ -285,6 +294,20 @@ public class ActivityPubScriptService implements ScriptService
     }
 
     /**
+     * Compute and return the list of resolved targets.
+     * See {@link ActivityPubObjectReferenceResolver#resolveTargets(ActivityPubObject)} for details.
+     *
+     * @param activityPubObject the object for which to compute the targets.
+     * @return a set of {@link AbstractActor} being the concrete targets of the given object.
+     * @since 1.2
+     */
+    @Unstable
+    public Set<AbstractActor> resolveTargets(ActivityPubObject activityPubObject)
+    {
+        return this.activityPubObjectReferenceResolver.resolveTargets(activityPubObject);
+    }
+
+    /**
      * Resolve and returns the given {@link ActivityPubObjectReference}.
      * @param reference the reference to resolve.
      * @param <T> the type of the reference.
@@ -366,7 +389,8 @@ public class ActivityPubScriptService implements ScriptService
 
             Note note = new Note()
                     .setAttributedTo(Collections.singletonList(currentActor.getReference()))
-                    .setContent(content);
+                    .setContent(content)
+                    .setPublished(new Date());
             this.fillRecipients(targets, currentActor, note);
             this.activityPubStorage.storeEntity(note);
 
@@ -556,6 +580,54 @@ public class ActivityPubScriptService implements ScriptService
             logger.error("Cannot find the actor from [{}].", userReference, e);
             return null;
         }
+    }
+
+    /**
+     * Retrieve the messages sent by the given actor.
+     *
+     * @param actor the actor who sent messages or null for the current actor.
+     * @param limit the maximum number of messages to retrieve.
+     * @return a list of {@link Note} or an empty list.
+     * @since 1.2
+     */
+    @Unstable
+    public List<Note> getSentMessages(AbstractActor actor, int limit)
+    {
+        try {
+            AbstractActor currentActor = this.getSourceActor(actor);
+            // IDs are stored with relative URI.
+            URI actorRelativeURI = this.internalURINormalizer.relativizeURI(currentActor.getId());
+            String query = String.format(MESSAGE_QUERY_FILTER, ActivityPubStorage.AUTHORS_FIELD,
+                escapeQueryChars(actorRelativeURI.toASCIIString()));
+            return this.activityPubStorage.query(Note.class, query, limit);
+        } catch (ActivityPubException e) {
+            this.logger.warn(GET_CURRENT_ACTOR_ERR_MSG, ExceptionUtils.getRootCauseMessage(e));
+        }
+        return Collections.emptyList();
+    }
+
+    /**
+     * Retrieve the messages received by the given actor.
+     *
+     * @param actor the actor who received messages or null for the current actor.
+     * @param limit the maximum number of messages to retrieve.
+     * @return a list of {@link Note} or an empty list.
+     * @since 1.2
+     */
+    @Unstable
+    public List<Note> getReceivedMessages(AbstractActor actor, int limit)
+    {
+        try {
+            AbstractActor currentActor = this.getSourceActor(actor);
+            // IDs are stored with relative URI.
+            URI actorRelativeURI = this.internalURINormalizer.relativizeURI(currentActor.getId());
+            String query = String.format(MESSAGE_QUERY_FILTER, ActivityPubStorage.TARGETED_FIELD,
+                escapeQueryChars(actorRelativeURI.toASCIIString()));
+            return this.activityPubStorage.query(Note.class, query, limit);
+        } catch (ActivityPubException e) {
+            this.logger.warn(GET_CURRENT_ACTOR_ERR_MSG, ExceptionUtils.getRootCauseMessage(e));
+        }
+        return Collections.emptyList();
     }
 
     /**

@@ -242,8 +242,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
             URI storageId = this.internalURINormalizer.relativizeURI(uri);
             SolrDocument solrDocument = this.getSolrClient().getById(storageId.toASCIIString());
             if (solrDocument != null && !solrDocument.isEmpty() && retrieveSolrDocument(solrDocument)) {
-                result = (T) this.jsonParser.parse((String) solrDocument.getFieldValue(CONTENT_FIELD));
-                result.setId(uri);
+                result = this.createObjectFromResult(solrDocument);
             }
             return result;
         } catch (Exception e) {
@@ -305,12 +304,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
             QueryResponse queryResponse = this.getSolrClient().query(solrQuery);
             SolrDocumentList queryResults = queryResponse.getResults();
             for (SolrDocument queryResult : queryResults) {
-                T activityPubObject =
-                    this.jsonParser.parse((String) queryResult.getFieldValue(CONTENT_FIELD));
-                String uid = (String) queryResult.getFieldValue(ID_FIELD);
-                URI id = this.internalURINormalizer.retrieveAbsoluteURI(URI.create(uid));
-                activityPubObject.setId(id);
-                result.add(activityPubObject);
+                result.add(this.createObjectFromResult(queryResult));
             }
         } catch (SolrException | SolrServerException | IOException e) {
             throw new ActivityPubException(
@@ -318,5 +312,15 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
                     query, type.getSimpleName(), limit), e);
         }
         return result;
+    }
+
+    private <T extends ActivityPubObject> T createObjectFromResult(SolrDocument queryResult) throws ActivityPubException
+    {
+        T activityPubObject =
+            this.jsonParser.parse((String) queryResult.getFieldValue(CONTENT_FIELD));
+        String uid = (String) queryResult.getFieldValue(ID_FIELD);
+        URI id = this.internalURINormalizer.retrieveAbsoluteURI(URI.create(uid));
+        activityPubObject.setId(id);
+        return activityPubObject;
     }
 }

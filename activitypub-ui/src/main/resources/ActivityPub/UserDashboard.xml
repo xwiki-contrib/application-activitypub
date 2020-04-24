@@ -37,7 +37,9 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
   <content>{{include reference="ActivityPub.ActivityPubUserPicker"/}}
-{{velocity}}## Display the ActivityPub Dashboard for the actor given in parameter.
+{{include reference="ActivityPub.ListMessages"/}}
+{{velocity}}
+## Display the ActivityPub Dashboard for the actor given in parameter.
 #macro(activitypubDashboard $actor)
 #set ($discard = $xwiki.jsx.use('ActivityPub.UserDashboard'))
 #set ($discard = $xwiki.ssx.use('ActivityPub.UserDashboard'))
@@ -85,7 +87,7 @@ $services.localization.render('activitypub.webfinger.notconfigured')
 {{/warning}}
   #end
 
-  {{html clean='false'}}
+  {{html clean='false' wiki='true'}}
   &lt;ul class="nav nav-tabs" role="tablist"&gt;
     &lt;li role="presentation" class="active"&gt;
       &lt;a href="#follow" aria-controls="follow" role="tab" data-toggle="tab"&gt;
@@ -95,6 +97,16 @@ $services.localization.render('activitypub.webfinger.notconfigured')
     &lt;li role="presentation"&gt;
       &lt;a href="#messaging" aria-controls="messaging" role="tab" data-toggle="tab"&gt;
         $services.localization.render('activitypub.dashboard.tab.message')
+      &lt;/a&gt;
+    &lt;/li&gt;
+    &lt;li role="presentation"&gt;
+      &lt;a href="#messageOutbox" aria-controls="messageOutbox" role="tab" data-toggle="tab"&gt;
+        $services.localization.render('activitypub.dashboard.tab.sentMessagesList')
+      &lt;/a&gt;
+    &lt;/li&gt;
+    &lt;li role="presentation"&gt;
+      &lt;a href="#messageInbox" aria-controls="messageInbox" role="tab" data-toggle="tab"&gt;
+        $services.localization.render('activitypub.dashboard.tab.receivedMessagesList')
       &lt;/a&gt;
     &lt;/li&gt;
   &lt;/ul&gt;
@@ -151,6 +163,14 @@ $services.localization.render('activitypub.webfinger.notconfigured')
       &lt;/div&gt;
       &lt;/form&gt;
     &lt;/div&gt;
+    &lt;div role="tabpanel" class="tab-pane" id="messageOutbox"&gt;
+    
+      #displaySentMessages($actor, 10)
+    &lt;/div&gt;
+    &lt;div role="tabpanel" class="tab-pane" id="messageInbox"&gt;
+    
+      #displayReceivedMessages($actor, 10)
+    &lt;/div&gt;
   &lt;/div&gt;
   {{/html}}
   #end
@@ -197,7 +217,9 @@ $services.localization.render('activitypub.webfinger.notconfigured')
   #end
 &lt;/div&gt;
 {{/html}}
-#end{{/velocity}}</content>
+#end
+{{/velocity}}
+</content>
   <object>
     <name>ActivityPub.UserDashboard</name>
     <number>0</number>

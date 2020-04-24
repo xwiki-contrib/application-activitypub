@@ -194,6 +194,7 @@ public class DefaultActivityPubStorageTest
         when(this.jsonSerializer.serialize(object2)).thenReturn(content);
         when(this.jsonParser.parse(content)).thenReturn(object2);
         when(this.internalURINormalizer.relativizeURI(object2URL)).thenReturn(object2URL);
+        when(this.internalURINormalizer.retrieveAbsoluteURI(object2URL)).thenReturn(object2URL);
 
         // ID match server URL
         assertEquals(object2URL, this.activityPubStorage.storeEntity(object2));
@@ -217,6 +218,7 @@ public class DefaultActivityPubStorageTest
         when(this.jsonParser.parse(content)).thenReturn(object2);
         URI relativeURI = URI.create("object/42");
         when(this.internalURINormalizer.relativizeURI(object2URL)).thenReturn(relativeURI);
+        when(this.internalURINormalizer.retrieveAbsoluteURI(relativeURI)).thenReturn(object2URL);
 
         // ID match server URL
         assertEquals(object2URL, this.activityPubStorage.storeEntity(object2));

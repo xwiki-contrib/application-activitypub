@@ -254,6 +254,9 @@ class ActivityPubScriptServiceTest
         assertEquals(2, allValues.size());
         assertTrue(allValues.get(0) instanceof Note);
         assertTrue(allValues.get(1) instanceof Create);
+        Note obtainedNote = (Note) allValues.get(0);
+        assertNotNull(obtainedNote.getPublished());
+        obtainedNote.setPublished(null);
         assertEquals(note, allValues.get(0));
 
         Create create = (Create) allValues.get(1);
@@ -296,6 +299,9 @@ class ActivityPubScriptServiceTest
         assertEquals(2, allValues.size());
         assertTrue(allValues.get(0) instanceof Note);
         assertTrue(allValues.get(1) instanceof Create);
+        Note obtainedNote = (Note) allValues.get(0);
+        assertNotNull(obtainedNote.getPublished());
+        obtainedNote.setPublished(null);
         assertEquals(note, allValues.get(0));
 
         Create create = (Create) allValues.get(1);
