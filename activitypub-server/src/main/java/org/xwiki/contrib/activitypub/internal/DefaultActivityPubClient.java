@@ -170,7 +170,7 @@ public class DefaultActivityPubClient implements ActivityPubClient
         String exceptionMessage = null;
         if (!method.isRequestSent()) {
             exceptionMessage = "The request has not been sent.";
-        } else if (method.getStatusCode() != 200) {
+        } else if (method.getStatusCode() >= 400) {
             String responseBody = null;
             try {
                 responseBody = method.getResponseBodyAsString();
