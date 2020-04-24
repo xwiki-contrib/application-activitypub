@@ -68,7 +68,7 @@
       <unmodifiable>0</unmodifiable>
       <validationMessage/>
       <validationRegExp/>
-      <values>accept=Accept|reject=Reject|ask=Ask</values>
+      <values>accept=Accept|reject=Reject</values>
       <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
     </followPolicy>
     <pagesNotification>
