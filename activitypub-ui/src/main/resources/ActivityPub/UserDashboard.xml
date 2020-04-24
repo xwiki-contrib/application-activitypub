@@ -45,13 +45,13 @@
 #set ($discard = $xwiki.ssx.use('ActivityPub.UserDashboard'))
 #set ($canSeeDashboard = ("$!actor" != "" &amp;&amp; $services.activitypub.currentUserCanActFor($actor)))
 
-#if ("$!actor" == "")
-{{warning}}
-You can only access this macro if an actor is defined.
-{{/warning}}
-#elseif (!$services.activitypub.isStorageReady())
+#if (!$services.activitypub.isStorageReady())
 {{warning}}
 $services.localization.render('activitypub.storage.needrestart')
+{{/warning}}
+#elseif ("$!actor" == "")
+{{warning}}
+$services.localization.render('activitypub.dashboard.noactor')
 {{/warning}}
 #else
 ## The various interactions needs to send the actor id, so we put it in the document directly.
@@ -184,7 +184,7 @@ $services.localization.render('activitypub.webfinger.notconfigured')
 #end
 
 #macro(listFollowing $actor)
-{{html clean="false"}}
+{{html clean="false" wiki="true"}}
 &lt;div&gt;
     &lt;h1&gt;$services.localization.render('activitypub.following.title')&lt;/h1&gt;
 #set ($following = $services.activitypub.following($actor))
@@ -193,7 +193,7 @@ $services.localization.render('activitypub.webfinger.notconfigured')
 #else
     &lt;ul&gt;
   #foreach ($factor in $following)
-    &lt;li&gt;&lt;a href="$factor.id"&gt;$factor.preferredUsername@$factor.id.getHost()&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;#displayActor($factor)&lt;/li&gt;
   #end
     &lt;/ul&gt;
 #end
@@ -202,7 +202,7 @@ $services.localization.render('activitypub.webfinger.notconfigured')
 #end
 
 #macro (listFollowers $actor)
-{{html clean="false"}}
+{{html clean="false" wiki="true"}}
 &lt;div&gt;
   &lt;h1&gt;$services.localization.render('activitypub.followers.title')&lt;/h1&gt;
   #set ($followers = $services.activitypub.followers($actor))
@@ -211,7 +211,7 @@ $services.localization.render('activitypub.webfinger.notconfigured')
   #else
   &lt;ul&gt;
     #foreach ($factor in $followers)
-     &lt;li&gt;&lt;a href="$factor.id"&gt;$factor.preferredUsername@$factor.id.getHost()&lt;/a&gt;&lt;/li&gt;
+     &lt;li&gt;#displayActor($factor)&lt;/li&gt;
     #end
   &lt;/ul&gt;
   #end
