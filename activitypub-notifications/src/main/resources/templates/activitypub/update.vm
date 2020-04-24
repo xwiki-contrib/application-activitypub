@@ -19,6 +19,7 @@
 ## ---------------------------------------------------------------------------
 #template('activitypub/macros.vm')
 
+#set ($smallIcon = "refresh")
 #define ($content)
 <div class="notification-description">
     <div class="activity-type">$services.localization.render('activitypub.event.update.type')</div>
