@@ -55,6 +55,17 @@ public interface ActivityPubConfiguration
     }
 
     /**
+     * Behavior to adopt during notification of page creation and modification.
+     *
+     * @since 1.2
+     */
+    enum PageNotificationPolicy
+    {
+        WIKI,
+        WIKIANDUSER
+    }
+
+    /**
      * @return which follow policy is used by the server.
      */
     FollowPolicy getFollowPolicy();
@@ -69,12 +80,12 @@ public interface ActivityPubConfiguration
      * @since 1.2
      */
     @Unstable
-    boolean isPagesNotification();
+    boolean isPageNotificationsEnabled();
 
     /**
      * @return the value of the user page notificatin value.
      * @since 1.2
      */
     @Unstable
-    boolean isUserPagesNotification();
+    PageNotificationPolicy getPageNotificationPolicy();
 }

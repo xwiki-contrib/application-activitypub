@@ -26,6 +26,7 @@ import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -123,11 +124,14 @@ public class PageUpdatedNotificationJob extends AbstractPageNotificationJob
         // Make sure it's stored so it can be resolved later.
         this.storage.storeEntity(document);
 
+        List<ProxyActor> to = attributedTo.stream()
+            .map(it -> new ProxyActor(it.getObject().getFollowers().getLink()))
+            .collect(Collectors.toList());
         return new Update()
             .setActor(document.getAttributedTo().get(0))
             .setObject(document)
             .setName(String.format("Update of document [%s]", title))
-            .setTo(Collections.singletonList(new ProxyActor(author.getFollowers().getLink())))
+            .setTo(to)
             .setPublished(creationDate);
     }
 

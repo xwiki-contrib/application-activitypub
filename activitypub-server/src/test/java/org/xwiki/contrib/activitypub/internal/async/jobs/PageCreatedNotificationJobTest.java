@@ -22,7 +22,6 @@ package org.xwiki.contrib.activitypub.internal.async.jobs;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -64,6 +63,7 @@ import com.xpn.xwiki.user.api.XWikiRightService;
 
 import ch.qos.logback.classic.Level;
 
+import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -72,6 +72,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.PageNotificationPolicy.WIKI;
+import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.PageNotificationPolicy.WIKIANDUSER;
 
 /**
  * Tests of {@link PageCreatedNotificationJob}.
@@ -144,13 +146,14 @@ class PageCreatedNotificationJobTest
             .thenReturn(this.authorReference);
         when(this.actorHandler.getActor(this.authorReference)).thenReturn(this.person);
         ActivityPubObjectReference followers = mock(ActivityPubObjectReference.class);
+        when(followers.getLink()).thenReturn(URI.create("http://followerswiki"));
         this.service = new Service()
             .setFollowers(followers)
             .setId(URI.create("http://domain.tld/xwiki/1"));
         when(this.actorHandler.getActor(new WikiReference("xwiki"))).thenReturn(this.service);
-        when(this.objectReferenceResolver.resolveReference(followers)).thenReturn(serviceFollowers);
+        when(this.objectReferenceResolver.resolveReference(followers)).thenReturn(this.serviceFollowers);
         when(this.serviceFollowers.isEmpty()).thenReturn(true);
-        when(this.configuration.isUserPagesNotification()).thenReturn(true);
+        when(this.configuration.getPageNotificationPolicy()).thenReturn(WIKIANDUSER);
     }
 
     @Test
@@ -220,13 +223,16 @@ class PageCreatedNotificationJobTest
             .setName(documentTile)
             .setAttributedTo(Arrays.asList(wikiReference, userReference))
             .setPublished(creationDate)
-            .setUrl(Collections.singletonList(new URI(absoluteDocumentUrl)));
+            .setUrl(singletonList(new URI(absoluteDocumentUrl)));
         Create create = new Create()
             .setActor(this.person)
             .setObject(apDoc)
             .setName("Creation of document [A document title]")
             .setPublished(creationDate)
-            .setTo(Collections.singletonList(new ProxyActor(this.person.getFollowers().getLink())));
+            .setTo(Arrays.asList(
+                new ProxyActor(this.service.getFollowers().getLink()),
+                new ProxyActor(this.person.getFollowers().getLink())
+            ));
         ActivityRequest<Create> activityRequest = new ActivityRequest<>(this.person, create);
 
         PageChangedRequest request =
@@ -254,7 +260,7 @@ class PageCreatedNotificationJobTest
 
         when(this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, documentReference)).thenReturn(true);
 
-        when(this.configuration.isUserPagesNotification()).thenReturn(true);
+        when(this.configuration.getPageNotificationPolicy()).thenReturn(WIKIANDUSER);
 
         this.job.initialize(t);
         this.job.runInternal();
@@ -287,18 +293,18 @@ class PageCreatedNotificationJobTest
         Document apDoc = new Document()
             .setName(documentTile)
             .setAttributedTo(
-                Collections.singletonList(
+                singletonList(
                     new ActivityPubObjectReference<AbstractActor>()
                         .setObject(this.service))
             )
             .setPublished(creationDate)
-            .setUrl(Collections.singletonList(new URI(absoluteDocumentUrl)));
+            .setUrl(singletonList(new URI(absoluteDocumentUrl)));
         Create create = new Create()
             .setActor(this.person)
             .setObject(apDoc)
             .setName("Creation of document [A document title]")
             .setPublished(creationDate)
-            .setTo(Collections.singletonList(new ProxyActor(this.person.getFollowers().getLink())));
+            .setTo(singletonList(new ProxyActor(this.service.getFollowers().getLink())));
         ActivityRequest<Create> activityRequest = new ActivityRequest<>(this.person, create);
 
         PageChangedRequest request =
@@ -327,7 +333,7 @@ class PageCreatedNotificationJobTest
 
         when(this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, documentReference)).thenReturn(true);
 
-        when(this.configuration.isUserPagesNotification()).thenReturn(false);
+        when(this.configuration.getPageNotificationPolicy()).thenReturn(WIKI);
 
         this.job.initialize(t);
         this.job.runInternal();
@@ -457,22 +463,15 @@ class PageCreatedNotificationJobTest
         when(this.document.getCreationDate()).thenReturn(creationDate);
         when(this.document.getTitle()).thenReturn(documentTile);
 
-        Document apDoc = new Document()
-                             .setName(documentTile)
-                             .setAttributedTo(
-                                 Collections.singletonList(
-                                     new ActivityPubObjectReference<AbstractActor>()
-                                         .setObject(this.service)
-                                 )
-                             )
-                             .setPublished(creationDate)
-                             .setUrl(Collections.singletonList(new URI(absoluteDocumentUrl)));
+        Document apDoc = new Document().setName(documentTile)
+            .setAttributedTo(singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(this.service)))
+            .setPublished(creationDate).setUrl(singletonList(new URI(absoluteDocumentUrl)));
         Create create = new Create()
-                            .setActor(this.person)
-                            .setObject(apDoc)
-                            .setName("Creation of document [A document title]")
-                            .setPublished(creationDate)
-                            .setTo(Collections.singletonList(new ProxyActor(this.person.getFollowers().getLink())));
+            .setActor(this.person)
+            .setObject(apDoc)
+            .setName("Creation of document [A document title]")
+            .setPublished(creationDate)
+            .setTo(singletonList(new ProxyActor(this.service.getFollowers().getLink())));
         ActivityRequest<Create> activityRequest = new ActivityRequest<>(this.person, create);
         PageChangedRequest request =
             new PageChangedRequest()
@@ -495,7 +494,7 @@ class PageCreatedNotificationJobTest
         when(this.actorHandler.getActor(documentReference.getWikiReference()))
             .thenReturn(this.service);
         when(this.serviceFollowers.isEmpty()).thenReturn(false);
-        when(this.configuration.isUserPagesNotification()).thenReturn(false);
+        when(this.configuration.getPageNotificationPolicy()).thenReturn(WIKI);
 
         when(this.urlHandler.getAbsoluteURI(new URI(absoluteDocumentUrl))).thenReturn(URI.create(absoluteDocumentUrl));
 

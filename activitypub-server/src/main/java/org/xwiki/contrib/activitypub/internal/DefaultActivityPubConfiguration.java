@@ -27,9 +27,6 @@ import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 
-import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.FollowPolicy.REJECT;
-import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.FollowPolicy.valueOf;
-
 /**
  * Default configuration: it always accept Follow request for now.
  *
@@ -52,9 +49,9 @@ public class DefaultActivityPubConfiguration implements ActivityPubConfiguration
     {
         String followPolicy = this.configuration.getProperty("followPolicy", "reject");
         try {
-            return valueOf(followPolicy.toUpperCase().trim());
+            return FollowPolicy.valueOf(followPolicy.toUpperCase().trim());
         } catch (IllegalArgumentException | NullPointerException e) {
-            return REJECT;
+            return FollowPolicy.REJECT;
         }
     }
 
@@ -66,16 +63,20 @@ public class DefaultActivityPubConfiguration implements ActivityPubConfiguration
     }
 
     @Override
-    public boolean isPagesNotification()
+    public boolean isPageNotificationsEnabled()
     {
-        String value = this.configuration.getProperty("pagesNotification", "");
+        String value = this.configuration.getProperty("pageNotifications", "");
         return !"0".equals(value);
     }
 
     @Override
-    public boolean isUserPagesNotification()
+    public PageNotificationPolicy getPageNotificationPolicy()
     {
-        String value = this.configuration.getProperty("userPagesNotification", "");
-        return !"0".equals(value);
+        String pageNotificationPolicy = this.configuration.getProperty("pageNotificationPolicy", "wikiAndUser");
+        try {
+            return PageNotificationPolicy.valueOf(pageNotificationPolicy.toUpperCase().trim());
+        } catch (IllegalArgumentException | NullPointerException e) {
+            return PageNotificationPolicy.WIKIANDUSER;
+        }
     }
 }

@@ -76,6 +76,46 @@
         <values>accept=Accept|reject=Reject</values>
         <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
       </followPolicy>
+      <pageNotificationPolicy>
+        <cache>0</cache>
+        <customDisplay/>
+        <defaultValue>wikiAndUser</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText/>
+        <hint>Page creation and modifications notifications are send on behalf of the selected users.</hint>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>pageNotificationPolicy</name>
+        <number>4</number>
+        <picker>1</picker>
+        <prettyName>Page Notification Policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <sort/>
+        <unmodifiable>0</unmodifiable>
+        <validationMessage/>
+        <validationRegExp/>
+        <values>wiki=Whole Wiki|wikiAndUser=Whole Wiki + Author</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </pageNotificationPolicy>
+      <pageNotifications>
+        <customDisplay/>
+        <defaultValue>1</defaultValue>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType/>
+        <hint/>
+        <name>pageNotifications</name>
+        <number>3</number>
+        <prettyName>Enable page notification</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <validationMessage/>
+        <validationRegExp/>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </pageNotifications>
       <wikiGroup>
         <cache>0</cache>
         <customDisplay/>
@@ -104,6 +144,12 @@
     </class>
     <property>
       <followPolicy>accept</followPolicy>
+    </property>
+    <property>
+      <pageNotificationPolicy>wikiAndUser</pageNotificationPolicy>
+    </property>
+    <property>
+      <pageNotifications>1</pageNotifications>
     </property>
     <property>
       <wikiGroup>XWiki.XWikiAdminGroup</wikiGroup>

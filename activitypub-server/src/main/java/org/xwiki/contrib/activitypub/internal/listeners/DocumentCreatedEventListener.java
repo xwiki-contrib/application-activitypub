@@ -77,7 +77,7 @@ public class DocumentCreatedEventListener extends AbstractEventListener
     @Override
     public void onEvent(Event event, Object source, Object data)
     {
-        if (this.configuration.isPagesNotification()) {
+        if (this.configuration.isPageNotificationsEnabled()) {
             XWikiDocument document = (XWikiDocument) source;
             if (!Boolean.TRUE.equals(document.isHidden())) {
                 XWikiContext context = (XWikiContext) data;

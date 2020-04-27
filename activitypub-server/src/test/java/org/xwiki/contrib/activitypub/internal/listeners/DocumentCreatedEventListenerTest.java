@@ -187,7 +187,7 @@ public class DocumentCreatedEventListenerTest
                             .setTo(Collections.singletonList(new ProxyActor(this.person.getFollowers().getLink())));
         ActivityRequest<Create> activityRequest = new ActivityRequest<>(this.person, create);
         
-        when(this.configuration.isPagesNotification()).thenReturn(true);
+        when(this.configuration.isPageNotificationsEnabled()).thenReturn(true);
         
         this.listener.onEvent(new DocumentCreatedEvent(), this.document, this.context);
 
@@ -244,7 +244,7 @@ public class DocumentCreatedEventListenerTest
             .setTo(Collections.singletonList(new ProxyActor(this.person.getFollowers().getLink())));
         ActivityRequest<Create> activityRequest = new ActivityRequest<>(this.person, create);
 
-        when(this.configuration.isPagesNotification()).thenReturn(false);
+        when(this.configuration.isPageNotificationsEnabled()).thenReturn(false);
 
         this.listener.onEvent(new DocumentCreatedEvent(), this.document, this.context);
 

@@ -37,6 +37,8 @@ import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
+
 /**
  * Specific handler for {@link Accept} activities.
  *
@@ -96,10 +98,14 @@ public class AcceptActivityHandler extends AbstractActivityHandler<Accept>
         List<ActivityPubObjectReference<AbstractActor>> lst = list.getOrderedItems();
         boolean found = false;
         for (ActivityPubObjectReference<AbstractActor> x : lst) {
-            AbstractActor rx = this.activityPubObjectReferenceResolver.resolveReference(x);
-            if (rx.equals(followingActor) || rx.equals(acceptingActor)) {
-                found = true;
-                break;
+            try {
+                AbstractActor rx = this.activityPubObjectReferenceResolver.resolveReference(x);
+                if (rx.equals(followingActor) || rx.equals(acceptingActor)) {
+                    found = true;
+                    break;
+                }
+            } catch (ActivityPubException e) {
+                this.logger.warn("User [{}] not resolved. Cause: [{}]", x, getRootCauseMessage(e));
             }
         }
         return found;

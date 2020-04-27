@@ -76,6 +76,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.PageNotificationPolicy.WIKI;
+import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.PageNotificationPolicy.WIKIANDUSER;
 
 /**
  * Tests of {@link PageUpdatedNotificationJob}.
@@ -154,13 +156,14 @@ class PageUpdatedNotificationJobTest
             .thenReturn(this.authorReference);
         when(this.actorHandler.getActor(this.authorReference)).thenReturn(this.person);
         ActivityPubObjectReference followers = mock(ActivityPubObjectReference.class);
+        when(followers.getLink()).thenReturn(URI.create("http://followerswiki"));
         this.service = new Service()
             .setFollowers(followers)
             .setId(URI.create("http://domain.tld/xwiki/1"));
         when(this.actorHandler.getActor(new WikiReference("xwiki"))).thenReturn(this.service);
-        when(this.objectReferenceResolver.resolveReference(followers)).thenReturn(serviceFollowers);
+        when(this.objectReferenceResolver.resolveReference(followers)).thenReturn(this.serviceFollowers);
         when(this.serviceFollowers.isEmpty()).thenReturn(true);
-        when(this.configuration.isUserPagesNotification()).thenReturn(true);
+        when(this.configuration.getPageNotificationPolicy()).thenReturn(WIKIANDUSER);
     }
 
     @Test
@@ -240,7 +243,10 @@ class PageUpdatedNotificationJobTest
             .setObject(updatedDoc)
             .setName("Update of document [A document title]")
             .setPublished(creationDate)
-            .setTo(singletonList(new ProxyActor(this.person.getFollowers().getLink())));
+            .setTo(Arrays.asList(
+                new ProxyActor(this.service.getFollowers().getLink()),
+                new ProxyActor(this.person.getFollowers().getLink())
+            ));
         ActivityRequest<Update> activityRequest = new ActivityRequest<>(this.service, update);
 
         PageChangedRequest request =
@@ -268,7 +274,7 @@ class PageUpdatedNotificationJobTest
 
         when(this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, documentReference)).thenReturn(true);
 
-        when(this.configuration.isUserPagesNotification()).thenReturn(true);
+        when(this.configuration.getPageNotificationPolicy()).thenReturn(WIKIANDUSER);
 
         when(this.stringEntityReferenceSerializer.serialize(documentReference))
             .thenReturn(documentReference.toString());
@@ -322,7 +328,10 @@ class PageUpdatedNotificationJobTest
             .setObject(apDoc)
             .setName("Update of document [A document title]")
             .setPublished(creationDate)
-            .setTo(singletonList(new ProxyActor(this.person.getFollowers().getLink())));
+            .setTo(Arrays.asList(
+                new ProxyActor(this.service.getFollowers().getLink()),
+                new ProxyActor(this.person.getFollowers().getLink())
+            ));
         ActivityRequest<Update> activityRequest = new ActivityRequest<>(this.service, update);
 
         PageChangedRequest request =
@@ -350,7 +359,7 @@ class PageUpdatedNotificationJobTest
 
         when(this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, documentReference)).thenReturn(true);
 
-        when(this.configuration.isUserPagesNotification()).thenReturn(true);
+        when(this.configuration.getPageNotificationPolicy()).thenReturn(WIKIANDUSER);
 
         when(this.stringEntityReferenceSerializer.serialize(documentReference))
             .thenReturn(documentReference.toString());
@@ -399,7 +408,7 @@ class PageUpdatedNotificationJobTest
             .setObject(apDoc)
             .setName("Update of document [A document title]")
             .setPublished(creationDate)
-            .setTo(singletonList(new ProxyActor(this.person.getFollowers().getLink())));
+            .setTo(singletonList(new ProxyActor(this.service.getFollowers().getLink())));
         ActivityRequest<Update> activityRequest = new ActivityRequest<>(this.service, update);
 
         PageChangedRequest request =
@@ -428,7 +437,7 @@ class PageUpdatedNotificationJobTest
 
         when(this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, documentReference)).thenReturn(true);
 
-        when(this.configuration.isUserPagesNotification()).thenReturn(false);
+        when(this.configuration.getPageNotificationPolicy()).thenReturn(WIKI);
 
         when(this.stringEntityReferenceSerializer.serialize(documentReference))
             .thenReturn(documentReference.toString());
@@ -550,9 +559,20 @@ class PageUpdatedNotificationJobTest
             .thenReturn(true);
         when(this.objectReferenceResolver.resolveReference(this.person.getFollowers())).thenReturn(
             new OrderedCollection<AbstractActor>()
-                .addItem(new Person())
+                .addItem(new Person().setId(URI.create("http://wiki/follower/OfFooBar")))
+                .addItem(new Person().setId(URI.create("http://wiki/follower/OfBoth")))
                 .setId(new URI("http://followers"))
         );
+
+        when(this.objectReferenceResolver.resolveReference(this.service.getFollowers())).thenReturn(
+            new OrderedCollection<AbstractActor>()
+                .addItem(new Person().setId(URI.create("http://wiki/follower/OfWiki")))
+                .addItem(new Person().setId(URI.create("http://wiki/follower/OfBoth")))
+                .setId(new URI("http://followerswiki"))
+        );
+
+        when(this.objectReferenceResolver.resolveReference(new ActivityPubObjectReference<>().setObject(this.service)))
+            .thenReturn(this.service);
 
         String absoluteDocumentUrl = "http://www.xwiki.org/xwiki/bin/view/Main";
         String relativeDocumentUrl = "/xwiki/bin/view/Main";
@@ -575,7 +595,7 @@ class PageUpdatedNotificationJobTest
             .setObject(apDoc)
             .setName("Update of document [A document title]")
             .setPublished(creationDate)
-            .setTo(singletonList(new ProxyActor(this.person.getFollowers().getLink())));
+            .setTo(singletonList(new ProxyActor(this.service.getFollowers().getLink())));
         ActivityRequest<Update> activityRequest = new ActivityRequest<>(this.service, update);
         PageChangedRequest request =
             new PageChangedRequest()
@@ -598,7 +618,7 @@ class PageUpdatedNotificationJobTest
         when(this.actorHandler.getActor(documentReference.getWikiReference()))
             .thenReturn(this.service);
         when(this.serviceFollowers.isEmpty()).thenReturn(false);
-        when(this.configuration.isUserPagesNotification()).thenReturn(false);
+        when(this.configuration.getPageNotificationPolicy()).thenReturn(WIKI);
 
         when(this.urlHandler.getAbsoluteURI(new URI(absoluteDocumentUrl))).thenReturn(URI.create(absoluteDocumentUrl));
 

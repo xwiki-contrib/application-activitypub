@@ -22,6 +22,7 @@ package org.xwiki.contrib.activitypub.internal.async.jobs;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -47,6 +48,7 @@ import com.xpn.xwiki.user.api.XWikiRightService;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.PageNotificationPolicy.WIKIANDUSER;
 
 /**
  * Please document me.
@@ -99,7 +101,8 @@ public abstract class AbstractPageNotificationJob extends AbstractJob<PageChange
             // but also if there's no wiki followers but author followers and the configuration allows to trigger on it.
             boolean shouldTriggerNotifications = guestAccess
                 && (!wikiFollowers.isEmpty()
-                || (this.configuration.isUserPagesNotification() && !authorFollowers.isEmpty()));
+                || (Objects.equals(this.configuration.getPageNotificationPolicy(), WIKIANDUSER) && !authorFollowers
+                .isEmpty()));
 
             if (shouldTriggerNotifications) {
                 this.proceed(author);
@@ -126,9 +129,9 @@ public abstract class AbstractPageNotificationJob extends AbstractJob<PageChange
         Service wikiActor = this.actorHandler.getActor(dr.getWikiReference());
         ActivityPubObjectReference<AbstractActor> wiki = new ActivityPubObjectReference<AbstractActor>()
             .setObject(wikiActor);
-        
+
         List<ActivityPubObjectReference<AbstractActor>> ret;
-        if (this.configuration.isUserPagesNotification()) {
+        if (Objects.equals(this.configuration.getPageNotificationPolicy(), WIKIANDUSER)) {
             ret = asList(wiki, new ActivityPubObjectReference<AbstractActor>().setObject(author));
         } else {
             ret = singletonList(wiki);
