@@ -35,27 +35,36 @@
       #set ($actor = $services.activitypub.resolve($activity.actor))
 
       #if ($activity.type.toLowerCase() == "accept")
-        #if ($services.activitypub.isCurrentUser($actor) || $services.activitypub.currentUserCanActFor($actor))
+        #if ($services.activitypub.isCurrentUser($actor))
           #set ($object = $services.activitypub.resolve($activity.object))
           #set ($actor = $services.activitypub.resolve($object.actor))
-          #set ($description = "activitypub.event.follow.description.accept.currentuser")
+          #set ($description = $services.localization.render("activitypub.event.follow.description.accept.currentuser"))
+        #elseif($services.activitypub.currentUserCanActFor($actor))
+          #set ($object = $services.activitypub.resolve($activity.object))
+          #set ($targetActor = $actor)
+          #set ($actor = $services.activitypub.resolve($object.actor))
+          #set ($description = $services.localization.render("activitypub.event.follow.description.accept.wiki", [$targetActor.name]))
         #else
-          #set ($description = "activitypub.event.follow.description.accept.otheruser")
+          #set ($description = $services.localization.render("activitypub.event.follow.description.accept.otheruser"))
         #end
       #elseif ($activity.type.toLowerCase() == "reject")
         #if ($services.activitypub.isCurrentUser($actor) || $services.activitypub.currentUserCanActFor($actor))
           #set ($object = $services.activitypub.resolve($activity.object))
           #set ($actor = $services.activitypub.resolve($object.actor))
-          #set ($description = "activitypub.event.follow.description.reject.currentuser")
+          #set ($description = $services.localization.render("activitypub.event.follow.description.reject.currentuser"))
         #else
-          #set ($description = "activitypub.event.follow.description.reject.otheruser")
+          #set ($description = $services.localization.render("activitypub.event.follow.description.reject.otheruser"))
         #end
       #elseif ($activity.type.toLowerCase() == "follow")
-        #set ($description = "activitypub.event.follow.description.follow")
+        #if ($services.activitypub.isCurrentUser($actor))
+          #set ($description = $services.localization.render("activitypub.event.follow.description.follow.currentuser"))
+        #else
+          #set ($description = $services.localization.render("activitypub.event.follow.description.follow.wiki", [$actor.preferredUsername]))
+        #end
       #else
-        #set ($description = "activitypub.event.follow.description.$activity.type")
+        #set ($description = $services.localization.render("activitypub.event.follow.description.$activity.type"))
       #end
-      #displayAPEventDetail($event $actor $services.localization.render($description))
+      #displayAPEventDetail($event $actor $description)
     #end
   #end
   #displayNotificationEventDetailsSkeletons($events.size(), $rows)
