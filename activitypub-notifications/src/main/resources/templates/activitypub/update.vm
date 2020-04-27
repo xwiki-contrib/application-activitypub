@@ -53,7 +53,11 @@
                     </div><!-- /.modal-dialog -->
                 </div><!-- /.modal -->
                     #if ("$!object.url" != "")
-                        #set($objectLink = "<a href=""$object.url.get(0)"">$object.name</a>")
+                        #if ($services.activitypub.belongsToCurrentInstance("$object.url.get(0)"))
+                            #set($objectLink = "<a href=""$object.url.get(0)"">$object.name</a>")
+                        #else
+                            #set($objectLink = "<span class=""wikiexternallink""><a href=""$object.url.get(0)"">$object.name</a></span>")
+                        #end
                     #else
                         #set($objectLink = $object.name)
                     #end

@@ -39,7 +39,11 @@
   <content>{{velocity output="false"}}
 #macro (displayActor $actor)
   #set ($username = $services.webfinger.getWebfingerId($actor))
-  [[$username&gt;&gt;$actor.id]]
+  #if ($services.activitypub.belongsToCurrentInstance("$actor.id"))
+    {{html}}&lt;a href="$actor.id"&gt;$username&lt;/a&gt;{{/html}}
+  #else
+    [[$username&gt;&gt;$actor.id]]
+  #end
 #end
 
 #macro (displayFrom $message)

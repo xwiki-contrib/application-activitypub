@@ -32,7 +32,15 @@
 #macro (displayAPEventDetail $event $actor $summary)
   #set ($username = $services.webfinger.getWebfingerId($actor))
 <tr>
-  <td><span class="notification-event-user"><a href="$actor.id">$username</a></span></td>
+  <td>
+    <span class="notification-event-user">
+    #if ($services.activitypub.belongsToCurrentInstance("$actor.id"))
+      <a href="$actor.id">$username</a>
+    #else
+      <span class="wikiexternallink"><a href="$actor.id">$username</a></span>
+    #end
+    </span>
+  </td>
   <td class="description">$summary</td>
   #insertEventDate($event)
 </tr>

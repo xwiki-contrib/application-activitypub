@@ -659,7 +659,7 @@ public class ActivityPubScriptService implements ScriptService
     {
         return this.activityPubStorage.isStorageReady();
     }
-    
+
     /**
      * @param dateProvider the date provider.
      * @since 1.2
@@ -667,5 +667,19 @@ public class ActivityPubScriptService implements ScriptService
     public void setDateProvider(DateProvider dateProvider)
     {
         this.dateProvider = dateProvider;
+    }
+
+    /**
+     * @param url An url.
+     * @return True of the url points to a content of the current instance.
+     * @since 1.2
+     */
+    public boolean belongsToCurrentInstance(String url)
+    {
+        try {
+            return this.urlHandler.belongsToCurrentInstance(URI.create(url));
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
