@@ -85,13 +85,23 @@ public abstract class AbstractPageNotificationJob extends AbstractJob<PageChange
             UserReference userReference =
                 this.xWikiUserBridge.resolveDocumentReference(request.getAuthorReference());
             AbstractActor author = this.actorHandler.getActor(userReference);
-            OrderedCollection<AbstractActor> followers =
+            OrderedCollection<AbstractActor> authorFollowers =
                 this.objectReferenceResolver.resolveReference(author.getFollowers());
+            Service wikiActor = this.actorHandler.getActor(request.getDocumentReference().getWikiReference());
+            OrderedCollection<AbstractActor> wikiFollowers =
+                this.objectReferenceResolver.resolveReference(wikiActor.getFollowers());
 
             // ensure the page can be viewed with guest user to not disclose private stuff in a notif
             boolean guestAccess = this.authorizationManager
                 .hasAccess(Right.VIEW, GUEST_USER, request.getDocumentReference());
-            if (guestAccess && !followers.isEmpty()) {
+
+            // We trigger notifications only if the page is available in guest and there is wiki followers
+            // but also if there's no wiki followers but author followers and the configuration allows to trigger on it.
+            boolean shouldTriggerNotifications = guestAccess
+                && (!wikiFollowers.isEmpty()
+                || (this.configuration.isUserPagesNotification() && !authorFollowers.isEmpty()));
+
+            if (shouldTriggerNotifications) {
                 this.proceed(author);
             }
         } catch (URISyntaxException | ActivityPubException | IOException e) {

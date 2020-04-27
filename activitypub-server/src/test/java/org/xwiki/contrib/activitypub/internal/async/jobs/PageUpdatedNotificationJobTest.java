@@ -50,6 +50,7 @@ import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.contrib.activitypub.internal.async.PageChangedRequest;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
+import org.xwiki.model.reference.WikiReference;
 import org.xwiki.security.authorization.AuthorizationManager;
 import org.xwiki.security.authorization.Right;
 import org.xwiki.test.LogLevel;
@@ -135,6 +136,11 @@ class PageUpdatedNotificationJobTest
     @Mock
     private UserReference authorReference;
 
+    private Service service;
+
+    @Mock
+    private OrderedCollection<AbstractActor> serviceFollowers;
+
     @BeforeEach
     public void setup() throws Exception
     {
@@ -147,6 +153,14 @@ class PageUpdatedNotificationJobTest
         when(this.xWikiUserBridge.resolveDocumentReference(this.document.getAuthorReference()))
             .thenReturn(this.authorReference);
         when(this.actorHandler.getActor(this.authorReference)).thenReturn(this.person);
+        ActivityPubObjectReference followers = mock(ActivityPubObjectReference.class);
+        this.service = new Service()
+            .setFollowers(followers)
+            .setId(URI.create("http://domain.tld/xwiki/1"));
+        when(this.actorHandler.getActor(new WikiReference("xwiki"))).thenReturn(this.service);
+        when(this.objectReferenceResolver.resolveReference(followers)).thenReturn(serviceFollowers);
+        when(this.serviceFollowers.isEmpty()).thenReturn(true);
+        when(this.configuration.isUserPagesNotification()).thenReturn(true);
     }
 
     @Test
@@ -159,6 +173,7 @@ class PageUpdatedNotificationJobTest
     void runInternalNoFollowers() throws Exception
     {
         PageChangedRequest t = mock(PageChangedRequest.class);
+        when(t.getDocumentReference()).thenReturn(new DocumentReference("xwiki", "Foo", "Bar"));
         when(this.xWikiUserBridge.resolveDocumentReference(t.getAuthorReference()))
             .thenReturn(this.authorReference);
 
@@ -173,6 +188,7 @@ class PageUpdatedNotificationJobTest
     void runInternalOneFollowerNoRight() throws Exception
     {
         PageChangedRequest t = mock(PageChangedRequest.class);
+        when(t.getDocumentReference()).thenReturn(new DocumentReference("xwiki", "Foo", "Bar"));
         when(this.xWikiUserBridge.resolveDocumentReference(t.getAuthorReference()))
             .thenReturn(this.authorReference);
 
@@ -206,9 +222,8 @@ class PageUpdatedNotificationJobTest
         when(this.document.getCreationDate()).thenReturn(creationDate);
         when(this.document.getTitle()).thenReturn(documentTile);
 
-        Service wiki = new Service().setId(URI.create("http://domain.tld/xwiki/1"));
         ActivityPubObjectReference<AbstractActor> wikiReference = new ActivityPubObjectReference<AbstractActor>()
-            .setObject(wiki);
+            .setObject(this.service);
         ActivityPubObjectReference<AbstractActor> userReference =
             new ActivityPubObjectReference<AbstractActor>().setObject(this.person);
         Document apDoc = new Document()
@@ -221,12 +236,12 @@ class PageUpdatedNotificationJobTest
             .setAttributedTo(Arrays.asList(wikiReference, userReference))
             .setContent("<h1>new content</h1>");
         Update update = new Update()
-            .setActor(wiki)
+            .setActor(this.service)
             .setObject(updatedDoc)
             .setName("Update of document [A document title]")
             .setPublished(creationDate)
             .setTo(singletonList(new ProxyActor(this.person.getFollowers().getLink())));
-        ActivityRequest<Update> activityRequest = new ActivityRequest<>(wiki, update);
+        ActivityRequest<Update> activityRequest = new ActivityRequest<>(this.service, update);
 
         PageChangedRequest request =
             new PageChangedRequest()
@@ -247,7 +262,7 @@ class PageUpdatedNotificationJobTest
         when(t.getCreationDate()).thenReturn(creationDate);
         when(t.getViewURL()).thenReturn(absoluteDocumentUrl);
         when(this.actorHandler.getActor(documentReference.getWikiReference()))
-            .thenReturn(wiki);
+            .thenReturn(this.service);
 
         when(this.urlHandler.getAbsoluteURI(new URI(absoluteDocumentUrl))).thenReturn(URI.create(absoluteDocumentUrl));
 
@@ -292,9 +307,8 @@ class PageUpdatedNotificationJobTest
         when(this.document.getCreationDate()).thenReturn(creationDate);
         when(this.document.getTitle()).thenReturn(documentTile);
 
-        Service wiki = new Service().setId(URI.create("http://domain.tld/xwiki/1"));
         ActivityPubObjectReference<AbstractActor> wikiReference = new ActivityPubObjectReference<AbstractActor>()
-            .setObject(wiki);
+            .setObject(this.service);
         ActivityPubObjectReference<AbstractActor> userReference =
             new ActivityPubObjectReference<AbstractActor>().setObject(this.person);
         Document apDoc = new Document()
@@ -304,12 +318,12 @@ class PageUpdatedNotificationJobTest
             .setUrl(singletonList(new URI(absoluteDocumentUrl)))
             .setXwikiReference("xwiki:XWiki.TEST");
         Update update = new Update()
-            .setActor(wiki)
+            .setActor(this.service)
             .setObject(apDoc)
             .setName("Update of document [A document title]")
             .setPublished(creationDate)
             .setTo(singletonList(new ProxyActor(this.person.getFollowers().getLink())));
-        ActivityRequest<Update> activityRequest = new ActivityRequest<>(wiki, update);
+        ActivityRequest<Update> activityRequest = new ActivityRequest<>(this.service, update);
 
         PageChangedRequest request =
             new PageChangedRequest()
@@ -330,7 +344,7 @@ class PageUpdatedNotificationJobTest
         when(t.getCreationDate()).thenReturn(creationDate);
         when(t.getViewURL()).thenReturn(absoluteDocumentUrl);
         when(this.actorHandler.getActor(documentReference.getWikiReference()))
-            .thenReturn(wiki);
+            .thenReturn(this.service);
 
         when(this.urlHandler.getAbsoluteURI(new URI(absoluteDocumentUrl))).thenReturn(URI.create(absoluteDocumentUrl));
 
@@ -374,20 +388,19 @@ class PageUpdatedNotificationJobTest
         when(this.document.getCreationDate()).thenReturn(creationDate);
         when(this.document.getTitle()).thenReturn(documentTile);
 
-        Service wiki = new Service().setId(URI.create("http://domain.tld/xwiki/1"));
         Document apDoc = new Document()
             .setName(documentTile)
-            .setAttributedTo(singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(wiki)))
+            .setAttributedTo(singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(this.service)))
             .setPublished(creationDate)
             .setUrl(singletonList(new URI(absoluteDocumentUrl)))
             .setXwikiReference("xwiki:XWiki.TEST");
         Update update = new Update()
-            .setActor(wiki)
+            .setActor(this.service)
             .setObject(apDoc)
             .setName("Update of document [A document title]")
             .setPublished(creationDate)
             .setTo(singletonList(new ProxyActor(this.person.getFollowers().getLink())));
-        ActivityRequest<Update> activityRequest = new ActivityRequest<>(wiki, update);
+        ActivityRequest<Update> activityRequest = new ActivityRequest<>(this.service, update);
 
         PageChangedRequest request =
             new PageChangedRequest()
@@ -408,7 +421,8 @@ class PageUpdatedNotificationJobTest
         when(t.getCreationDate()).thenReturn(creationDate);
         when(t.getViewURL()).thenReturn(absoluteDocumentUrl);
         when(this.actorHandler.getActor(documentReference.getWikiReference()))
-            .thenReturn(wiki);
+            .thenReturn(this.service);
+        when(this.serviceFollowers.isEmpty()).thenReturn(false);
 
         when(this.urlHandler.getAbsoluteURI(new URI(absoluteDocumentUrl))).thenReturn(URI.create(absoluteDocumentUrl));
 
@@ -550,20 +564,19 @@ class PageUpdatedNotificationJobTest
         when(this.document.getCreationDate()).thenReturn(creationDate);
         when(this.document.getTitle()).thenReturn(documentTile);
 
-        Service wiki = new Service().setId(URI.create("http://domain.tld/xwiki/1"));
         Document apDoc = new Document()
             .setName(documentTile)
-            .setAttributedTo(singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(wiki)))
+            .setAttributedTo(singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(this.service)))
             .setPublished(creationDate)
             .setUrl(singletonList(new URI(absoluteDocumentUrl)))
             .setXwikiReference("xwiki:XWiki.TEST");
         Update update = new Update()
-            .setActor(wiki)
+            .setActor(this.service)
             .setObject(apDoc)
             .setName("Update of document [A document title]")
             .setPublished(creationDate)
             .setTo(singletonList(new ProxyActor(this.person.getFollowers().getLink())));
-        ActivityRequest<Update> activityRequest = new ActivityRequest<>(wiki, update);
+        ActivityRequest<Update> activityRequest = new ActivityRequest<>(this.service, update);
         PageChangedRequest request =
             new PageChangedRequest()
                 .setDocumentReference(this.document.getDocumentReference())
@@ -583,7 +596,9 @@ class PageUpdatedNotificationJobTest
         when(t.getCreationDate()).thenReturn(creationDate);
         when(t.getViewURL()).thenReturn(absoluteDocumentUrl);
         when(this.actorHandler.getActor(documentReference.getWikiReference()))
-            .thenReturn(wiki);
+            .thenReturn(this.service);
+        when(this.serviceFollowers.isEmpty()).thenReturn(false);
+        when(this.configuration.isUserPagesNotification()).thenReturn(false);
 
         when(this.urlHandler.getAbsoluteURI(new URI(absoluteDocumentUrl))).thenReturn(URI.create(absoluteDocumentUrl));
 
