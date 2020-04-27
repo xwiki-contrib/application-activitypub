@@ -98,6 +98,7 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
                     getMethod.releaseConnection();
                 }
                 reference.setObject(result);
+                this.activityPubStorageProvider.get().storeEntity(result);
             } catch (IOException e) {
                 // We might be trying to refresh an information, in that case we just rely on the information we already
                 // manage to retrieve from the storage.

@@ -117,6 +117,7 @@ public class DefaultActivityPubObjectReferenceResolverTest
             .resolveReference(new ActivityPubObjectReference<>().setObject(object)));
         verify(this.activityPubClient, never()).get(any());
         verify(this.activityPubStorage, never()).retrieveEntity(any());
+        verify(this.activityPubStorage, never()).storeEntity(any());
     }
 
     @Test
@@ -132,6 +133,7 @@ public class DefaultActivityPubObjectReferenceResolverTest
         assertSame(t, this.resolver.resolveReference(reference));
         assertSame(t, reference.getObject());
         verify(this.activityPubStorage).retrieveEntity(uri);
+        verify(this.activityPubStorage).storeEntity(t);
     }
 
     @Test
@@ -144,6 +146,7 @@ public class DefaultActivityPubObjectReferenceResolverTest
         assertSame(t, this.resolver.resolveReference(reference));
         assertSame(t, reference.getObject());
         verify(this.activityPubClient, never()).get(uri);
+        verify(this.activityPubStorage, never()).storeEntity(any());
     }
 
     @Test
@@ -158,12 +161,15 @@ public class DefaultActivityPubObjectReferenceResolverTest
     }
 
     @Test
-    public void resolveTargetsWithComputedTargets()
+    public void resolveTargetsWithComputedTargets() throws Exception
     {
         ActivityPubObject activityPubObject = mock(ActivityPubObject.class);
         Set<AbstractActor> result = Collections.singleton(mock(AbstractActor.class));
         when(activityPubObject.getComputedTargets()).thenReturn(result);
         assertEquals(result, this.resolver.resolveTargets(activityPubObject));
+        verify(this.activityPubClient, never()).get(any());
+        verify(this.activityPubStorage, never()).retrieveEntity(any());
+        verify(this.activityPubStorage, never()).storeEntity(any());
     }
 
     @Test
@@ -255,6 +261,7 @@ public class DefaultActivityPubObjectReferenceResolverTest
         assertSame(person, reference.getObject());
         verify(this.activityPubStorage).retrieveEntity(uri);
         verify(this.activityPubClient).get(uri);
+        verify(this.activityPubStorage).storeEntity(person);
     }
 
     @Test
@@ -277,5 +284,6 @@ public class DefaultActivityPubObjectReferenceResolverTest
         assertSame(person, reference.getObject());
         verify(this.activityPubStorage).retrieveEntity(uri);
         verify(this.activityPubClient).get(uri);
+        verify(this.activityPubStorage, never()).storeEntity(any());
     }
 }
