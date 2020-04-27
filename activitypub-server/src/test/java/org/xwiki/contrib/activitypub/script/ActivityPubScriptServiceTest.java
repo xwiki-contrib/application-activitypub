@@ -22,6 +22,7 @@ package org.xwiki.contrib.activitypub.script;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -38,6 +39,7 @@ import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.ActorHandler;
+import org.xwiki.contrib.activitypub.HTMLRenderer;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
@@ -49,6 +51,7 @@ import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Service;
+import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.WikiReference;
@@ -80,6 +83,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.xwiki.contrib.activitypub.script.ActivityPubScriptService.DateProvider;
 import static org.xwiki.test.LogLevel.ERROR;
 
 /**
@@ -126,6 +130,12 @@ class ActivityPubScriptServiceTest
 
     @MockComponent
     private AuthorizationManager authorizationManager;
+
+    @MockComponent
+    private HTMLRenderer htmlRenderer;
+
+    @MockComponent
+    private DefaultURLHandler urlHandler;
 
     @RegisterExtension
     LogCaptureExtension logCapture = new LogCaptureExtension(ERROR);
@@ -372,13 +382,39 @@ class ActivityPubScriptServiceTest
         when(this.contextProvider.get()).thenReturn(xWikiContext);
         XWiki xWiki = mock(XWiki.class);
         when(xWikiContext.getWiki()).thenReturn(xWiki);
-        when(xWiki.getDocument(documentReference, xWikiContext)).thenReturn(mock(XWikiDocument.class));
+        XWikiDocument xwikiDoc = mock(XWikiDocument.class);
+        when(xWiki.getDocument(documentReference, xWikiContext)).thenReturn(xwikiDoc);
         when(this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, documentReference)).thenReturn(true);
+        when(xwikiDoc.getTitle()).thenReturn("Doc Title");
+        when(xwikiDoc.getURL("view", xWikiContext)).thenReturn("http://wiki/view/page");
+        when(this.urlHandler.getAbsoluteURI(URI.create("http://wiki/view/page"))).thenReturn(URI.create(
+            "http://wiki/view/page"));
+        when(this.htmlRenderer.render(xwikiDoc.getXDOM(), documentReference)).thenReturn("<div>content</div>");
+        AbstractActor u1 = new Person().setName("U1").setId(URI.create("http://wiki/person/u1"));
+        when(this.actorHandler.getActor("U1")).thenReturn(u1);
+
+        DateProvider dateProvider = mock(DateProvider.class);
+        this.scriptService.setDateProvider(dateProvider);
+        // fix the date to make it deterministic
+        Date currentDate = new Date();
+        when(dateProvider.currentTime()).thenReturn(currentDate);
 
         boolean actual = this.scriptService.sharePage(Collections.singletonList("U1"), "xwiki:XWiki.MyPage");
 
         assertTrue(actual);
-        verify(this.activityPubStorage).storeEntity(any(Announce.class));
+        ActivityPubObject document = new Document()
+            .setName("Doc Title")
+            .setAttributedTo(Collections.singletonList(currentActor.getReference()))
+            .setUrl(Collections.singletonList(URI.create("http://wiki/view/page")))
+            .setContent("<div>content</div>")
+            .setTo(Collections.singletonList(u1.getProxyActor()));
+        verify(this.activityPubStorage).storeEntity(document);
+        verify(this.activityPubStorage).storeEntity(new Announce()
+            .setActor(currentActor)
+            .setObject(document)
+            .setAttributedTo(Collections.singletonList(currentActor.getReference()))
+            .setPublished(currentDate)
+            .<Announce>setTo(Collections.singletonList(u1.getProxyActor())));
         verify(this.announceActivityHandler).handleOutboxRequest(any(ActivityRequest.class));
     }
 
@@ -395,9 +431,11 @@ class ActivityPubScriptServiceTest
         when(this.contextProvider.get()).thenReturn(xWikiContext);
         XWiki xWiki = mock(XWiki.class);
         when(xWikiContext.getWiki()).thenReturn(xWiki);
-        when(xWiki.getDocument(documentReference, xWikiContext)).thenReturn(mock(XWikiDocument.class));
+        XWikiDocument xwikiDoc = mock(XWikiDocument.class);
+        when(xWiki.getDocument(documentReference, xWikiContext)).thenReturn(xwikiDoc);
         when(this.activityPubStorage.storeEntity(any())).thenThrow(new ActivityPubException("ERR"));
         when(this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, documentReference)).thenReturn(true);
+        when(xwikiDoc.getURL("view", xWikiContext)).thenReturn("http://wiki/view/page");
 
         boolean actual = this.scriptService.sharePage(Collections.singletonList("U1"), "xwiki:XWiki.MyPage");
 

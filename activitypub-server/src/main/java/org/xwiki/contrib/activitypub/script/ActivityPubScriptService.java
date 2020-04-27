@@ -21,6 +21,7 @@ package org.xwiki.contrib.activitypub.script;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -60,6 +61,7 @@ import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Service;
+import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.contrib.activitypub.internal.InternalURINormalizer;
 import org.xwiki.contrib.activitypub.internal.XWikiUserBridge;
 import org.xwiki.contrib.activitypub.internal.stream.StreamActivityPubObjectReferenceResolver;
@@ -79,6 +81,7 @@ import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.user.api.XWikiRightService;
 
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.solr.client.solrj.util.ClientUtils.escapeQueryChars;
 
@@ -103,6 +106,16 @@ public class ActivityPubScriptService implements ScriptService
         new DocumentReference("xwiki", "XWiki", XWikiRightService.GUEST_USER);
 
     private static final String MESSAGE_QUERY_FILTER = "filter(%s:%s)";
+
+    protected static class DateProvider
+    {
+        public Date currentTime()
+        {
+            return new Date();
+        }
+    }
+
+    private DateProvider dateProvider = new DateProvider();
 
     @Inject
     private ActivityPubClient activityPubClient;
@@ -148,6 +161,9 @@ public class ActivityPubScriptService implements ScriptService
 
     @Inject
     private StreamActivityPubObjectReferenceResolver streamActivityPubObjectReferenceResolver;
+
+    @Inject
+    private DefaultURLHandler urlHandler;
 
     private void checkAuthentication() throws ActivityPubException
     {
@@ -387,19 +403,20 @@ public class ActivityPubScriptService implements ScriptService
         try {
             AbstractActor currentActor = this.getSourceActor(sourceActor);
 
+            Date currentTime = this.dateProvider.currentTime();
             Note note = new Note()
-                    .setAttributedTo(Collections.singletonList(currentActor.getReference()))
-                    .setContent(content)
-                    .setPublished(new Date());
+                .setAttributedTo(singletonList(currentActor.getReference()))
+                .setContent(content)
+                .setPublished(currentTime);
             this.fillRecipients(targets, currentActor, note);
             this.activityPubStorage.storeEntity(note);
 
             Create create = new Create()
-                    .setActor(currentActor)
-                    .setObject(note)
-                    .setAttributedTo(note.getAttributedTo())
-                    .setTo(note.getTo())
-                    .setPublished(new Date());
+                .setActor(currentActor)
+                .setObject(note)
+                .setAttributedTo(note.getAttributedTo())
+                .setTo(note.getTo())
+                .setPublished(currentTime);
             this.activityPubStorage.storeEntity(create);
 
             create.getObject().setExpand(true);
@@ -433,22 +450,25 @@ public class ActivityPubScriptService implements ScriptService
              * Additionally, sharing a page can only be realized by logged in users.
              */
             if (guestAccess && currentActor != null) {
-                XWikiDocument xwikiDoc =
-                    this.contextProvider.get().getWiki().getDocument(dr, this.contextProvider.get());
+                XWikiContext context = this.contextProvider.get();
+                XWikiDocument xwikiDoc = context.getWiki().getDocument(dr, context);
                 String content = this.htmlRenderer.render(xwikiDoc.getXDOM(), dr);
+                URI documentUrl = this.urlHandler.getAbsoluteURI(URI.create(xwikiDoc.getURL("view", context)));
                 Document document = new Document()
                     .setName(xwikiDoc.getTitle())
-                    .setAttributedTo(Collections.singletonList(currentActor.getReference()))
+                    .setAttributedTo(singletonList(currentActor.getReference()))
+                    .setUrl(singletonList(documentUrl))
                     .setContent(content);
                 this.fillRecipients(targets, currentActor, document);
                 this.activityPubStorage.storeEntity(document);
 
+                Date published = this.dateProvider.currentTime();
                 Announce announce = new Announce()
                     .setActor(currentActor)
                     .setObject(document)
                     .setAttributedTo(document.getAttributedTo())
                     .setTo(document.getTo())
-                    .setPublished(new Date());
+                    .setPublished(published);
                 this.activityPubStorage.storeEntity(announce);
 
                 this.announceActivityHandler.handleOutboxRequest(new ActivityRequest<>(currentActor, announce));
@@ -456,7 +476,7 @@ public class ActivityPubScriptService implements ScriptService
             } else {
                 return false;
             }
-        } catch (IOException | ActivityPubException | XWikiException e) {
+        } catch (IOException | ActivityPubException | XWikiException | URISyntaxException e) {
             this.logger.error("Error while sharing a page.", e);
             return false;
         }
@@ -638,5 +658,14 @@ public class ActivityPubScriptService implements ScriptService
     public boolean isStorageReady()
     {
         return this.activityPubStorage.isStorageReady();
+    }
+    
+    /**
+     * @param dateProvider the date provider.
+     * @since 1.2
+     */
+    public void setDateProvider(DateProvider dateProvider)
+    {
+        this.dateProvider = dateProvider;
     }
 }
