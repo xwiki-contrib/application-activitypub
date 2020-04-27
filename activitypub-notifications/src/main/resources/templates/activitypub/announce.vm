@@ -37,7 +37,7 @@
             #if ($object.type.toLowerCase() == "document")
                 #define($description)
                 <div class="modal fade" tabindex="-1" role="dialog" id="evt-modal-$event.id">
-                  <div class="modal-dialog" role="document">
+                  <div class="modal-dialog modal-lg" role="document">
                     <div class="modal-content">
                       <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -52,7 +52,12 @@
                     </div><!-- /.modal-content -->
                   </div><!-- /.modal-dialog -->
                 </div><!-- /.modal -->
-                    $services.localization.render('activitypub.event.announce.description') <a href="$object.url.get(0)">$object.name</a>.
+                    #if ("$!object.url" != "")
+                        #set($objectLink = "<a href=""$object.url.get(0)"">$object.name</a>")
+                    #else
+                        #set($objectLink = $object.name)
+                    #end
+                    $services.localization.render('activitypub.event.announce.description') $objectLink.
                 <div>
                   <button type="button" class="btn btn-primary btn-xs" id="btn-modal-$event.id">
                     See the page
