@@ -75,10 +75,8 @@ activitypub.shareDocument.target.placeholder=Insert here the identifier(s) of us
 activitypub.dashboard.tab.follow=Follow
 activitypub.dashboard.tab.message=New message
 activitypub.dashboard.guest=You cannot use this application as guest user, please log in.
-ActivityPub.ActivityPubConfigurationClass_pageNotifications.hint=Whether page creation and modification notifications 
-  are active or not.
-ActivityPub.ActivityPubConfigurationClass_pageNotificationPolicy.hint=Page creation and modifications notifications 
-  are send to the followers of the selected users.
+ActivityPub.ActivityPubConfigurationClass_pageNotifications.hint=Whether page creation and modification notifications are active or not.
+ActivityPub.ActivityPubConfigurationClass_pageNotificationPolicy.hint=Page creation and modifications notifications are send to the followers of the selected users.
 activitypub.dashboard.tab.sentMessagesList=Sent messages
 activitypub.dashboard.tab.receivedMessagesList=Received messages
 activitypub.dashboard.noactor=You can only access this macro if an actor is defined.
