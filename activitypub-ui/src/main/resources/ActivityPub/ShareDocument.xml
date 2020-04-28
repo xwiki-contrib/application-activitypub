@@ -141,7 +141,10 @@
     <property>
       <code>require(['jquery', 'xwiki-meta'], function($, xm) {
   $(document).ready(function() {
-    $("#activitypub-link-share-page").click(function() { 
+
+    $("#activitypub-modal-share-page").prependTo("body");
+
+    $("#activitypub-link-share-page").click(function() {
       $("#activitypub-form-share-page select")[0].selectize.clear();
       $('#activitypub-modal-share-page').modal('show');
     });
@@ -320,7 +323,7 @@
         &lt;h4 class="modal-title"&gt;$services.localization.render('activitypub.shareDocument.modalTitle')&lt;/h4&gt;
       &lt;/div&gt;
       &lt;div class="modal-body"&gt;
-        &lt;form id="activitypub-form-share-page" class='xform'&gt;
+        &lt;div id="activitypub-form-share-page" class='xform'&gt;
           &lt;dl&gt;
             &lt;dt&gt;
               &lt;label for="messageTarget"&gt;$services.localization.render('activitypub.shareDocument.target.label')&lt;/label&gt;
@@ -336,7 +339,7 @@
                 #APUsersPicker($APUsersPickerParams)
             &lt;/dd&gt;
           &lt;/dl&gt;
-        &lt;/form&gt;
+        &lt;/div&gt;
       &lt;/div&gt;
       &lt;div class="modal-footer"&gt;
         &lt;button type="button" class="btn btn-default" data-dismiss="modal"&gt;Close&lt;/button&gt;
