@@ -26,13 +26,11 @@ import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.http.client.utils.URIBuilder;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
@@ -76,26 +74,7 @@ public class ActivityPubResourceReferenceSerializer implements
             ExtendedURL extendedURL = new ExtendedURL(segments, resource.getParameters());
 
             extendedURL = this.extendedURLNormalizer.normalize(extendedURL);
-
-            // The following is a nasty hack, we should rely on URLURLNormarlizer once
-            // https://jira.xwiki.org/browse/XWIKI-17023 is fixed.
-            URIBuilder uriBuilder = new URIBuilder(this.urlHandler.getServerUrl().toURI());
-            uriBuilder.setPathSegments(extendedURL.getSegments());
-            for (Map.Entry<String, List<String>> parameter : extendedURL.getParameters().entrySet()) {
-                String paramKey = parameter.getKey();
-                if (parameter.getValue().isEmpty()) {
-                    uriBuilder.addParameter(paramKey, null);
-                } else {
-                    for (String paramValue : parameter.getValue()) {
-                        uriBuilder.addParameter(paramKey, paramValue);
-                    }
-                }
-            }
-            // We remove the ":80" part of the server URL to avoid problem with the storage.
-            if (uriBuilder.getPort() == 80) {
-                uriBuilder.setPort(-1);
-            }
-            return uriBuilder.build();
+            return this.urlHandler.getAbsoluteURI(URI.create(extendedURL.toString()));
         } catch (MalformedURLException | URISyntaxException | UnsupportedEncodingException e) {
             throw new SerializeResourceReferenceException(
                 String.format("Error while serializing [%s] to URI.", resource), e);

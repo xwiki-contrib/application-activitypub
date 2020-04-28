@@ -30,6 +30,7 @@ import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.test.annotation.BeforeComponent;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
+import org.xwiki.test.junit5.mockito.MockComponent;
 import org.xwiki.test.mockito.MockitoComponentManager;
 import org.xwiki.url.ExtendedURL;
 import org.xwiki.url.URLNormalizer;
@@ -51,10 +52,12 @@ public class ActivityPubResourceReferenceSerializerTest
     @InjectMockComponents
     private ActivityPubResourceReferenceSerializer serializer;
 
+    @MockComponent
+    private DefaultURLHandler urlHandler;
+
     @BeforeComponent
     public void setup(MockitoComponentManager componentManager) throws Exception
     {
-        DefaultURLHandler urlHandler = componentManager.registerMockComponent(DefaultURLHandler.class);
         when(urlHandler.getServerUrl()).thenReturn(new URL(DEFAULT_URL));
 
         Type urlNormalizerType = new DefaultParameterizedType(null, URLNormalizer.class, ExtendedURL.class);
@@ -72,6 +75,9 @@ public class ActivityPubResourceReferenceSerializerTest
         resourceReference.addParameter("param2", 42);
 
         URI expectedURI = new URI("http://www.xwiki.org/activitypub/foobar/myuid?param1=bazbuz&param2=42");
+        when(urlHandler.getAbsoluteURI(URI.create("/activitypub/foobar/myuid?param1=bazbuz&param2=42")))
+            .thenReturn(expectedURI);
+
         assertEquals(expectedURI, this.serializer.serialize(resourceReference));
     }
 
@@ -85,6 +91,9 @@ public class ActivityPubResourceReferenceSerializerTest
 
         URI expectedURI =
             new URI("http://www.xwiki.org/activitypub/Person/xwiki%253AXWiki.Admin?param1=bazbuz&param2=42");
+        when(urlHandler.getAbsoluteURI(URI.create("/activitypub/Person/xwiki%253AXWiki.Admin?param1=bazbuz&param2=42")))
+            .thenReturn(expectedURI);
+
         assertEquals(expectedURI, this.serializer.serialize(resourceReference));
     }
 }
