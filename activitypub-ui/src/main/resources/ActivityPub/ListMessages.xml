@@ -49,15 +49,15 @@
 #macro (displayFrom $message)
   #set($fromList = $message.attributedTo)
   #foreach($actorReference in $fromList)
-    #set($actor = $services.activitypub.resolve($actorReference))
-    #displayActor($actor) 
+    #set($displayFromActor = $services.activitypub.resolve($actorReference))
+    #displayActor($displayFromActor) 
   #end
 #end
 
 #macro (displayTo $message)
   #set($toList = $services.activitypub.resolveTargets($message))
-  #foreach($actor in $toList)
-    #displayActor($actor) 
+  #foreach($displayToActor in $toList)
+    #displayActor($displayToActor) 
   #end
 #end
 
