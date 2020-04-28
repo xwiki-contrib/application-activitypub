@@ -69,7 +69,7 @@
 
     **$services.localization.render('activitypub.message.display.content')**
 
-    $message.content
+    {{html}}$message.content{{/html}}
   {{/box}}
   
 #end
