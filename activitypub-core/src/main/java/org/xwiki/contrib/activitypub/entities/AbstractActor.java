@@ -173,6 +173,12 @@ public abstract class AbstractActor extends ActivityPubObject
     }
 
     @Override
+    public boolean isActor()
+    {
+        return true;
+    }
+
+    @Override
     public String toString()
     {
         return new XWikiToStringBuilder(this)

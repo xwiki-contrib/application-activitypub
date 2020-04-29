@@ -40,7 +40,7 @@ import org.xwiki.contrib.activitypub.HTMLRenderer;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Create;
-import org.xwiki.contrib.activitypub.entities.Document;
+import org.xwiki.contrib.activitypub.entities.Page;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.rendering.block.XDOM;
@@ -93,7 +93,7 @@ public class PageCreatedNotificationJob extends AbstractPageNotificationJob
         URI documentUrl = this.urlHandler.getAbsoluteURI(new URI(view));
 
         List<ActivityPubObjectReference<AbstractActor>> attributedTo = this.emitters(author);
-        Document document = new Document()
+        Page page = new Page()
             .setName(title)
             .setAttributedTo(attributedTo)
             .setPublished(creationDate)
@@ -104,14 +104,14 @@ public class PageCreatedNotificationJob extends AbstractPageNotificationJob
             .setXwikiReference(this.stringEntityReferenceSerializer.serialize(this.request.getDocumentReference()));
 
         // Make sure it's stored so it can be resolved later.
-        this.storage.storeEntity(document);
+        this.storage.storeEntity(page);
 
         List<ProxyActor> to = attributedTo.stream()
             .map(it -> new ProxyActor(it.getObject().getFollowers().getLink()))
             .collect(Collectors.toList());
         return new Create()
             .setActor(author)
-            .setObject(document)
+            .setObject(page)
             .setName(String.format("Creation of document [%s]", title))
             .setTo(to)
             .setPublished(creationDate);

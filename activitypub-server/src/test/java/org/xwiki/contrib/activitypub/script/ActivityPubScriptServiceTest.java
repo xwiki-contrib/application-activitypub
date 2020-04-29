@@ -45,9 +45,9 @@ import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Announce;
 import org.xwiki.contrib.activitypub.entities.Create;
-import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
+import org.xwiki.contrib.activitypub.entities.Page;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Service;
@@ -402,16 +402,16 @@ class ActivityPubScriptServiceTest
         boolean actual = this.scriptService.sharePage(Collections.singletonList("U1"), "xwiki:XWiki.MyPage");
 
         assertTrue(actual);
-        ActivityPubObject document = new Document()
+        ActivityPubObject page = new Page()
             .setName("Doc Title")
             .setAttributedTo(Collections.singletonList(currentActor.getReference()))
             .setUrl(Collections.singletonList(URI.create("http://wiki/view/page")))
             .setContent("<div>content</div>")
             .setTo(Collections.singletonList(u1.getProxyActor()));
-        verify(this.activityPubStorage).storeEntity(document);
+        verify(this.activityPubStorage).storeEntity(page);
         verify(this.activityPubStorage).storeEntity(new Announce()
             .setActor(currentActor)
-            .setObject(document)
+            .setObject(page)
             .setAttributedTo(Collections.singletonList(currentActor.getReference()))
             .setPublished(currentDate)
             .<Announce>setTo(Collections.singletonList(u1.getProxyActor())));
@@ -465,7 +465,7 @@ class ActivityPubScriptServiceTest
         boolean actual = this.scriptService.sharePage(Collections.singletonList("U1"), "xwiki:XWiki.MyPage");
 
         assertFalse(actual);
-        verify(this.activityPubStorage, never()).storeEntity(any(Document.class));
+        verify(this.activityPubStorage, never()).storeEntity(any(Page.class));
         verify(this.activityPubStorage, never()).storeEntity(any(Announce.class));
         verify(this.announceActivityHandler, never()).handleOutboxRequest(any(ActivityRequest.class));
         assertEquals(0, this.logCapture.size());
@@ -491,7 +491,7 @@ class ActivityPubScriptServiceTest
         boolean actual = this.scriptService.sharePage(Collections.singletonList("U1"), "xwiki:XWiki.MyPage");
 
         assertFalse(actual);
-        verify(this.activityPubStorage, never()).storeEntity(any(Document.class));
+        verify(this.activityPubStorage, never()).storeEntity(any(Page.class));
         verify(this.activityPubStorage, never()).storeEntity(any(Announce.class));
         verify(this.announceActivityHandler, never()).handleOutboxRequest(any(ActivityRequest.class));
         assertEquals(0, this.logCapture.size());

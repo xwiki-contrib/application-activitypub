@@ -39,8 +39,8 @@ import org.xwiki.contrib.activitypub.HTMLRenderer;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
-import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
+import org.xwiki.contrib.activitypub.entities.Page;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Service;
@@ -229,13 +229,13 @@ class PageUpdatedNotificationJobTest
             .setObject(this.service);
         ActivityPubObjectReference<AbstractActor> userReference =
             new ActivityPubObjectReference<AbstractActor>().setObject(this.person);
-        Document apDoc = new Document()
+        Page apDoc = new Page()
             .setName(documentTile)
             .setAttributedTo(Arrays.asList(wikiReference, userReference))
             .setPublished(creationDate)
             .setUrl(singletonList(new URI(absoluteDocumentUrl)))
             .setXwikiReference("xwiki:XWiki.TEST");
-        ActivityPubObject updatedDoc = new Document()
+        ActivityPubObject updatedDoc = new Page()
             .setAttributedTo(Arrays.asList(wikiReference, userReference))
             .setContent("<h1>new content</h1>");
         Update update = new Update()
@@ -279,15 +279,15 @@ class PageUpdatedNotificationJobTest
         when(this.stringEntityReferenceSerializer.serialize(documentReference))
             .thenReturn(documentReference.toString());
 
-        when(this.activityPubStorage.query(Document.class, "filter(xwikiReference:xwiki\\:XWiki.TEST)", 1))
-            .thenReturn(singletonList(new Document()));
+        when(this.activityPubStorage.query(Page.class, "filter(xwikiReference:xwiki\\:XWiki.TEST)", 1))
+            .thenReturn(singletonList(new Page()));
 
         when(this.htmlRenderer.render(any(), any())).thenReturn("<h1>new content</h1>");
 
         this.job.initialize(t);
         this.job.runInternal();
 
-        verify(this.activityPubStorage).query(Document.class, "filter(xwikiReference:xwiki\\:XWiki.TEST)", 1);
+        verify(this.activityPubStorage).query(Page.class, "filter(xwikiReference:xwiki\\:XWiki.TEST)", 1);
         verify(this.activityPubStorage).storeEntity(updatedDoc);
         verify(this.updateActivityHandler).handleOutboxRequest(activityRequest);
     }
@@ -317,7 +317,7 @@ class PageUpdatedNotificationJobTest
             .setObject(this.service);
         ActivityPubObjectReference<AbstractActor> userReference =
             new ActivityPubObjectReference<AbstractActor>().setObject(this.person);
-        Document apDoc = new Document()
+        Page apDoc = new Page()
             .setName(documentTile)
             .setAttributedTo(Arrays.asList(wikiReference, userReference))
             .setPublished(creationDate)
@@ -365,13 +365,13 @@ class PageUpdatedNotificationJobTest
             .thenReturn(documentReference.toString());
 
         // the updated document is not found in storage
-        when(this.activityPubStorage.query(Document.class, "filter(xwikiReference:xwiki\\:XWiki.TEST)", 1))
+        when(this.activityPubStorage.query(Page.class, "filter(xwikiReference:xwiki\\:XWiki.TEST)", 1))
             .thenReturn(emptyList());
 
         this.job.initialize(t);
         this.job.runInternal();
 
-        verify(this.activityPubStorage).query(Document.class, "filter(xwikiReference:xwiki\\:XWiki.TEST)", 1);
+        verify(this.activityPubStorage).query(Page.class, "filter(xwikiReference:xwiki\\:XWiki.TEST)", 1);
         verify(this.activityPubStorage).storeEntity(apDoc);
         verify(this.updateActivityHandler).handleOutboxRequest(activityRequest);
     }
@@ -397,7 +397,7 @@ class PageUpdatedNotificationJobTest
         when(this.document.getCreationDate()).thenReturn(creationDate);
         when(this.document.getTitle()).thenReturn(documentTile);
 
-        Document apDoc = new Document()
+        Page apDoc = new Page()
             .setName(documentTile)
             .setAttributedTo(singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(this.service)))
             .setPublished(creationDate)
@@ -442,7 +442,7 @@ class PageUpdatedNotificationJobTest
         when(this.stringEntityReferenceSerializer.serialize(documentReference))
             .thenReturn(documentReference.toString());
 
-        when(this.activityPubStorage.query(Document.class, "filter(xwikiReference:xwiki\\:XWiki.TEST)", 1))
+        when(this.activityPubStorage.query(Page.class, "filter(xwikiReference:xwiki\\:XWiki.TEST)", 1))
             .thenReturn(emptyList());
 
         this.job.initialize(t);
@@ -584,7 +584,7 @@ class PageUpdatedNotificationJobTest
         when(this.document.getCreationDate()).thenReturn(creationDate);
         when(this.document.getTitle()).thenReturn(documentTile);
 
-        Document apDoc = new Document()
+        Page apDoc = new Page()
             .setName(documentTile)
             .setAttributedTo(singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(this.service)))
             .setPublished(creationDate)
@@ -629,7 +629,7 @@ class PageUpdatedNotificationJobTest
         when(this.stringEntityReferenceSerializer.serialize(documentReference))
             .thenReturn(documentReference.toString());
 
-        when(this.activityPubStorage.query(Document.class, "filter(xwikiReference:xwiki\\:XWiki.TEST)", 1))
+        when(this.activityPubStorage.query(Page.class, "filter(xwikiReference:xwiki\\:XWiki.TEST)", 1))
             .thenReturn(emptyList());
 
         this.job.initialize(t);

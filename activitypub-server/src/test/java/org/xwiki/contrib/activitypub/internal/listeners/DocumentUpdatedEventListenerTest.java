@@ -36,8 +36,8 @@ import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
-import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
+import org.xwiki.contrib.activitypub.entities.Page;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Update;
@@ -180,7 +180,7 @@ public class DocumentUpdatedEventListenerTest
         when(this.document.getTitle()).thenReturn(documentTile);
         this.defineMajorRevision();
 
-        Document apDoc = new Document()
+        Page apDoc = new Page()
             .setName(documentTile)
             .setAttributedTo(
                 Collections.singletonList(
@@ -238,7 +238,7 @@ public class DocumentUpdatedEventListenerTest
         when(this.document.getTitle()).thenReturn(documentTile);
         this.defineMajorRevision();
 
-        Document apDoc = new Document()
+        Page apDoc = new Page()
             .setName(documentTile)
             .setAttributedTo(
                 Collections.singletonList(
@@ -296,7 +296,7 @@ public class DocumentUpdatedEventListenerTest
         when(this.document.getTitle()).thenReturn(documentTile);
         this.defineMinorRevision();
 
-        Document apDoc = new Document()
+        Page apDoc = new Page()
             .setName(documentTile)
             .setAttributedTo(
                 Collections.singletonList(

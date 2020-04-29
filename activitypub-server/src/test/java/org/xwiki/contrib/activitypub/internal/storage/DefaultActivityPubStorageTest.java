@@ -50,9 +50,9 @@ import org.xwiki.contrib.activitypub.ActivityPubResourceReference;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
-import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.Outbox;
+import org.xwiki.contrib.activitypub.entities.Page;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.contrib.activitypub.internal.InternalURINormalizer;
@@ -405,11 +405,11 @@ public class DefaultActivityPubStorageTest
         String query = "wikiReference:\"xwiki:MySpace.MyDoc\"";
         int limit = 42;
         SolrQuery solrQuery = new SolrQuery("*")
-            .addFilterQuery("filter(type:Document)")
+            .addFilterQuery("filter(type:Page)")
             .addFilterQuery(query)
             .addSort("updatedDate", SolrQuery.ORDER.desc)
             .setRows(limit);
-        Document document = mock(Document.class);
+        Page document = mock(Page.class);
         SolrDocumentList solrDocumentList = mock(SolrDocumentList.class);
         QueryResponse queryResponse = mock(QueryResponse.class);
         when(this.solrClient.query(any())).thenReturn(queryResponse);
@@ -418,11 +418,11 @@ public class DefaultActivityPubStorageTest
         when(solrDocumentList.iterator()).thenReturn(Arrays.asList(document1).iterator());
         String content1 = "{doc1}";
         when(document1.getFieldValue("content")).thenReturn(content1);
-        when(document1.getFieldValue("id")).thenReturn("Document/doc1");
-        when(this.internalURINormalizer.retrieveAbsoluteURI(URI.create("Document/doc1")))
-            .thenReturn(URI.create("http://xwiki.org/activitypub/Document/doc1"));
+        when(document1.getFieldValue("id")).thenReturn("Page/doc1");
+        when(this.internalURINormalizer.retrieveAbsoluteURI(URI.create("Page/doc1")))
+            .thenReturn(URI.create("http://xwiki.org/activitypub/Page/doc1"));
         when(this.jsonParser.parse(content1)).thenReturn(document);
-        assertEquals(Collections.singletonList(document), this.activityPubStorage.query(Document.class, query, limit));
+        assertEquals(Collections.singletonList(document), this.activityPubStorage.query(Page.class, query, limit));
         ArgumentCaptor<SolrQuery> argumentCaptor = ArgumentCaptor.forClass(SolrQuery.class);
         verify(this.solrClient).query(argumentCaptor.capture());
         assertEquals(solrQuery.toString(), argumentCaptor.getValue().toString());

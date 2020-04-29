@@ -33,4 +33,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 @JsonDeserialize(as = Document.class)
 public class Document extends ActivityPubObject
 {
+    @Override
+    public boolean isDocument()
+    {
+        return true;
+    }
 }

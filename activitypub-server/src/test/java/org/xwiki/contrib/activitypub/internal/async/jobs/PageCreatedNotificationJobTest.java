@@ -38,8 +38,8 @@ import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Create;
-import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
+import org.xwiki.contrib.activitypub.entities.Page;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Service;
@@ -219,7 +219,7 @@ class PageCreatedNotificationJobTest
             .setObject(this.service);
         ActivityPubObjectReference<AbstractActor> userReference =
             new ActivityPubObjectReference<AbstractActor>().setObject(this.person);
-        Document apDoc = new Document()
+        Page apDoc = new Page()
             .setName(documentTile)
             .setAttributedTo(Arrays.asList(wikiReference, userReference))
             .setPublished(creationDate)
@@ -290,7 +290,7 @@ class PageCreatedNotificationJobTest
         when(this.document.getCreationDate()).thenReturn(creationDate);
         when(this.document.getTitle()).thenReturn(documentTile);
 
-        Document apDoc = new Document()
+        Page apDoc = new Page()
             .setName(documentTile)
             .setAttributedTo(
                 singletonList(
@@ -463,7 +463,7 @@ class PageCreatedNotificationJobTest
         when(this.document.getCreationDate()).thenReturn(creationDate);
         when(this.document.getTitle()).thenReturn(documentTile);
 
-        Document apDoc = new Document().setName(documentTile)
+        Page apDoc = new Page().setName(documentTile)
             .setAttributedTo(singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(this.service)))
             .setPublished(creationDate).setUrl(singletonList(new URI(absoluteDocumentUrl)));
         Create create = new Create()

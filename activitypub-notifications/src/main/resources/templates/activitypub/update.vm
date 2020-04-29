@@ -34,7 +34,7 @@
             #set ($activity = $eventActivities.get($event))
             #set ($actor = $services.activitypub.resolve($activity.actor))
             #set ($object = $services.activitypub.resolve($activity.object))
-            #if ($object.type.toLowerCase() == "document")
+            #if ($object.isDocument())
                 #define($description)
                 <div class="modal fade" tabindex="-1" role="dialog" id="evt-modal-$event.id">
                     <div class="modal-dialog modal-lg" role="document">

@@ -54,10 +54,10 @@ import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Announce;
 import org.xwiki.contrib.activitypub.entities.Create;
-import org.xwiki.contrib.activitypub.entities.Document;
 import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
+import org.xwiki.contrib.activitypub.entities.Page;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Service;
@@ -432,16 +432,16 @@ public class ActivityPubScriptService implements ScriptService
      * Share a page.
      *
      * @param targets List of recipients of the sharing.
-     * @param page    The page to be shared.
+     * @param pageReference The serialized reference to the page to be shared.
      * @return True if the shared succeeded, false otherwise.
      */
-    public boolean sharePage(List<String> targets, String page)
+    public boolean sharePage(List<String> targets, String pageReference)
     {
         try {
             // get current actor
             AbstractActor currentActor = this.getSourceActor(null);
 
-            DocumentReference dr = this.documentReferenceResolver.resolve(page);
+            DocumentReference dr = this.documentReferenceResolver.resolve(pageReference);
             boolean guestAccess =
                 this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, dr);
 
@@ -454,20 +454,20 @@ public class ActivityPubScriptService implements ScriptService
                 XWikiDocument xwikiDoc = context.getWiki().getDocument(dr, context);
                 String content = this.htmlRenderer.render(xwikiDoc.getXDOM(), dr);
                 URI documentUrl = this.urlHandler.getAbsoluteURI(URI.create(xwikiDoc.getURL("view", context)));
-                Document document = new Document()
+                Page page = new Page()
                     .setName(xwikiDoc.getTitle())
                     .setAttributedTo(singletonList(currentActor.getReference()))
                     .setUrl(singletonList(documentUrl))
                     .setContent(content);
-                this.fillRecipients(targets, currentActor, document);
-                this.activityPubStorage.storeEntity(document);
+                this.fillRecipients(targets, currentActor, page);
+                this.activityPubStorage.storeEntity(page);
 
                 Date published = this.dateProvider.currentTime();
                 Announce announce = new Announce()
                     .setActor(currentActor)
-                    .setObject(document)
-                    .setAttributedTo(document.getAttributedTo())
-                    .setTo(document.getTo())
+                    .setObject(page)
+                    .setAttributedTo(page.getAttributedTo())
+                    .setTo(page.getTo())
                     .setPublished(published);
                 this.activityPubStorage.storeEntity(announce);
 

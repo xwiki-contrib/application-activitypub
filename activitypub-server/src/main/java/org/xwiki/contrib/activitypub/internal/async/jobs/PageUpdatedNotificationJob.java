@@ -39,7 +39,7 @@ import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.HTMLRenderer;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
-import org.xwiki.contrib.activitypub.entities.Document;
+import org.xwiki.contrib.activitypub.entities.Page;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Update;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
@@ -100,14 +100,14 @@ public class PageUpdatedNotificationJob extends AbstractPageNotificationJob
 
         String docIdSolr = this.stringEntityReferenceSerializer.serialize(documentReference);
 
-        List<Document> documents = this.storage.query(Document.class, String.format("filter(%s:%s)",
+        List<Page> pages = this.storage.query(Page.class, String.format("filter(%s:%s)",
             ActivityPubStorage.XWIKI_REFERENCE_FIELD,
             escapeQueryChars(docIdSolr)), 1);
         String contentRendered = this.htmlRenderer.render(content, documentReference);
-        Document document;
-        if (documents.isEmpty()) {
+        Page page;
+        if (pages.isEmpty()) {
             // the document was created before the installation of this extension.
-            document = new Document()
+            page = new Page()
                 .setName(title)
                 .setAttributedTo(attributedTo)
                 .setPublished(creationDate)
@@ -116,20 +116,20 @@ public class PageUpdatedNotificationJob extends AbstractPageNotificationJob
                 .setXwikiReference(docIdSolr);
         } else {
             // if the document was already existing in storage, we update it
-            document = documents.get(0)
+            page = pages.get(0)
                 .setContent(contentRendered)
                 .setAttributedTo(attributedTo);
         }
 
         // Make sure it's stored so it can be resolved later.
-        this.storage.storeEntity(document);
+        this.storage.storeEntity(page);
 
         List<ProxyActor> to = attributedTo.stream()
             .map(it -> new ProxyActor(it.getObject().getFollowers().getLink()))
             .collect(Collectors.toList());
         return new Update()
-            .setActor(document.getAttributedTo().get(0))
-            .setObject(document)
+            .setActor(page.getAttributedTo().get(0))
+            .setObject(page)
             .setName(String.format("Update of document [%s]", title))
             .setTo(to)
             .setPublished(creationDate);

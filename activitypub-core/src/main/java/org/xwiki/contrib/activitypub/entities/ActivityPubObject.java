@@ -371,6 +371,24 @@ public class ActivityPubObject extends JSONLDObjects
         this.lastUpdated = lastUpdated;
     }
 
+    /**
+     * @return {@code true} only if the current object is a document of any kind.
+     */
+    @JsonIgnore
+    public boolean isDocument()
+    {
+        return false;
+    }
+
+    /**
+     * @return {@code true} only if the current object is an actor of any kind.
+     */
+    @JsonIgnore
+    public boolean isActor()
+    {
+        return false;
+    }
+
     @Override
     public boolean equals(Object o)
     {
