@@ -89,6 +89,7 @@ public class FollowActivityHandler extends AbstractActivityHandler<Follow>
                         .setObject(follow)
                         .setTo(Collections.singletonList(followingActor.getProxyActor()));
                     this.activityPubStorage.storeEntity(accept);
+                    this.activityPubStorage.storeEntity(follow);
                     this.notifier.notify(accept, Collections.singleton(followedActor));
                     ActivityRequest<Accept> acceptActivityRequest = new ActivityRequest<>(followedActor, accept);
                     this.acceptActivityHandler.handleOutboxRequest(acceptActivityRequest);
@@ -132,7 +133,6 @@ public class FollowActivityHandler extends AbstractActivityHandler<Follow>
     public void handleOutboxRequest(ActivityRequest<Follow> activityRequest) throws IOException, ActivityPubException
     {
         Follow follow = activityRequest.getActivity();
-        this.activityPubStorage.storeEntity(follow);
         this.handleFollow(follow, activityRequest.getResponse());
     }
 }

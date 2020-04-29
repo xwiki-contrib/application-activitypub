@@ -185,8 +185,8 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
 
         this.handler.handleInboxRequest(
             new ActivityRequest<>(null, follow, this.servletRequest, this.servletResponse));
-        verify(this.activityPubStorage, never()).storeEntity(follow);
         verify(this.activityPubStorage).storeEntity(accept);
+        verify(this.activityPubStorage).storeEntity(follow);
         verify(this.acceptActivityHandler).handleOutboxRequest(new ActivityRequest<>(followedActor, accept));
         verify(this.notifier).notify(accept, Collections.singleton(followedActor));
         verifyResponse(accept);
@@ -264,7 +264,7 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
         verify(this.activityPubStorage).storeEntity(reject);
         verify(this.rejectActivityHandler).handleOutboxRequest(new ActivityRequest<>(followedActor, reject));
         verify(this.notifier).notify(reject, Collections.singleton(followedActor));
-        verifyResponse(reject);
+        this.verifyResponse(reject);
     }
 
     @Test
@@ -295,10 +295,11 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
 
         this.handler.handleOutboxRequest(
             new ActivityRequest<>(null, follow, this.servletRequest, this.servletResponse));
+        
         verify(this.activityPubStorage).storeEntity(follow);
         verify(this.activityPubStorage).storeEntity(accept);
         verify(this.acceptActivityHandler).handleOutboxRequest(new ActivityRequest<>(followedActor, accept));
         verify(this.notifier).notify(accept, Collections.singleton(followedActor));
-        verifyResponse(accept);
+        this.verifyResponse(accept);
     }
 }
