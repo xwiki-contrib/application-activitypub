@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.xwiki.contrib</groupId>
     <artifactId>parent-platform</artifactId>
-    <version>12.2</version>
+    <version>12.3</version>
   </parent>
   <artifactId>application-activitypub</artifactId>
   <version>1.2-SNAPSHOT</version>
@@ -61,11 +61,6 @@
   <properties>
     <xwiki.release.jira.skip>false</xwiki.release.jira.skip>
     <xwiki.issueManagement.jira.id>XAP</xwiki.issueManagement.jira.id>
-    <!-- Temporary rely on the RC1 release version, this will need to be removed once a new parent pom is released
-        after 12.3 final -->
-    <platform.version>12.3-rc-1</platform.version>
-    <commons.version>12.3-rc-1</commons.version>
-    <xwiki.enforcer.skip>true</xwiki.enforcer.skip>
   </properties>
   <dependencies>
     <dependency>
