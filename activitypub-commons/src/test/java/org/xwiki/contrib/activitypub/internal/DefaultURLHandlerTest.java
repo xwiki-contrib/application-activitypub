@@ -89,6 +89,7 @@ public class DefaultURLHandlerTest
         URI expectedURI = new URI("http://xwiki.org/xwiki/bin/view/XWiki/Admin");
 
         assertEquals(expectedURI, this.urlHandler.getAbsoluteURI(uri));
+        
     }
 
     @Test
