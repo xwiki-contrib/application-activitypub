@@ -85,7 +85,8 @@ activitypub.message.display.from=From:
 activitypub.message.display.to=To:
 activitypub.message.display.date=Date:
 activitypub.message.display.content=Content:
-activitypub.message.nomessage=There is currently no message to display.</content>
+activitypub.message.nomessage=There is currently no message to display.
+activitypub.message.display.public=Public message</content>
   <object>
     <name>ActivityPub.ActivityPubTranslations</name>
     <number>0</number>
