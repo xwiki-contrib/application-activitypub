@@ -21,7 +21,9 @@ package org.xwiki.contrib.activitypub.internal;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Singleton;
 
+import org.xwiki.component.annotation.Component;
 import org.xwiki.configuration.ConfigurationSource;
 import org.xwiki.contrib.activitypub.ActivityPubConfiguration;
 import org.xwiki.model.reference.DocumentReference;
@@ -32,6 +34,8 @@ import org.xwiki.model.reference.DocumentReferenceResolver;
  *
  * @version $Id$
  */
+@Component
+@Singleton
 public class DefaultActivityPubConfiguration implements ActivityPubConfiguration
 {
     private static final String ADMIN_GROUP = "XWiki.XWikiAdminGroup";
