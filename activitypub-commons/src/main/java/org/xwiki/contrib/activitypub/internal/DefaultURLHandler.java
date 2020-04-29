@@ -76,7 +76,9 @@ public class DefaultURLHandler
     }
 
     /**
-     * Check that the given URI is part of the current instance.
+     * Check that the given URI is part of the current instance. The comparison is done using the uri's domain names and
+     * ports.
+     *
      * @param id the URI to check.
      * @return {@code true} if it belongs to the current instance.
      */
@@ -88,9 +90,9 @@ public class DefaultURLHandler
         if (id.isAbsolute()) {
             try {
                 URL idUrl = id.toURL();
-                return Objects.equals(getServerUrl().getHost(), idUrl.getHost())
-                    && Objects.equals(getServerUrl().getProtocol(), idUrl.getProtocol())
-                    && this.normalizePort(getServerUrl().getPort()) == this.normalizePort(idUrl.getPort());
+                URL serverUrl = this.getServerUrl();
+                return Objects.equals(serverUrl.getHost(), idUrl.getHost())
+                    && this.normalizePort(serverUrl.getPort()) == this.normalizePort(idUrl.getPort());
             } catch (MalformedURLException e) {
                 this.logger.error("Error while comparing server URL and actor ID", e);
             }
