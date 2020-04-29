@@ -160,6 +160,7 @@
         'sharedPage': xm.documentReference.toString()
       };
       $.post(shareDoc.getURL("view") + '?outputSyntax=plain', $.param(data, true), function(data) {
+        $('#activitypub-modal-share-page').modal('hide');
         if(data.success) {
           new XWiki.widgets.Notification(data.message, 'success');
         } else {
