@@ -46,16 +46,32 @@ import org.xwiki.contrib.activitypub.entities.ProxyActor;
 
 /**
  * Default implementation of {@link ActivityPubObjectReferenceResolver}.
- * 
+ *
  * @version $Id$
  */
 @Component
 @Singleton
 public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObjectReferenceResolver
 {
+    @FunctionalInterface
+    interface DateProvider
+    {
+        /**
+         * Check if a given number has elapse between the last update and the current date.
+         *
+         * @param currentDate the current date.
+         * @param lastUpdated the last update.
+         * @return true if the period has elapsed.
+         */
+        boolean isElapsed(Date currentDate, Date lastUpdated);
+    }
+
+    private DateProvider dateProvider =
+        (currentDate, lastUpdated) -> currentDate.after(DateUtils.addDays(lastUpdated, MAX_DAY_BEFORE_REFRESH));
+
     @Inject
     private ActivityPubJsonParser activityPubJsonParser;
-    
+
     @Inject
     private Provider<ActivityPubClient> activityPubClientProvider;
 
@@ -99,7 +115,7 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
                 }
                 reference.setObject(result);
                 this.activityPubStorageProvider.get().storeEntity(result);
-            } catch (IOException e) {
+            } catch (IOException | ActivityPubException e) {
                 // We might be trying to refresh an information, in that case we just rely on the information we already
                 // manage to retrieve from the storage.
                 if (result == null) {
@@ -130,10 +146,12 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
     @Override
     public <T extends ActivityPubObject> boolean shouldBeRefreshed(T activityPubObject)
     {
+        Date date = new Date();
+        Date lastUpdated = activityPubObject.getLastUpdated();
         return (CLASSES_TO_REFRESH.contains(activityPubObject.getClass())
             && !this.defaultURLHandler.belongsToCurrentInstance(activityPubObject.getId())
             && activityPubObject.getLastUpdated() != null
-            && new Date().after(DateUtils.addDays(activityPubObject.getLastUpdated(), MAX_DAY_BEFORE_REFRESH)));
+            && this.dateProvider.isElapsed(date, lastUpdated));
     }
 
     private void resolveProxyActorList(List<ProxyActor> proxyActorList, Set<AbstractActor> resolvedTargets)
@@ -163,5 +181,16 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
                 }
             }
         }
+    }
+
+    /**
+     * This method is for test purpose.
+     *
+     * @param dateProvider a date provider.
+     * @since 1.2
+     */
+    void setDateProvider(DateProvider dateProvider)
+    {
+        this.dateProvider = dateProvider;
     }
 }

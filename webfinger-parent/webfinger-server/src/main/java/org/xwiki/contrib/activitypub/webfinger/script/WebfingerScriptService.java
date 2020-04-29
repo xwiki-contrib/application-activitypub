@@ -99,10 +99,16 @@ public class WebfingerScriptService implements ScriptService
      */
     public String getWebfingerId(AbstractActor actor)
     {
+        if (actor == null) {
+            this.logger.warn("Error while getting WebFinger id. The actor is null.");
+            return null;
+        }
         try {
             URL url = actor.getId().toURL();
-            return actor.getPreferredUsername() + "@" + this.formatUrl(url);
-        } catch (MalformedURLException e) {
+            String preferredUsername = actor.getPreferredUsername();
+            String domain = this.formatUrl(url);
+            return preferredUsername + "@" + domain;
+        } catch (MalformedURLException | IllegalArgumentException e) {
             this.logger.error("Error while getting WebFinger id", e);
             return null;
         }

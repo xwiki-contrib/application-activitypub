@@ -27,7 +27,6 @@ import java.util.List;
 import javax.script.SimpleScriptContext;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.entities.Accept;
@@ -46,8 +45,6 @@ import org.xwiki.rendering.block.XDOM;
 import org.xwiki.script.ScriptContextManager;
 import org.xwiki.template.Template;
 import org.xwiki.template.TemplateManager;
-import org.xwiki.test.LogLevel;
-import org.xwiki.test.junit5.LogCaptureExtension;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
@@ -72,9 +69,6 @@ public class ActivityPubNotificationDisplayerTest
 {
     @InjectMockComponents
     private ActivityPubNotificationDisplayer activityPubNotificationDisplayer;
-
-    @RegisterExtension
-    LogCaptureExtension logCapture = new LogCaptureExtension(LogLevel.ERROR);
 
     @MockComponent
     private ActivityPubJsonParser activityPubJsonParser;

@@ -57,6 +57,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -101,12 +102,30 @@ public class DefaultActivityPubObjectReferenceResolverTest
     }
 
     @Test
-    public void resolveReferenceInvalidLink()
+    void resolveReferenceInvalidLink()
     {
         Executable executable =
             () -> this.resolver.resolveReference(new ActivityPubObjectReference<>());
         ActivityPubException e = assertThrows(ActivityPubException.class, executable);
         assertEquals("The reference property is null and does not have any ID to follow.", e.getMessage());
+    }
+
+    @Test
+    void resolveReferenceActivityPubException() throws Exception
+    {
+        when(this.urlHandler.belongsToCurrentInstance(URI.create("http://person/1"))).thenReturn(false);
+        HttpMethod httpMethod = mock(HttpMethod.class);
+        when(this.activityPubClient.get(URI.create("http://person/1"))).thenReturn(httpMethod);
+        doThrow(new ActivityPubException("")).when(this.activityPubClient).checkAnswer(httpMethod);
+
+        Person person = new Person().setId(URI.create("http://person/1")).setLastUpdated(new Date());
+        this.resolver.setDateProvider((a, b) -> true);
+
+        ActivityPubObject actual = this.resolver.resolveReference(new ActivityPubObjectReference<>().setObject(person));
+
+        assertEquals(actual, person);
+        verify(httpMethod).releaseConnection();
+        verify(this.activityPubStorage, never()).storeEntity(any());
     }
 
     @Test
@@ -121,7 +140,7 @@ public class DefaultActivityPubObjectReferenceResolverTest
     }
 
     @Test
-    public void resolveReferenceObjectNullNotStored() throws Exception
+    void resolveReferenceObjectNullNotStored() throws Exception
     {
         Accept t = new Accept();
         HttpMethod hm = mock(HttpMethod.class);
@@ -137,7 +156,7 @@ public class DefaultActivityPubObjectReferenceResolverTest
     }
 
     @Test
-    public void resolveReferenceObjectNullStored() throws Exception
+    void resolveReferenceObjectNullStored() throws Exception
     {
         Accept t = new Accept();
         URI uri = URI.create("http://test/create/1");
@@ -150,7 +169,7 @@ public class DefaultActivityPubObjectReferenceResolverTest
     }
 
     @Test
-    public void resolveReferenceNetworkError() throws Exception
+    void resolveReferenceNetworkError() throws Exception
     {
         when(this.activityPubClient.get(any())).thenThrow(new IOException(""));
         ActivityPubObjectReference<ActivityPubObject> reference =
@@ -161,7 +180,7 @@ public class DefaultActivityPubObjectReferenceResolverTest
     }
 
     @Test
-    public void resolveTargetsWithComputedTargets() throws Exception
+    void resolveTargetsWithComputedTargets() throws Exception
     {
         ActivityPubObject activityPubObject = mock(ActivityPubObject.class);
         Set<AbstractActor> result = Collections.singleton(mock(AbstractActor.class));
@@ -173,7 +192,7 @@ public class DefaultActivityPubObjectReferenceResolverTest
     }
 
     @Test
-    public void resolveTargetsNotComputed() throws Exception
+    void resolveTargetsNotComputed() throws Exception
     {
         ActivityPubObject activityPubObject = mock(ActivityPubObject.class);
         when(activityPubObject.getComputedTargets()).thenReturn(null);
@@ -212,7 +231,7 @@ public class DefaultActivityPubObjectReferenceResolverTest
     }
 
     @Test
-    public void resolveTargetsEmpty()
+    void resolveTargetsEmpty()
     {
         ActivityPubObject activityPubObject = mock(ActivityPubObject.class);
         when(activityPubObject.getComputedTargets()).thenReturn(null);
@@ -221,7 +240,7 @@ public class DefaultActivityPubObjectReferenceResolverTest
     }
 
     @Test
-    public void shouldBeRefreshed()
+    void shouldBeRefreshed()
     {
         Person person = new Person();
         assertFalse(this.resolver.shouldBeRefreshed(person));
@@ -242,7 +261,7 @@ public class DefaultActivityPubObjectReferenceResolverTest
     }
 
     @Test
-    public void resolveReferenceObjectNullStoredButNeedRefresh() throws Exception
+    void resolveReferenceObjectNullStoredButNeedRefresh() throws Exception
     {
         URI uri = URI.create("http://test/person/1");
         Person person = new Person();
@@ -265,7 +284,7 @@ public class DefaultActivityPubObjectReferenceResolverTest
     }
 
     @Test
-    public void resolveReferenceObjectNullStoredNeedRefreshButNetworkError() throws Exception
+    void resolveReferenceObjectNullStoredNeedRefreshButNetworkError() throws Exception
     {
         URI uri = URI.create("http://test/person/1");
         Person person = new Person();

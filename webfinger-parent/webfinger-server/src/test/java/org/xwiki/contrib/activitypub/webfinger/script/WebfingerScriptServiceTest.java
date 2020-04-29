@@ -24,9 +24,12 @@ import java.net.URL;
 import javax.inject.Provider;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.webfinger.WebfingerClient;
+import org.xwiki.test.LogLevel;
+import org.xwiki.test.junit5.LogCaptureExtension;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
@@ -34,7 +37,10 @@ import org.xwiki.test.junit5.mockito.MockComponent;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.web.XWikiURLFactory;
 
+import ch.qos.logback.classic.Level;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -57,6 +63,9 @@ class WebfingerScriptServiceTest
 
     @MockComponent
     private WebfingerClient webfingerClient;
+
+    @RegisterExtension
+    LogCaptureExtension logCapture = new LogCaptureExtension(LogLevel.WARN);
 
     @Test
     void isWebfingerConfiguredAlreadyDone() throws Exception
@@ -84,7 +93,36 @@ class WebfingerScriptServiceTest
         AbstractActor actor = new Person()
             .setPreferredUsername("username")
             .setId(URI.create("http://wiki.tld/person/1"));
+
         String actual = this.webfingerScriptService.getWebfingerId(actor);
+        
         assertEquals("username@wiki.tld", actual);
+        assertEquals(0, this.logCapture.size());
+    }
+
+    @Test
+    void getWebfingerMalformedURL()
+    {
+        AbstractActor actor = new Person()
+            .setPreferredUsername("username")
+            .setId(URI.create("abcd://wiki.tld/person/1"));
+
+        String actual = this.webfingerScriptService.getWebfingerId(actor);
+
+        assertNull(actual);
+        assertEquals(1, this.logCapture.size());
+        assertEquals(Level.ERROR, this.logCapture.getLogEvent(0).getLevel());
+        assertEquals("Error while getting WebFinger id", this.logCapture.getMessage(0));
+    }
+
+    @Test
+    void getWebfingerNull()
+    {
+        String actual = this.webfingerScriptService.getWebfingerId(null);
+
+        assertNull(actual);
+        assertEquals(1, this.logCapture.size());
+        assertEquals(Level.WARN, this.logCapture.getLogEvent(0).getLevel());
+        assertEquals("Error while getting WebFinger id. The actor is null.", this.logCapture.getMessage(0));
     }
 }

@@ -363,12 +363,16 @@ public class ActivityPubObject extends JSONLDObjects
 
     /**
      * Set the date of the last time the object was stored in DB.
+     *
      * @param lastUpdated the date of the last time the object was stored in DB.
+     * @param <T> the concrete type of this object.
+     * @return the current object.
      */
     @JsonIgnore
-    public void setLastUpdated(Date lastUpdated)
+    public <T extends ActivityPubObject> T setLastUpdated(Date lastUpdated)
     {
         this.lastUpdated = lastUpdated;
+        return (T) this;
     }
 
     /**
