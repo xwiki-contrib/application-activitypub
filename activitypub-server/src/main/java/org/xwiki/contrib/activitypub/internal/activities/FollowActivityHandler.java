@@ -56,6 +56,7 @@ public class FollowActivityHandler extends AbstractActivityHandler<Follow>
     private void handleFollow(Follow follow, HttpServletResponse servletResponse)
         throws ActivityPubException, IOException
     {
+        this.activityPubStorage.storeEntity(follow);
         ActivityPubObject followedObject = this.activityPubObjectReferenceResolver.resolveReference(follow.getObject());
         
         ActivityPubObjectReference<AbstractActor> actor = follow.getActor();
@@ -89,7 +90,6 @@ public class FollowActivityHandler extends AbstractActivityHandler<Follow>
                         .setObject(follow)
                         .setTo(Collections.singletonList(followingActor.getProxyActor()));
                     this.activityPubStorage.storeEntity(accept);
-                    this.activityPubStorage.storeEntity(follow);
                     this.notifier.notify(accept, Collections.singleton(followedActor));
                     ActivityRequest<Accept> acceptActivityRequest = new ActivityRequest<>(followedActor, accept);
                     this.acceptActivityHandler.handleOutboxRequest(acceptActivityRequest);

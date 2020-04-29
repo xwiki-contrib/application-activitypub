@@ -42,7 +42,6 @@ import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -151,11 +150,11 @@ public class FollowActivityHandlerTest extends AbstractHandlerTest
 
         this.handler.handleInboxRequest(
             new ActivityRequest<>(null, follow, this.servletRequest, this.servletResponse));
-        verify(this.activityPubStorage, never()).storeEntity(follow);
+        verify(this.activityPubStorage).storeEntity(follow);
         verify(this.activityPubStorage).storeEntity(reject);
         verify(this.rejectActivityHandler).handleOutboxRequest(new ActivityRequest<>(followedActor, reject));
         verify(this.notifier).notify(reject, Collections.singleton(followedActor));
-        verifyResponse(reject);
+        this.verifyResponse(reject);
     }
 
     @Test
