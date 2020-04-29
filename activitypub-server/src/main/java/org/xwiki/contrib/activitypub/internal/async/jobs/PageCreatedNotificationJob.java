@@ -91,8 +91,7 @@ public class PageCreatedNotificationJob extends AbstractPageNotificationJob
         XDOM content = this.request.getContent();
 
         URI documentUrl = this.urlHandler.getAbsoluteURI(new URI(view));
-
-        List<ActivityPubObjectReference<AbstractActor>> attributedTo = this.emitters(author);
+        List<ActivityPubObjectReference<AbstractActor>> attributedTo = Collections.singletonList(author.getReference());
         Page page = new Page()
             .setName(title)
             .setAttributedTo(attributedTo)
@@ -106,7 +105,8 @@ public class PageCreatedNotificationJob extends AbstractPageNotificationJob
         // Make sure it's stored so it can be resolved later.
         this.storage.storeEntity(page);
 
-        List<ProxyActor> to = attributedTo.stream()
+        List<ActivityPubObjectReference<AbstractActor>> emitters = this.emitters(author);
+        List<ProxyActor> to = emitters.stream()
             .map(it -> new ProxyActor(it.getObject().getFollowers().getLink()))
             .collect(Collectors.toList());
         return new Create()

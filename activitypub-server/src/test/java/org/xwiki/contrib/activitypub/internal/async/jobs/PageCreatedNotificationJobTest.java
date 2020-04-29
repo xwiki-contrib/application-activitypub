@@ -22,6 +22,7 @@ package org.xwiki.contrib.activitypub.internal.async.jobs;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -221,7 +222,7 @@ class PageCreatedNotificationJobTest
             new ActivityPubObjectReference<AbstractActor>().setObject(this.person);
         Page apDoc = new Page()
             .setName(documentTile)
-            .setAttributedTo(Arrays.asList(wikiReference, userReference))
+            .setAttributedTo(Collections.singletonList(userReference))
             .setPublished(creationDate)
             .setUrl(singletonList(new URI(absoluteDocumentUrl)));
         Create create = new Create()
@@ -290,13 +291,11 @@ class PageCreatedNotificationJobTest
         when(this.document.getCreationDate()).thenReturn(creationDate);
         when(this.document.getTitle()).thenReturn(documentTile);
 
+        ActivityPubObjectReference<AbstractActor> userReference =
+            new ActivityPubObjectReference<AbstractActor>().setObject(this.person);
         Page apDoc = new Page()
             .setName(documentTile)
-            .setAttributedTo(
-                singletonList(
-                    new ActivityPubObjectReference<AbstractActor>()
-                        .setObject(this.service))
-            )
+            .setAttributedTo(Collections.singletonList(userReference))
             .setPublished(creationDate)
             .setUrl(singletonList(new URI(absoluteDocumentUrl)));
         Create create = new Create()
@@ -464,7 +463,7 @@ class PageCreatedNotificationJobTest
         when(this.document.getTitle()).thenReturn(documentTile);
 
         Page apDoc = new Page().setName(documentTile)
-            .setAttributedTo(singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(this.service)))
+            .setAttributedTo(singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(this.person)))
             .setPublished(creationDate).setUrl(singletonList(new URI(absoluteDocumentUrl)));
         Create create = new Create()
             .setActor(this.person)

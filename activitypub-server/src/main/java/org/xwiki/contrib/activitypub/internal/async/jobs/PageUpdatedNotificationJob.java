@@ -96,7 +96,8 @@ public class PageUpdatedNotificationJob extends AbstractPageNotificationJob
 
         URI documentUrl = this.urlHandler.getAbsoluteURI(new URI(view));
 
-        List<ActivityPubObjectReference<AbstractActor>> attributedTo = this.emitters(author);
+
+        List<ActivityPubObjectReference<AbstractActor>> attributedTo = Collections.singletonList(author.getReference());
 
         String docIdSolr = this.stringEntityReferenceSerializer.serialize(documentReference);
 
@@ -124,11 +125,12 @@ public class PageUpdatedNotificationJob extends AbstractPageNotificationJob
         // Make sure it's stored so it can be resolved later.
         this.storage.storeEntity(page);
 
-        List<ProxyActor> to = attributedTo.stream()
+        List<ActivityPubObjectReference<AbstractActor>> emitters = this.emitters(author);
+        List<ProxyActor> to = emitters.stream()
             .map(it -> new ProxyActor(it.getObject().getFollowers().getLink()))
             .collect(Collectors.toList());
         return new Update()
-            .setActor(page.getAttributedTo().get(0))
+            .setActor(author)
             .setObject(page)
             .setName(String.format("Update of document [%s]", title))
             .setTo(to)

@@ -236,10 +236,10 @@ class PageUpdatedNotificationJobTest
             .setUrl(singletonList(new URI(absoluteDocumentUrl)))
             .setXwikiReference("xwiki:XWiki.TEST");
         ActivityPubObject updatedDoc = new Page()
-            .setAttributedTo(Arrays.asList(wikiReference, userReference))
+            .setAttributedTo(Arrays.asList(userReference))
             .setContent("<h1>new content</h1>");
         Update update = new Update()
-            .setActor(this.service)
+            .setActor(this.person)
             .setObject(updatedDoc)
             .setName("Update of document [A document title]")
             .setPublished(creationDate)
@@ -247,7 +247,7 @@ class PageUpdatedNotificationJobTest
                 new ProxyActor(this.service.getFollowers().getLink()),
                 new ProxyActor(this.person.getFollowers().getLink())
             ));
-        ActivityRequest<Update> activityRequest = new ActivityRequest<>(this.service, update);
+        ActivityRequest<Update> activityRequest = new ActivityRequest<>(this.person, update);
 
         PageChangedRequest request =
             new PageChangedRequest()
@@ -313,18 +313,16 @@ class PageUpdatedNotificationJobTest
         when(this.document.getCreationDate()).thenReturn(creationDate);
         when(this.document.getTitle()).thenReturn(documentTile);
 
-        ActivityPubObjectReference<AbstractActor> wikiReference = new ActivityPubObjectReference<AbstractActor>()
-            .setObject(this.service);
         ActivityPubObjectReference<AbstractActor> userReference =
             new ActivityPubObjectReference<AbstractActor>().setObject(this.person);
         Page apDoc = new Page()
             .setName(documentTile)
-            .setAttributedTo(Arrays.asList(wikiReference, userReference))
+            .setAttributedTo(Arrays.asList(userReference))
             .setPublished(creationDate)
             .setUrl(singletonList(new URI(absoluteDocumentUrl)))
             .setXwikiReference("xwiki:XWiki.TEST");
         Update update = new Update()
-            .setActor(this.service)
+            .setActor(this.person)
             .setObject(apDoc)
             .setName("Update of document [A document title]")
             .setPublished(creationDate)
@@ -332,7 +330,7 @@ class PageUpdatedNotificationJobTest
                 new ProxyActor(this.service.getFollowers().getLink()),
                 new ProxyActor(this.person.getFollowers().getLink())
             ));
-        ActivityRequest<Update> activityRequest = new ActivityRequest<>(this.service, update);
+        ActivityRequest<Update> activityRequest = new ActivityRequest<>(this.person, update);
 
         PageChangedRequest request =
             new PageChangedRequest()
@@ -399,17 +397,17 @@ class PageUpdatedNotificationJobTest
 
         Page apDoc = new Page()
             .setName(documentTile)
-            .setAttributedTo(singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(this.service)))
+            .setAttributedTo(singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(this.person)))
             .setPublished(creationDate)
             .setUrl(singletonList(new URI(absoluteDocumentUrl)))
             .setXwikiReference("xwiki:XWiki.TEST");
         Update update = new Update()
-            .setActor(this.service)
+            .setActor(this.person)
             .setObject(apDoc)
             .setName("Update of document [A document title]")
             .setPublished(creationDate)
             .setTo(singletonList(new ProxyActor(this.service.getFollowers().getLink())));
-        ActivityRequest<Update> activityRequest = new ActivityRequest<>(this.service, update);
+        ActivityRequest<Update> activityRequest = new ActivityRequest<>(this.person, update);
 
         PageChangedRequest request =
             new PageChangedRequest()
@@ -586,17 +584,17 @@ class PageUpdatedNotificationJobTest
 
         Page apDoc = new Page()
             .setName(documentTile)
-            .setAttributedTo(singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(this.service)))
+            .setAttributedTo(singletonList(new ActivityPubObjectReference<AbstractActor>().setObject(this.person)))
             .setPublished(creationDate)
             .setUrl(singletonList(new URI(absoluteDocumentUrl)))
             .setXwikiReference("xwiki:XWiki.TEST");
         Update update = new Update()
-            .setActor(this.service)
+            .setActor(this.person)
             .setObject(apDoc)
             .setName("Update of document [A document title]")
             .setPublished(creationDate)
             .setTo(singletonList(new ProxyActor(this.service.getFollowers().getLink())));
-        ActivityRequest<Update> activityRequest = new ActivityRequest<>(this.service, update);
+        ActivityRequest<Update> activityRequest = new ActivityRequest<>(this.person, update);
         PageChangedRequest request =
             new PageChangedRequest()
                 .setDocumentReference(this.document.getDocumentReference())
