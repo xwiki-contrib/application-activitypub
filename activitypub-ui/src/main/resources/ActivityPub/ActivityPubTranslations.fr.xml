@@ -85,5 +85,6 @@ activitypub.message.display.from=De :
 activitypub.message.display.to=À :
 activitypub.message.display.date=Date :
 activitypub.message.display.content=Contenu :
-activitypub.message.nomessage=Il n'y a actuellement aucun message à afficher.</content>
+activitypub.message.nomessage=Il n'y a actuellement aucun message à afficher.
+### Missing: activitypub.message.display.public=Public message</content>
 </xwikidoc>
