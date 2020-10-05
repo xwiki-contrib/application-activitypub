@@ -99,6 +99,8 @@ public class ActivityPubScriptService implements ScriptService
 {
     private static final String GET_CURRENT_ACTOR_ERR_MSG = "Failed to retrieve the current actor. Cause [{}].";
 
+    private static final String GET_ACTOR_ERROR_MSG = "Error while trying to get the actor [{}].";
+
     private static final String GET_CURRENT_ACTOR_UNEXPECTED_ERR_MSG =
         "Failed to retrieve the current actor. Unexpected Cause [{}].";
 
@@ -196,9 +198,27 @@ public class ActivityPubScriptService implements ScriptService
                 result = this.actorHandler.getActor(actor.trim());
             }
         } catch (ActivityPubException e) {
-            this.logger.error("Error while trying to get the actor [{}].", actor, e);
+            this.logger.error(GET_ACTOR_ERROR_MSG, actor, e);
         }
         return result;
+    }
+
+    /**
+     * Resolve an actor from a {@link DocumentReference}.
+     *
+     * @param actor the {@link DocumentReference} of the actor
+     * @return the resolved actor or {code null} if the resolution failed
+     * @since 1.3
+     */
+    @Unstable
+    public AbstractActor getActor(DocumentReference actor)
+    {
+        try {
+            return this.actorHandler.getActor(actor);
+        } catch (ActivityPubException e) {
+            this.logger.error(GET_ACTOR_ERROR_MSG, actor, e);
+        }
+        return null;
     }
 
     /**

@@ -22,7 +22,6 @@ package org.xwiki.contrib.activitypub.internal;
 import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.Collections;
 
 import javax.inject.Provider;
 
@@ -75,6 +74,10 @@ import org.xwiki.user.group.GroupManager;
 
 import com.xpn.xwiki.XWikiContext;
 
+import ch.qos.logback.classic.Level;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -96,7 +99,7 @@ import static org.mockito.Mockito.when;
  * @version $Id$
  */
 @ComponentTest
-public class DefaultActorHandlerTest
+class DefaultActorHandlerTest
 {
     private static final String GENERIC_ACTOR_ID = "http://xwiki.org/actor/foo";
 
@@ -160,7 +163,7 @@ public class DefaultActorHandlerTest
     private URI fooUserURI;
 
     @BeforeEach
-    public void setup() throws Exception
+    void setup() throws Exception
     {
         // Foo is an existing user, named Foo Foo.
         when(this.xWikiUserBridge.resolveUser("xwiki:XWiki.Foo")).thenReturn(this.fooUserReference);
@@ -176,8 +179,8 @@ public class DefaultActorHandlerTest
         when(this.xWikiUserBridge.getUserLogin(this.fooUserReference)).thenReturn("XWiki.Foo");
         this.fooUserURI = new URI("http://domain.org/xwiki/activitypub/Person/xwiki%3AXWiki.Foo");
         when(this.serializer.serialize(new ActivityPubResourceReference("Person", "xwiki:XWiki.Foo")))
-            .thenReturn(fooUserURI);
-        when(this.userReferenceSerializer.serialize(fooUserReference)).thenReturn("xwiki:XWiki.Foo");
+            .thenReturn(this.fooUserURI);
+        when(this.userReferenceSerializer.serialize(this.fooUserReference)).thenReturn("xwiki:XWiki.Foo");
 
         // Bar does not exist.
         when(this.xWikiUserBridge.resolveUser("XWiki.Bar")).thenReturn(this.barUserReference);
@@ -187,14 +190,14 @@ public class DefaultActorHandlerTest
         when(this.xWikiUserBridge.isExistingUser("Bar")).thenReturn(false);
 
         when(this.activityPubStorage.storeEntity(any(AbstractActor.class))).thenAnswer(invocationOnMock -> {
-           AbstractActor actor = (AbstractActor) invocationOnMock.getArguments()[0];
-           actor.setId(new URI(GENERIC_ACTOR_ID));
-           return null;
+            AbstractActor actor = (AbstractActor) invocationOnMock.getArguments()[0];
+            actor.setId(new URI(GENERIC_ACTOR_ID));
+            return null;
         });
     }
 
     @Test
-    public void getActorWithStoredPerson() throws Exception
+    void getActorWithStoredPerson() throws Exception
     {
         AbstractActor expectedActor = new Person().setPreferredUsername("XWiki.Foo");
         when(this.activityPubStorage.retrieveEntity(this.fooUserURI)).thenReturn(expectedActor);
@@ -204,7 +207,7 @@ public class DefaultActorHandlerTest
     }
 
     @Test
-    public void getActorWithNotStoredButExistingPerson() throws Exception
+    void getActorWithNotStoredButExistingPerson() throws Exception
     {
         when(this.signatureService.getPublicKeyPEM(any())).thenReturn("...");
         when(this.xWikiUserBridge.getDocumentReference(this.fooUserReference))
@@ -220,10 +223,10 @@ public class DefaultActorHandlerTest
         expectedActor.setPreferredUsername("Foo")
             .setPublicKey(publicKey)
             .setInbox(new ActivityPubObjectReference<Inbox>().setObject(
-                new Inbox().setAttributedTo(Collections.singletonList(
+                new Inbox().setAttributedTo(singletonList(
                     new ActivityPubObjectReference<AbstractActor>().setObject(expectedActor)))))
             .setOutbox(new ActivityPubObjectReference<Outbox>().setObject(
-                new Outbox().setAttributedTo(Collections.singletonList(
+                new Outbox().setAttributedTo(singletonList(
                     new ActivityPubObjectReference<AbstractActor>().setObject(expectedActor)))))
             .setFollowers(
                 new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(new OrderedCollection<>()))
@@ -249,7 +252,7 @@ public class DefaultActorHandlerTest
     }
 
     @Test
-    public void getActorWithStoredService() throws Exception
+    void getActorWithStoredService() throws Exception
     {
         WikiReference wikiReference = new WikiReference("FooWiki");
         when(this.entityReferenceSerializer.serialize(wikiReference)).thenReturn("wiki:FooWiki");
@@ -263,7 +266,7 @@ public class DefaultActorHandlerTest
     }
 
     @Test
-    public void getActorWithNotStoredButExistingService() throws Exception
+    void getActorWithNotStoredButExistingService() throws Exception
     {
         WikiReference wikiReference = new WikiReference("FooWiki");
         when(this.signatureService.getPublicKeyPEM(any())).thenReturn("...");
@@ -278,10 +281,10 @@ public class DefaultActorHandlerTest
         expectedActor.setPreferredUsername("FooWiki.xwiki")
             .setPublicKey(publicKey)
             .setInbox(new ActivityPubObjectReference<Inbox>().setObject(
-                new Inbox().setAttributedTo(Collections.singletonList(
+                new Inbox().setAttributedTo(singletonList(
                     new ActivityPubObjectReference<AbstractActor>().setObject(expectedActor)))))
             .setOutbox(new ActivityPubObjectReference<Outbox>().setObject(
-                new Outbox().setAttributedTo(Collections.singletonList(
+                new Outbox().setAttributedTo(singletonList(
                     new ActivityPubObjectReference<AbstractActor>().setObject(expectedActor)))))
             .setFollowers(
                 new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(new OrderedCollection<>()))
@@ -294,17 +297,17 @@ public class DefaultActorHandlerTest
     }
 
     @Test
-    public void getPersonNotExisting() throws Exception
+    void getPersonNotExisting() throws Exception
     {
         ActivityPubException activityPubException = assertThrows(ActivityPubException.class, () -> {
-            actorHandler.getActor(this.barUserReference);
+            this.actorHandler.getActor(this.barUserReference);
         });
         assertEquals("Cannot find any user with reference [barUserReference]", activityPubException.getMessage());
         verify(this.activityPubStorage, never()).storeEntity(any());
     }
 
     @Test
-    public void isExistingUser()
+    void isExistingUser()
     {
         assertTrue(this.actorHandler.isExistingUser("Foo"));
         assertTrue(this.actorHandler.isExistingUser("XWiki.Foo"));
@@ -314,7 +317,7 @@ public class DefaultActorHandlerTest
     }
 
     @Test
-    public void getXWikiUserReference() throws Exception
+    void getXWikiUserReference() throws Exception
     {
         assertSame(this.fooUserReference,
             this.actorHandler.getXWikiUserReference(new Person().setPreferredUsername("Foo")));
@@ -326,7 +329,7 @@ public class DefaultActorHandlerTest
     }
 
     @Test
-    public void isLocalActor() throws Exception
+    void isLocalActor() throws Exception
     {
         assertTrue(this.actorHandler.isLocalActor(new Person().setPreferredUsername("Foo")));
         assertTrue(this.actorHandler.isLocalActor(new Person().setPreferredUsername("XWiki.Foo")));
@@ -341,7 +344,7 @@ public class DefaultActorHandlerTest
     }
 
     @Test
-    public void getLocalActor() throws Exception
+    void getLocalActor() throws Exception
     {
         when(this.signatureService.getPublicKeyPEM(any())).thenReturn("...");
         when(this.xWikiUserBridge.getDocumentReference(this.fooUserReference))
@@ -358,10 +361,10 @@ public class DefaultActorHandlerTest
         expectedActor.setPreferredUsername("Foo")
             .setPublicKey(publicKey)
             .setInbox(new ActivityPubObjectReference<Inbox>().setObject(
-                new Inbox().setAttributedTo(Collections.singletonList(
+                new Inbox().setAttributedTo(singletonList(
                     new ActivityPubObjectReference<AbstractActor>().setObject(expectedActor)))))
             .setOutbox(new ActivityPubObjectReference<Outbox>().setObject(
-                new Outbox().setAttributedTo(Collections.singletonList(
+                new Outbox().setAttributedTo(singletonList(
                     new ActivityPubObjectReference<AbstractActor>().setObject(expectedActor)))))
             .setFollowers(
                 new ActivityPubObjectReference<OrderedCollection<AbstractActor>>().setObject(new OrderedCollection<>()))
@@ -371,17 +374,27 @@ public class DefaultActorHandlerTest
             .setId(new URI(GENERIC_ACTOR_ID))
             .setXwikiReference("xwiki:XWiki.Foo");
 
+        when(this.webfingerClient.get("xwiki:XWiki.Foo")).thenThrow(new WebfingerException(""));
+        when(this.webfingerClient.get("xwiki:XWiki.Bar")).thenThrow(new WebfingerException(""));
+
         assertEquals(expectedActor, this.actorHandler.getActor("Foo"));
         assertEquals(expectedActor, this.actorHandler.getActor("XWiki.Foo"));
-        assertNull(actorHandler.getActor("XWiki.Bar"));
-        assertNull(actorHandler.getActor("Bar"));
+        assertEquals(expectedActor, this.actorHandler.getActor("xwiki:XWiki.Foo"));
+        assertNull(this.actorHandler.getActor("xwiki:XWiki.Bar"));
+        assertNull(this.actorHandler.getActor("XWiki.Bar"));
+        assertNull(this.actorHandler.getActor("Bar"));
 
-        assertEquals("Cannot find the asked user [XWiki.Bar].", logCapture.getMessage(0));
-        assertEquals("Cannot find the asked user [Bar].", logCapture.getMessage(1));
+        assertEquals(3, this.logCapture.size());
+        assertEquals(Level.WARN, this.logCapture.getLogEvent(0).getLevel());
+        assertEquals(Level.WARN, this.logCapture.getLogEvent(1).getLevel());
+        assertEquals(Level.WARN, this.logCapture.getLogEvent(2).getLevel());
+        assertEquals("Cannot find the asked user [xwiki:XWiki.Bar].", this.logCapture.getMessage(0));
+        assertEquals("Cannot find the asked user [XWiki.Bar].", this.logCapture.getMessage(1));
+        assertEquals("Cannot find the asked user [Bar].", this.logCapture.getMessage(2));
     }
 
     @Test
-    public void getRemoteActor() throws Exception
+    void getRemoteActor() throws Exception
     {
         when(this.webfingerClient.get(any())).thenThrow(new WebfingerException("Cannot find resource", 404));
         Person person = new Person().setPreferredUsername("Foobar");
@@ -393,11 +406,11 @@ public class DefaultActorHandlerTest
     }
 
     @Test
-    public void getRemoteActorWebfinger() throws Exception
+    void getRemoteActorWebfinger() throws Exception
     {
         JSONResourceDescriptor jrd = mock(JSONResourceDescriptor.class);
         when(jrd.getLinks())
-            .thenReturn(Arrays.asList(new Link().setRel("self").setHref(URI.create("http://server.com/user/test"))));
+            .thenReturn(singletonList(new Link().setRel("self").setHref(URI.create("http://server.com/user/test"))));
         when(this.activityPubClient.get(any())).thenReturn(mock(HttpMethod.class));
         when(this.webfingerClient.get("test@server.com")).thenReturn(jrd);
         this.actorHandler.getActor("test@server.com");
@@ -406,7 +419,7 @@ public class DefaultActorHandlerTest
     }
 
     @Test
-    public void getRemoteActorXWikiProfile() throws Exception
+    void getRemoteActorXWikiProfile() throws Exception
     {
         Person person = new Person().setPreferredUsername("Foobar");
         String remoteProfileUrl = "http://www.xwiki.org/xwiki/view/bin/XWiki/Foobar";
@@ -434,7 +447,7 @@ public class DefaultActorHandlerTest
     }
 
     @Test
-    public void getCurrentActor() throws Exception
+    void getCurrentActor() throws Exception
     {
         when(this.xWikiUserBridge.isExistingUser(CurrentUserReference.INSTANCE)).thenReturn(true);
         when(this.userReferenceSerializer.serialize(CurrentUserReference.INSTANCE)).thenReturn("xwiki:XWiki.Foo");
@@ -445,7 +458,7 @@ public class DefaultActorHandlerTest
     }
 
     @Test
-    public void isAuthorizedToActForWithPerson() throws Exception
+    void isAuthorizedToActForWithPerson() throws Exception
     {
         assertFalse(this.actorHandler.isAuthorizedToActFor(null, mock(AbstractActor.class)));
         assertFalse(this.actorHandler.isAuthorizedToActFor(null, mock(Person.class)));
@@ -457,7 +470,7 @@ public class DefaultActorHandlerTest
     }
 
     @Test
-    public void isAuthorizedToActForWithService() throws Exception
+    void isAuthorizedToActForWithService() throws Exception
     {
         Service actor = mock(Service.class);
         assertFalse(this.actorHandler.isAuthorizedToActFor(null, actor));
@@ -469,34 +482,34 @@ public class DefaultActorHandlerTest
         DocumentReference groupReference = mock(DocumentReference.class);
         when(this.activityPubConfiguration.getWikiGroup()).thenReturn(groupReference);
         DocumentReference userDocumentReference = mock(DocumentReference.class);
-        when(this.xWikiUserBridge.getDocumentReference(fooUserReference)).thenReturn(userDocumentReference);
+        when(this.xWikiUserBridge.getDocumentReference(this.fooUserReference)).thenReturn(userDocumentReference);
         when(userDocumentReference.toString()).thenReturn("Foo");
 
         when(this.groupManager.getGroups(userDocumentReference, wikiReference, true))
             .thenReturn(Arrays.asList(mock(DocumentReference.class), groupReference, mock(DocumentReference.class)));
-        assertTrue(this.actorHandler.isAuthorizedToActFor(fooUserReference, actor));
+        assertTrue(this.actorHandler.isAuthorizedToActFor(this.fooUserReference, actor));
 
         when(this.groupManager.getGroups(userDocumentReference, wikiReference, true))
-            .thenReturn(Collections.emptyList());
-        assertFalse(this.actorHandler.isAuthorizedToActFor(fooUserReference, actor));
+            .thenReturn(emptyList());
+        assertFalse(this.actorHandler.isAuthorizedToActFor(this.fooUserReference, actor));
 
         when(this.groupManager.getGroups(userDocumentReference, wikiReference, true))
-            .thenReturn(Collections.singletonList(mock(DocumentReference.class)));
-        assertFalse(this.actorHandler.isAuthorizedToActFor(fooUserReference, actor));
+            .thenReturn(singletonList(mock(DocumentReference.class)));
+        assertFalse(this.actorHandler.isAuthorizedToActFor(this.fooUserReference, actor));
 
         when(this.groupManager.getGroups(userDocumentReference, wikiReference, true))
             .thenThrow(new GroupException("error"));
         ActivityPubException exception = assertThrows(ActivityPubException.class,
-            () -> this.actorHandler.isAuthorizedToActFor(fooUserReference, actor));
+            () -> this.actorHandler.isAuthorizedToActFor(this.fooUserReference, actor));
         assertEquals("Error while looking for groups for [Foo].", exception.getMessage());
     }
 
     @Test
-    public void getNotificationTarget() throws Exception
+    void getNotificationTarget() throws Exception
     {
         Person fooUser = mock(Person.class);
         when(fooUser.getPreferredUsername()).thenReturn("Foo");
-        when(this.userReferenceSerializer.serialize(fooUserReference)).thenReturn("XWiki.Foo");
+        when(this.userReferenceSerializer.serialize(this.fooUserReference)).thenReturn("XWiki.Foo");
         assertEquals("XWiki.Foo", this.actorHandler.getNotificationTarget(fooUser));
 
         DocumentReference groupReference = mock(DocumentReference.class);
@@ -512,12 +525,12 @@ public class DefaultActorHandlerTest
     }
 
     @Test
-    public void getStoreDocument() throws Exception
+    void getStoreDocument() throws Exception
     {
         Person fooUser = mock(Person.class);
         when(fooUser.getPreferredUsername()).thenReturn("Foo");
         DocumentReference userDocumentReference = mock(DocumentReference.class);
-        when(this.xWikiUserBridge.getDocumentReference(fooUserReference)).thenReturn(userDocumentReference);
+        when(this.xWikiUserBridge.getDocumentReference(this.fooUserReference)).thenReturn(userDocumentReference);
         assertSame(userDocumentReference, this.actorHandler.getStoreDocument(fooUser));
 
         Service serviceUser = mock(Service.class);
@@ -534,7 +547,7 @@ public class DefaultActorHandlerTest
     }
 
     @Test
-    public void getActorFromResourceReference() throws Exception
+    void getActorFromResourceReference() throws Exception
     {
         Person expectedPerson = new Person().setPreferredUsername("XWiki.Foo");
         when(this.activityPubStorage.retrieveEntity(this.fooUserURI)).thenReturn(expectedPerson);

@@ -382,15 +382,23 @@ public class DefaultActorHandler implements ActorHandler
     }
 
     @Override
+    public AbstractActor getActor(DocumentReference actor) throws ActivityPubException
+    {
+        return this.getActor(this.xWikiUserBridge.resolveDocumentReference(actor));
+    }
+
+    @Override
     public AbstractActor getActor(String username) throws ActivityPubException
     {
-        AbstractActor ret = null;
+        AbstractActor ret;
 
         try {
             URI actorURI = new URI(username);
 
             // A URI with a scheme (absolute) or containing a @ cannot be an XWiki identifier
-            if (actorURI.isAbsolute() || username.contains(WEBFINGER_SEPARATOR)) {
+            boolean absoluteURI = actorURI.isAbsolute();
+            if (absoluteURI || username.contains(WEBFINGER_SEPARATOR))
+            {
                 // FIXME: we need to ensure to discard remote Actor info after some time for it to be efficient.
                 ret = this.activityPubStorage.retrieveEntity(actorURI);
                 boolean isAlreadyStored = ret != null;
@@ -401,16 +409,21 @@ public class DefaultActorHandler implements ActorHandler
                 }
 
                 // if WebFinger didn't worked, try to resolve it as AP URL
-                if (ret == null && actorURI.isAbsolute()) {
+                boolean isHttp = Arrays.asList("http", "https").contains(actorURI.getScheme());
+                if (ret == null && absoluteURI && isHttp) {
                     ret = this.getRemoteActor(actorURI);
                 }
 
                 // if AP URL didn't work, try it as an XWiki URL
-                if (ret == null && actorURI.isAbsolute()) {
+                if (ret == null && absoluteURI && isHttp) {
                     URI xWikiActorURI = this.resolveXWikiActorURL(actorURI.toURL());
                     if (xWikiActorURI != null) {
                         ret = this.getRemoteActor(xWikiActorURI);
                     }
+                }
+
+                if (ret == null && absoluteURI && !isHttp) {
+                    ret = this.getLocalActor(username);
                 }
 
                 // if we managed to find an actor and it wasn't stored yet we store it for speeding further resolutions.
@@ -419,18 +432,23 @@ public class DefaultActorHandler implements ActorHandler
                 }
             } else {
                 // the given argument might be an XWiki identifier
-                try {
-                    ret = this.getActor(this.xWikiUserBridge.resolveUser(username));
-                } catch (ActivityPubException ex) {
-                    this.logger.warn("Cannot find the asked user [{}].", username, ex);
-                }
+                ret = this.getLocalActor(username);
             }
-
         } catch (URISyntaxException | IOException e) {
             throw new ActivityPubException(
                 String.format("Error while loading information for actor [%s].", username), e);
         }
         return ret;
+    }
+
+    private AbstractActor getLocalActor(String username)
+    {
+        try {
+            return this.getActor(this.xWikiUserBridge.resolveUser(username));
+        } catch (ActivityPubException ex) {
+            this.logger.warn("Cannot find the asked user [{}].", username, ex);
+        }
+        return null;
     }
 
     private AbstractActor getWebfingerActor(String webfingerResource) throws IOException
@@ -442,14 +460,14 @@ public class DefaultActorHandler implements ActorHandler
                     .orElse(null);
             return this.getRemoteActor(href);
         } catch (WebfingerException e) {
-            logger.debug("Error when querying the WebFinger resource from [{}].", webfingerResource, e);
+            this.logger.debug("Error when querying the WebFinger resource from [{}].", webfingerResource, e);
         }
         return null;
     }
 
     /**
      * Implements {@see getRemoteActor} but tries to use actorURL as a XWiki url profile URL if the standard activitypub
-     * request fails. 
+     * request fails.
      *
      * @param actorURI the URI of the remote actor.
      * @return an instance of the actor.
