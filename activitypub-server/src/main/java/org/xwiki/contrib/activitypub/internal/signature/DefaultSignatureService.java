@@ -40,6 +40,7 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.URI;
 import org.apache.commons.httpclient.URIException;
@@ -103,8 +104,8 @@ public class DefaultSignatureService implements SignatureService
     private Environment environment;
 
     @Override
-    public void generateSignature(HttpMethod postMethod, AbstractActor actor)
-            throws ActivityPubException
+    public void generateSignature(HttpMethod postMethod, AbstractActor actor, String content)
+        throws ActivityPubException
     {
         String date = this.dateProvider.getFormatedDate();
 
@@ -112,13 +113,17 @@ public class DefaultSignatureService implements SignatureService
             URI postMethodURI = postMethod.getURI();
             String uriPath = postMethodURI.getPath();
             String host = postMethodURI.getHost();
-            String signatureStr = String.format("(request-target): post %s\nhost: %s\ndate: %s", uriPath, host, date);
+            String digest = Base64.getEncoder().encodeToString(DigestUtils.sha256(content));
+            String signatureStr =
+                String.format("(request-target): post %s\nhost: %s\ndate: %s\ndigest: SHA-256=%s", uriPath, host, date,
+                    digest);
 
             byte[] bytess = this.sign(actor, signatureStr);
             String signatureB64 = Base64.getEncoder().encodeToString(bytess);
             String actorAPURL = actor.getId().toASCIIString();
-            String signature = String.format("keyId=\"%s\",headers=\"(request-target) host date\",signature=\"%s\"",
-                actorAPURL, signatureB64);
+            String signature =
+                String.format("keyId=\"%s\",headers=\"(request-target) host date digest\",signature=\"%s\"",
+                    actorAPURL, signatureB64);
             postMethod.addRequestHeader("Signature", signature);
             postMethod.addRequestHeader("Date", date);
         } catch (URIException e) {

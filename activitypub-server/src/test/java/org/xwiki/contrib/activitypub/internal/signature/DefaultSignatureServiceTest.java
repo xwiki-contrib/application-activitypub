@@ -121,10 +121,10 @@ class DefaultSignatureServiceTest
         when(privateKeyParameters.getEncoded())
             .thenReturn(KeyPairGenerator.getInstance("RSA").generateKeyPair().getPrivate().getEncoded());
 
-        this.signatureService.generateSignature(postMethod, actor);
+        this.signatureService.generateSignature(postMethod, actor, "{}");
         InOrder inOrder = inOrder(postMethod, postMethod);
         inOrder.verify(postMethod).addRequestHeader(eq("Signature"), matches(
-            "keyId=\"http:\\/\\/actoruri\\/\",headers=\"\\(request-target\\) host date\","
+            "keyId=\"http:\\/\\/actoruri\\/\",headers=\"\\(request-target\\) host date digest\","
                 + "signature=\"[^\"]*\""));
         inOrder.verify(postMethod).addRequestHeader(eq("Date"), anyString());
     }
@@ -150,10 +150,10 @@ class DefaultSignatureServiceTest
         when(privateKeyParameters.getEncoded())
             .thenReturn(KeyPairGenerator.getInstance("RSA").generateKeyPair().getPrivate().getEncoded());
 
-        this.signatureService.generateSignature(postMethod, actor);
+        this.signatureService.generateSignature(postMethod, actor, "{}");
         InOrder inOrder = inOrder(postMethod, postMethod);
         inOrder.verify(postMethod).addRequestHeader(eq("Signature"), matches(
-            "keyId=\"http:\\/\\/actoruri\\/\",headers=\"\\(request-target\\) host date\","
+            "keyId=\"http:\\/\\/actoruri\\/\",headers=\"\\(request-target\\) host date digest\","
                 + "signature=\"[^\"]*\""));
         inOrder.verify(postMethod).addRequestHeader(eq("Date"), anyString());
     }
@@ -179,19 +179,19 @@ class DefaultSignatureServiceTest
 
         CertifiedKeyPair certifiedKeyPair = mock(CertifiedKeyPair.class);
         when(this.keyStore.retrieve(argThat(
-                storeReference -> (storeReference instanceof FileStoreReference) &&
-                        Objects.equals(((FileStoreReference) storeReference).getFile().getName(),
-                                documentReference.toString() + ".key"))))
+            storeReference -> (storeReference instanceof FileStoreReference)
+                                  && Objects.equals(((FileStoreReference) storeReference).getFile().getName(),
+                documentReference.toString() + ".key"))))
                 .thenReturn(certifiedKeyPair);
         PrivateKeyParameters privateKeyParameters = mock(PrivateKeyParameters.class);
         when(certifiedKeyPair.getPrivateKey()).thenReturn(privateKeyParameters);
         when(privateKeyParameters.getEncoded()).thenReturn(PK);
 
-        this.signatureService.generateSignature(postMethod, actor);
+        this.signatureService.generateSignature(postMethod, actor, "{}");
         InOrder inOrder = inOrder(postMethod, postMethod);
         inOrder.verify(postMethod).addRequestHeader(eq("Signature"),
-                eq("keyId=\"http://actoruri/\",headers=\"(request-target) host date\""
-                        + ",signature=\"bdNHx5ahaz5D4SybbFcR/X97b7IdE7umC77+IeJI26ZmM7QqSs09T0wzYQWil8FDJDejepg2WfzW6OGXDDVM0Q==\""));
+                eq("keyId=\"http://actoruri/\",headers=\"(request-target) host date digest\""
+                        + ",signature=\"gyFYtjF/9JX9moeR9yYHVYf7/B222obL1IIJDqDf5AK7ThyqIKoJHpARj1+eljAkEvXdQrUUg5y/Su7ljmhpCQ==\""));
         inOrder.verify(postMethod).addRequestHeader(eq("Date"), anyString());
     }
 }

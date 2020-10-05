@@ -121,12 +121,12 @@ public class DefaultActivityPubClient implements ActivityPubClient
     @Override
     public HttpMethod post(URI uri, AbstractActivity activity) throws ActivityPubException, IOException
     {
-        RequestEntity bodyRequest =
-            new StringRequestEntity(this.activityPubJsonSerializer.serialize(activity), CONTENT_TYPE_STRICT, "UTF-8");
+        String content = this.activityPubJsonSerializer.serialize(activity);
+        RequestEntity bodyRequest = new StringRequestEntity(content, CONTENT_TYPE_STRICT, "UTF-8");
         PostMethod postMethod = new PostMethod(uri.toASCIIString());
         postMethod.setRequestEntity(bodyRequest);
         AbstractActor actor = this.resolver.resolveReference(activity.getActor());
-        this.signature.generateSignature(postMethod, actor);
+        this.signature.generateSignature(postMethod, actor, content);
         this.httpClient.executeMethod(postMethod);
         return postMethod;
     }

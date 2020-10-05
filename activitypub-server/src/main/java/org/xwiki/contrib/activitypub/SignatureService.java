@@ -37,11 +37,12 @@ public interface SignatureService
     /**
      * Generate the signature of a message send to an external ActivityPub inbox.
      *
-     * @param postMethod The post method to sign.
-     * @param actor the actor who posts the message.
-     * @throws ActivityPubException In case of error when signing the request.
+     * @param postMethod the post method to sign
+     * @param actor the actor who posts the message
+     * @param content the content of the body of the request
+     * @throws ActivityPubException in case of error when signing the request
      */
-    void generateSignature(HttpMethod postMethod, AbstractActor actor)
+    void generateSignature(HttpMethod postMethod, AbstractActor actor, String content)
         throws ActivityPubException;
 
     /**
