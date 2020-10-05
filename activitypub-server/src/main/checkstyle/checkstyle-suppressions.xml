@@ -26,6 +26,7 @@
 
 <suppressions>
   <suppress checks="CyclomaticComplexity" files="DefaultActorHandler.java"/>
+  <suppress checks="NPathComplexity" files="DefaultActorHandler.java"/>
   <suppress checks="ClassFanOutComplexity" files="DefaultActorHandler.java"/>
   <suppress checks="ClassFanOutComplexity" files="DefaultActivityPubStorage.java"/>
   <suppress checks="CyclomaticComplexity" files="DefaultActivityPubStorage.java"/>

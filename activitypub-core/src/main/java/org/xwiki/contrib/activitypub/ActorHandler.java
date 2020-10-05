@@ -110,6 +110,17 @@ public interface ActorHandler
     AbstractActor getActor(String actorIdentifier) throws ActivityPubException;
 
     /**
+     * Retrieve an actor based on a {@link DocumentReference}.
+     *
+     * @param actor the {@link DocumentReference} of the actor
+     * @throws ActivityPubException if the reference fails to be resolved to an actor
+     * @return the resolved {@link AbstractActor}
+     * @since 1.3
+     */
+    @Unstable
+    AbstractActor getActor(DocumentReference actor) throws ActivityPubException;
+
+    /**
      * Verify if an user with the given serialized reference exist.
      * @param login the name of an user.
      * @return {@code true} if the user exists.
