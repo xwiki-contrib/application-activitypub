@@ -40,7 +40,9 @@
                   <div class="modal-dialog modal-lg" role="document">
                     <div class="modal-content">
                       <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
                         <h4 class="modal-title">$object.name</h4>
                       </div>
                       <div class="modal-body">
@@ -56,7 +58,8 @@
                         #if ($services.activitypub.belongsToCurrentInstance("$object.url.get(0)"))
                             #set($objectLink = "<a href=""$object.url.get(0)"">$object.name</a>")
                         #else
-                            #set($objectLink = "<span class=""wikiexternallink""><a href=""$object.url.get(0)"">$object.name</a></span>")
+                            #set($objectLink =
+                              "<span class=""wikiexternallink""><a href=""$object.url.get(0)"">$object.name</a></span>")
                         #end
                     #else
                         #set($objectLink = $object.name)
@@ -79,7 +82,19 @@
                 </div>
                 #end
             #else
-                #set($description = "$services.localization.render('activitypub.event.announce.description') $object.type <a href='$object.id'>$object.name</a>.")
+                #set ($discard = $xwiki.ssx.use('ActivityPub.WebHome'))
+                #define ($description)
+                  $services.localization.render('activitypub.event.announce.description')
+                  ${object.type}#if ($object.name) <a href='$object.id'>$object.name</a>#end.
+                  #if ($object.content)
+                    <blockquote class='activitypub'>$object.content</blockquote>
+                    #set ($originalAuthor = $services.activitypub.resolve($object.attributedTo[0]))
+                    <span>
+                      $services.localization.render('activitypub.event.announce.originalAuthor.label')
+                      <a href='$originalAuthor.id'>$originalAuthor.name</a>
+                    </span>
+                  #end
+                #end
             #end
             #displayAPEventDetail($event $actor $description)
         #end
