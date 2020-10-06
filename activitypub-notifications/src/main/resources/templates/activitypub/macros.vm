@@ -20,6 +20,8 @@
 ## Helper macros for ActivityPub notifications.
 #template('notification/macros.vm')
 
+#set ($discard = $xwiki.ssx.use('ActivityPub.WebHome'))
+
 #set ($smallIcon = "branch")
 #set ($mainIcon = "branch")
 #set ($eventNumber = $compositeEvent.events.size())
@@ -27,6 +29,37 @@
 
 #macro (insertEventDate $event)
   <td class="text-right text-muted">$escapetool.xml($services.date.displayTimeAgo($event.date))</td>
+#end
+
+#macro (insertEventDateDiv $event)
+<div class="text-right text-muted"><small>$escapetool.xml($services.date.displayTimeAgo($event.date))</small></div>
+#end
+
+#macro (computeUserName $actor)
+  #if($actor.name && $actor.name != '')
+    $actor.name
+  #elseif ($actor.preferredUsername && $actor.preferredUsername != '')
+    $actor.preferredUsername
+  #else
+    $services.webfinger.getWebfingerId($actor)
+  #end
+#end
+
+#macro (computeUserLink $actor)
+<a href='$actor.id'>
+  #computeUserName($actor)
+</a>
+#end
+
+#macro (activityPubActorLink $actor)
+#set ($username = $services.webfinger.getWebfingerId($actor))
+<span class="notification-event-user">
+  #if ($services.activitypub.belongsToCurrentInstance("$actor.id"))
+      <a href="$actor.id">$username</a>
+  #else
+    <span class="wikiexternallink"><a href="$actor.id">$username</a></span>
+  #end
+</span>
 #end
 
 #macro (displayAPEventDetail $event $actor $summary)
@@ -44,6 +77,17 @@
   <td class="description">$summary</td>
   #insertEventDate($event)
 </tr>
+#end
+
+#macro (displayAPEventDetailLarge $event $actor $introduction $summary)
+<div class="row activitypub notifications">
+  <p>$introduction</p>
+  <blockquote class="activitypub notifications">$!summary</blockquote>
+  #if ($optionalContent)
+    $!optionalContent
+  #end
+  #insertEventDateDiv($event)
+</div>
 #end
 
 #macro (getAPEventSummary $translationPrefix)

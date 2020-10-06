@@ -81,22 +81,25 @@
                   </script>
                 </div>
                 #end
+                #displayAPEventDetail($event $actor $description)
             #else
-                #set ($discard = $xwiki.ssx.use('ActivityPub.WebHome'))
-                #define ($description)
-                  $services.localization.render('activitypub.event.announce.description')
-                  ${object.type}#if ($object.name) <a href='$object.id'>$object.name</a>#end.
-                  #if ($object.content)
-                    <blockquote class='activitypub'>$object.content</blockquote>
-                    #set ($originalAuthor = $services.activitypub.resolve($object.attributedTo[0]))
-                    <span>
-                      $services.localization.render('activitypub.event.announce.originalAuthor.label')
-                      <a href='$originalAuthor.id'>$originalAuthor.name</a>
-                    </span>
+                #define ($optionalContent)
+                  #set ($originalAuthor = $services.activitypub.resolve($object.attributedTo[0]))
+                    #if($originalAuthor)
+                      <span>
+                        $services.localization.render('activitypub.event.announce.originalAuthor.label')
+                        #computeUserLink($originalAuthor)
+                      </span>
+                    #end
                   #end
-                #end
+                  #define ($actorLink)
+                    #activityPubActorLink($actor)
+                  #end
+                  #set ($introduction =
+                    "$services.localization.render('activitypub.event.announce.description.withActor', [$actorLink])" +
+                      " ${object.type}#if ($object.name) <a href='$object.id'>$object.name</a>#end.")
+                #displayAPEventDetailLarge($event $actor $introduction $object.content $optionalContent)
             #end
-            #displayAPEventDetail($event $actor $description)
         #end
     #end
     #displayNotificationEventDetailsSkeletons($events.size(), $rows)

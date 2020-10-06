@@ -35,11 +35,11 @@
             #set ($actor = $services.activitypub.resolve($activity.actor))
             #set ($object = $services.activitypub.resolve($activity.object))
 
-            #define($description)
-                $services.localization.render('activitypub.event.message.description')
-                <div class="activitypub-message">$object.content</div>
+            #define($actorLink)
+              #activityPubActorLink($actor)
             #end
-            #displayAPEventDetail($event $actor $description)
+            #set ($introduction = $services.localization.render('activitypub.event.message.description.withActor', [$actorLink]))
+            #displayAPEventDetailLarge($event $actor $introduction $object.content)
         #end
     #end
     #displayNotificationEventDetailsSkeletons($events.size(), $rows)

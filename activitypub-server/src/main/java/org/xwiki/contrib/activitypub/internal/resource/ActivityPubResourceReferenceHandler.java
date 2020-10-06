@@ -19,7 +19,9 @@
  */
 package org.xwiki.contrib.activitypub.internal.resource;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -227,7 +229,8 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
         AbstractActor actor = this.objectReferenceResolver.resolveReference(box.getAttributedTo().get(0));
 
         // Parse the body of the request to retrieve the activity
-        ActivityPubObject object = this.activityPubJsonParser.parse(request.getReader());
+        ActivityPubObject object = this.activityPubJsonParser.parse(
+            new BufferedReader(new InputStreamReader(request.getInputStream(), StandardCharsets.UTF_8)));
         AbstractActivity activity = getActivity(object);
 
         // Create the ActivityRequest and retrieve the handler for it

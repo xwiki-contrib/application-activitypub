@@ -176,9 +176,15 @@
       <cache>long</cache>
     </property>
     <property>
-      <code>blockquote.activitypub {
+      <code>blockquote.activitypub.notifications {
   font-size: 1.0em;
-  margin-bottom: 0px;
+  margin: 0px;
+  padding: 0px 0.8em;
+}
+
+div.row.activitypub.notifications {
+  margin-top: 0.8em;
+  padding: 0px 0.8em;
 }</code>
     </property>
     <property>
