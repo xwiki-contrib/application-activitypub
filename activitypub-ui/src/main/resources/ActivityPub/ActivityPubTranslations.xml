@@ -72,6 +72,7 @@ activitypub.shareDocument.modalTitle=Document Share
 activitypub.shareDocument.target.label=Target users of the document sharing
 activitypub.shareDocument.target.hint=You can select your followers and/or some specif users.
 activitypub.shareDocument.target.placeholder=Insert here the identifier(s) of user(s)
+activitypub.shareDocument.publicRecipientWarning=Be aware that pages shared without "public" being part of the recipients can be ignored by some instances of the fediverse.
 activitypub.dashboard.tab.follow=Follow
 activitypub.dashboard.tab.message=New message
 activitypub.dashboard.guest=You cannot use this application as guest user, please log in.
