@@ -25,10 +25,10 @@
   <parent>
     <groupId>org.xwiki.contrib</groupId>
     <artifactId>application-activitypub</artifactId>
-    <version>1.3-SNAPSHOT</version>
+    <version>1.2.1-SNAPSHOT</version>
   </parent>
   <artifactId>webfinger-parent</artifactId>
-  <version>1.3-SNAPSHOT</version>
+  <version>1.2.1-SNAPSHOT</version>
   <name>XWiki Webfinger - Parent</name>
   <packaging>pom</packaging>
   <modules>
