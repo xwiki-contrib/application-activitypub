@@ -72,6 +72,7 @@ activitypub.shareDocument.modalTitle=Compartir documento
 activitypub.shareDocument.target.label=Usuarios destinatarios de la compartición del documento
 activitypub.shareDocument.target.hint=Puedes escoger a tus seguidores y/o algunos usuarios específicos.
 activitypub.shareDocument.target.placeholder=Introduce aquí los identificadores de los usuarios
+### Missing: activitypub.shareDocument.publicRecipientWarning=Be aware that pages shared without "public" being part of the recipients can be ignored by some instances of the fediverse.
 activitypub.dashboard.tab.follow=Seguir
 activitypub.dashboard.tab.message=Mensaje nuevo
 activitypub.dashboard.guest=No puedes utilizar esta aplicación como usuario invitado, por favor, inicia sesión.
