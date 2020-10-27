@@ -61,6 +61,10 @@
   <properties>
     <xwiki.release.jira.skip>false</xwiki.release.jira.skip>
     <xwiki.issueManagement.jira.id>XAP</xwiki.issueManagement.jira.id>
+    <!-- to be removed when 12.10 is release -->
+    <commons.version>12.10-SNAPSHOT</commons.version>
+    <platform.version>12.10-SNAPSHOT</platform.version>
+    <xwiki.enforcer.skip>true</xwiki.enforcer.skip>
   </properties>
   <dependencies>
     <dependency>

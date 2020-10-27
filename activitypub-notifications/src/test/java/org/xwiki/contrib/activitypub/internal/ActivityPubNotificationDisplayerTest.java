@@ -88,7 +88,8 @@ public class ActivityPubNotificationDisplayerTest
         NotificationException expt = assertThrows(NotificationException.class,
             () -> this.activityPubNotificationDisplayer.renderNotification(compositeEvent));
 
-        assertEquals("Error while getting the activity of the event [null at null by null on null]", expt.getMessage());
+        assertEquals("Error while getting the activity of the event [null at null by null on null with id null]",
+            expt.getMessage());
     }
 
     @Test
@@ -131,10 +132,8 @@ public class ActivityPubNotificationDisplayerTest
         NotificationException expt = assertThrows(NotificationException.class,
             () -> this.activityPubNotificationDisplayer.renderNotification(compositeEvent));
 
-        assertEquals(
-            "Error while getting the activity of the event "
-                + "[evtType at null by xwiki:XWiki.U1 on xwiki:XWiki.D1]",
-            expt.getMessage());
+        assertEquals("Error while getting the activity of the event "
+            + "[evtType at null by xwiki:XWiki.U1 on xwiki:XWiki.D1 with id null]", expt.getMessage());
     }
 
     @Test
