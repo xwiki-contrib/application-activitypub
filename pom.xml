@@ -92,27 +92,6 @@
       <plugin>
         <groupId>org.revapi</groupId>
         <artifactId>revapi-maven-plugin</artifactId>
-        <configuration>
-          <analysisConfiguration><![CDATA[
-            {
-              "revapi": {
-                "ignore": [
-                  {
-                    "code": "java.method.addedToInterface",
-                    "new": "method org.xwiki.contrib.activitypub.entities.AbstractActor org.xwiki.contrib.activitypub.ActorHandler::getActor(org.xwiki.model.reference.DocumentReference) throws org.xwiki.contrib.activitypub.ActivityPubException",
-                    "justification": "Young API."
-                  },
-                  {
-                    "code": "java.method.numberOfParametersChanged",
-                    "old": "method void org.xwiki.contrib.activitypub.SignatureService::generateSignature(org.apache.commons.httpclient.HttpMethod, org.xwiki.contrib.activitypub.entities.AbstractActor) throws org.xwiki.contrib.activitypub.ActivityPubException",
-                    "new": "method void org.xwiki.contrib.activitypub.SignatureService::generateSignature(org.apache.commons.httpclient.HttpMethod, org.xwiki.contrib.activitypub.entities.AbstractActor, java.lang.String) throws org.xwiki.contrib.activitypub.ActivityPubException",
-                    "justification": "Young API."
-                  }
-                ]
-              }
-            }
-          ]]></analysisConfiguration>
-        </configuration>
       </plugin>
     </plugins>
   </build>
