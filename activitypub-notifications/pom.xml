@@ -25,10 +25,10 @@
   <parent>
     <groupId>org.xwiki.contrib</groupId>
     <artifactId>application-activitypub</artifactId>
-    <version>1.3-SNAPSHOT</version>
+    <version>1.3</version>
   </parent>
   <artifactId>activitypub-notifications</artifactId>
-  <version>1.3-SNAPSHOT</version>
+  <version>1.3</version>
   <name>XWiki ActivityPub - Notifications</name>
   <packaging>jar</packaging>
   <properties>
