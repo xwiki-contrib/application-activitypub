@@ -20,10 +20,14 @@
 package org.xwiki.contrib.activitypub.entities;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -32,13 +36,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @since 1.0
  * @version $Id$
  */
-public class NoteTest extends AbstractEntityTest
+class NoteTest extends AbstractEntityTest
 {
     @Test
     void serialization() throws Exception
     {
-        Note note = new Note()
-                            .setId(new URI("http://localhost:8080/xwiki/activitypub/Note/XWiki.Foo-note"));
+        Note note = initializeNote();
 
         String expectedSerialization = this.readResource("note/note1.json");
         assertEquals(expectedSerialization, this.serializer.serialize(note));
@@ -47,17 +50,23 @@ public class NoteTest extends AbstractEntityTest
     @Test
     void parsing() throws Exception
     {
-        Note expectedNote = new Note()
-                                    .setId(new URI("http://localhost:8080/xwiki/activitypub/Note/XWiki.Foo-note"));
-
+        Note expectedNote = initializeNote();
 
         ActivityPubObjectReference<AbstractActivity> a = new ActivityPubObjectReference<>();
         a.setLink(URI.create("http://test/create/1"));
 
-        String json = this.readResource("note/note1.json");
+        String json = this.readResource("note/note3.json");
         Note actual0 = this.parser.parse(json, Note.class);
         assertEquals(expectedNote, actual0);
         ActivityPubObject actual1 = this.parser.parse(json);
         assertEquals(expectedNote, actual1);
+    }
+
+    private Note initializeNote() throws URISyntaxException
+    {
+        return new Note()
+            .setId(new URI("http://localhost:8080/xwiki/activitypub/Note/XWiki.Foo-note"))
+            .setTag(singletonList(new ActivityPubObjectReference<>().setObject(
+                new Mention().setId(URI.create("https://localhost:8080/xwiki/activitypub/Mentions/mentionid")))));
     }
 }

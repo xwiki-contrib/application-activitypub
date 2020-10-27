@@ -1,6 +1,9 @@
 {
   "@context" : [ "https://www.w3.org/ns/activitystreams" ],
   "id" : "http://localhost:8080/xwiki/activitypub/Note/XWiki.Foo-note",
-  "tag" : [ "https://localhost:8080/xwiki/activitypub/Mentions/mentionid" ],
+  "tag" : [{
+      "type": "Mention",
+      "id": "https://localhost:8080/xwiki/activitypub/Mentions/mentionid"
+    }],
   "type" : "Note"
 }

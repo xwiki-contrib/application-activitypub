@@ -73,6 +73,8 @@ public class ActivityPubObject extends JSONLDObjects
 
     private Date lastUpdated;
 
+    private List<ActivityPubObjectReference<?>> tag;
+
     /**
      * The type is not stored as a property but instead we rely on the class name to return it.
      *
@@ -318,6 +320,31 @@ public class ActivityPubObject extends JSONLDObjects
     }
 
     /**
+     * One or more "tags" that have been associated with an objects.
+     *
+     * @return the object tags
+     * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-tag">Activity Stream tag definition</a>
+     */
+    public List<ActivityPubObjectReference<?>> getTag()
+    {
+        return this.tag;
+    }
+
+    /**
+     * One or more "tags" that have been associated with an objects.
+     *
+     * @param tag the object tags
+     * @param <T> the concrete type of the current instance
+     * @return the current object
+     * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-tag">Activity Stream tag definition</a>
+     */
+    public <T extends ActivityPubObject> T setTag(List<ActivityPubObjectReference<?>> tag)
+    {
+        this.tag = tag;
+        return (T) this;
+    }
+
+    /**
      * Computed targets is the real list of targeted AbstractActor references, computed when an activity is delivered.
      *
      * @return the set of deduplicated concrete actors targets.
@@ -406,38 +433,40 @@ public class ActivityPubObject extends JSONLDObjects
         ActivityPubObject object = (ActivityPubObject) o;
 
         return new EqualsBuilder()
-                .appendSuper(super.equals(o))
-                .append(id, object.id)
-                .append(name, object.name)
-                .append(published, object.published)
-                .append(summary, object.summary)
-                .append(to, object.to)
-                .append(content, object.content)
-                .append(attributedTo, object.attributedTo)
-                .append(url, object.url)
-                .append(shares, object.shares)
-                .append(xwikiReference, object.xwikiReference)
-                .append(lastUpdated, object.lastUpdated)
-                .isEquals();
+            .appendSuper(super.equals(o))
+            .append(this.id, object.id)
+            .append(this.name, object.name)
+            .append(this.published, object.published)
+            .append(this.summary, object.summary)
+            .append(this.to, object.to)
+            .append(this.content, object.content)
+            .append(this.attributedTo, object.attributedTo)
+            .append(this.url, object.url)
+            .append(this.shares, object.shares)
+            .append(this.xwikiReference, object.xwikiReference)
+            .append(this.lastUpdated, object.lastUpdated)
+            .append(this.tag, object.tag)
+            .isEquals();
     }
 
     @Override
     public int hashCode()
     {
         return new HashCodeBuilder(17, 37)
-                .appendSuper(super.hashCode())
-                .append(id)
-                .append(name)
-                .append(published)
-                .append(summary)
-                .append(to)
-                .append(content)
-                .append(attributedTo)
-                .append(url)
-                .append(shares)
-                .append(xwikiReference)
-                .append(lastUpdated)
-                .toHashCode();
+            .appendSuper(super.hashCode())
+            .append(this.id)
+            .append(this.name)
+            .append(this.published)
+            .append(this.summary)
+            .append(this.to)
+            .append(this.content)
+            .append(this.attributedTo)
+            .append(this.url)
+            .append(this.shares)
+            .append(this.xwikiReference)
+            .append(this.lastUpdated)
+            .append(this.tag)
+            .toHashCode();
     }
 
     @Override
