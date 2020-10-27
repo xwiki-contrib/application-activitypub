@@ -46,6 +46,7 @@ public abstract class AbstractActor extends ActivityPubObject
     private ActivityPubObjectReference<OrderedCollection<AbstractActor>> followers;
     private ActivityPubObjectReference<OrderedCollection<AbstractActor>> following;
     private PublicKey publicKey;
+    private ActivityPubObjectReference<OrderedCollection<Like>> liked;
 
     /**
      * @return the username of the actor.
@@ -172,6 +173,29 @@ public abstract class AbstractActor extends ActivityPubObject
         return this;
     }
 
+    /**
+     * @return the list of Like performed by the actor.
+     * @since 1.4
+     */
+    @Unstable
+    public ActivityPubObjectReference<OrderedCollection<Like>> getLiked()
+    {
+        return liked;
+    }
+
+    /**
+     * @param liked the likes performed by the actor.
+     * @param <T> the type of the actor.
+     * @return the current instance.
+     * @since 1.4
+     */
+    @Unstable
+    public <T extends AbstractActor> T setLiked(ActivityPubObjectReference<OrderedCollection<Like>> liked)
+    {
+        this.liked = liked;
+        return (T) this;
+    }
+
     @Override
     public boolean isActor()
     {
@@ -207,7 +231,8 @@ public abstract class AbstractActor extends ActivityPubObject
             .append(outbox, object.outbox)
             .append(followers, object.followers)
             .append(following, object.following)
-            .append(publicKey, object.publicKey).build();
+            .append(publicKey, object.publicKey)
+            .append(liked, object.liked).build();
     }
 
     @Override
@@ -220,7 +245,8 @@ public abstract class AbstractActor extends ActivityPubObject
             .append(outbox)
             .append(followers)
             .append(following)
-            .append(publicKey).build();
+            .append(publicKey)
+            .append(liked).build();
     }
 
     /**

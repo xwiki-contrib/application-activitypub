@@ -89,6 +89,8 @@ public class PersonTest extends AbstractEntityTest
                                               .setLink(new URI("https://social.example/alyssa/followers/")))
                             .setFollowing(new ActivityPubObjectReference<OrderedCollection<AbstractActor>>()
                                               .setLink(new URI("https://social.example/alyssa/following/")))
+                            .setLiked(new ActivityPubObjectReference<OrderedCollection<Like>>()
+                                                .setLink(new URI("https://social.example/alyssa/liked/")))
                             .setId(new URI("https://social.example/alyssa/"))
                             .setName("Alyssa P. Hacker")
                             .setSummary("Lisp enthusiast hailing from MIT");

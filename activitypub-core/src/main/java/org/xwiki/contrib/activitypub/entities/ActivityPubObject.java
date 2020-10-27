@@ -75,6 +75,8 @@ public class ActivityPubObject extends JSONLDObjects
 
     private List<ActivityPubObjectReference<?>> tag;
 
+    private ActivityPubObjectReference<OrderedCollection<Like>> likes;
+
     /**
      * The type is not stored as a property but instead we rely on the class name to return it.
      *
@@ -292,6 +294,29 @@ public class ActivityPubObject extends JSONLDObjects
         this.shares = shares;
         return (T) this;
     }
+
+    /**
+     * @return the list of likes of the object.
+     * @since 1.4
+     */
+    @Unstable
+    public ActivityPubObjectReference<OrderedCollection<Like>> getLikes()
+    {
+        return likes;
+    }
+
+    /**
+     * @param likes the list of likes of the object.
+     * @return the current instance.
+     * @param <T> The runtime type of the chained object.
+     * @since 1.4
+     */
+    @Unstable
+    public <T extends ActivityPubObject> T setLikes(ActivityPubObjectReference<OrderedCollection<Like>> likes)
+    {
+        this.likes = likes;
+        return (T) this;
+    }
     
 
     /**
@@ -443,6 +468,7 @@ public class ActivityPubObject extends JSONLDObjects
             .append(this.attributedTo, object.attributedTo)
             .append(this.url, object.url)
             .append(this.shares, object.shares)
+            .append(likes, object.likes)
             .append(this.xwikiReference, object.xwikiReference)
             .append(this.lastUpdated, object.lastUpdated)
             .append(this.tag, object.tag)
@@ -463,6 +489,7 @@ public class ActivityPubObject extends JSONLDObjects
             .append(this.attributedTo)
             .append(this.url)
             .append(this.shares)
+            .append(likes)
             .append(this.xwikiReference)
             .append(this.lastUpdated)
             .append(this.tag)

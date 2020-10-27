@@ -4,6 +4,7 @@ org.xwiki.contrib.activitypub.internal.activities.CreateActivityHandler
 org.xwiki.contrib.activitypub.internal.activities.FollowActivityHandler
 org.xwiki.contrib.activitypub.internal.activities.RejectActivityHandler
 org.xwiki.contrib.activitypub.internal.activities.UpdateActivityHandler
+org.xwiki.contrib.activitypub.internal.activities.LikeActivityHandler
 org.xwiki.contrib.activitypub.internal.async.jobs.PageCreatedNotificationJob
 org.xwiki.contrib.activitypub.internal.async.jobs.PageUpdatedNotificationJob
 org.xwiki.contrib.activitypub.internal.filters.PublicActivityCollectionFilter
