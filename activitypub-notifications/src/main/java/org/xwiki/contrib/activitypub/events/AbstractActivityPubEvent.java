@@ -35,8 +35,8 @@ import org.xwiki.stability.Unstable;
 @Unstable
 public abstract class AbstractActivityPubEvent<T extends AbstractActivity> implements RecordableEvent, TargetableEvent
 {
-    private Set<String> target;
-    private T activity;
+    private final Set<String> target;
+    private final T activity;
 
     /**
      * Default constructor.
@@ -52,7 +52,7 @@ public abstract class AbstractActivityPubEvent<T extends AbstractActivity> imple
     @Override
     public Set<String> getTarget()
     {
-        return target;
+        return this.target;
     }
 
     /**
@@ -60,7 +60,7 @@ public abstract class AbstractActivityPubEvent<T extends AbstractActivity> imple
      */
     public T getActivity()
     {
-        return activity;
+        return this.activity;
     }
 
     /**
