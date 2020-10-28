@@ -59,6 +59,8 @@ public class ActivityPubObject extends JSONLDObjects
 
     private List<ProxyActor> to;
 
+    private List<ProxyActor> cc;
+
     private String content;
 
     private List<ActivityPubObjectReference<AbstractActor>> attributedTo;
@@ -225,6 +227,37 @@ public class ActivityPubObject extends JSONLDObjects
     }
 
     /**
+     * Identifies an Object that is part of the public secondary audience of this Object.
+     *
+     * @return the list of actors of the secondary audience of this Object
+     * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-cc">Activity Stream vocabulary cc
+     *     definition</a>
+     * @since 1.4
+     */
+    @Unstable
+    public List<ProxyActor> getCc()
+    {
+        return this.cc;
+    }
+
+    /**
+     * Identifies an Object that is part of the public secondary audience of this Object.
+     *
+     * @param cc the list of actors of the secondary audience of this Object
+     * @param <T> the type of the object
+     * @return the current object for fluent API
+     * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-cc">Activity Stream vocabulary cc
+     *     definition</a>
+     * @since 1.4
+     */
+    @Unstable
+    public <T extends ActivityPubObject> T setCc(List<ProxyActor> cc)
+    {
+        this.cc = cc;
+        return (T) this;
+    }
+
+    /**
      * @return the list of references of the actors the object is attributed to.
      * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-attributedto">ActivityStream definition</a>
      */
@@ -317,7 +350,7 @@ public class ActivityPubObject extends JSONLDObjects
         this.likes = likes;
         return (T) this;
     }
-    
+
 
     /**
      * An XWiki specific field that allows to retrieve an entity on the wiki instance.
@@ -349,7 +382,9 @@ public class ActivityPubObject extends JSONLDObjects
      *
      * @return the object tags
      * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-tag">Activity Stream tag definition</a>
+     * @since 1.4
      */
+    @Unstable
     public List<ActivityPubObjectReference<?>> getTag()
     {
         return this.tag;
@@ -362,7 +397,9 @@ public class ActivityPubObject extends JSONLDObjects
      * @param <T> the concrete type of the current instance
      * @return the current object
      * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-tag">Activity Stream tag definition</a>
+     * @since 1.4
      */
+    @Unstable
     public <T extends ActivityPubObject> T setTag(List<ActivityPubObjectReference<?>> tag)
     {
         this.tag = tag;
@@ -469,6 +506,7 @@ public class ActivityPubObject extends JSONLDObjects
             .append(this.url, object.url)
             .append(this.shares, object.shares)
             .append(likes, object.likes)
+            .append(cc, object.cc)
             .append(this.xwikiReference, object.xwikiReference)
             .append(this.lastUpdated, object.lastUpdated)
             .append(this.tag, object.tag)
@@ -490,6 +528,7 @@ public class ActivityPubObject extends JSONLDObjects
             .append(this.url)
             .append(this.shares)
             .append(likes)
+            .append(cc)
             .append(this.xwikiReference)
             .append(this.lastUpdated)
             .append(this.tag)
