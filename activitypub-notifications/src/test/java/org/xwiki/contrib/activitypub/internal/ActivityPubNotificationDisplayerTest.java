@@ -33,6 +33,7 @@ import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.contrib.activitypub.events.AnnounceEvent;
 import org.xwiki.contrib.activitypub.events.CreateEvent;
 import org.xwiki.contrib.activitypub.events.FollowEvent;
+import org.xwiki.contrib.activitypub.events.MentionEvent;
 import org.xwiki.contrib.activitypub.events.MessageEvent;
 import org.xwiki.contrib.activitypub.events.UpdateEvent;
 import org.xwiki.eventstream.internal.DefaultEvent;
@@ -145,6 +146,7 @@ public class ActivityPubNotificationDisplayerTest
             FollowEvent.EVENT_TYPE,
             AnnounceEvent.EVENT_TYPE,
             MessageEvent.EVENT_TYPE,
+            MentionEvent.EVENT_TYPE,
             UpdateEvent.EVENT_TYPE
         ), supportedEvents);
     }

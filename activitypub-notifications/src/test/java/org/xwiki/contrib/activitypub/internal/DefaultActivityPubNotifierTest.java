@@ -19,69 +19,227 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
-import java.util.Collections;
+import java.net.URI;
 import java.util.HashSet;
+import java.util.Objects;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActorHandler;
-import org.xwiki.contrib.activitypub.entities.AbstractActor;
-import org.xwiki.contrib.activitypub.events.AbstractActivityPubEvent;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
+import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.Accept;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
+import org.xwiki.contrib.activitypub.entities.Announce;
+import org.xwiki.contrib.activitypub.entities.Create;
+import org.xwiki.contrib.activitypub.entities.Link;
+import org.xwiki.contrib.activitypub.entities.Mention;
+import org.xwiki.contrib.activitypub.entities.Note;
+import org.xwiki.contrib.activitypub.entities.Page;
+import org.xwiki.contrib.activitypub.entities.Update;
+import org.xwiki.contrib.activitypub.events.AbstractActivityPubEvent;
+import org.xwiki.contrib.activitypub.events.AnnounceEvent;
+import org.xwiki.contrib.activitypub.events.CreateEvent;
+import org.xwiki.contrib.activitypub.events.MentionEvent;
+import org.xwiki.contrib.activitypub.events.MessageEvent;
+import org.xwiki.contrib.activitypub.events.UpdateEvent;
 import org.xwiki.observation.ObservationManager;
+import org.xwiki.test.junit5.LogCaptureExtension;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
-import org.xwiki.user.UserReference;
-import org.xwiki.user.UserReferenceSerializer;
 
+import static java.util.Collections.singleton;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.xwiki.test.LogLevel.WARN;
 
 /**
  * Test of {@link DefaultActivityPubNotifier}.
  *
- * @since 1.0
  * @version $Id$
+ * @since 1.0
  */
 @ComponentTest
-public class DefaultActivityPubNotifierTest
+class DefaultActivityPubNotifierTest
 {
     @InjectMockComponents
     private DefaultActivityPubNotifier defaultActivityPubNotifier;
 
     @MockComponent
+    private ActorHandler actorHandler;
+
+    @MockComponent
     private ObservationManager observationManager;
 
     @MockComponent
-    private ActorHandler actorHandler;
+    private ActivityPubObjectReferenceResolver resolver;
 
     @Test
     void notifyNoTargets() throws Exception
     {
         this.defaultActivityPubNotifier.notify(new Accept(), new HashSet<>());
-        verify(this.observationManager)
-            .notify(ArgumentMatchers.argThat(
-                (AbstractActivityPubEvent<? extends AbstractActivity> activityPubEvent) -> activityPubEvent.getTarget()
-                                                                                       .isEmpty()),
-                eq("org.xwiki.contrib:activitypub-notifications"), eq("activitypub.follow"));
+        verify(this.observationManager, never()).notify(any(), any(), any());
+    }
+
+    @Test
+    void notifyNullTarget()
+    {
+        ActivityPubException activityPubException = assertThrows(ActivityPubException.class,
+            () -> this.defaultActivityPubNotifier.notify(new Create(), singleton(null)));
+        assertEquals("You cannot send a notification to a null target.", activityPubException.getMessage());
+    }
+
+    @Test
+    void notifyUnknownType() throws ActivityPubException
+    {
+        // Anonymous activity to be sure to fail the type matching.
+        AbstractActor actor = mock(AbstractActor.class);
+        when(this.actorHandler.getNotificationTarget(actor)).thenReturn("Foobar");
+        AbstractActivity activity = new AbstractActivity()
+        {
+        };
+        ActivityPubException activityPubException = assertThrows(ActivityPubException.class,
+            () -> this.defaultActivityPubNotifier.notify(activity, singleton(actor)));
+        assertEquals(
+            "Cannot find the right event to notify about "
+                + "[type = [], id = [<null>], name = [<null>], published = [<null>], summary = [<null>], "
+                + "to = [<null>], attributedTo = [<null>]]",
+            activityPubException.getMessage());
     }
 
     @Test
     void notifyOneTarget() throws Exception
     {
         AbstractActor actor = mock(AbstractActor.class);
-        when(actorHandler.getNotificationTarget(actor)).thenReturn("Foobar");
-        this.defaultActivityPubNotifier.notify(new Accept(), Collections.singleton(actor));
+        when(this.actorHandler.getNotificationTarget(actor)).thenReturn("Foobar");
+        this.defaultActivityPubNotifier.notify(new Accept(), singleton(actor));
+        verify(this.observationManager).notify(argThat(
+            (AbstractActivityPubEvent<?> activityPubEvent) ->
+                activityPubEvent.getTarget().size() == 1 && activityPubEvent.getTarget().contains("Foobar")),
+            eq("org.xwiki.contrib:activitypub-notifications"), eq("activitypub.follow"));
+    }
+
+    @Test
+    void notifyCreateWithPage() throws Exception
+    {
+        AbstractActor actor = mock(AbstractActor.class);
+        Page page = new Page();
+        Create create = new Create().setObject(page);
+
+        when(this.actorHandler.getNotificationTarget(actor)).thenReturn("actor1");
+
+        when(this.resolver.resolveReference(new ActivityPubObjectReference<>().setObject(page))).thenReturn(page);
+
+        this.defaultActivityPubNotifier.notify(create, singleton(actor));
+
         verify(this.observationManager)
-            .notify(
-                ArgumentMatchers
-                    .argThat((AbstractActivityPubEvent<? extends AbstractActivity> activityPubEvent) ->
-                        activityPubEvent.getTarget().size() == 1
-                            && activityPubEvent.getTarget().contains("Foobar")),
-                eq("org.xwiki.contrib:activitypub-notifications"), eq("activitypub.follow"));
+            .notify(argThat(event -> event instanceof CreateEvent
+                    && Objects.equals(((CreateEvent) event).getActivity(), create)
+                    && Objects.equals(((CreateEvent) event).getTarget(), singleton("actor1"))),
+                eq("org.xwiki.contrib:activitypub-notifications"),
+                eq(CreateEvent.EVENT_TYPE));
+    }
+
+    @Test
+    void notifyCreateWithNoteNoMention() throws Exception
+    {
+        AbstractActor actor = mock(AbstractActor.class);
+        AbstractActor sender = mock(AbstractActor.class);
+        Note note = new Note();
+        Create create = new Create()
+            .setObject(note)
+            .setActor(sender);
+
+        when(this.actorHandler.getNotificationTarget(actor)).thenReturn("actor1");
+
+        when(this.resolver.resolveReference(new ActivityPubObjectReference<>().setObject(note))).thenReturn(note);
+
+        this.defaultActivityPubNotifier.notify(create, singleton(actor));
+
+        verify(this.observationManager)
+            .notify(argThat(event -> event instanceof MessageEvent
+                    && Objects.equals(((MessageEvent) event).getActivity(), create)
+                    && Objects.equals(((MessageEvent) event).getTarget(), singleton("actor1"))),
+                eq("org.xwiki.contrib:activitypub-notifications"),
+                eq(MessageEvent.EVENT_TYPE));
+    }
+
+    @Test
+    void notifyCreateWithNoteIsMentioned() throws Exception
+    {
+        AbstractActor actor = mock(AbstractActor.class);
+        AbstractActor sender = mock(AbstractActor.class);
+        Link mention = new Mention()
+            .setHref(URI.create("http://actor.org"));
+        ActivityPubObjectReference<ActivityPubObject> mentionReference = new ActivityPubObjectReference<>()
+            .setObject(mention);
+        Note note = new Note()
+            .setTag(singletonList(mentionReference));
+        Create create = new Create()
+            .setObject(note)
+            .setActor(sender);
+
+        when(actor.getId()).thenReturn(URI.create("http://actor.org"));
+        when(this.actorHandler.getNotificationTarget(actor)).thenReturn("actor1");
+
+        when(this.resolver.resolveReference(new ActivityPubObjectReference<>().setObject(note))).thenReturn(note);
+        when(this.resolver.resolveReference(mentionReference)).thenReturn(mention);
+
+        this.defaultActivityPubNotifier.notify(create, singleton(actor));
+
+        verify(this.observationManager)
+            .notify(argThat(event -> event instanceof MentionEvent
+                    && Objects.equals(((MentionEvent) event).getActivity(), create)
+                    && Objects.equals(((MentionEvent) event).getTarget(), singleton("actor1"))),
+                eq("org.xwiki.contrib:activitypub-notifications"),
+                eq(MentionEvent.EVENT_TYPE));
+    }
+
+    @Test
+    void notifyUpdate() throws Exception
+    {
+        AbstractActor actor = mock(AbstractActor.class);
+        Update update = new Update();
+
+        when(this.actorHandler.getNotificationTarget(actor)).thenReturn("actor1");
+
+        this.defaultActivityPubNotifier.notify(update, singleton(actor));
+
+        verify(this.observationManager)
+            .notify(argThat(event -> event instanceof UpdateEvent
+                    && Objects.equals(((UpdateEvent) event).getActivity(), update)
+                    && Objects.equals(((UpdateEvent) event).getTarget(), singleton("actor1"))),
+                eq("org.xwiki.contrib:activitypub-notifications"),
+                eq(UpdateEvent.EVENT_TYPE));
+    }
+
+    @Test
+    void notifyAnnounce() throws Exception
+    {
+        AbstractActor actor = mock(AbstractActor.class);
+        Announce announce = new Announce();
+
+        when(this.actorHandler.getNotificationTarget(actor)).thenReturn("actor1");
+
+        this.defaultActivityPubNotifier.notify(announce, singleton(actor));
+
+        verify(this.observationManager)
+            .notify(argThat(event -> event instanceof AnnounceEvent
+                    && Objects.equals(((AnnounceEvent) event).getActivity(), announce)
+                    && Objects.equals(((AnnounceEvent) event).getTarget(), singleton("actor1"))),
+                eq("org.xwiki.contrib:activitypub-notifications"),
+                eq(AnnounceEvent.EVENT_TYPE));
     }
 }

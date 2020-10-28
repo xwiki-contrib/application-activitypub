@@ -28,6 +28,7 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.events.AnnounceEvent;
 import org.xwiki.contrib.activitypub.events.CreateEvent;
 import org.xwiki.contrib.activitypub.events.FollowEvent;
+import org.xwiki.contrib.activitypub.events.MentionEvent;
 import org.xwiki.contrib.activitypub.events.MessageEvent;
 import org.xwiki.contrib.activitypub.events.UpdateEvent;
 import org.xwiki.eventstream.Event;
@@ -50,6 +51,7 @@ import static org.xwiki.contrib.activitypub.internal.ActivityPubRecordableEventC
     FollowEvent.EVENT_TYPE,
     AnnounceEvent.EVENT_TYPE,
     MessageEvent.EVENT_TYPE,
+    MentionEvent.EVENT_TYPE,
     UpdateEvent.EVENT_TYPE
 })
 @Singleton
