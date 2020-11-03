@@ -110,7 +110,7 @@
         <hint/>
         <name>pageNotifications</name>
         <number>3</number>
-        <prettyName>Enable page notification</prettyName>
+        <prettyName>Enable page notifications</prettyName>
         <unmodifiable>0</unmodifiable>
         <validationMessage/>
         <validationRegExp/>
@@ -365,7 +365,7 @@
       <displayBeforeCategory/>
     </property>
     <property>
-      <displayInCategory/>
+      <displayInCategory>social</displayInCategory>
     </property>
     <property>
       <displayInSection>ActivityPub</displayInSection>
