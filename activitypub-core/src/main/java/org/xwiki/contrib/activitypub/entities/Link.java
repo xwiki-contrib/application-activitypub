@@ -69,13 +69,14 @@ public class Link extends ActivityPubObject
      *
      * @param href the target resource {@link URI}
      * @return the current object
+     * @param <T> the dynamic type of the object
      * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-href">Activity Stream vocabulary href
      *     definition</a>
      */
-    public Link setHref(URI href)
+    public <T extends Link> T setHref(URI href)
     {
         this.href = href;
-        return this;
+        return (T) this;
     }
 
     /**

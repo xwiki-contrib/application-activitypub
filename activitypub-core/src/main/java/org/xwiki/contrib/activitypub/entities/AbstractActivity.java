@@ -19,8 +19,8 @@
  */
 package org.xwiki.contrib.activitypub.entities;
 
-import java.util.Objects;
-
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.xwiki.stability.Unstable;
 
 import com.fasterxml.jackson.annotation.JsonSetter;
@@ -114,20 +114,27 @@ public abstract class AbstractActivity extends ActivityPubObject
         if (this == o) {
             return true;
         }
+
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        if (!super.equals(o)) {
-            return false;
-        }
-        AbstractActivity activity = (AbstractActivity) o;
-        return Objects.equals(actor, activity.actor)
-            && Objects.equals(object, activity.object);
+
+        AbstractActivity that = (AbstractActivity) o;
+
+        return new EqualsBuilder()
+            .appendSuper(super.equals(o))
+            .append(this.actor, that.actor)
+            .append(this.object, that.object)
+            .isEquals();
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(super.hashCode(), actor, object);
+        return new HashCodeBuilder(17, 37)
+            .appendSuper(super.hashCode())
+            .append(this.actor)
+            .append(this.object)
+            .toHashCode();
     }
 }
