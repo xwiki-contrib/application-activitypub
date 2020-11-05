@@ -94,10 +94,16 @@ class DefaultActivityPubNotifierTest
     }
 
     @Test
-    void notifyNullTarget()
+    void notifyNullTarget() throws Exception
     {
+        Note note = new Note();
+        Create activity = new Create()
+            .setObject(note);
+
+        when(this.resolver.resolveReference((ActivityPubObjectReference<Note>) activity.getObject())).thenReturn(note);
+
         ActivityPubException activityPubException = assertThrows(ActivityPubException.class,
-            () -> this.defaultActivityPubNotifier.notify(new Create(), singleton(null)));
+            () -> this.defaultActivityPubNotifier.notify(activity, singleton(null)));
         assertEquals("You cannot send a notification to a null target.", activityPubException.getMessage());
     }
 
@@ -164,7 +170,7 @@ class DefaultActivityPubNotifierTest
 
         when(this.actorHandler.getNotificationTarget(actor)).thenReturn("actor1");
 
-        when(this.resolver.resolveReference(new ActivityPubObjectReference<>().setObject(note))).thenReturn(note);
+        when(this.resolver.resolveReference((ActivityPubObjectReference<Note>) create.getObject())).thenReturn(note);
 
         this.defaultActivityPubNotifier.notify(create, singleton(actor));
 
@@ -211,9 +217,14 @@ class DefaultActivityPubNotifierTest
     void notifyUpdate() throws Exception
     {
         AbstractActor actor = mock(AbstractActor.class);
-        Update update = new Update();
+        URI noteURI = URI.create("https://server.tld/note/1");
+        Note note = new Note()
+            .setId(noteURI);
+        Update update = new Update()
+            .setObject(note);
 
         when(this.actorHandler.getNotificationTarget(actor)).thenReturn("actor1");
+        when(this.resolver.resolveReference((ActivityPubObjectReference<Note>) update.getObject())).thenReturn(note);
 
         this.defaultActivityPubNotifier.notify(update, singleton(actor));
 

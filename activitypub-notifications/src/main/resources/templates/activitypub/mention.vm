@@ -38,8 +38,18 @@
             #define($actorLink)
               #activityPubActorLink($actor)
             #end
-            #set ($introduction = $services.localization.render('activitypub.event.mention.description.withActor', [$actorLink]))
-            #displayAPEventDetailLarge($event $actor $introduction $object.content)
+            #if ("$!object.url" != "")
+              #if ($services.activitypub.belongsToCurrentInstance("$object.url.get(0)"))
+                #set($objectLink = "<a href='$object.url.get(0)'>$object.name</a>")
+              #else
+                #set($objectLink =
+                  "<span class='wikiexternallink'><a href='$object.url.get(0)'>$object.name</a></span>")
+              #end
+            #else
+              #set($objectLink = $object.name)
+            #end
+            #set ($introduction = $services.localization.render('activitypub.event.mention.description.withActor', [$actorLink, $objectLink]))
+            #displayAPEventDetail($event $actor $introduction)
         #end
     #end
     #displayNotificationEventDetailsSkeletons($events.size(), $rows)

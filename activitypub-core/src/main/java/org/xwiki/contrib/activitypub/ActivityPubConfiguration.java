@@ -34,6 +34,14 @@ import org.xwiki.stability.Unstable;
 public interface ActivityPubConfiguration
 {
     /**
+     * The type of the mentions to activitypub actors.
+     *
+     * @since 1.4
+     */
+    @Unstable
+    String ACTIVITYPUB_MENTION_TYPE = "activitypub";
+    
+    /**
      * Behaviour to adopt in case of Follow request.
      */
     enum FollowPolicy

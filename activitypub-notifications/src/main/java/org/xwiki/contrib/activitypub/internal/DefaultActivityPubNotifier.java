@@ -20,7 +20,6 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -43,7 +42,6 @@ import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Follow;
 import org.xwiki.contrib.activitypub.entities.Mention;
 import org.xwiki.contrib.activitypub.entities.Note;
-import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Reject;
 import org.xwiki.contrib.activitypub.entities.Update;
 import org.xwiki.contrib.activitypub.events.AbstractActivityPubEvent;
@@ -68,6 +66,8 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMess
 @Singleton
 public class DefaultActivityPubNotifier implements ActivityPubNotifier
 {
+    private static final String EVENT_SOURCE = "org.xwiki.contrib:activitypub-notifications";
+
     @Inject
     private ActorHandler actorHandler;
 
@@ -92,21 +92,39 @@ public class DefaultActivityPubNotifier implements ActivityPubNotifier
     private <T extends AbstractActivity> void notify(T activity, AbstractActor targetedActor)
         throws ActivityPubException
     {
-        AbstractActivityPubEvent<? extends AbstractActivity> event;
         ActivityPubObject activityObject = this.resolver.resolveReference(activity.getObject());
         if (activity instanceof Create) {
-            event = notifyCreate((Create) activity, targetedActor, activityObject);
+            notifyCreate((Create) activity, targetedActor, activityObject);
         } else if (activity instanceof Update) {
-            event = new UpdateEvent((Update) activity, serializeTargets(singleton(targetedActor)));
+            notifyUpdate((Update) activity, targetedActor, activityObject);
         } else if (activity instanceof Announce) {
-            event = new AnnounceEvent((Announce) activity, serializeTargets(singleton(targetedActor)));
+            AnnounceEvent event = new AnnounceEvent((Announce) activity, serializeTargets(singleton(targetedActor)));
+            this.observationManager.notify(event, EVENT_SOURCE, event.getType());
         } else if (activity instanceof Follow || activity instanceof Reject || activity instanceof Accept) {
-            event = new FollowEvent<>(activity, serializeTargets(singleton(targetedActor)));
+            FollowEvent<T> event = new FollowEvent<>(activity, serializeTargets(singleton(targetedActor)));
+            this.observationManager.notify(event, EVENT_SOURCE, event.getType());
         } else {
             throw new ActivityPubException(
                 String.format("Cannot find the right event to notify about [%s]", activity));
         }
-        this.observationManager.notify(event, "org.xwiki.contrib:activitypub-notifications", event.getType());
+    }
+
+    /**
+     * Handles the notifications for the {@link Update} activities.
+     *
+     * @param activity an {@link Update} activity
+     * @param targetedActor the target of the activity
+     * @param activityObject the resolved object of the activityt
+     */
+    private void notifyUpdate(Update activity,
+        AbstractActor targetedActor, ActivityPubObject activityObject) throws ActivityPubException
+    {
+        if (isActorMentioned(targetedActor, activityObject)) {
+            MentionEvent event = new MentionEvent(activity, serializeTargets(singleton(targetedActor)));
+            this.observationManager.notify(event, EVENT_SOURCE, event.getType());
+        }
+        UpdateEvent event = new UpdateEvent(activity, serializeTargets(singleton(targetedActor)));
+        this.observationManager.notify(event, EVENT_SOURCE, event.getType());
     }
 
     /**
@@ -115,36 +133,45 @@ public class DefaultActivityPubNotifier implements ActivityPubNotifier
      * @param activity a {@link Create} activity
      * @param targetedActor the target of the activity
      * @param activityObject the resolved object of the activity
-     * @return the resulting event
      */
-    private AbstractActivityPubEvent<? extends AbstractActivity> notifyCreate(Create activity,
+    private void notifyCreate(Create activity,
         AbstractActor targetedActor, ActivityPubObject activityObject) throws ActivityPubException
     {
         AbstractActivityPubEvent<? extends AbstractActivity> event;
-        if (activityObject instanceof Note) {
-            // if the actor is not a direct
+        if (isActorMentioned(targetedActor, activityObject)) {
+            event = new MentionEvent(activity, serializeTargets(singleton(targetedActor)));
+            this.observationManager.notify(event, EVENT_SOURCE, event.getType());
+        }
 
-            if (!isActorDirectRecipient(activityObject, targetedActor) && isActorMentioned(activityObject,
-                targetedActor))
-            {
-                event = new MentionEvent(activity, serializeTargets(singleton(targetedActor)));
-            } else {
-                event = new MessageEvent(activity, serializeTargets(singleton(targetedActor)));
-            }
+        if (activityObject instanceof Note) {
+            event = new MessageEvent(activity, serializeTargets(singleton(targetedActor)));
+            this.observationManager.notify(event, EVENT_SOURCE, event.getType());
         } else {
             event = new CreateEvent(activity, serializeTargets(singleton(targetedActor)));
+            this.observationManager.notify(event, EVENT_SOURCE, event.getType());
         }
-        return event;
+    }
+
+    private Set<String> serializeTargets(Set<AbstractActor> targets) throws ActivityPubException
+    {
+        Set<String> result = new HashSet<>();
+        for (AbstractActor target : targets) {
+            if (target == null) {
+                throw new ActivityPubException("You cannot send a notification to a null target.");
+            }
+            result.add(this.actorHandler.getNotificationTarget(target));
+        }
+        return result;
     }
 
     /**
-     * Checks if the actor is mentioned in the object.
+     * Checks of the actor is part of the mentioned actors of the object.
      *
-     * @param object the object
      * @param actor the actor
-     * @return {@code true} if the actor is mentioned, {@code false} otherwise
+     * @param object the activity pub object
+     * @return {@code true} if the actor is found in the mentioned actors of the object. {@code false} otherwise
      */
-    private boolean isActorMentioned(ActivityPubObject object, AbstractActor actor)
+    private boolean isActorMentioned(AbstractActor actor, ActivityPubObject object)
     {
         return Optional.ofNullable(object.getTag())
             .map(tags ->
@@ -162,44 +189,5 @@ public class DefaultActivityPubNotifier implements ActivityPubNotifier
                             && Objects.equals(((Mention) tag).getHref(), actor.getId()))
                         .orElse(false)))
             .orElse(false);
-    }
-
-    /**
-     * Checks of the subject actor is part of the list of actors.
-     *
-     * @param actors the list of actors
-     * @param subjectActor the subject actor
-     * @return {@code true} if the subject actor is found in the list of actors, {@code false} otherwise
-     */
-    private boolean isActorRecipient(List<ProxyActor> actors, AbstractActor subjectActor)
-    {
-        return Optional.ofNullable(actors)
-            .map(to -> to.stream()
-                .anyMatch(it1 -> Objects.equals(it1.getLink(), subjectActor.getId())))
-            .orElse(false);
-    }
-
-    /**
-     * Checks if the actor is a direct recipient of the object.
-     *
-     * @param object the object
-     * @param actor the actor
-     * @return {@code true} if the actor is one of the direct recipients of the object, {code false} otherwise
-     */
-    private boolean isActorDirectRecipient(ActivityPubObject object, AbstractActor actor)
-    {
-        return isActorRecipient(object.getTo(), actor);
-    }
-
-    private Set<String> serializeTargets(Set<AbstractActor> targets) throws ActivityPubException
-    {
-        Set<String> result = new HashSet<>();
-        for (AbstractActor target : targets) {
-            if (target == null) {
-                throw new ActivityPubException("You cannot send a notification to a null target.");
-            }
-            result.add(this.actorHandler.getNotificationTarget(target));
-        }
-        return result;
     }
 }

@@ -5,6 +5,7 @@ org.xwiki.contrib.activitypub.internal.activities.FollowActivityHandler
 org.xwiki.contrib.activitypub.internal.activities.RejectActivityHandler
 org.xwiki.contrib.activitypub.internal.activities.UpdateActivityHandler
 org.xwiki.contrib.activitypub.internal.activities.LikeActivityHandler
+org.xwiki.contrib.activitypub.internal.ActivityPubMentionEventListener
 org.xwiki.contrib.activitypub.internal.async.jobs.PageCreatedNotificationJob
 org.xwiki.contrib.activitypub.internal.async.jobs.PageUpdatedNotificationJob
 org.xwiki.contrib.activitypub.internal.filters.PublicActivityCollectionFilter
@@ -23,4 +24,5 @@ org.xwiki.contrib.activitypub.internal.DefaultActivityPubClient
 org.xwiki.contrib.activitypub.internal.DefaultActivityPubConfiguration
 org.xwiki.contrib.activitypub.internal.DefaultActorHandler
 org.xwiki.contrib.activitypub.internal.DefaultHTMLRenderer
+org.xwiki.contrib.activitypub.internal.ActivityPubMentionsSender
 org.xwiki.contrib.activitypub.script.ActivityPubScriptService
