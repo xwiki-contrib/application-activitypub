@@ -46,7 +46,7 @@ public abstract class AbstractActor extends ActivityPubObject
     private ActivityPubObjectReference<OrderedCollection<AbstractActor>> followers;
     private ActivityPubObjectReference<OrderedCollection<AbstractActor>> following;
     private PublicKey publicKey;
-    private ActivityPubObjectReference<OrderedCollection<Like>> liked;
+    private ActivityPubObjectReference<OrderedCollection<ActivityPubObject>> liked;
 
     /**
      * @return the username of the actor.
@@ -178,7 +178,7 @@ public abstract class AbstractActor extends ActivityPubObject
      * @since 1.4
      */
     @Unstable
-    public ActivityPubObjectReference<OrderedCollection<Like>> getLiked()
+    public ActivityPubObjectReference<OrderedCollection<ActivityPubObject>> getLiked()
     {
         return liked;
     }
@@ -190,7 +190,7 @@ public abstract class AbstractActor extends ActivityPubObject
      * @since 1.4
      */
     @Unstable
-    public <T extends AbstractActor> T setLiked(ActivityPubObjectReference<OrderedCollection<Like>> liked)
+    public <T extends AbstractActor> T setLiked(ActivityPubObjectReference<OrderedCollection<ActivityPubObject>> liked)
     {
         this.liked = liked;
         return (T) this;

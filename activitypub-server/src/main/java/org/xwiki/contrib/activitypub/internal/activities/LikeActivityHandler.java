@@ -75,14 +75,14 @@ public class LikeActivityHandler extends AbstractActivityHandler<Like>
     {
         Like activity = activityRequest.getActivity();
         AbstractActor actor = activityRequest.getActor();
-        ActivityPubObjectReference<OrderedCollection<Like>> likedReference = actor.getLiked();
-        OrderedCollection<Like> liked;
+        ActivityPubObjectReference<OrderedCollection<ActivityPubObject>> likedReference = actor.getLiked();
+        OrderedCollection<ActivityPubObject> liked;
         if (likedReference != null) {
             liked = this.activityPubObjectReferenceResolver.resolveReference(likedReference);
         } else {
             liked = new OrderedCollection<>();
         }
-        liked.addItem(activity);
+        liked.addItem(this.activityPubObjectReferenceResolver.resolveReference(activity.getObject()));
         this.activityPubStorage.storeEntity(liked);
 
         // if it's the first like then we just created the ordered collection and we need to store its reference.
