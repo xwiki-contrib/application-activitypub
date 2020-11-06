@@ -41,6 +41,9 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.component.manager.ComponentLookupException;
+import org.xwiki.component.manager.ComponentManager;
+import org.xwiki.component.util.DefaultParameterizedType;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
@@ -49,12 +52,14 @@ import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.HTMLRenderer;
+import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Announce;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Follow;
+import org.xwiki.contrib.activitypub.entities.Like;
 import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Page;
@@ -132,12 +137,6 @@ public class ActivityPubScriptService implements ScriptService
     private ActivityPubObjectReferenceResolver activityPubObjectReferenceResolver;
 
     @Inject
-    private ActivityHandler<Create> createActivityHandler;
-
-    @Inject
-    private ActivityHandler<Announce> announceActivityHandler;
-
-    @Inject
     private UserReferenceResolver<CurrentUserReference> userReferenceResolver;
 
     @Inject
@@ -167,11 +166,26 @@ public class ActivityPubScriptService implements ScriptService
     @Inject
     private DefaultURLHandler urlHandler;
 
+    @Inject
+    @Named("context")
+    private ComponentManager componentManager;
+
     private void checkAuthentication() throws ActivityPubException
     {
         UserReference userReference = this.userReferenceResolver.resolve(null);
         if (userReference == GuestUserReference.INSTANCE) {
             throw new ActivityPubException("You need to be authenticated to use this method.");
+        }
+    }
+
+    private <T extends AbstractActivity> ActivityHandler<T> getActivityHandler(T activity) throws ActivityPubException
+    {
+        try {
+            return this.componentManager
+                .getInstance(new DefaultParameterizedType(null, ActivityHandler.class, activity.getClass()));
+        } catch (ComponentLookupException e) {
+            throw new ActivityPubException(
+                String.format("Cannot find activity handler component for activity [%s]", activity.getClass()), e);
         }
     }
 
@@ -440,7 +454,7 @@ public class ActivityPubScriptService implements ScriptService
             this.activityPubStorage.storeEntity(create);
 
             create.getObject().setExpand(true);
-            this.createActivityHandler.handleOutboxRequest(new ActivityRequest<>(currentActor, create));
+            this.getActivityHandler(create).handleOutboxRequest(new ActivityRequest<>(currentActor, create));
             return true;
         } catch (IOException | ActivityPubException e) {
             this.logger.error("Error while posting a note.", e);
@@ -491,7 +505,7 @@ public class ActivityPubScriptService implements ScriptService
                     .setPublished(published);
                 this.activityPubStorage.storeEntity(announce);
 
-                this.announceActivityHandler.handleOutboxRequest(new ActivityRequest<>(currentActor, announce));
+                this.getActivityHandler(announce).handleOutboxRequest(new ActivityRequest<>(currentActor, announce));
                 return true;
             } else {
                 return false;
@@ -668,6 +682,38 @@ public class ActivityPubScriptService implements ScriptService
             this.logger.warn(GET_CURRENT_ACTOR_ERR_MSG, ExceptionUtils.getRootCauseMessage(e));
         }
         return Collections.emptyList();
+    }
+
+    /**
+     * Record a Like for the object of the activity referenced by the given id.
+     *
+     * @param activityId the ID of an activity to like the object of.
+     * @return {@code true} if the like has been properly performed.
+     * @since 1.4
+     */
+    @Unstable
+    public boolean likeActivity(String activityId)
+    {
+        try {
+            AbstractActor currentActor = this.actorHandler.getCurrentActor();
+            AbstractActivity activity = this.activityPubObjectReferenceResolver
+                .resolveReference(new ActivityPubObjectReference<AbstractActivity>().setLink(URI.create(activityId)));
+            ActivityPubObjectReference<? extends ActivityPubObject> objectReference = activity.getObject();
+            if (objectReference != null) {
+                ActivityPubObject activityPubObject =
+                    this.activityPubObjectReferenceResolver.resolveReference(objectReference);
+                Like likeActivity = new Like().setActor(currentActor).setObject(activityPubObject);
+                this.activityPubStorage.storeEntity(likeActivity);
+                this.getActivityHandler(likeActivity)
+                    .handleOutboxRequest(new ActivityRequest<>(currentActor, likeActivity));
+                return true;
+            }
+        } catch (ActivityPubException | IOException e) {
+            this.logger.warn(String.format("Error while liking activity [%s]", activityId),
+                ExceptionUtils.getRootCauseMessage(e));
+
+        }
+        return false;
     }
 
     /**

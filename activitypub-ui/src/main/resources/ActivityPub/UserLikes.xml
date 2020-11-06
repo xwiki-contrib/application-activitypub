@@ -1,0 +1,236 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.4" reference="ActivityPub.UserLikes" locale="">
+  <web>ActivityPub</web>
+  <name>UserLikes</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>UserLikes</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{velocity}}
+#if ($request.livetable == "true")
+  #if("$!{request.xpage}" == 'plain')
+    $response.setContentType('application/json')
+  #end
+  #set ($currentActor = $services.activitypub.getActor($request.actor))
+  ##==============================
+  ## Offset = item # at which to start displaying data
+  ##==============================
+  #set($offset = $numbertool.toNumber($request.get('offset')))
+  ## offset starts from 0 in velocity and 1 in javascript
+  #set($offset = $offset - 1)
+  #if($offset &lt; 0)
+    #set($offset = 0)
+  #end
+  ##==================
+  ## Limit = # of items to display
+  ##==================
+  ## We don't use the limit for now since there's no pagination.
+  #set($limit = $numbertool.toNumber($request.get('limit')))
+  #if ("$!currentActor.liked" != "")
+    #set ($likedReferences = $services.activitypub.resolve($currentActor.liked))
+  #else
+    #set ($likedReferences = [])
+  #end
+  ##==========
+  ## Sort direction
+  ##==========
+  #set($order = "$!request.sort")
+  #if($order != '')
+    #set($orderDirection = "$!{request.get('dir').toLowerCase()}")
+    #if("$!orderDirection" != '' &amp;&amp; "$!orderDirection" != 'asc')
+      #set($orderDirection = 'desc')
+    #end
+  #end
+  #set ($resultRows = [])
+  #foreach($likedObjectRef in $likedReferences)
+    #set ($likedObject = $services.activitypub.resolve($likedObjectRef))
+    #set ($row = {
+      'published': $datetool.format($likedObject.published),
+      'type' : $likedObject.type,
+      'attributedTo': 'TODO',
+      'summary': $likedObject.summary,
+      'doc_viewable': true
+    })
+    ## TODO: Compute proper HTML for attributedTO
+    #if ("$!likedObject.href" == "")
+      #set ($discard = $row.put('doc_view_url', $likedObject.id))
+    #else
+      #set ($discard = $row.put('doc_view_url', $likedObject.href))
+    #end
+    #set ($discard = $resultRows.add($row))
+  #end
+  #set ($newOffset = $offset + 1)
+  ## ===
+  ## JSON
+  ## ===
+  {
+    "totalrows": $resultRows.size(),
+    "returnedrows":  $resultRows.size(),
+    "offset": $newOffset,
+    "reqNo": $numbertool.toNumber($request.reqNo),
+    "rows": $jsontool.serialize($resultRows)
+  }
+#end
+{{/velocity}}</content>
+  <object>
+    <name>ActivityPub.UserLikes</name>
+    <number>0</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>6e03e607-d9c0-48e6-8dd3-40022e562ec7</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>require(['jquery', 'xwiki-meta'], function($, xm) {
+  'use strict';
+  var init = function () {
+    $("button.notification-like").removeClass('hidden');
+    $("button.notification-like").on('click', function () {
+      var notification = new XWiki.widgets.Notification(
+        $jsontool.serialize($services.localization.render('activitypub.notification.like.inProgress')),
+        'inprogress'
+      );
+      var activityId = $(this).attr('data-activity-id');
+      $.post(new XWiki.Document().getURL("get"), {
+        "xpage": "activitypub/likeAction",
+        "outputSyntax": "plain",
+        "form_token": xm.form_token,
+        "activityId": activityId
+      }).done(function (data) {
+        if (data.success) {
+          notification.replace(new XWiki.widgets.Notification(
+            $jsontool.serialize($services.localization.render('activitypub.notification.like.done')),
+            'done'
+          ));
+        } else {
+          notification.replace(new XWiki.widgets.Notification(
+            $jsontool.serialize($services.localization.render('activitypub.notification.like.error')),
+            'error'
+          ));
+        }
+      });
+    });
+  };
+
+  (XWiki.isInitialized &amp;&amp; init()) || document.observe('xwiki:dom:loading', init);
+});</code>
+    </property>
+    <property>
+      <name>Notification Like Action</name>
+    </property>
+    <property>
+      <parse>1</parse>
+    </property>
+    <property>
+      <use>onDemand</use>
+    </property>
+  </object>
+</xwikidoc>

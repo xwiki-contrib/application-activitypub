@@ -21,6 +21,7 @@
 #template('notification/macros.vm')
 
 #set ($discard = $xwiki.ssx.use('ActivityPub.WebHome'))
+#set ($discard = $xwiki.jsx.use('ActivityPub.UserLikes'))
 
 #set ($smallIcon = "branch")
 #set ($mainIcon = "branch")
@@ -28,11 +29,22 @@
 #set ($compositeEventDate = $escapetool.xml($services.date.displayTimeAgo($compositeEvent.dates.get(0))))
 
 #macro (insertEventDate $event)
-  <td class="text-right text-muted">$escapetool.xml($services.date.displayTimeAgo($event.date))</td>
+  <td class="text-right text-muted">
+    $escapetool.xml($services.date.displayTimeAgo($event.date))
+    #insertLikeButton($event)
+  </td>
+#end
+
+#macro (insertLikeButton $event)
+  #set ($activity = $eventActivities.get($event))
+  <button class="btn btn-xs notification-like hidden" title="Like" data-activity-id="$activity.id"><span class="fa fa-heart"></span></button>
 #end
 
 #macro (insertEventDateDiv $event)
-<div class="text-right text-muted"><small>$escapetool.xml($services.date.displayTimeAgo($event.date))</small></div>
+<div class="text-right text-muted">
+  <small>$escapetool.xml($services.date.displayTimeAgo($event.date))</small>
+  #insertLikeButton($event)
+</div>
 #end
 
 #macro (computeUserName $actor)

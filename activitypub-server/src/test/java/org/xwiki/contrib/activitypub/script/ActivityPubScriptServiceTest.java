@@ -26,12 +26,15 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
 
+import javax.inject.Named;
 import javax.inject.Provider;
 
 import org.apache.commons.httpclient.HttpMethod;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
+import org.xwiki.component.manager.ComponentManager;
+import org.xwiki.component.util.DefaultParameterizedType;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
@@ -52,6 +55,7 @@ import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Service;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
+import org.xwiki.contrib.activitypub.internal.activities.CreateActivityHandler;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.WikiReference;
@@ -111,9 +115,6 @@ class ActivityPubScriptServiceTest
     private ActivityPubStorage activityPubStorage;
 
     @MockComponent
-    private ActivityHandler<Create> createActivityHandler;
-
-    @MockComponent
     private ActivityPubObjectReferenceResolver activityPubObjectReferenceResolver;
 
     @MockComponent
@@ -126,9 +127,6 @@ class ActivityPubScriptServiceTest
     private DocumentReferenceResolver<String> documentReferenceResolver;
 
     @MockComponent
-    private ActivityHandler<Announce> announceActivityHandler;
-
-    @MockComponent
     private AuthorizationManager authorizationManager;
 
     @MockComponent
@@ -136,6 +134,10 @@ class ActivityPubScriptServiceTest
 
     @MockComponent
     private DefaultURLHandler urlHandler;
+
+    @MockComponent
+    @Named("context")
+    private ComponentManager componentManager;
 
     @RegisterExtension
     LogCaptureExtension logCapture = new LogCaptureExtension(ERROR);
@@ -252,6 +254,9 @@ class ActivityPubScriptServiceTest
         when(actor.getReference()).thenReturn(actorReference);
         when(this.actorHandler.getCurrentActor()).thenReturn(actor);
 
+        ActivityHandler activityHandler = mock(ActivityHandler.class);
+        when(this.componentManager.getInstance(new DefaultParameterizedType(null, ActivityHandler.class, Create.class)))
+            .thenReturn(activityHandler);
         String noteContent = "some content";
         this.scriptService.publishNote(null, noteContent);
         Note note = new Note()
@@ -275,7 +280,7 @@ class ActivityPubScriptServiceTest
         assertEquals(note.getAttributedTo(), create.getAttributedTo());
         assertEquals(note.getTo(), create.getTo());
         assertNotNull(create.getPublished());
-        verify(this.createActivityHandler).handleOutboxRequest(new ActivityRequest<>(actor, create));
+        verify(activityHandler).handleOutboxRequest(new ActivityRequest<>(actor, create));
     }
 
     @Test
@@ -289,6 +294,10 @@ class ActivityPubScriptServiceTest
         when(followersReference.getLink()).thenReturn(new URI("http://followers"));
         when(actor.getFollowers()).thenReturn(followersReference);
         when(this.actorHandler.getCurrentActor()).thenReturn(actor);
+
+        ActivityHandler activityHandler = mock(ActivityHandler.class);
+        when(this.componentManager.getInstance(new DefaultParameterizedType(null, ActivityHandler.class, Create.class)))
+            .thenReturn(activityHandler);
 
         AbstractActor targetActor = mock(AbstractActor.class);
         ProxyActor targetProxyActor = mock(ProxyActor.class);
@@ -320,7 +329,7 @@ class ActivityPubScriptServiceTest
         assertEquals(note.getAttributedTo(), create.getAttributedTo());
         assertEquals(note.getTo(), create.getTo());
         assertNotNull(create.getPublished());
-        verify(this.createActivityHandler).handleOutboxRequest(new ActivityRequest<>(actor, create));
+        verify(activityHandler).handleOutboxRequest(new ActivityRequest<>(actor, create));
     }
 
     @Test
@@ -378,6 +387,11 @@ class ActivityPubScriptServiceTest
         Person currentActor = new Person();
         when(this.actorHandler.getCurrentActor()).thenReturn(currentActor);
 
+        ActivityHandler activityHandler = mock(ActivityHandler.class);
+        when(this.componentManager
+            .getInstance(new DefaultParameterizedType(null, ActivityHandler.class, Announce.class)))
+            .thenReturn(activityHandler);
+
         XWikiContext xWikiContext = mock(XWikiContext.class);
         when(this.contextProvider.get()).thenReturn(xWikiContext);
         XWiki xWiki = mock(XWiki.class);
@@ -415,7 +429,7 @@ class ActivityPubScriptServiceTest
             .setAttributedTo(Collections.singletonList(currentActor.getReference()))
             .setPublished(currentDate)
             .<Announce>setTo(Collections.singletonList(u1.getProxyActor())));
-        verify(this.announceActivityHandler).handleOutboxRequest(any(ActivityRequest.class));
+        verify(activityHandler).handleOutboxRequest(any(ActivityRequest.class));
     }
 
     @Test
@@ -426,6 +440,11 @@ class ActivityPubScriptServiceTest
             .thenReturn(documentReference);
 
         when(this.actorHandler.getCurrentActor()).thenReturn(new Person());
+
+        ActivityHandler activityHandler = mock(ActivityHandler.class);
+        when(this.componentManager
+            .getInstance(new DefaultParameterizedType(null, ActivityHandler.class, Announce.class)))
+            .thenReturn(activityHandler);
 
         XWikiContext xWikiContext = mock(XWikiContext.class);
         when(this.contextProvider.get()).thenReturn(xWikiContext);
@@ -440,7 +459,7 @@ class ActivityPubScriptServiceTest
         boolean actual = this.scriptService.sharePage(Collections.singletonList("U1"), "xwiki:XWiki.MyPage");
 
         assertFalse(actual);
-        verify(this.announceActivityHandler, never()).handleOutboxRequest(any(ActivityRequest.class));
+        verify(activityHandler, never()).handleOutboxRequest(any(ActivityRequest.class));
         assertEquals(1, this.logCapture.size());
         assertEquals("Error while sharing a page.", this.logCapture.getMessage(0));
     }
@@ -453,6 +472,11 @@ class ActivityPubScriptServiceTest
             .thenReturn(documentReference);
 
         when(this.actorHandler.getCurrentActor()).thenReturn(null);
+
+        ActivityHandler activityHandler = mock(ActivityHandler.class);
+        when(this.componentManager
+            .getInstance(new DefaultParameterizedType(null, ActivityHandler.class, Announce.class)))
+            .thenReturn(activityHandler);
 
         XWikiContext xWikiContext = mock(XWikiContext.class);
         when(this.contextProvider.get()).thenReturn(xWikiContext);
@@ -467,7 +491,7 @@ class ActivityPubScriptServiceTest
         assertFalse(actual);
         verify(this.activityPubStorage, never()).storeEntity(any(Page.class));
         verify(this.activityPubStorage, never()).storeEntity(any(Announce.class));
-        verify(this.announceActivityHandler, never()).handleOutboxRequest(any(ActivityRequest.class));
+        verify(activityHandler, never()).handleOutboxRequest(any(ActivityRequest.class));
         assertEquals(0, this.logCapture.size());
     }
 
@@ -479,6 +503,10 @@ class ActivityPubScriptServiceTest
             .thenReturn(documentReference);
 
         when(this.actorHandler.getCurrentActor()).thenReturn(new Person());
+        ActivityHandler activityHandler = mock(ActivityHandler.class);
+        when(this.componentManager
+            .getInstance(new DefaultParameterizedType(null, ActivityHandler.class, Announce.class)))
+            .thenReturn(activityHandler);
 
         XWikiContext xWikiContext = mock(XWikiContext.class);
         when(this.contextProvider.get()).thenReturn(xWikiContext);
@@ -493,7 +521,7 @@ class ActivityPubScriptServiceTest
         assertFalse(actual);
         verify(this.activityPubStorage, never()).storeEntity(any(Page.class));
         verify(this.activityPubStorage, never()).storeEntity(any(Announce.class));
-        verify(this.announceActivityHandler, never()).handleOutboxRequest(any(ActivityRequest.class));
+        verify(activityHandler, never()).handleOutboxRequest(any(ActivityRequest.class));
         assertEquals(0, this.logCapture.size());
     }
 }
