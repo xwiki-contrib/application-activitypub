@@ -110,6 +110,11 @@ $services.localization.render('activitypub.webfinger.notconfigured')
         $services.localization.render('activitypub.dashboard.tab.receivedMessagesList')
       &lt;/a&gt;
     &lt;/li&gt;
+    &lt;li role="presentation"&gt;
+      &lt;a href="#likes" aria-controls="likes" role="tab" data-toggle="tab"&gt;
+        $services.localization.render('activitypub.dashboard.tab.likes')
+      &lt;/a&gt;
+    &lt;/li&gt;
   &lt;/ul&gt;
   &lt;div class="tab-content"&gt;
     &lt;div role="tabpanel" class="tab-pane active" id="follow"&gt;
@@ -171,6 +176,35 @@ $services.localization.render('activitypub.webfinger.notconfigured')
     &lt;div role="tabpanel" class="tab-pane" id="messageInbox"&gt;
     
       #displayReceivedMessages($actor, 10)
+    &lt;/div&gt;
+    &lt;div role="tabpanel" class="tab-pane" id="likes"&gt;
+      #set($columns = ["published", "type", "summary", "attributedTo", "_actions"])
+      #set($columnsProperties = {
+        "published" : { "type" : "date", "sortable": false, "filterable": false },
+        "type" : { "type" : "text", "sortable": false, "filterable": false },
+        "summary" : { "type" : "text", "sortable": false, "filterable": false},
+        "attributedTo" : { "type" : "text", "sortable": false, "filterable": false},
+        "_actions": {"actions": [{
+          'id': 'view',
+          'label': 'view',
+          'icon': 'eye',
+          'async': false
+        }]}
+      })
+      #set ($currentActor = $services.activitypub.getActor(""))
+      #set ($queryParams = {
+        "livetable": "true",
+        "outputSyntax": "plain",
+        "actor": $currentActor.id
+      })
+      #set ($docLiveTableRef = $services.model.resolveDocument("ActivityPub.UserLikes"))
+      #set ($docLiveTable = $xwiki.getDocument($docLiveTableRef))
+      #set($options = {
+        'url': $docLiveTable.getURL('get', $escapetool.url($queryParams)),
+        'translationPrefix' : "activitypub.like.livetable."
+      })
+
+      #livetable("activitypubLikes" $columns $columnsProperties $options)
     &lt;/div&gt;
   &lt;/div&gt;
   {{/html}}
@@ -572,7 +606,7 @@ $services.localization.render('activitypub.webfinger.notconfigured')
         <number>4</number>
         <prettyName>Context elements</prettyName>
         <relationalStorage>0</relationalStorage>
-        <separator> </separator>
+        <separator>, </separator>
         <separators>|, </separators>
         <size>5</size>
         <unmodifiable>0</unmodifiable>
