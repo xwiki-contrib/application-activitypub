@@ -88,10 +88,10 @@ activitypub.message.display.date=Date :
 activitypub.message.display.content=Contenu :
 activitypub.message.nomessage=Il n'y a actuellement aucun message à afficher.
 activitypub.message.display.public=Message public
-### Missing: activitypub.like.livetable.published=Publication Date
-### Missing: activitypub.like.livetable.type=Type
-### Missing: activitypub.like.livetable.summary=Summary
-### Missing: activitypub.like.livetable.attributedTo=Attributed To
-### Missing: activitypub.like.livetable._actions=Actions
-### Missing: activitypub.dashboard.tab.likes=Likes</content>
+activitypub.like.livetable.published=Date de publication
+activitypub.like.livetable.type=Type
+activitypub.like.livetable.summary=Résumé
+activitypub.like.livetable.attributedTo=Attribué à
+activitypub.like.livetable._actions=Actions
+activitypub.dashboard.tab.likes=J'aime</content>
 </xwikidoc>
