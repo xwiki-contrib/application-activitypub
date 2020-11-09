@@ -87,6 +87,12 @@ activitypub.message.display.to=A:
 activitypub.message.display.date=Fecha:
 activitypub.message.display.content=Contenido:
 activitypub.message.nomessage=No hay actualmente ningún mensaje que visualizar.
-activitypub.message.display.public=Mensaje público</content>
+activitypub.message.display.public=Mensaje público
+activitypub.like.livetable.published=Fecha de publicación
+activitypub.like.livetable.type=Tipo
+activitypub.like.livetable.summary=Resumen
+activitypub.like.livetable.attributedTo=Atribuido a
+activitypub.like.livetable._actions=Acciones
+activitypub.dashboard.tab.likes=Nº de "me gusta"</content>
   
 </xwikidoc>
