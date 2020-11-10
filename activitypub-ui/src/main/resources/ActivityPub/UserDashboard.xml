@@ -67,7 +67,7 @@ $services.localization.render('activitypub.dashboard.noactor')
   #if ("$!actor.name" != "")
     #set($username = $actor.name)
   #else
-    #set($username = $actor.preferredUsername);
+    #set($username = $actor.preferredUsername)
   #end
   #set($dashboardTitle = $services.localization.render('activitypub.dashboard.title', [$username]))
   {{html clean='false'}}
