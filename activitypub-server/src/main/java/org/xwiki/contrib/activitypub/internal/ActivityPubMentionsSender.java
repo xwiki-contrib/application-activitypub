@@ -34,7 +34,6 @@ import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.ActorHandler;
-import org.xwiki.contrib.activitypub.HTMLRenderer;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
@@ -42,17 +41,17 @@ import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Link;
 import org.xwiki.contrib.activitypub.entities.Mention;
+import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.Page;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Update;
-import org.xwiki.mentions.MentionsFormatter;
+import org.xwiki.mentions.MentionLocation;
 import org.xwiki.mentions.internal.MentionFormatterProvider;
 import org.xwiki.mentions.notifications.MentionNotificationParameter;
 import org.xwiki.mentions.notifications.MentionNotificationParameters;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.rendering.block.XDOM;
-import org.xwiki.user.UserReference;
 import org.xwiki.user.UserReferenceResolver;
 
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -84,10 +83,10 @@ public class ActivityPubMentionsSender
     private UserReferenceResolver<String> userReferenceResolver;
 
     @Inject
-    private HTMLRenderer htmlRenderer;
+    private MentionFormatterProvider mentionFormatterProvider;
 
     @Inject
-    private MentionFormatterProvider mentionFormatterProvider;
+    private ActivityPubXDOMService activityPubXDOMService;
 
     @Inject
     private Logger logger;
@@ -102,17 +101,19 @@ public class ActivityPubMentionsSender
     public void sendNotification(MentionNotificationParameters mentionNotificationParameters,
         XWikiDocument doc, URI documentUrl)
     {
-        MentionsFormatter mentionsFormatter = this.mentionFormatterProvider.get(ACTIVITYPUB_MENTION_TYPE);
-
         Set<MentionNotificationParameter> mentionsForActivityPub =
             mentionNotificationParameters.getNewMentions().get(ACTIVITYPUB_MENTION_TYPE);
 
         if (mentionsForActivityPub != null) {
-
             try {
-                UserReference authorUserReference =
-                    this.userReferenceResolver.resolve(mentionNotificationParameters.getAuthorReference());
-                AbstractActor authorAbstractActor = this.actorHandler.getActor(authorUserReference);
+                List<ActivityPubObjectReference<?>> mentions = computeMentions(mentionsForActivityPub);
+                XDOM xdom = this.activityPubXDOMService.getXDOM(mentionNotificationParameters.getEntityReference(), doc,
+                    mentionNotificationParameters.getLocation()).orElse(null);
+                String content = this.activityPubXDOMService.render(xdom,
+                    (DocumentReference) mentionNotificationParameters.getEntityReference()
+                        .extractReference(EntityType.DOCUMENT));
+                AbstractActor authorAbstractActor = this.actorHandler.getActor(
+                    this.userReferenceResolver.resolve(mentionNotificationParameters.getAuthorReference()));
 
                 List<ProxyActor> to = mentionsForActivityPub
                     .stream()
@@ -128,34 +129,10 @@ public class ActivityPubMentionsSender
                     .map(AbstractActor::getProxyActor)
                     .collect(Collectors.toList());
 
-                DocumentReference documentReference =
-                    (DocumentReference) mentionNotificationParameters.getEntityReference()
-                        .extractReference(EntityType.DOCUMENT);
-                XDOM xdom = doc.getXDOM();
-                List<ActivityPubObjectReference<?>> mentions =
-                    mentionsForActivityPub
-                        .stream()
-                        .map(mentionNotificationParameter -> {
-                            try {
-                                String reference = mentionNotificationParameter.getReference();
-                                AbstractActor actor = this.actorHandler.getActor(reference);
-                                return new Mention()
-                                    .setHref(actor.getReference().getLink())
-                                    .<Link>setName(mentionsFormatter
-                                        .formatMention(mentionNotificationParameter.getReference(),
-                                            mentionNotificationParameter.getDisplayStyle()));
-                            } catch (ActivityPubException e) {
-                                return null;
-                            }
-                        })
-                        .filter(Objects::nonNull)
-                        .map(ActivityPubObject::getReference)
-                        .collect(Collectors.toList());
-                String content = this.htmlRenderer.render(xdom, documentReference);
                 AbstractActivity abstractActivity = initActivity(doc)
                     .setActor(authorAbstractActor)
                     .<AbstractActivity>setTo(to)
-                    .setObject(new Page()
+                    .setObject(initObject(mentionNotificationParameters)
                         .setName(doc.getTitle())
                         .setUrl(singletonList(documentUrl))
                         .setAttributedTo(singletonList(authorAbstractActor.getReference()))
@@ -176,6 +153,40 @@ public class ActivityPubMentionsSender
                     mentionNotificationParameters, getRootCauseMessage(e));
             }
         }
+    }
+
+    private List<ActivityPubObjectReference<?>> computeMentions(
+        Set<MentionNotificationParameter> mentionsForActivityPub)
+    {
+        return mentionsForActivityPub
+            .stream()
+            .map(mentionNotificationParameter -> {
+                try {
+                    String reference = mentionNotificationParameter.getReference();
+                    AbstractActor actor = this.actorHandler.getActor(reference);
+                    return new Mention()
+                        .setHref(actor.getReference().getLink())
+                        .<Link>setName(this.mentionFormatterProvider.get(ACTIVITYPUB_MENTION_TYPE)
+                            .formatMention(mentionNotificationParameter.getReference(),
+                                mentionNotificationParameter.getDisplayStyle()));
+                } catch (ActivityPubException e) {
+                    return null;
+                }
+            })
+            .filter(Objects::nonNull)
+            .map(ActivityPubObject::getReference)
+            .collect(Collectors.toList());
+    }
+
+    private ActivityPubObject initObject(MentionNotificationParameters mentionNotificationParameters)
+    {
+        ActivityPubObject object;
+        if (mentionNotificationParameters.getLocation().equals(MentionLocation.DOCUMENT)) {
+            object = new Page();
+        } else {
+            object = new Note();
+        }
+        return object;
     }
 
     private AbstractActivity initActivity(XWikiDocument doc)

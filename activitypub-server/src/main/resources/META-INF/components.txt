@@ -25,4 +25,5 @@ org.xwiki.contrib.activitypub.internal.DefaultActivityPubConfiguration
 org.xwiki.contrib.activitypub.internal.DefaultActorHandler
 org.xwiki.contrib.activitypub.internal.DefaultHTMLRenderer
 org.xwiki.contrib.activitypub.internal.ActivityPubMentionsSender
+org.xwiki.contrib.activitypub.internal.ActivityPubXDOMService
 org.xwiki.contrib.activitypub.script.ActivityPubScriptService
