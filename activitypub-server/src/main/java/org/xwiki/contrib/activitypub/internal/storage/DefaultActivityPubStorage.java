@@ -77,7 +77,6 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
     private static final String INBOX_SUFFIX_ID = "inbox";
     private static final String OUTBOX_SUFFIX_ID = "outbox";
     private static final String WEBFINGER_TYPE = "webfinger";
-    private static final String DEFAULT_QUERY = "*";
     private static final String ACTIVITYPUB = "activitypub";
 
     @Inject
@@ -254,7 +253,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         List<JSONResourceDescriptor> result = new ArrayList<>();
         try {
             String queryString = String.format("filter(type:%s) AND id:*%s*", WEBFINGER_TYPE, query);
-            SolrQuery solrQuery = new SolrQuery(DEFAULT_QUERY).addFilterQuery(queryString).setRows(limit);
+            SolrQuery solrQuery = new SolrQuery().addFilterQuery(queryString).setRows(limit);
             QueryResponse queryResponse = this.getSolrClient().query(solrQuery);
             SolrDocumentList results = queryResponse.getResults();
             for (SolrDocument solrDocument : results) {
@@ -274,7 +273,7 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
         List<T> result = new ArrayList<>();
 
         String typeQueryString = String.format("filter(type:%s)", type.getSimpleName());
-        SolrQuery solrQuery = new SolrQuery(DEFAULT_QUERY)
+        SolrQuery solrQuery = new SolrQuery()
             .addFilterQuery(typeQueryString)
             .addFilterQuery(query)
             .addSort(UPDATED_DATE_FIELD, SolrQuery.ORDER.desc)
