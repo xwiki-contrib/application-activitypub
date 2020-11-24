@@ -79,8 +79,8 @@
                 </div>
                 #end
             #else
-                #set($description = "$services.localization.render('activitypub.event.update.description') $object
-                .type <a href='$object.id'>$object.name</a>.")
+                #set($description = "$services.localization.render('activitypub.event.update.description') 
+                    $object.type <a href='$object.id'>$object.name</a>.")
             #end
             #displayAPEventDetail($event $actor $description)
         #end
