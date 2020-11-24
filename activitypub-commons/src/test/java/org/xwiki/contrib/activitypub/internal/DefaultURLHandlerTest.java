@@ -37,15 +37,12 @@ import org.xwiki.url.ExtendedURL;
 
 import com.xpn.xwiki.XWiki;
 import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.web.XWikiRequest;
 import com.xpn.xwiki.web.XWikiURLFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -54,7 +51,7 @@ import static org.mockito.Mockito.when;
  * @version $Id$
  */
 @ComponentTest
-public class DefaultURLHandlerTest
+class DefaultURLHandlerTest
 {
     private static final String SERVER_URL = "http://xwiki.org";
 
@@ -70,30 +67,29 @@ public class DefaultURLHandlerTest
     @BeforeEach
     public void setup() throws MalformedURLException
     {
-        when(contextProvider.get()).thenReturn(context);
+        when(this.contextProvider.get()).thenReturn(this.context);
         XWikiURLFactory urlFactory = mock(XWikiURLFactory.class);
-        when(context.getURLFactory()).thenReturn(urlFactory);
-        when(urlFactory.getServerURL(context)).thenReturn(new URL(SERVER_URL));
+        when(this.context.getURLFactory()).thenReturn(urlFactory);
+        when(urlFactory.getServerURL(this.context)).thenReturn(new URL(SERVER_URL));
     }
 
     @Test
-    public void getServerURL() throws MalformedURLException
+    void getServerURL() throws MalformedURLException
     {
         assertEquals(new URL(SERVER_URL), this.urlHandler.getServerUrl());
     }
 
     @Test
-    public void getAbsoluteURI() throws URISyntaxException, MalformedURLException
+    void getAbsoluteURI() throws URISyntaxException, MalformedURLException
     {
         URI uri = new URI("/xwiki/bin/view/XWiki/Admin");
         URI expectedURI = new URI("http://xwiki.org/xwiki/bin/view/XWiki/Admin");
 
         assertEquals(expectedURI, this.urlHandler.getAbsoluteURI(uri));
-        
     }
 
     @Test
-    public void belongsToCurrentInstance() throws Exception
+    void belongsToCurrentInstance()
     {
         assertTrue(this.urlHandler.belongsToCurrentInstance(null));
         assertTrue(this.urlHandler.belongsToCurrentInstance(URI.create("http://xwiki.org/foo/something")));
@@ -105,13 +101,13 @@ public class DefaultURLHandlerTest
     }
 
     @Test
-    public void getExtendedURL() throws Exception
+    void getExtendedURL() throws Exception
     {
         URI absoluteURI = URI.create("http://xwiki.org/xwiki/activitypub/foo/something");
         ExtendedURL extendedURL = new ExtendedURL(Arrays.asList("activitypub", "foo", "something"));
         XWiki xwiki = mock(XWiki.class);
-        when(context.getWiki()).thenReturn(xwiki);
-        when(xwiki.getWebAppPath(context)).thenReturn("xwiki/");
+        when(this.context.getWiki()).thenReturn(xwiki);
+        when(xwiki.getWebAppPath(this.context)).thenReturn("xwiki/");
         ExtendedURL obtainedURL = this.urlHandler.getExtendedURL(absoluteURI);
         assertEquals(extendedURL.getSegments(), obtainedURL.getSegments());
     }
