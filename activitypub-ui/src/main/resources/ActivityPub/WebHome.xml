@@ -185,10 +185,25 @@
 div.row.activitypub.notifications {
   margin-top: 0.8em;
   padding: 0px 0.8em;
+}
+
+button.notification-like.not-liked {
+  color: @btn-default-color;
+}
+
+button.notification-like.not-liked:hover {
+  color: @brand-danger;
+}
+
+button.notification-like {
+  color: @brand-danger;
+}
+button.notification-like:hover {
+  color: @brand-danger;
 }</code>
     </property>
     <property>
-      <contentType>CSS</contentType>
+      <contentType>LESS</contentType>
     </property>
     <property>
       <name/>

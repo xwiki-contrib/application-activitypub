@@ -37,7 +37,11 @@
 
 #macro (insertLikeButton $event)
   #set ($activity = $eventActivities.get($event))
-  <button class="btn btn-xs notification-like hidden" title="Like" data-activity-id="$activity.id"><span class="fa fa-heart"></span></button>
+  #set ($isLiked = $services.activitypub.isLiked($activity.id))
+  <button class="btn btn-xs notification-like hidden #if(!$isLiked)not-liked#end" title="Like"
+          #if($isLiked)disabled="disabled"#end" data-activity-id="$activity.id">
+    <span class="fa fa-heart"></span>
+  </button>
 #end
 
 #macro (insertEventDateDiv $event)

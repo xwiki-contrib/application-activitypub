@@ -209,7 +209,8 @@
   'use strict';
   var init = function () {
     $("button.notification-like").removeClass('hidden');
-    $("button.notification-like").on('click', function () {
+    $("button.notification-like.not-liked").on('click', function () {
+      var button = $(this);
       var notification = new XWiki.widgets.Notification(
         $jsontool.serialize($services.localization.render('activitypub.notification.like.inProgress')),
         'inprogress'
@@ -226,6 +227,8 @@
             $jsontool.serialize($services.localization.render('activitypub.notification.like.done')),
             'done'
           ));
+          button.removeClass('not-liked');
+          button.prop('disabled',true);
         } else {
           notification.replace(new XWiki.widgets.Notification(
             $jsontool.serialize($services.localization.render('activitypub.notification.like.error')),
