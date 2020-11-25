@@ -37,6 +37,17 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
   <content>{{velocity}}
+#macro (activityPubActorLink $actor)
+#set ($username = $services.webfinger.getWebfingerId($actor))
+&lt;span class="activitypub-actor-link"&gt;
+  #if ($services.activitypub.belongsToCurrentInstance("$actor.id"))
+      &lt;a href="$actor.id"&gt;$username&lt;/a&gt;
+  #else
+    &lt;span class="wikiexternallink"&gt;&lt;a href="$actor.id"&gt;$username&lt;/a&gt;&lt;/span&gt;
+  #end
+&lt;/span&gt;
+#end
+
 #if ($request.livetable == "true")
   #if("$!{request.xpage}" == 'plain')
     $response.setContentType('application/json')
@@ -74,14 +85,19 @@
   #set ($resultRows = [])
   #foreach($likedObjectRef in $likedReferences)
     #set ($likedObject = $services.activitypub.resolve($likedObjectRef))
+    #define ($attributedTo)
+      #foreach ($actorRef in $likedObject.attributedTo)
+        #set($actor = $services.activitypub.resolve($actorRef))
+        #activityPubActorLink($actor)
+      #end
+    #end
     #set ($row = {
-      'published': $datetool.format($likedObject.published),
+      'published': $xwiki.formatDate($likedObject.published),
       'type' : $likedObject.type,
-      'attributedTo': 'TODO',
+      'attributedTo': "$attributedTo",
       'summary': $likedObject.summary,
       'doc_viewable': true
     })
-    ## TODO: Compute proper HTML for attributedTO
     #if ("$!likedObject.href" == "")
       #set ($discard = $row.put('doc_view_url', $likedObject.id))
     #else

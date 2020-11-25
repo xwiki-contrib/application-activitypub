@@ -183,7 +183,7 @@ $services.localization.render('activitypub.webfinger.notconfigured')
         "published" : { "type" : "date", "sortable": false, "filterable": false },
         "type" : { "type" : "text", "sortable": false, "filterable": false },
         "summary" : { "type" : "text", "sortable": false, "filterable": false},
-        "attributedTo" : { "type" : "text", "sortable": false, "filterable": false},
+        "attributedTo" : { "type" : "text", "sortable": false, "filterable": false, "html": true},
         "_actions": {"actions": [{
           'id': 'view',
           'label': 'view',
