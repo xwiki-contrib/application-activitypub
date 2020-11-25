@@ -29,6 +29,7 @@ import org.xwiki.contrib.activitypub.internal.json.absolute.DefaultActivityPubJs
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -114,5 +115,17 @@ public class CollectionTest extends AbstractEntityTest
         String json = this.readResource("collection/collection1.json");
         assertEquals(collection, this.parser.parse(json, Collection.class));
         assertEquals(collection, this.parser.parse(json));
+    }
+
+    @Test
+    void contains()
+    {
+        Collection<ActivityPubObject> collection = new Collection<>()
+            .addItem(new Follow().setId(URI.create("http://test/follow/1")))
+            .addItem(new Accept().setId(URI.create("http://test/accept/2")));
+
+        assertTrue(collection.contains(new ActivityPubObjectReference<>().setLink(URI.create("http://test/follow/1"))));
+        assertFalse(
+            collection.contains(new ActivityPubObjectReference<>().setLink(URI.create("http://test/follow/2"))));
     }
 }

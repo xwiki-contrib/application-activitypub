@@ -20,6 +20,7 @@
 package org.xwiki.contrib.activitypub.entities;
 
 import java.net.URI;
+import java.util.Objects;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -124,6 +125,34 @@ public class ActivityPubObjectReference<T extends ActivityPubObject>
     {
         this.isExpand = expand;
         return this;
+    }
+
+    /**
+     * Define if the given reference concerns the same object as the current reference.
+     * This method checks if two references are about the same object: this is true if the references are equals,
+     * but it's also true if one of the reference is an unresolved link to the reference, while the other is already
+     * resolved. Though they're not equals, they concerns same object.
+     *
+     * @param otherReference the other reference to check.
+     * @return {@code true} if both references are resolved to the same object.
+     * @since 1.4
+     */
+    @Unstable
+    public boolean concernsSameObject(ActivityPubObjectReference<T> otherReference)
+    {
+        boolean result = false;
+        if (this.equals(otherReference)) {
+            result = true;
+        } else if (otherReference == null || Objects.equals(this.isLink(), otherReference.isLink())) {
+            result = false;
+        } else {
+            boolean currentIsLink = this.isLink() && this.getLink() != null && otherReference.getObject() != null
+                && this.getLink().equals(otherReference.getObject().getId());
+            boolean otherIsLink = otherReference.isLink() && otherReference.getLink() != null
+                && this.getObject() != null && otherReference.getLink().equals(this.getObject().getId());
+            result = currentIsLink || otherIsLink;
+        }
+        return result;
     }
 
     @Override

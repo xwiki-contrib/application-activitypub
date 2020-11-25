@@ -694,22 +694,53 @@ public class ActivityPubScriptService implements ScriptService
     @Unstable
     public boolean likeActivity(String activityId)
     {
+        if (!isLiked(activityId)) {
+            try {
+                AbstractActor currentActor = this.actorHandler.getCurrentActor();
+                AbstractActivity activity = this.activityPubObjectReferenceResolver
+                    .resolveReference(
+                        new ActivityPubObjectReference<AbstractActivity>().setLink(URI.create(activityId)));
+                ActivityPubObjectReference<? extends ActivityPubObject> objectReference = activity.getObject();
+                if (objectReference != null) {
+                    ActivityPubObject activityPubObject =
+                        this.activityPubObjectReferenceResolver.resolveReference(objectReference);
+                    Like likeActivity = new Like().setActor(currentActor).setObject(activityPubObject);
+                    this.activityPubStorage.storeEntity(likeActivity);
+                    this.getActivityHandler(likeActivity)
+                        .handleOutboxRequest(new ActivityRequest<>(currentActor, likeActivity));
+                    return true;
+                }
+            } catch (ActivityPubException | IOException e) {
+                this.logger.warn("Error while liking activity [{}]: [{}]",
+                    activityId, ExceptionUtils.getRootCauseMessage(e));
+            }
+        } else {
+            this.logger.debug("Activity [{}] has already been liked.", activityId);
+        }
+        return false;
+    }
+
+    /**
+     * Check if an activity has already been liked.
+     *
+     * @param activityId the activity to check for like.
+     * @return {@code true} if the activity is already present in the likes of the actor.
+     * @since 1.4
+     */
+    @Unstable
+    public boolean isLiked(String activityId)
+    {
         try {
             AbstractActor currentActor = this.actorHandler.getCurrentActor();
+            OrderedCollection<? extends ActivityPubObject> likedElements =
+                this.activityPubObjectReferenceResolver.resolveReference(currentActor.getLiked());
             AbstractActivity activity = this.activityPubObjectReferenceResolver
-                .resolveReference(new ActivityPubObjectReference<AbstractActivity>().setLink(URI.create(activityId)));
-            ActivityPubObjectReference<? extends ActivityPubObject> objectReference = activity.getObject();
-            if (objectReference != null) {
-                ActivityPubObject activityPubObject =
-                    this.activityPubObjectReferenceResolver.resolveReference(objectReference);
-                Like likeActivity = new Like().setActor(currentActor).setObject(activityPubObject);
-                this.activityPubStorage.storeEntity(likeActivity);
-                this.getActivityHandler(likeActivity)
-                    .handleOutboxRequest(new ActivityRequest<>(currentActor, likeActivity));
-                return true;
-            }
-        } catch (ActivityPubException | IOException e) {
-            this.logger.warn(String.format("Error while liking activity [%s]", activityId),
+                .resolveReference(
+                    new ActivityPubObjectReference<AbstractActivity>().setLink(URI.create(activityId)));
+            ActivityPubObjectReference objectReference = activity.getObject();
+            return likedElements.contains(objectReference);
+        } catch (ActivityPubException e) {
+            this.logger.warn(String.format("Error while checking if activity [%s] is liked", activityId),
                 ExceptionUtils.getRootCauseMessage(e));
 
         }

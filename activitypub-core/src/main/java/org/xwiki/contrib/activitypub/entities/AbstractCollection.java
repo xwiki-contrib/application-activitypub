@@ -79,4 +79,25 @@ public abstract class AbstractCollection<I extends ActivityPubObject>
     {
         return new ProxyActor(this.getReference().getLink());
     }
+
+    /**
+     * Check if a collection contains a specific reference.
+     * This method relies on the internal iterator and on
+     * {@link ActivityPubObjectReference#concernsSameObject(ActivityPubObjectReference)} to avoid resolving all objects
+     * of the collection.
+     * @param element a reference that might be contained in the collection.
+     * @return {@code true} if the element is contained in the collection.
+     * @since 1.4
+     */
+    @Unstable
+    public boolean contains(ActivityPubObjectReference<I> element)
+    {
+        for (ActivityPubObjectReference<I> item : this)
+        {
+            if (item.concernsSameObject(element)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

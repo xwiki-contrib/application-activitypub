@@ -43,11 +43,13 @@ import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.HTMLRenderer;
+import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Announce;
 import org.xwiki.contrib.activitypub.entities.Create;
+import org.xwiki.contrib.activitypub.entities.Like;
 import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Page;
@@ -56,6 +58,7 @@ import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Service;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.contrib.activitypub.internal.activities.CreateActivityHandler;
+import org.xwiki.contrib.activitypub.internal.activities.LikeActivityHandler;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.WikiReference;
@@ -523,5 +526,86 @@ class ActivityPubScriptServiceTest
         verify(this.activityPubStorage, never()).storeEntity(any(Announce.class));
         verify(activityHandler, never()).handleOutboxRequest(any(ActivityRequest.class));
         assertEquals(0, this.logCapture.size());
+    }
+
+    @Test
+    void isLiked() throws Exception
+    {
+        Person actor = mock(Person.class);
+        when(this.actorHandler.getCurrentActor()).thenReturn(actor);
+
+        String activityId = "http://xwiki/AP/activity/Foo";
+        ActivityPubObjectReference<OrderedCollection<ActivityPubObject>> liked = mock(ActivityPubObjectReference.class);
+        when(actor.getLiked()).thenReturn(liked);
+        OrderedCollection likedCollection = mock(OrderedCollection.class);
+        when(this.activityPubObjectReferenceResolver.resolveReference(liked)).thenReturn(likedCollection);
+
+        AbstractActivity activity = mock(AbstractActivity.class);
+        when(this.activityPubObjectReferenceResolver
+            .resolveReference(new ActivityPubObjectReference<>().setLink(URI.create(activityId))))
+            .thenReturn(activity);
+        ActivityPubObject activityPubObject = mock(ActivityPubObject.class);
+        when((ActivityPubObjectReference<ActivityPubObject>) activity.getObject())
+            .thenReturn(new ActivityPubObjectReference<>().setObject(activityPubObject));
+        when(likedCollection.contains(new ActivityPubObjectReference<>().setObject(activityPubObject)))
+            .thenReturn(true);
+
+        assertTrue(this.scriptService.isLiked(activityId));
+    }
+
+    @Test
+    void likeActivityAlreadyLiked() throws Exception
+    {
+        Person actor = mock(Person.class);
+        when(this.actorHandler.getCurrentActor()).thenReturn(actor);
+
+        String activityId = "http://xwiki/AP/activity/Foo";
+        ActivityPubObjectReference<OrderedCollection<ActivityPubObject>> liked = mock(ActivityPubObjectReference.class);
+        when(actor.getLiked()).thenReturn(liked);
+        OrderedCollection likedCollection = mock(OrderedCollection.class);
+        when(this.activityPubObjectReferenceResolver.resolveReference(liked)).thenReturn(likedCollection);
+        AbstractActivity activity = mock(AbstractActivity.class);
+        when(this.activityPubObjectReferenceResolver
+            .resolveReference(new ActivityPubObjectReference<>().setLink(URI.create(activityId))))
+            .thenReturn(activity);
+        ActivityPubObject activityPubObject = mock(ActivityPubObject.class);
+        when((ActivityPubObjectReference<ActivityPubObject>) activity.getObject())
+            .thenReturn(new ActivityPubObjectReference<>().setObject(activityPubObject));
+        when(likedCollection.contains(new ActivityPubObjectReference<>().setObject(activityPubObject)))
+            .thenReturn(true);
+        assertFalse(this.scriptService.likeActivity(activityId));
+        verify(this.activityPubStorage, never()).storeEntity(any());
+    }
+
+    @Test
+    void likeNewActivity() throws Exception
+    {
+        Person actor = mock(Person.class);
+        when(this.actorHandler.getCurrentActor()).thenReturn(actor);
+
+        String activityId = "http://xwiki/AP/activity/Foo";
+        ActivityPubObjectReference<OrderedCollection<ActivityPubObject>> liked = mock(ActivityPubObjectReference.class);
+        when(actor.getLiked()).thenReturn(liked);
+        OrderedCollection likedCollection = mock(OrderedCollection.class);
+        when(this.activityPubObjectReferenceResolver.resolveReference(liked)).thenReturn(likedCollection);
+        AbstractActivity activity = mock(AbstractActivity.class);
+        when(this.activityPubObjectReferenceResolver
+            .resolveReference(new ActivityPubObjectReference<>().setLink(URI.create(activityId))))
+            .thenReturn(activity);
+        ActivityPubObjectReference activityPubObjectReference = mock(ActivityPubObjectReference.class);
+        when(activity.getObject()).thenReturn(activityPubObjectReference);
+        when(likedCollection.contains(activityPubObjectReference))
+            .thenReturn(false);
+        ActivityPubObject activityObject = mock(ActivityPubObject.class);
+        when(this.activityPubObjectReferenceResolver.resolveReference(activityPubObjectReference))
+            .thenReturn(activityObject);
+        Like likeActivity = new Like().setActor(actor).setObject(activityObject);
+        LikeActivityHandler likeActivityHandler = mock(LikeActivityHandler.class);
+        when(this.componentManager.getInstance(new DefaultParameterizedType(null, ActivityHandler.class, Like.class)))
+            .thenReturn(likeActivityHandler);
+
+        assertTrue(this.scriptService.likeActivity(activityId));
+        verify(this.activityPubStorage).storeEntity(likeActivity);
+        verify(likeActivityHandler).handleOutboxRequest(new ActivityRequest<>(actor, likeActivity));
     }
 }
