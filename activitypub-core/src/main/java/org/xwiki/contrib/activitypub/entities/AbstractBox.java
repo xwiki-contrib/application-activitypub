@@ -20,17 +20,23 @@
 package org.xwiki.contrib.activitypub.entities;
 
 import org.xwiki.stability.Unstable;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
- * Represents an Outbox as defined by ActivityPub.
+ * A common class to represent an {@link Inbox} or an {@link Outbox}.
  *
- * @see <a href="https://www.w3.org/TR/activitypub/#outbox">ActivityPub Outbox definition</a>
  * @version $Id$
- * @since 1.0
+ * @since 1.4
  */
 @Unstable
-@JsonDeserialize(as = Outbox.class)
-public class Outbox extends AbstractBox
+public abstract class AbstractBox extends OrderedCollection<AbstractActivity>
 {
+    @Override
+    public <O extends AbstractCollection<AbstractActivity>> O addItem(AbstractActivity item)
+    {
+        if (!this.contains(item.getReference())) {
+            return super.addItem(item);
+        } else {
+            return (O) this;
+        }
+    }
 }

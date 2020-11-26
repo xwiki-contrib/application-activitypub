@@ -41,7 +41,8 @@ public class OutboxTest extends AbstractEntityTest
         Outbox outbox = new Outbox()
                             .setId(new URI("http://localhost:8080/xwiki/activitypub/Outbox/XWiki.Foo-outbox"));
         outbox.addItem(new Accept().setId(URI.create("http://test/create/1")));
-        outbox.addActivity(new Follow().setId(URI.create("http://test/follow/2")));
+        outbox.addItem(new Follow().setId(URI.create("http://test/follow/2")));
+        outbox.addItem(new Accept().setId(URI.create("http://test/create/1")));
 
         String expectedSerialization = this.readResource("outbox/outbox1.json");
         assertEquals(expectedSerialization, this.serializer.serialize(outbox));
@@ -54,9 +55,12 @@ public class OutboxTest extends AbstractEntityTest
                                     .setId(new URI("http://localhost:8080/xwiki/activitypub/Outbox/XWiki.Foo-outbox"));
 
         
-        ActivityPubObjectReference<AbstractActivity> items = new ActivityPubObjectReference<>();
-        items.setLink(URI.create("http://test/create/1"));
-        expectedOutbox.setOrderedItems(Arrays.asList(items));
+        ActivityPubObjectReference<AbstractActivity> item1 = new ActivityPubObjectReference<>();
+        item1.setLink(URI.create("http://test/create/1"));
+
+        ActivityPubObjectReference<AbstractActivity> item2 = new ActivityPubObjectReference<>();
+        item2.setLink(URI.create("http://test/follow/2"));
+        expectedOutbox.setOrderedItems(Arrays.asList(item1, item2));
 
         String json = this.readResource("outbox/outbox1.json");
         assertEquals(expectedOutbox, this.parser.parse(json, Outbox.class));

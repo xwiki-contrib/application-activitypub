@@ -58,9 +58,10 @@ public class AnnounceActivityHandler extends AbstractActivityHandler<Announce>
             if (announce.getObject() != null) {
                 announce.getObject().setExpand(true);
             }
+            this.activityPubStorage.storeEntity(announce);
             AbstractActor actor = activityRequest.getActor();
             Inbox inbox = this.getInbox(actor);
-            inbox.addActivity(announce);
+            inbox.addItem(announce);
             this.activityPubStorage.storeEntity(inbox);
             ActivityPubObject object = this.getOrPersist(announce.getObject());
             ActivityPubObjectReference<OrderedCollection<Announce>> shares = this.getSharesOrInit(object);
@@ -113,7 +114,7 @@ public class AnnounceActivityHandler extends AbstractActivityHandler<Announce>
 
         AbstractActor actor = activityRequest.getActor();
         Outbox outbox = this.getOutbox(actor);
-        outbox.addActivity(announce);
+        outbox.addItem(announce);
         this.activityPubStorage.storeEntity(outbox);
 
         for (AbstractActor targetActor : this.activityPubObjectReferenceResolver.resolveTargets(announce)) {

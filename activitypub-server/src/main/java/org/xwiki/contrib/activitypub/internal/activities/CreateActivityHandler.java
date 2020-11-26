@@ -53,8 +53,9 @@ public class CreateActivityHandler extends AbstractActivityHandler<Create>
                 "The ID of the activity must not be null.");
         } else {
             AbstractActor actor = activityRequest.getActor();
+            this.activityPubStorage.storeEntity(create);
             Inbox inbox = this.getInbox(actor);
-            inbox.addActivity(create);
+            inbox.addItem(create);
             this.activityPubStorage.storeEntity(inbox);
             ActivityPubObject entity = this.activityPubObjectReferenceResolver.resolveReference(create.getObject());
             this.activityPubStorage.storeEntity(entity);
@@ -72,7 +73,7 @@ public class CreateActivityHandler extends AbstractActivityHandler<Create>
 
         AbstractActor actor = activityRequest.getActor();
         Outbox outbox = this.getOutbox(actor);
-        outbox.addActivity(create);
+        outbox.addItem(create);
         this.activityPubStorage.storeEntity(outbox);
 
         for (AbstractActor targetActor : this.activityPubObjectReferenceResolver.resolveTargets(create)) {

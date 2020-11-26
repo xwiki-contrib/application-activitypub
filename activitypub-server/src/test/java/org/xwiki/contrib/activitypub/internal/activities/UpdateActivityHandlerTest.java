@@ -95,8 +95,8 @@ public class UpdateActivityHandlerTest extends AbstractHandlerTest
 
         this.handler.handleInboxRequest(
             new ActivityRequest<>(actor, activity, this.servletRequest, this.servletResponse));
-        assertEquals(1, inbox.getAllActivities().size());
-        assertTrue(inbox.getAllActivities().contains(activity));
+        assertEquals(1, inbox.getAllItems().size());
+        assertTrue(inbox.getAllItems().contains(activity.getReference()));
         verify(this.activityPubStorage).storeEntity(inbox);
         verify(this.notifier).notify(activity, Collections.singleton(actor));
         this.verifyResponse(activity);
@@ -122,8 +122,8 @@ public class UpdateActivityHandlerTest extends AbstractHandlerTest
         this.handler.handleOutboxRequest(
             new ActivityRequest<>(actor, activity, this.servletRequest, this.servletResponse));
         verify(this.activityPubStorage).storeEntity(activity);
-        assertEquals(1, outbox.getAllActivities().size());
-        assertTrue(outbox.getAllActivities().contains(activity));
+        assertEquals(1, outbox.getAllItems().size());
+        assertTrue(outbox.getAllItems().contains(activity.getReference()));
         verify(this.activityPubStorage).storeEntity(outbox);
         verify(this.notifier, never()).notify(any(), any());
         this.verifyResponse(activity);
@@ -154,8 +154,8 @@ public class UpdateActivityHandlerTest extends AbstractHandlerTest
 
         this.handler.handleOutboxRequest(
             new ActivityRequest<>(actor, activity, this.servletRequest, this.servletResponse));
-        assertEquals(1, outbox.getAllActivities().size());
-        assertTrue(outbox.getAllActivities().contains(activity));
+        assertEquals(1, outbox.getAllItems().size());
+        assertTrue(outbox.getAllItems().contains(activity.getReference()));
         verify(this.activityPubStorage).storeEntity(outbox);
         verify(this.notifier, never()).notify(any(), any());
         this.verifyResponse(activity);

@@ -20,9 +20,7 @@
 package org.xwiki.contrib.activitypub.entities;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -40,11 +38,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  */
 @Unstable
 @JsonDeserialize(as = Inbox.class)
-public class Inbox extends OrderedCollection<AbstractActivity>
+public class Inbox extends AbstractBox
 {
-    @JsonIgnore
-    private Map<String, AbstractActivity> items;
-
     @JsonIgnore
     private List<Follow> pendingFollows;
 
@@ -53,29 +48,7 @@ public class Inbox extends OrderedCollection<AbstractActivity>
      */
     public Inbox()
     {
-        this.items = new HashMap<>();
         this.pendingFollows = new ArrayList<>();
-    }
-
-    /**
-     * Store an activity.
-     * @param activity the activity to be stored.
-     */
-    public void addActivity(AbstractActivity activity)
-    {
-        if (activity.getId() == null) {
-            throw new IllegalArgumentException("The activity ID must not be null.");
-        }
-        this.items.put(activity.getId().toASCIIString(), activity);
-    }
-
-    /**
-     * @return all activities contained in the inbox.
-     */
-    @JsonIgnore
-    public java.util.Collection<AbstractActivity> getAllActivities()
-    {
-        return this.items.values();
     }
 
     /**
@@ -108,7 +81,6 @@ public class Inbox extends OrderedCollection<AbstractActivity>
         Inbox object = (Inbox) o;
         return new EqualsBuilder()
             .appendSuper(super.equals(o))
-            .append(items, object.items)
             .append(pendingFollows, object.pendingFollows).build();
     }
 
@@ -117,7 +89,6 @@ public class Inbox extends OrderedCollection<AbstractActivity>
     {
         return new HashCodeBuilder()
             .appendSuper(super.hashCode())
-            .append(items)
             .append(pendingFollows).build();
     }
 }

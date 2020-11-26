@@ -1,7 +1,7 @@
 {
   "@context" : [ "https://www.w3.org/ns/activitystreams" ],
   "id" : "http://localhost:8080/xwiki/activitypub/Inbox/XWiki.Foo-inbox",
-  "orderedItems" : [ ],
-  "totalItems" : 0,
+  "orderedItems" : [ "http://test/create/1", "http://test/follow/2" ],
+  "totalItems" : 2,
   "type" : "Inbox"
 }

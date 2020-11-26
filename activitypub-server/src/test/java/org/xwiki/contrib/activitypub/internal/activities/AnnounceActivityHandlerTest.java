@@ -111,7 +111,7 @@ class AnnounceActivityHandlerTest extends AbstractHandlerTest
                 new ActivityRequest<>(receiver, announce, this.servletRequest, this.servletResponse));
 
         this.verifyResponse(announce);
-        assertEquals(announce, new ArrayList<>(inbox.getAllActivities()).get(0));
+        assertEquals(announce.getReference(), new ArrayList<>(inbox.getAllItems()).get(0));
         verify(this.activityPubStorage).storeEntity(inbox);
         assertEquals(new URI("http://www.xwiki.org"), sharesCollection
                 .getOrderedItems()

@@ -92,6 +92,77 @@
       <plugin>
         <groupId>org.revapi</groupId>
         <artifactId>revapi-maven-plugin</artifactId>
+        <configuration>
+          <analysisConfiguration>
+            <revapi.ignore>
+              <item>
+                <code>java.method.removed</code>
+                <old>method void org.xwiki.contrib.activitypub.entities.Inbox::addActivity(org.xwiki.contrib.activitypub.entities.AbstractActivity)</old>
+                <justification>Young API: this method was wrong, you should now use Inbox#addItem.</justification>
+              </item>
+              <item>
+                <code>java.method.removed</code>
+                <old>method java.util.Collection&lt;org.xwiki.contrib.activitypub.entities.AbstractActivity&gt; org.xwiki.contrib.activitypub.entities.Inbox::getAllActivities()</old>
+                <justification>Young API: this method was wrong, you should rely on AbstractCollection methods.</justification>
+              </item>
+              <item>
+                <code>java.class.nonFinalClassInheritsFromNewClass</code>
+                <old>class org.xwiki.contrib.activitypub.entities.Inbox</old>
+                <new>class org.xwiki.contrib.activitypub.entities.Inbox</new>
+                <justification>Young API: boxes now inherits from AbstractBox.</justification>
+              </item>
+              <item>
+                <code>java.method.removed</code>
+                <old>method void org.xwiki.contrib.activitypub.entities.Outbox::addActivity(org.xwiki.contrib.activitypub.entities.AbstractActivity)</old>
+                <justification>Young API: this method was wrong, you should now use Outbox#addItem.</justification>
+              </item>
+              <item>
+                <code>java.method.removed</code>
+                <old>method java.util.Collection&lt;org.xwiki.contrib.activitypub.entities.AbstractActivity&gt; org.xwiki.contrib.activitypub.entities.Outbox::getAllActivities()</old>
+                <justification>Young API: this method was wrong, you should rely on AbstractCollection methods.</justification>
+              </item>
+              <item>
+                <code>java.class.nonFinalClassInheritsFromNewClass</code>
+                <old>class org.xwiki.contrib.activitypub.entities.Outbox</old>
+                <new>class org.xwiki.contrib.activitypub.entities.Outbox</new>
+                <justification>Young API: boxes now inherits from AbstractBox.</justification>
+              </item>
+              <!-- Apparently I had to declare twice those ignores for some reason, looks like a bug in revapi -->
+              <item>
+                <code>java.method.removed</code>
+                <old>method void org.xwiki.contrib.activitypub.entities.Inbox::addActivity(org.xwiki.contrib.activitypub.entities.AbstractActivity)</old>
+                <justification>Young API: this method was wrong, you should now use Inbox#addItem.</justification>
+              </item>
+              <item>
+                <code>java.method.removed</code>
+                <old>method java.util.Collection&lt;org.xwiki.contrib.activitypub.entities.AbstractActivity&gt; org.xwiki.contrib.activitypub.entities.Inbox::getAllActivities()</old>
+                <justification>Young API: this method was wrong, you should rely on AbstractCollection methods.</justification>
+              </item>
+                <item>
+                <code>java.method.removed</code>
+                <old>method void org.xwiki.contrib.activitypub.entities.Outbox::addActivity(org.xwiki.contrib.activitypub.entities.AbstractActivity)</old>
+                <justification>Young API: this method was wrong, you should now use Outbox#addItem.</justification>
+              </item>
+              <item>
+                <code>java.method.removed</code>
+                <old>method java.util.Collection&lt;org.xwiki.contrib.activitypub.entities.AbstractActivity&gt; org.xwiki.contrib.activitypub.entities.Inbox::getAllActivities()</old>
+                <justification>Young API: this method was wrong, you should rely on AbstractCollection methods.</justification>
+              </item>
+              <item>
+                <code>java.method.parameterTypeChanged</code>
+                <old>parameter &lt;O extends org.xwiki.contrib.activitypub.entities.AbstractCollection&lt;T&gt;&gt; O org.xwiki.contrib.activitypub.entities.OrderedCollection&lt;T extends org.xwiki.contrib.activitypub.entities.ActivityPubObject&gt;::addItem(===T===) @ org.xwiki.contrib.activitypub.entities.Inbox</old>
+                <new>parameter &lt;O extends org.xwiki.contrib.activitypub.entities.AbstractCollection&lt;org.xwiki.contrib.activitypub.entities.AbstractActivity&gt;&gt; O org.xwiki.contrib.activitypub.entities.AbstractBox::addItem(===org.xwiki.contrib.activitypub.entities.AbstractActivity===) @ org.xwiki.contrib.activitypub.entities.Inbox</new>
+                <justification>Young API and not a breakage.</justification>
+              </item>
+              <item>
+                <code>java.method.parameterTypeChanged</code>
+                <old>parameter &lt;O extends org.xwiki.contrib.activitypub.entities.AbstractCollection&lt;T&gt;&gt; O org.xwiki.contrib.activitypub.entities.OrderedCollection&lt;T extends org.xwiki.contrib.activitypub.entities.ActivityPubObject&gt;::addItem(===T===) @ org.xwiki.contrib.activitypub.entities.Outbox</old>
+                <new>parameter &lt;O extends org.xwiki.contrib.activitypub.entities.AbstractCollection&lt;org.xwiki.contrib.activitypub.entities.AbstractActivity&gt;&gt; O org.xwiki.contrib.activitypub.entities.AbstractBox::addItem(===org.xwiki.contrib.activitypub.entities.AbstractActivity===) @ org.xwiki.contrib.activitypub.entities.Outbox</new>
+                <justification>Young API and not a breakage.</justification>
+              </item>
+            </revapi.ignore>
+          </analysisConfiguration>
+        </configuration>
       </plugin>
     </plugins>
   </build>

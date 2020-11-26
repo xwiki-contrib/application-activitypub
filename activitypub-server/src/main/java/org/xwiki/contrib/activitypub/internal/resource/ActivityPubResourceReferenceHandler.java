@@ -56,6 +56,7 @@ import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
+import org.xwiki.contrib.activitypub.entities.AbstractBox;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Inbox;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
@@ -180,7 +181,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
 
             // We are finally in a POST request to a box and we can handle it.
             } else {
-                this.handleBox(entity);
+                this.handleBox((AbstractBox) entity);
             }
         } catch (ActivityPubException | IOException | URISyntaxException e) {
             try {
@@ -220,7 +221,7 @@ public class ActivityPubResourceReferenceHandler extends AbstractResourceReferen
      * @throws ActivityPubException in case of error during the checks on the body
      * @throws IOException          in case of error during an HTTP response.
      */
-    private void handleBox(ActivityPubObject box) throws ActivityPubException, IOException
+    private void handleBox(AbstractBox box) throws ActivityPubException, IOException
     {
         HttpServletRequest request = ((ServletRequest) this.container.getRequest()).getHttpServletRequest();
         HttpServletResponse response = ((ServletResponse) this.container.getResponse()).getHttpServletResponse();
