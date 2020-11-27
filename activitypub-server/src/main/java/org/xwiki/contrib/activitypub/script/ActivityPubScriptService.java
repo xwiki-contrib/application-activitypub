@@ -758,6 +758,22 @@ public class ActivityPubScriptService implements ScriptService
     }
 
     /**
+     * Escape the xwiki syntax from the content.
+     *
+     * @param content the content to escape
+     * @return the escaped content
+     * @since 1.4
+     */
+    @Unstable
+    public String escapeXWikiSyntax(String content)
+    {
+        if (content == null) {
+            return null;
+        }
+        return content.replaceAll("\\{\\{", "&#123;&#123;");
+    }
+
+    /**
      * @param dateProvider the date provider.
      * @since 1.2
      */

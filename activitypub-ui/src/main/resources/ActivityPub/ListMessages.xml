@@ -50,14 +50,14 @@
   #set($fromList = $message.attributedTo)
   #foreach($actorReference in $fromList)
     #set($displayFromActor = $services.activitypub.resolve($actorReference))
-    #displayActor($displayFromActor) 
+    #displayActor($displayFromActor)
   #end
 #end
 
 #macro (displayTo $message)
   #set($toList = $services.activitypub.resolveTargets($message))
   #foreach($displayToActor in $toList)
-    #displayActor($displayToActor) 
+    #displayActor($displayToActor)
   #end
 #end
 
@@ -65,13 +65,15 @@
   {{box}}
     #if ($message.isPublic()){{info}}$services.localization.render('activitypub.message.display.public'){{/info}}#end
 
+    #if ($message.published)
     **$services.localization.render('activitypub.message.display.date')** $message.published
+    #end
     **$services.localization.render('activitypub.message.display.from')** #displayFrom($message)
     **$services.localization.render('activitypub.message.display.to')** #displayTo($message)
 
     **$services.localization.render('activitypub.message.display.content')**
 
-    {{html}}$message.content{{/html}}
+    {{html}}$services.activitypub.escapeXWikiSyntax($message.content){{html}}
   {{/box}}
   
 #end

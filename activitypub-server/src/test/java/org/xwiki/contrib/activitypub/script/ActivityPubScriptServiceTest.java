@@ -81,6 +81,7 @@ import com.xpn.xwiki.user.api.XWikiRightService;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -607,5 +608,17 @@ class ActivityPubScriptServiceTest
         assertTrue(this.scriptService.likeActivity(activityId));
         verify(this.activityPubStorage).storeEntity(likeActivity);
         verify(likeActivityHandler).handleOutboxRequest(new ActivityRequest<>(actor, likeActivity));
+    }
+
+    @Test
+    void escapeXWikiSyntaxNull()
+    {
+        assertNull(this.scriptService.escapeXWikiSyntax(null));
+    }
+
+    @Test
+    void escapeXWikiSyntax()
+    {
+        assertEquals("abcd&#123;&#123;edf", this.scriptService.escapeXWikiSyntax("abcd{{edf"));
     }
 }
