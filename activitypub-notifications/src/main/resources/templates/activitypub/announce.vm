@@ -29,80 +29,82 @@
 #end
 
 #define ($details)
-    #define($rows)
-        #foreach($event in $compositeEvent.events)
-            #set ($activity = $eventActivities.get($event))
-            #set ($actor = $services.activitypub.resolve($activity.actor))
-            #set ($object = $services.activitypub.resolve($activity.object))
-            #if ($object.isDocument())
-                #define($description)
-                <div class="modal fade" tabindex="-1" role="dialog" id="evt-modal-$event.id">
-                  <div class="modal-dialog modal-lg" role="document">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                          <span aria-hidden="true">&times;</span>
-                        </button>
-                        <h4 class="modal-title">$object.name</h4>
-                      </div>
-                      <div class="modal-body">
-                          $object.content
-                      </div>
-                      <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                      </div>
-                    </div><!-- /.modal-content -->
-                  </div><!-- /.modal-dialog -->
-                </div><!-- /.modal -->
-                    #if ("$!object.url" != "")
-                        #if ($services.activitypub.belongsToCurrentInstance("$object.url.get(0)"))
-                            #set($objectLink = "<a href=""$object.url.get(0)"">$object.name</a>")
-                        #else
-                            #set($objectLink =
-                              "<span class=""wikiexternallink""><a href=""$object.url.get(0)"">$object.name</a></span>")
-                        #end
-                    #else
-                        #set($objectLink = $object.name)
-                    #end
-                    $services.localization.render('activitypub.event.announce.description') $objectLink.
-                <div>
-                  <button type="button" class="btn btn-primary btn-xs" id="btn-modal-$event.id">
-                    See the page
-                  </button>
-                  <script type="text/javascript">
-                    require(['jquery'], function($) {
-                      $("#evt-modal-$event.id").prependTo('body');
-                      $(document).ready(function() {
-                        $("#btn-modal-$event.id").click(function(){
-                          $("#evt-modal-$event.id").modal('toggle');
-                        });
-                      })
-                    });
-                  </script>
-                </div>
-                #end
-                #displayAPEventDetail($event $actor $description)
-            #else
-                #define ($optionalContent)
-                  #set ($originalAuthor = $services.activitypub.resolve($object.attributedTo[0]))
-                    #if($originalAuthor)
-                      <span>
-                        $services.localization.render('activitypub.event.announce.originalAuthor.label')
-                        #computeUserLink($originalAuthor)
-                      </span>
-                    #end
-                  #end
-                  #define ($actorLink)
-                    #activityPubActorLink($actor)
-                  #end
-                  #set ($introduction =
-                    "$services.localization.render('activitypub.event.announce.description.withActor', [$actorLink])" +
-                      " ${object.type}#if ($object.name) <a href='$object.id'>$object.name</a>#end.")
-                #displayAPEventDetailLarge($event $actor $introduction $object.content $optionalContent)
-            #end
+  #define($rows)
+    #foreach($event in $compositeEvent.events)
+      #set ($activity = $eventActivities.get($event))
+      #set ($actor = $services.activitypub.resolve($activity.actor))
+      #set ($object = $services.activitypub.resolve($activity.object))
+      #if ("$!object.url" != "")
+        #if ($services.activitypub.belongsToCurrentInstance("$object.url.get(0)"))
+          #set($objectLink = "<a href=""$object.url.get(0)"">$object.name</a>")
+        #else
+          #set($objectLink = "<span class=""wikiexternallink""><a href=""$object.url.get(0)"">$object.name</a></span>")
         #end
+      #else
+        #set($objectLink = $object.name)
+      #end
+      #define ($actorLink)
+        #activityPubActorLink($actor)
+      #end
+    <div>
+    </div>
+      #if ($object.isDocument())
+        #define($description)
+        <div class="modal fade activitypub-modal" tabindex="-1" role="dialog" id="evt-modal-$event.id">
+          <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">$object.name</h4>
+              </div>
+              <div class="modal-body">
+                $object.content
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              </div>
+            </div><!-- /.modal-content -->
+          </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
+        <div>
+          <button type="button" class="btn btn-primary btn-xs" id="btn-modal-$event.id">
+            $services.localization.render('activitypub.event.activity.page.view')
+          </button>
+          <script type="text/javascript">
+            require(['jquery'], function($) {
+              $("#evt-modal-$event.id").prependTo('body');
+              $(document).ready(function() {
+                $("#btn-modal-$event.id").click(function(){
+                  $("#evt-modal-$event.id").modal('toggle');
+                });
+              })
+            });
+          </script>
+        </div>
+        #end
+        #set ($introduction = "$services.localization.render('activitypub.event.announce.description.withActor',
+          [$actorLink]) $objectLink")
+        #displayAPEventDetailLarge($event $actor $introduction $description 'div')
+      #else
+        #define ($optionalContent)
+          #set ($originalAuthor = $services.activitypub.resolve($object.attributedTo[0]))
+          #if($originalAuthor)
+          <span>
+            $services.localization.render('activitypub.event.announce.originalAuthor.label')
+            #computeUserLink($originalAuthor)
+          </span>
+          #end
+        #end
+        #set ($introduction =
+          "$services.localization.render('activitypub.event.announce.description.withActor', [$actorLink])" +
+            " ${object.type}#if ($object.name) <a href='$object.id'>$object.name</a>#end.")
+        #displayAPEventDetailLarge($event $actor $introduction $object.content $optionalContent 'blockquote')
+      #end
     #end
-    #displayNotificationEventDetailsSkeletons($events.size(), $rows)
+  #end
+  #displayNotificationEventDetailsSkeletons($events.size() $rows)
 #end
 
 #displayNotificationEventSkeleton($mainIcon $smallIcon $content $details)

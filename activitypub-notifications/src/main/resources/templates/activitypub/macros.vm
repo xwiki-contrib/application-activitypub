@@ -71,7 +71,7 @@
 #set ($username = $services.webfinger.getWebfingerId($actor))
 <span class="notification-event-user">
   #if ($services.activitypub.belongsToCurrentInstance("$actor.id"))
-      <a href="$actor.id">$username</a>
+    <a href="$actor.id">$username</a>
   #else
     <span class="wikiexternallink"><a href="$actor.id">$username</a></span>
   #end
@@ -95,15 +95,19 @@
 </tr>
 #end
 
-#macro (displayAPEventDetailLarge $event $actor $introduction $summary)
-<div class="row activitypub notifications">
-  <p>$introduction</p>
-  <blockquote class="activitypub notifications">$!summary</blockquote>
-  #if ($optionalContent)
-    $!optionalContent
-  #end
-  #insertEventDateDiv($event)
-</div>
+#macro (displayAPEventDetailLarge $event $actor $introduction $summary $summaryTag)
+<tr>
+  <td class="description">
+    <div class="activitypub notifications col-xs-12">
+      <p>$introduction</p>
+      <$summaryTag class="activitypub notifications">$!summary</$summaryTag>
+      #if ($optionalContent)
+        $!optionalContent
+      #end
+      #insertEventDateDiv($event)
+    </div>
+  </td>
+</tr>
 #end
 
 #macro (getAPEventSummary $translationPrefix)

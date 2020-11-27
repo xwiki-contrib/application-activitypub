@@ -19,9 +19,9 @@
 ## ---------------------------------------------------------------------------
 #template('activitypub/macros.vm')
 
-#set ($smallIcon = "comment")
+#set ($smallIcon = 'comment')
 #define ($content)
-<div class="notification-description">
+<div class='notification-description'>
   <div class="activity-type">$services.localization.render('activitypub.event.message.type')</div>
   <div class="activity-summary">#getAPEventSummary('activitypub.event.message.summary')</div>
   <div><small class="text-muted">$compositeEventDate</small></div>
@@ -29,20 +29,19 @@
 #end
 
 #define ($details)
-    #define($rows)
-        #foreach($event in $compositeEvent.events)
-            #set ($activity = $eventActivities.get($event))
-            #set ($actor = $services.activitypub.resolve($activity.actor))
-            #set ($object = $services.activitypub.resolve($activity.object))
-
-            #define($actorLink)
-              #activityPubActorLink($actor)
-            #end
-            #set ($introduction = $services.localization.render('activitypub.event.message.description.withActor', [$actorLink]))
-            #displayAPEventDetailLarge($event $actor $introduction $object.content)
-        #end
+  #define($rows)
+    #foreach($event in $compositeEvent.events)
+      #set ($activity = $eventActivities.get($event))
+      #set ($actor = $services.activitypub.resolve($activity.actor))
+      #set ($object = $services.activitypub.resolve($activity.object))
+      #define($actorLink)
+        #activityPubActorLink($actor)
+      #end
+      #set ($introduction = $services.localization.render('activitypub.event.message.description.withActor', [$actorLink]))
+      #displayAPEventDetailLarge($event $actor $introduction $object.content 'blockquote')
     #end
-    #displayNotificationEventDetailsSkeletons($events.size(), $rows)
+  #end
+  #displayNotificationEventDetailsSkeletons($events.size(), $rows)
 #end
 
 #displayNotificationEventSkeleton($mainIcon $smallIcon $content $details)

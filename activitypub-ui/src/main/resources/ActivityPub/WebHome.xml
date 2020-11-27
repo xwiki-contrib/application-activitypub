@@ -182,9 +182,17 @@
   padding: 0px 0.8em;
 }
 
-div.row.activitypub.notifications {
-  margin-top: 0.8em;
-  padding: 0px 0.8em;
+table.notification-event-details div.col-xs-12.activitypub.notifications {
+  width: 300px;
+  word-wrap: break-word;
+}
+
+div.activitypub-modal div.modal-header {
+  word-wrap: break-word;
+}
+
+div.activitypub-modal div.modal-body {
+  word-wrap: break-word;
 }
 
 button.notification-like.not-liked {
@@ -198,6 +206,7 @@ button.notification-like.not-liked:hover {
 button.notification-like {
   color: @brand-danger;
 }
+
 button.notification-like:hover {
   color: @brand-danger;
 }</code>
@@ -255,7 +264,7 @@ button.notification-like:hover {
         <separators>|, </separators>
         <size>5</size>
         <unmodifiable>0</unmodifiable>
-        <values>doc.reference=Document|icon.theme=Icon theme|locale=Language|rendering.defaultsyntax=Default syntax|rendering.restricted=Restricted|rendering.targetsyntax=Target syntax|request.base=Request base URL|request.parameters=Request parameters|request.url=Request URL|request.wiki=Request wiki|user=User|wiki=Wiki</values>
+        <values>action=Action|doc.reference=Document|icon.theme=Icon theme|locale=Language|rendering.defaultsyntax=Default syntax|rendering.restricted=Restricted|rendering.targetsyntax=Target syntax|request.base=Request base URL|request.parameters=Request parameters|request.url=Request URL|request.wiki=Request wiki|user=User|wiki=Wiki</values>
         <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
       </async_context>
       <async_enabled>
