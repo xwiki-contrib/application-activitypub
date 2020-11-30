@@ -27,3 +27,4 @@ org.xwiki.contrib.activitypub.internal.DefaultHTMLRenderer
 org.xwiki.contrib.activitypub.internal.ActivityPubMentionsSender
 org.xwiki.contrib.activitypub.internal.ActivityPubXDOMService
 org.xwiki.contrib.activitypub.script.ActivityPubScriptService
+org.xwiki.contrib.activitypub.internal.ActivityPubMentionsFormatter
