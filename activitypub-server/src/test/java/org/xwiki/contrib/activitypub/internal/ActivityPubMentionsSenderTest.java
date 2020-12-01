@@ -20,8 +20,10 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import java.net.URI;
+import java.util.Date;
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.xwiki.contrib.activitypub.ActivityHandler;
@@ -58,6 +60,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.ACTIVITYPUB_MENTION_TYPE;
+import static org.xwiki.contrib.activitypub.internal.ActivityPubMentionsSender.*;
 
 /**
  * Test of {@link ActivityPubMentionsSender}.
@@ -95,6 +98,22 @@ class ActivityPubMentionsSenderTest
 
     @Mock
     private MentionsFormatter mentionsFormatter;
+
+    private Date currentTime;
+
+    @BeforeEach
+    void setUp()
+    {
+        this.currentTime = new Date();
+        this.activityPubMentionsSender.setDateProvider(new DateProvider()
+        {
+            @Override
+            public Date currentTime()
+            {
+                return ActivityPubMentionsSenderTest.this.currentTime;
+            }
+        });
+    }
 
     @Test
     void sendNotificationNoActivityPubNewMentions()
@@ -148,12 +167,14 @@ class ActivityPubMentionsSenderTest
         List<ProxyActor> to = asList(new ProxyActor(u1URI));
         Page page = new Page()
             .setTo(to)
+            .setPublished(this.currentTime)
             .setContent("rendered content")
             .setTag(asList(new ActivityPubObjectReference<>().setObject(mention)))
             .setAttributedTo(asList(new ActivityPubObjectReference<AbstractActor>().setObject(authorActor)))
             .setUrl(asList(documentUrl));
         Create create = new Create()
             .setActor(authorActor)
+            .<Create>setPublished(this.currentTime)
             .setObject(page)
             .setTo(to);
         ActivityRequest<Create> activityRequest = new ActivityRequest<>(authorActor, create);
@@ -196,11 +217,13 @@ class ActivityPubMentionsSenderTest
         List<ProxyActor> to = asList(new ProxyActor(u1URI));
         Page page = new Page()
             .setTo(to)
+            .setPublished(this.currentTime)
             .setContent("rendered content")
             .setTag(asList(new ActivityPubObjectReference<>().setObject(mention)))
             .setAttributedTo(asList(new ActivityPubObjectReference<AbstractActor>().setObject(authorActor)))
             .setUrl(asList(documentUrl));
         Update create = new Update()
+            .<Update>setPublished(this.currentTime)
             .setActor(authorActor)
             .setObject(page)
             .setTo(to);

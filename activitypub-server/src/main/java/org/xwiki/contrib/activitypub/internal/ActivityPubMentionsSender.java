@@ -20,6 +20,7 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import java.net.URI;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -91,6 +92,8 @@ public class ActivityPubMentionsSender
     @Inject
     private Logger logger;
 
+    private DateProvider dateProvider = new DateProvider();
+
     /**
      * Send the notifications of the mentions to the fediverse actors.
      *
@@ -129,10 +132,13 @@ public class ActivityPubMentionsSender
                     .map(AbstractActor::getProxyActor)
                     .collect(Collectors.toList());
 
+                Date currentTime = this.dateProvider.currentTime();
                 AbstractActivity abstractActivity = initActivity(doc)
                     .setActor(authorAbstractActor)
                     .<AbstractActivity>setTo(to)
+                    .<AbstractActivity>setPublished(currentTime)
                     .setObject(initObject(mentionNotificationParameters)
+                        .setPublished(currentTime)
                         .setName(doc.getTitle())
                         .setUrl(singletonList(documentUrl))
                         .setAttributedTo(singletonList(authorAbstractActor.getReference()))
@@ -198,5 +204,22 @@ public class ActivityPubMentionsSender
             abstractActivity = new Create();
         }
         return abstractActivity;
+    }
+
+    static class DateProvider
+    {
+        public Date currentTime()
+        {
+            return new Date();
+        }
+    }
+
+    /**
+     * @param dateProvider the date provider
+     * @since 1.4
+     */
+    void setDateProvider(DateProvider dateProvider)
+    {
+        this.dateProvider = dateProvider;
     }
 }

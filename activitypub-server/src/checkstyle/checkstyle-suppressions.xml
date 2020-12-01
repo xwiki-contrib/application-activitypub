@@ -29,9 +29,8 @@
   <suppress checks="NPathComplexity" files="DefaultActorHandler.java"/>
   <suppress checks="ClassFanOutComplexity" files="DefaultActorHandler.java"/>
   <suppress checks="ClassFanOutComplexity" files="DefaultActivityPubStorage.java"/>
-  <suppress checks="CyclomaticComplexity" files="DefaultActivityPubStorage.java"/>
   <suppress checks="ClassFanOutComplexity" files="ActivityPubResourceReferenceHandler.java"/>
-  <suppress checks="ClassFanOutComplexity" files="PageCreatedNotificationJob.java"/>
   <suppress checks="ClassFanOutComplexity" files="ActivityPubScriptService.java"/>
   <suppress checks="ClassFanOutComplexity" files="DefaultSignatureService.java"/>
+  <suppress checks="ClassFanOutComplexity" files="ActivityPubMentionsSender.java" />
 </suppressions>
