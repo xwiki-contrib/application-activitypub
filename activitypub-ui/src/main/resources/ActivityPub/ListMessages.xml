@@ -73,7 +73,7 @@
 
     **$services.localization.render('activitypub.message.display.content')**
 
-    {{html}}$services.activitypub.escapeXWikiSyntax($message.content){{html}}
+    {{html}}$services.activitypub.escapeXWikiSyntax($message.content){{/html}}
   {{/box}}
   
 #end
