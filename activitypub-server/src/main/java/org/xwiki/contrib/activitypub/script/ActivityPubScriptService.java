@@ -492,7 +492,8 @@ public class ActivityPubScriptService implements ScriptService
                     .setName(xwikiDoc.getTitle())
                     .setAttributedTo(singletonList(currentActor.getReference()))
                     .setUrl(singletonList(documentUrl))
-                    .setContent(content);
+                    .setContent(content)
+                    .setPublished(xwikiDoc.getContentUpdateDate());
                 this.fillRecipients(targets, currentActor, page);
                 this.activityPubStorage.storeEntity(page);
 

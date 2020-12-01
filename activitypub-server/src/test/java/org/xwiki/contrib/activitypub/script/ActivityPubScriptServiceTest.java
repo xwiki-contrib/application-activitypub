@@ -405,6 +405,7 @@ class ActivityPubScriptServiceTest
         when(this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, documentReference)).thenReturn(true);
         when(xwikiDoc.getTitle()).thenReturn("Doc Title");
         when(xwikiDoc.getURL("view", xWikiContext)).thenReturn("http://wiki/view/page");
+        when(xwikiDoc.getContentUpdateDate()).thenReturn(new Date(200));
         when(this.urlHandler.getAbsoluteURI(URI.create("http://wiki/view/page"))).thenReturn(URI.create(
             "http://wiki/view/page"));
         when(this.htmlRenderer.render(xwikiDoc.getXDOM(), documentReference)).thenReturn("<div>content</div>");
@@ -425,7 +426,8 @@ class ActivityPubScriptServiceTest
             .setAttributedTo(Collections.singletonList(currentActor.getReference()))
             .setUrl(Collections.singletonList(URI.create("http://wiki/view/page")))
             .setContent("<div>content</div>")
-            .setTo(Collections.singletonList(u1.getProxyActor()));
+            .setTo(Collections.singletonList(u1.getProxyActor()))
+            .setPublished(new Date(200));
         verify(this.activityPubStorage).storeEntity(page);
         verify(this.activityPubStorage).storeEntity(new Announce()
             .setActor(currentActor)
