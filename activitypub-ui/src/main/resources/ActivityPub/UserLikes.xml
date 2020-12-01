@@ -91,11 +91,15 @@
         #activityPubActorLink($actor)
       #end
     #end
+    #if ("$!likedObject.published" != "")
+      #set ($publishedDate = $xwiki.formatDate($likedObject.published))
+    #else
+      #set ($publishedDate = "N/A")
+    #end
     #set ($row = {
-      'published': $xwiki.formatDate($likedObject.published),
+      'published': $publishedDate,
       'type' : $likedObject.type,
       'attributedTo': "$attributedTo",
-      'summary': $likedObject.summary,
       'doc_viewable': true
     })
     #if ("$!likedObject.href" == "")
