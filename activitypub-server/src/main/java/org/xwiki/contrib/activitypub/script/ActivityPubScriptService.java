@@ -711,7 +711,7 @@ public class ActivityPubScriptService implements ScriptService
                         .handleOutboxRequest(new ActivityRequest<>(currentActor, likeActivity));
                     return true;
                 }
-            } catch (ActivityPubException | IOException e) {
+            } catch (ActivityPubException | ClassCastException | IOException e) {
                 this.logger.warn("Error while liking activity [{}]: [{}]",
                     activityId, ExceptionUtils.getRootCauseMessage(e));
             }
@@ -740,10 +740,9 @@ public class ActivityPubScriptService implements ScriptService
                     new ActivityPubObjectReference<AbstractActivity>().setLink(URI.create(activityId)));
             ActivityPubObjectReference objectReference = activity.getObject();
             return likedElements.contains(objectReference);
-        } catch (ActivityPubException e) {
+        } catch (ActivityPubException | ClassCastException e) {
             this.logger.warn(String.format("Error while checking if activity [%s] is liked", activityId),
                 ExceptionUtils.getRootCauseMessage(e));
-
         }
         return false;
     }
