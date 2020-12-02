@@ -36,7 +36,7 @@
   <minorEdit>false</minorEdit>
   <syntaxId>plain/1.0</syntaxId>
   <hidden>true</hidden>
-  <content>activitypub.follow.input.label=Suivre l'utilisateur indiqué
+  <content>activitypub.follow.input.label=Suivre l'utilisateur spécifié
 activitypub.follow.input.hint=Entrez l'identifiant d'un utilisateur pour commencer à le suivre
 activitypub.follow.input.placeholder=@foo@domaine
 activitypub.follow.button=Suivre
@@ -93,5 +93,6 @@ activitypub.like.livetable.type=Type
 activitypub.like.livetable.summary=Résumé
 activitypub.like.livetable.attributedTo=Attribué à
 activitypub.like.livetable._actions=Actions
-activitypub.dashboard.tab.likes=J'aime</content>
+activitypub.dashboard.tab.likes=J'aime
+</content>
 </xwikidoc>
