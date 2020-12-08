@@ -170,6 +170,9 @@ public class ActivityPubScriptService implements ScriptService
     @Named("context")
     private ComponentManager componentManager;
 
+    @Inject
+    private ActivityPubDiscussionsScriptService activityPubDiscussionsScriptService;
+
     private void checkAuthentication() throws ActivityPubException
     {
         UserReference userReference = this.userReferenceResolver.resolve(null);
@@ -794,5 +797,15 @@ public class ActivityPubScriptService implements ScriptService
         } catch (Exception e) {
             return false;
         }
+    }
+
+    /**
+     * @return the discussions script service
+     * @since 1.5
+     */
+    @Unstable
+    public ActivityPubDiscussionsScriptService getDiscussions()
+    {
+        return this.activityPubDiscussionsScriptService;
     }
 }

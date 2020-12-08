@@ -1,0 +1,231 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.4" reference="ActivityPub.NotificationReply" locale="">
+  <web>ActivityPub</web>
+  <name>NotificationReply</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>NotificationReply</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>true</hidden>
+  <content>{{velocity}}
+#if ($request.getMethod().toLowerCase() == 'post')
+#try("replyToEventException")
+#set ($success = $services.activitypub.discussions.replyToEvent({
+  'discussionContexts': [{ 
+    'name': 'event',
+    'description':  'event',
+    'referenceType': 'event',
+    'entityReference': "$request.eventId"
+  }, {
+    'name': 'activitypub-activity',
+    'description':  'activitypub-activity',
+    'referenceType': 'activitypub-activity',
+    'entityReference': "$request.activityId"
+  }],
+  'discussion': {
+    'title': "Discussion for $request.activityId",
+    'description': "Discussion for $request.activityId"
+  },
+  'content': "$request.content"
+}))
+#end
+
+#if ("$!replyToEventException" != '')
+  #set ($success = false)
+#end
+
+#jsonResponse({
+  'success': $success
+})
+#end
+{{/velocity}}</content>
+  <object>
+    <name>ActivityPub.NotificationReply</name>
+    <number>0</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>448cb33b-8036-4f4f-930c-c9b9c19fc1ea</guid>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <defaultValue>long</defaultValue>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <contenttype>PureText</contenttype>
+        <disabled>0</disabled>
+        <editor>PureText</editor>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <freeText>forbidden</freeText>
+        <largeStorage>0</largeStorage>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators>|, </separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage|onDemand|always</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>require(['jquery', 'xwiki-meta'], function($, xm) {
+  'use strict';
+  var init = function() {
+
+    $('.modal.activitypub-modal-reply-notification').on('hidden.bs.modal', function() {
+      // TODO: Dangerous since if the user is editing another field in parallel, he will not be warned before submitting and will loose its changes.
+      $(document).trigger('xwiki:actions:cancel');
+    });
+
+    $('.activitypub-button-reply-button').click(function(e) {
+      if (e) e.preventDefault();
+
+      document.fire('xwiki:actions:beforeSave');
+      // TODO: Dangerous since if the user is editing another field in parallel, he will not be warned before submitting and will loose its changes.
+      $(document).trigger('xwiki:actions:cancel');
+
+      var form = $(this).parents('.modal').find('form');
+      var modalWindow = $(this).parents('.activitypub-modal-reply-notification');
+
+      const notificationReplyDoc = new XWiki.Document(XWiki.Model.resolve('ActivityPub.NotificationReply', XWiki.EntityType.DOCUMENT));
+
+      $.post(notificationReplyDoc.getURL("get"), {
+        "eventId": form.find('[name="eventId"]').val(),
+        "activityId": form.find('[name="activityId"]').val(),
+        "content": form.find('[name="content"]').val(),
+      }, function(res) {
+        if(res.success) {
+          new XWiki.widgets.Notification('Reply successfully sent.', 'done');
+          modalWindow.modal('hide');
+        } else {
+          new XWiki.widgets.Notification('Failed to send the message.', 'error');
+        }
+      });
+    });
+
+    var replyButton = $("button.notification-reply")
+    replyButton.removeClass('hidden');
+    replyButton.click(function() {
+      var eventId = $(this).prev().val();
+      var replyModal = $("#activitypub-modal-reply-notification-" + eventId)
+      replyModal.prependTo("body");
+
+      var formGroup = replyModal.find('.form-group');
+      if (formGroup.children().length === 0) {
+        const displayMessageFieldDoc = new XWiki.Document(XWiki.Model.resolve('Discussions.Code.DisplayMessage', XWiki.EntityType.DOCUMENT));
+        $.get(displayMessageFieldDoc.getURL("get"), {
+          "showContentField": "show"
+        }, function(res) {
+          formGroup.append(res);
+          $(document).trigger('xwiki:dom:updated', {
+            'elements': formGroup.toArray()
+          });
+          replyModal.modal('show');
+        });
+      } else {
+        replyModal.modal('show');
+      }
+    });
+  };
+
+  (XWiki.isInitialized &amp;&amp; init()) || document.observe('xwiki:dom:loading', init);
+});</code>
+    </property>
+    <property>
+      <name>Notifications Reply Action</name>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>onDemand</use>
+    </property>
+  </object>
+</xwikidoc>

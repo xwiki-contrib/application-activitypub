@@ -22,6 +22,7 @@
 
 #set ($discard = $xwiki.ssx.use('ActivityPub.WebHome'))
 #set ($discard = $xwiki.jsx.use('ActivityPub.UserLikes'))
+#set ($discard = $xwiki.jsx.use('ActivityPub.NotificationReply'))
 
 #set ($smallIcon = "branch")
 #set ($mainIcon = "branch")
@@ -32,6 +33,7 @@
   <td class="text-right text-muted">
     $escapetool.xml($services.date.displayTimeAgo($event.date))
     #insertLikeButton($event)
+    #insertReplyButton($event)
   </td>
 #end
 
@@ -39,15 +41,52 @@
   #set ($activity = $eventActivities.get($event))
   #set ($isLiked = $services.activitypub.isLiked($activity.id))
   <button class="btn btn-xs notification-like hidden #if(!$isLiked)not-liked#end" title="Like"
-          #if($isLiked)disabled="disabled"#end" data-activity-id="$activity.id">
+          #if($isLiked)disabled="disabled"#end data-activity-id="$activity.id">
     <span class="fa fa-heart"></span>
   </button>
+  
+#end
+
+#macro (insertReplyButton $event)
+  #set ($activity = $eventActivities.get($event))
+  #set ($isLiked = $services.activitypub.isLiked($activity.id))
+  <input type="hidden" class="reply-event-id" value="$event.id" />
+  <button class="btn btn-xs notification-reply hidden" title="Reply" data-activity-id="$activity.id">
+    $services.icon.renderHTML('comment')
+  </button>
+  <div class="modal fade activitypub-modal-reply-notification" tabindex="-1" role="dialog" id="activitypub-modal-reply-notification-$event.id" style="text-align: left;">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Reply</h4>
+        </div>
+        <div class="modal-body">
+          <form>
+            <form method="post" action="$url" class="message-form">
+                <div class="form-group">
+                    <!-- empty: loaded lazily -->
+                </div>
+                <input type="hidden" name="eventId" value="$event.id" />
+                <input type="hidden" name="activityId" value="$activity.id" />
+            </form>
+            #set ($discard = $xwiki.jsx.use('Discussions.Code.DiscussionMacro'))
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary activitypub-button-reply-button">Reply</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
 #end
 
 #macro (insertEventDateDiv $event)
 <div class="text-right text-muted">
   <small>$escapetool.xml($services.date.displayTimeAgo($event.date))</small>
   #insertLikeButton($event)
+  #insertReplyButton($event)
 </div>
 #end
 

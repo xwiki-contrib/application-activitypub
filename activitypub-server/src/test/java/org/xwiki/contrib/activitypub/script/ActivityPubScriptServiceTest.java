@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
@@ -57,6 +58,7 @@ import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Service;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
+import org.xwiki.contrib.activitypub.internal.InternalURINormalizer;
 import org.xwiki.contrib.activitypub.internal.activities.CreateActivityHandler;
 import org.xwiki.contrib.activitypub.internal.activities.LikeActivityHandler;
 import org.xwiki.model.reference.DocumentReference;
@@ -142,6 +144,9 @@ class ActivityPubScriptServiceTest
     @MockComponent
     @Named("context")
     private ComponentManager componentManager;
+
+    @MockComponent
+    private InternalURINormalizer internalURINormalizer;
 
     @RegisterExtension
     LogCaptureExtension logCapture = new LogCaptureExtension(ERROR);
@@ -264,8 +269,8 @@ class ActivityPubScriptServiceTest
         String noteContent = "some content";
         this.scriptService.publishNote(null, noteContent);
         Note note = new Note()
-                        .setContent(noteContent)
-                        .setAttributedTo(Collections.singletonList(actor.getReference()));
+            .setContent(noteContent)
+            .setAttributedTo(Collections.singletonList(actor.getReference()));
 
         ArgumentCaptor<ActivityPubObject> argumentCaptor = ArgumentCaptor.forClass(ActivityPubObject.class);
         verify(this.activityPubStorage, times(2)).storeEntity(argumentCaptor.capture());
@@ -312,9 +317,9 @@ class ActivityPubScriptServiceTest
         this.scriptService.publishNote(Arrays.asList("followers", "@targetActor"), noteContent);
 
         Note note = new Note()
-                        .setContent(noteContent)
-                        .setAttributedTo(Collections.singletonList(actor.getReference()))
-                        .setTo(Arrays.asList(new ProxyActor(followersReference.getLink()), targetProxyActor));
+            .setContent(noteContent)
+            .setAttributedTo(Collections.singletonList(actor.getReference()))
+            .setTo(Arrays.asList(new ProxyActor(followersReference.getLink()), targetProxyActor));
 
         ArgumentCaptor<ActivityPubObject> argumentCaptor = ArgumentCaptor.forClass(ActivityPubObject.class);
         verify(this.activityPubStorage, times(2)).storeEntity(argumentCaptor.capture());
@@ -622,5 +627,23 @@ class ActivityPubScriptServiceTest
     void escapeXWikiSyntax()
     {
         assertEquals("abcd&#123;&#123;edf", this.scriptService.escapeXWikiSyntax("abcd{{edf"));
+    }
+
+    @Test
+    void getSentMessages() throws Exception
+    {
+        UserReference userReference = mock(UserReference.class);
+        when(this.userReferenceResolver.resolve(null)).thenReturn(userReference);
+        AbstractActor targetActor = mock(AbstractActor.class);
+        when(this.actorHandler.isAuthorizedToActFor(userReference, targetActor)).thenReturn(true);
+        URI inputURI = URI.create("https://server/actor");
+        when(targetActor.getId()).thenReturn(inputURI);
+        when(this.internalURINormalizer.relativizeURI(inputURI)).thenReturn(inputURI);
+
+        List<Note> value = Arrays.asList();
+        when(this.activityPubStorage.query(Note.class, "filter(authors:https\\:\\/\\/server\\/actor)", 10)).thenReturn(
+            value);
+        List<Note> sentMessages = this.scriptService.getSentMessages(targetActor, 10);
+        assertSame(value, sentMessages);
     }
 }
