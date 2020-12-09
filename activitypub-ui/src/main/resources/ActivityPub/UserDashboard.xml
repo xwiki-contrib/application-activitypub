@@ -101,13 +101,9 @@ $services.localization.render('activitypub.webfinger.notconfigured')
       &lt;/a&gt;
     &lt;/li&gt;
     &lt;li role="presentation"&gt;
-      &lt;a href="#messageOutbox" aria-controls="messageOutbox" role="tab" data-toggle="tab"&gt;
-        $services.localization.render('activitypub.dashboard.tab.sentMessagesList')
-      &lt;/a&gt;
-    &lt;/li&gt;
-    &lt;li role="presentation"&gt;
-      &lt;a href="#messageInbox" aria-controls="messageInbox" role="tab" data-toggle="tab"&gt;
-        $services.localization.render('activitypub.dashboard.tab.receivedMessagesList')
+      #set ($discussionsDoc = $xwiki.getDocument('ActivityPub.Discussions'))
+      &lt;a href="$discussionsDoc.getURL('view')" role="tab"&gt;
+        $services.localization.render('activitypub.dashboard.tab.discussionsList')
       &lt;/a&gt;
     &lt;/li&gt;
     &lt;li role="presentation"&gt;
@@ -176,6 +172,9 @@ $services.localization.render('activitypub.webfinger.notconfigured')
     &lt;div role="tabpanel" class="tab-pane" id="messageInbox"&gt;
     
       #displayReceivedMessages($actor, 10)
+    &lt;/div&gt;
+    &lt;div role="tabpanel" class="tab-pane" id="discussions"&gt;
+      #displayDiscussions($actor)
     &lt;/div&gt;
     &lt;div role="tabpanel" class="tab-pane" id="likes"&gt;
       #set($columns = ["published", "type", "attributedTo", "_actions"])
@@ -609,7 +608,7 @@ $services.localization.render('activitypub.webfinger.notconfigured')
         <separators>|, </separators>
         <size>5</size>
         <unmodifiable>0</unmodifiable>
-        <values>doc.reference=Document|icon.theme=Icon theme|locale=Language|rendering.defaultsyntax=Default syntax|rendering.restricted=Restricted|rendering.targetsyntax=Target syntax|request.base=Request base URL|request.parameters=Request parameters|request.url=Request URL|request.wiki=Request wiki|user=User|wiki=Wiki</values>
+        <values>action=Action|doc.reference=Document|icon.theme=Icon theme|locale=Language|rendering.defaultsyntax=Default syntax|rendering.restricted=Restricted|rendering.targetsyntax=Target syntax|request.base=Request base URL|request.parameters=Request parameters|request.url=Request URL|request.wiki=Request wiki|user=User|wiki=Wiki</values>
         <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
       </async_context>
       <async_enabled>

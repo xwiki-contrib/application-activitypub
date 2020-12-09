@@ -19,9 +19,10 @@
  */
 package org.xwiki.contrib.activitypub.script;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -29,10 +30,18 @@ import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
+import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.discussions.DiscussionContextService;
 import org.xwiki.contrib.discussions.DiscussionService;
 import org.xwiki.contrib.discussions.MessageService;
+import org.xwiki.contrib.discussions.domain.Discussion;
 import org.xwiki.contrib.discussions.domain.DiscussionContext;
+import org.xwiki.contrib.discussions.domain.DiscussionContextEntityReference;
+import org.xwiki.rendering.syntax.Syntax;
+import org.xwiki.wysiwyg.converter.HTMLConverter;
 
 /**
  * Script services for the discussions operations.
@@ -46,6 +55,12 @@ public class ActivityPubDiscussionsScriptService
 {
     private static final String DESCRIPTION_STR = "description";
 
+    private static final String EVENT_STR = "event";
+
+    private static final String ACTIVITYPUB_ACTIVITY_STR = "activitypub-activity";
+
+    private static final String ACTIVITYPUB_ENTITY_TYPE = "activitypub";
+
     @Inject
     private DiscussionService discussionService;
 
@@ -55,63 +70,76 @@ public class ActivityPubDiscussionsScriptService
     @Inject
     private MessageService messageService;
 
+    @Inject
+    private ActivityPubObjectReferenceResolver resolver;
+
+    @Inject
+    private HTMLConverter htmlConverter;
+
     /**
      * Reply to an event by adding a message to a discussion.
      * <p>
      * If the discussion do not exists, or the discussion context, they are created too.
      * <p>
-     * Parameters is a map with three keys:
-     * <ul>
-     *     <li>discussionContexts: a list of maps with four keys: name, description, referenceType, entityReference</li>
-     *     <li>discussion: a map with two keys: title and description</li>
-     *     <li>content: the content of the message</li>
-     * </ul>
      *
-     * @param parameters a map of key values easily usable with Velocity
+     * @param eventId the event id
+     * @param activityId the activity id
+     * @param content the message content
      * @return {@code} true if the operation succeeded, {@code false} otherwise
      */
-    public boolean replyToEvent(Map<String, Object> parameters) throws ActivityPubException
+    public boolean replyToEvent(String eventId, String activityId, String content)
     {
-        List<Object> discussionContextsParamList = (List<Object>) parameters.get("discussionContexts");
-        Map<String, String> discussionMap = (Map<String, String>) parameters.get("discussion");
-        String content = (String) parameters.get("content");
-
-        checkParameters(discussionContextsParamList, discussionMap, content);
-
+        // First search or creates a discussion according to the discussion contexts for the event and the activity of 
+        // the message.
+        DiscussionContext eventDiscussionContext = new DiscussionContext(null, EVENT_STR,
+            EVENT_STR, new DiscussionContextEntityReference(EVENT_STR, eventId));
+        DiscussionContext activityDiscussionContext =
+            new DiscussionContext(null, ACTIVITYPUB_ACTIVITY_STR, ACTIVITYPUB_ACTIVITY_STR,
+                new DiscussionContextEntityReference(ACTIVITYPUB_ENTITY_TYPE, activityId));
         List<DiscussionContext> discussionContexts =
-            initializeDiscussionContexts(discussionContextsParamList);
-        return this.discussionService
-            .getOrCreate(discussionMap.get("title"), discussionMap.get(DESCRIPTION_STR),
-                discussionContexts.stream().map(DiscussionContext::getReference).collect(Collectors.toList()))
-            .map(it -> this.messageService.create(content, it.getReference()).isPresent())
+            initializeDiscussionContexts(eventDiscussionContext, activityDiscussionContext);
+        String discussionTitle = String.format("Discussion for %s", activityId);
+        List<String> discussionContextReferences =
+            discussionContexts.stream().map(DiscussionContext::getReference).collect(Collectors.toList());
+        Optional<Discussion> discussionOpt = this.discussionService.getOrCreate(discussionTitle, discussionTitle,
+            discussionContextReferences);
+        discussionOpt.ifPresent(discussion -> {
+
+            // Link the actors as discussion context of discussion.
+            try {
+                ActivityPubObject object =
+                    this.resolver.resolveReference(new ActivityPubObjectReference<>().setLink(URI.create(activityId)));
+                for (ProxyActor activityPubObjectReference : object.getTo()) {
+                    ActivityPubObject object1 = this.resolver.resolveReference(activityPubObjectReference);
+                    this.discussionContextService
+                        .getOrCreate(object1.getName(), object1.getName(), ACTIVITYPUB_ENTITY_TYPE,
+                            object1.getId().toASCIIString())
+                        .ifPresent(
+                            discussionContext -> this.discussionContextService.link(discussionContext, discussion));
+                }
+            } catch (ActivityPubException e) {
+                e.printStackTrace();
+            }
+        });
+
+        // Finally, creates the message.
+        return discussionOpt
+            // TODO: take into account the syntax and check if the conversion is required
+            .map(it -> this.messageService
+                .create(this.htmlConverter.fromHTML(content, Syntax.XWIKI_2_1.toIdString()), it.getReference())
+                .isPresent())
             .orElse(false);
     }
 
-    private void checkParameters(List<Object> discussionContextsParamList, Map<String, String> discussionMap,
-        String content)
-        throws ActivityPubException
-    {
-        if (discussionContextsParamList == null) {
-            throw new ActivityPubException("Parameter [discussionContexts] missing.");
-        }
-
-        if (discussionMap == null) {
-            throw new ActivityPubException("Parameter [discussion] missing.");
-        }
-
-        if (content == null) {
-            throw new ActivityPubException("Parameter [content] missing.");
-        }
-    }
-
-    private List<DiscussionContext> initializeDiscussionContexts(List<Object> discussionContextsParamList)
+    private List<DiscussionContext> initializeDiscussionContexts(DiscussionContext... discussionContextsIns)
     {
         List<DiscussionContext> discussionContexts = new ArrayList<>();
-        for (Object discussionContextParam : discussionContextsParamList) {
-            Map<String, String> discussionContext = (Map<String, String>) discussionContextParam;
-            this.discussionContextService
-                .getOrCreate(discussionContext.get("name"), discussionContext.get(DESCRIPTION_STR),
-                    discussionContext.get("referenceType"), discussionContext.get("entityReference"))
+        for (DiscussionContext discussionContextsIn : discussionContextsIns) {
+            String name = discussionContextsIn.getName();
+            String description = discussionContextsIn.getDescription();
+            String type = discussionContextsIn.getEntityReference().getType();
+            String reference = discussionContextsIn.getEntityReference().getReference();
+            this.discussionContextService.getOrCreate(name, description, type, reference)
                 .ifPresent(discussionContexts::add);
         }
         return discussionContexts;

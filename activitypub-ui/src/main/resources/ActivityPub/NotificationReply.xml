@@ -39,24 +39,7 @@
   <content>{{velocity}}
 #if ($request.getMethod().toLowerCase() == 'post')
 #try("replyToEventException")
-#set ($success = $services.activitypub.discussions.replyToEvent({
-  'discussionContexts': [{ 
-    'name': 'event',
-    'description':  'event',
-    'referenceType': 'event',
-    'entityReference': "$request.eventId"
-  }, {
-    'name': 'activitypub-activity',
-    'description':  'activitypub-activity',
-    'referenceType': 'activitypub-activity',
-    'entityReference': "$request.activityId"
-  }],
-  'discussion': {
-    'title': "Discussion for $request.activityId",
-    'description': "Discussion for $request.activityId"
-  },
-  'content': "$request.content"
-}))
+#set ($success = $services.activitypub.discussions.replyToEvent($request.eventId, $request.activityId, $request.content))
 #end
 
 #if ("$!replyToEventException" != '')

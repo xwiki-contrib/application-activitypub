@@ -80,6 +80,7 @@ ActivityPub.ActivityPubConfigurationClass_pageNotifications.hint=Whether page cr
 ActivityPub.ActivityPubConfigurationClass_pageNotificationPolicy.hint=Page creation and modifications notifications are send to the followers of the selected users.
 activitypub.dashboard.tab.sentMessagesList=Sent messages
 activitypub.dashboard.tab.receivedMessagesList=Received messages
+activitypub.dashboard.tab.discussionsList=Discussions
 activitypub.dashboard.noactor=You can only access this macro if an actor is defined.
 activitypub.dashboard.title=Dashboard of {0}
 activitypub.message.display.from=From:
