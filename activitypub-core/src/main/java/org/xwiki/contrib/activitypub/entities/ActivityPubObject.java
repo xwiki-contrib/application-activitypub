@@ -79,6 +79,8 @@ public class ActivityPubObject extends JSONLDObjects
 
     private ActivityPubObjectReference<OrderedCollection<Like>> likes;
 
+    private URI inReplyTo;
+
     /**
      * The type is not stored as a property but instead we rely on the class name to return it.
      *
@@ -407,6 +409,35 @@ public class ActivityPubObject extends JSONLDObjects
     }
 
     /**
+     * Defines the URI of the object to which an answer is given.
+     *
+     * @param inReplyTo the URI of the object to which an answer is given
+     * @param <T> the concrete type of the curr instance
+     * @return the current object
+     * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-inreplyto">Activity Stream inReplyTo
+     *     definition</a>
+     * @since 1.5
+     */
+    @Unstable
+    public <T extends ActivityPubObject> T setInReplyTo(URI inReplyTo)
+    {
+        this.inReplyTo = inReplyTo;
+        return (T) this;
+    }
+
+    /**
+     * @return the URI of the object to which an answer is given
+     * @see <a href="https://www.w3.org/TR/activitystreams-vocabulary/#dfn-inreplyto">Activity Stream inReplyTo
+     *     definition</a>
+     * @since 1.5
+     */
+    @Unstable
+    public URI getInReplyTo()
+    {
+        return this.inReplyTo;
+    }
+
+    /**
      * Computed targets is the real list of targeted AbstractActor references, computed when an activity is delivered.
      *
      * @return the set of deduplicated concrete actors targets.
@@ -505,8 +536,9 @@ public class ActivityPubObject extends JSONLDObjects
             .append(this.attributedTo, object.attributedTo)
             .append(this.url, object.url)
             .append(this.shares, object.shares)
-            .append(likes, object.likes)
-            .append(cc, object.cc)
+            .append(this.likes, object.likes)
+            .append(this.cc, object.cc)
+            .append(this.inReplyTo, object.inReplyTo)
             .append(this.xwikiReference, object.xwikiReference)
             .append(this.lastUpdated, object.lastUpdated)
             .append(this.tag, object.tag)
@@ -528,6 +560,7 @@ public class ActivityPubObject extends JSONLDObjects
             .append(this.url)
             .append(this.shares)
             .append(this.likes)
+            .append(this.inReplyTo)
             .append(this.cc)
             .append(this.xwikiReference)
             .append(this.lastUpdated)
@@ -545,6 +578,7 @@ public class ActivityPubObject extends JSONLDObjects
             .append("published", getPublished())
             .append("summary", getSummary())
             .append("to", getTo())
+            .append("inReplyTo", getInReplyTo())
             .append("attributedTo", getAttributedTo()).build();
     }
 }

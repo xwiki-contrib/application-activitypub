@@ -118,7 +118,7 @@ class DefaultActivityPubNotifierTest
         assertEquals(
             "Cannot find the right event to notify about "
                 + "[type = [], id = [<null>], name = [<null>], published = [<null>], summary = [<null>], "
-                + "to = [<null>], attributedTo = [<null>]]",
+                + "to = [<null>], inReplyTo = [<null>], attributedTo = [<null>]]",
             activityPubException.getMessage());
     }
 

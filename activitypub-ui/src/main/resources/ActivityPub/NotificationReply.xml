@@ -181,20 +181,17 @@
       replyModal.prependTo("body");
 
       var formGroup = replyModal.find('.form-group');
-      if (formGroup.children().length === 0) {
-        const displayMessageFieldDoc = new XWiki.Document(XWiki.Model.resolve('Discussions.Code.DisplayMessage', XWiki.EntityType.DOCUMENT));
-        $.get(displayMessageFieldDoc.getURL("get"), {
-          "showContentField": "show"
-        }, function(res) {
-          formGroup.append(res);
-          $(document).trigger('xwiki:dom:updated', {
-            'elements': formGroup.toArray()
-          });
-          replyModal.modal('show');
+      formGroup.empty();
+      const displayMessageFieldDoc = new XWiki.Document(XWiki.Model.resolve('Discussions.Code.DisplayMessage', XWiki.EntityType.DOCUMENT));
+      $.get(displayMessageFieldDoc.getURL("get"), {
+        "showContentField": "show"
+      }, function(res) {
+        formGroup.append(res);
+        $(document).trigger('xwiki:dom:updated', {
+          'elements': formGroup.toArray()
         });
-      } else {
         replyModal.modal('show');
-      }
+      });
     });
   };
 

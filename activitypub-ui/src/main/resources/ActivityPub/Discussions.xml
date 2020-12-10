@@ -41,7 +41,7 @@
 #set ($discussionDoc = $xwiki.getDocument('ActivityPub.Discussion'))
 #set ($url = "$discussionDoc.getURL('view')?reference=__REFERENCE__")
 
-{{listDiscussions listId="discussionsAPDashboard" type="activitypub" reference="$currentActor.id" linkTemplate="$url"}}
+{{listDiscussions listId="discussionsAPDashboard" type="activitypub-actor" reference="$currentActor.id" linkTemplate="$url"}}
 
 {{/velocity}}</content>
 </xwikidoc>

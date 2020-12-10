@@ -73,8 +73,7 @@ class ActivityPubDiscussionsScriptServiceTest
 
     @MockComponent
     private HTMLConverter htmlConverter;
-
-
+    
     @Test
     void replyToEvent() throws Exception
     {
@@ -92,7 +91,7 @@ class ActivityPubDiscussionsScriptServiceTest
         when(this.discussionContextService.getOrCreate("event", "event", "event", "discussionContext1Ref"))
             .thenReturn(Optional.of(dc1));
         when(this.discussionContextService
-            .getOrCreate("activitypub-activity", "activitypub-activity", "activitypub",
+            .getOrCreate("activitypub-activity", "activitypub-activity", "activitypub-activity",
                 "discussionContext2Ref"))
             .thenReturn(Optional.of(dc2));
 
