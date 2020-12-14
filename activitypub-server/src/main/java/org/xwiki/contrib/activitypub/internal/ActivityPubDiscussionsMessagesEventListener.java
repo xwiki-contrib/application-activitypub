@@ -21,6 +21,7 @@ package org.xwiki.contrib.activitypub.internal;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -38,6 +39,7 @@ import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Note;
@@ -70,6 +72,8 @@ public class ActivityPubDiscussionsMessagesEventListener implements EventListene
      * Type of the component.
      */
     public static final String TYPE = "ActivityPubDiscussionsMessagesEventListener";
+
+    private static final String ACTIVITYPUB_OBJECT = "activitypub-object";
 
     @Inject
     private DiscussionContextService discussionContextService;
@@ -118,22 +122,22 @@ public class ActivityPubDiscussionsMessagesEventListener implements EventListene
 
                 try {
                     AbstractActor actor = this.actorHandler.getActor(message.getActorReference());
-                    List<ProxyActor> to = getRelatedActors(discussionContexts);
+                    List<ProxyActor> to = getExternalRelatedActors(discussionContexts);
+                    to.remove(actor.getProxyActor());
 
-                    List<AbstractActivity> collect =
-                        getRelatedActivities(discussionContexts);
+                    List<ActivityPubObject> objects = getRelatedObjects(discussionContexts);
 
                     /*
                      If some activities are found, we send the note multiple times, to each activity, with the 
                      in-reply-to filled with the activity id.
                      Otherwise, we send the note only once
                     */
-                    if (collect.isEmpty()) {
+                    if (objects.isEmpty()) {
                         sendMessage(message, actionType, actor, to, null);
                     } else {
-                        for (AbstractActivity it : collect) {
-                            sendMessage(message, actionType, actor, to, it);
-                        }
+                        objects.stream()
+                            .max(Comparator.comparing(ActivityPubObject::getLastUpdated))
+                            .ifPresent(itx -> sendMessage(message, actionType, actor, to, itx));
                     }
                 } catch (ActivityPubException e) {
                     e.printStackTrace();
@@ -146,25 +150,36 @@ public class ActivityPubDiscussionsMessagesEventListener implements EventListene
     }
 
     private void sendMessage(Message message, ActionType actionType, AbstractActor actor, List<ProxyActor> to,
-        AbstractActivity it)
+        ActivityPubObject object)
     {
         try {
+            ActivityPubObject note = new Note()
+                .<Note>setContent(message.getContent())
+                .setPublished(message.getUpdateDate());
+
+            // TODO: decide what to do: in mastodon if a Note in linked to a Follow object for instance, it get dropped 
+            // when received, so the sender is sending a message but the recipient will never be able to read it.
+            // But without a reply-to field filled, the message is received without any context with is not really 
+            // great.
+            if (object != null && object.getType().equals(Note.class.getSimpleName())) {
+                note = note.setInReplyTo(object.getId());
+            }
             getActivityHandler(actionType)
                 .handleOutboxRequest(new ActivityRequest<>(actor, getActivity(actionType)
                     .<AbstractActivity>setTo(to)
                     .setActor(actor)
                     .<AbstractActivity>setPublished(message.getUpdateDate())
-                    .setObject(new Note()
-                        .<Note>setContent(message.getContent())
-                        .setPublished(message.getUpdateDate())
-                        .setInReplyTo(it.getObject().getLink())
-                        .setTo(to))));
+                    .setObject(note.setTo(to))));
+            // register the created note in the discussion 
+            String name = note.getId().toASCIIString();
+            this.discussionContextService.getOrCreate(name, name, ACTIVITYPUB_OBJECT, name)
+                .ifPresent(it -> this.discussionContextService.link(it, message.getDiscussion()));
         } catch (IOException | ActivityPubException e) {
             this.logger.warn("Failed to send the message [{}]. Cause: [{}].", message, getRootCauseMessage(e));
         }
     }
 
-    private List<ProxyActor> getRelatedActors(List<DiscussionContext> discussionContexts)
+    private List<ProxyActor> getExternalRelatedActors(List<DiscussionContext> discussionContexts)
     {
         return discussionContexts.stream()
             .filter(it -> it.getEntityReference().getType().equals("activitypub-actor"))
@@ -172,19 +187,22 @@ public class ActivityPubDiscussionsMessagesEventListener implements EventListene
                 String reference = it.getEntityReference().getReference();
                 try {
                     return Stream.of(
-                        this.actorHandler.getActor(reference).getProxyActor());
+                        this.actorHandler.getActor(reference));
                 } catch (ActivityPubException | ClassCastException e) {
                     this.logger.warn("Failed to resolve actor with reference [{}]. Cause: [{}].", reference,
                         getRootCauseMessage(e));
                     return Stream.empty();
                 }
-            }).collect(Collectors.toList());
+            })
+            .filter(it -> !this.actorHandler.isLocalActor(it))
+            .map(AbstractActor::getProxyActor)
+            .collect(Collectors.toList());
     }
 
-    private List<AbstractActivity> getRelatedActivities(List<DiscussionContext> discussionContexts)
+    private List<ActivityPubObject> getRelatedObjects(List<DiscussionContext> discussionContexts)
     {
         return discussionContexts.stream()
-            .filter(it -> it.getEntityReference().getType().equals("activitypub-activity")).flatMap(it -> {
+            .filter(it -> it.getEntityReference().getType().equals(ACTIVITYPUB_OBJECT)).flatMap(it -> {
                 try {
                     return Stream.of(this.activityPubObjectReferenceResolver.resolveReference(
                         new ActivityPubObjectReference<>()
@@ -194,8 +212,6 @@ public class ActivityPubDiscussionsMessagesEventListener implements EventListene
                     return Stream.empty();
                 }
             })
-            .filter(it -> it instanceof AbstractActivity)
-            .map(it -> (AbstractActivity) it)
             .collect(Collectors.toList());
     }
 

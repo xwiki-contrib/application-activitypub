@@ -20,10 +20,8 @@
 package org.xwiki.contrib.activitypub.script;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -41,9 +39,10 @@ import org.xwiki.contrib.discussions.DiscussionService;
 import org.xwiki.contrib.discussions.MessageService;
 import org.xwiki.contrib.discussions.domain.Discussion;
 import org.xwiki.contrib.discussions.domain.DiscussionContext;
-import org.xwiki.contrib.discussions.domain.DiscussionContextEntityReference;
 import org.xwiki.rendering.syntax.Syntax;
 import org.xwiki.wysiwyg.converter.HTMLConverter;
+
+import static java.util.Collections.singletonList;
 
 /**
  * Script services for the discussions operations.
@@ -57,13 +56,13 @@ public class ActivityPubDiscussionsScriptService
 {
     private static final String EVENT_STR = "event";
 
-    private static final String ACTIVITYPUB_ENTITY_TYPE = "activitypub-activity";
-
-    @Inject
-    private DiscussionService discussionService;
+    private static final String ACTIVITYPUB_OBJECT = "activitypub-object";
 
     @Inject
     private DiscussionContextService discussionContextService;
+
+    @Inject
+    private DiscussionService discussionService;
 
     @Inject
     private MessageService messageService;
@@ -89,58 +88,63 @@ public class ActivityPubDiscussionsScriptService
     {
         // First search or creates a discussion according to the discussion contexts for the event and the activity of 
         // the message.
-        DiscussionContext eventDiscussionContext = new DiscussionContext(null, EVENT_STR,
-            EVENT_STR, new DiscussionContextEntityReference(EVENT_STR, eventId));
-        DiscussionContext activityDiscussionContext =
-            new DiscussionContext(null, ACTIVITYPUB_ENTITY_TYPE, ACTIVITYPUB_ENTITY_TYPE,
-                new DiscussionContextEntityReference(ACTIVITYPUB_ENTITY_TYPE, activityId));
-        List<DiscussionContext> discussionContexts =
-            initializeDiscussionContexts(eventDiscussionContext, activityDiscussionContext);
-        String discussionTitle = String.format("Discussion for %s", activityId);
-        List<String> discussionContextReferences =
-            discussionContexts.stream().map(DiscussionContext::getReference).collect(Collectors.toList());
-        Optional<Discussion> discussionOpt = this.discussionService.getOrCreate(discussionTitle, discussionTitle,
-            discussionContextReferences);
-        discussionOpt.ifPresent(discussion ->
-            discussionContexts
-                .forEach(discussionContext -> this.discussionContextService.link(discussionContext, discussion)));
-        discussionOpt.ifPresent(discussion -> {
 
-            // Link the actors as discussion context of discussion.
-            try {
-                ActivityPubObject object =
-                    this.resolver.resolveReference(new ActivityPubObjectReference<>().setLink(URI.create(activityId)));
-                for (ProxyActor activityPubObjectReference : object.getTo()) {
-                    linkToActor(discussion, activityPubObjectReference);
-                }
+        try {
+            AbstractActivity activityPubObject =
+                (AbstractActivity) this.resolver
+                    .resolveReference(new ActivityPubObjectReference<>().setLink(URI.create(activityId)));
 
-                if (object instanceof AbstractActivity) {
-                    AbstractActivity abstractActivity = (AbstractActivity) object;
-                    List<ActivityPubObjectReference<AbstractActor>> attributedTo =
-                        this.resolver.resolveReference(abstractActivity.getObject()).getAttributedTo();
+            ActivityPubObject object = this.resolver.resolveReference(activityPubObject.getObject());
+
+            // Replace with an optional since only one parameter.
+            Optional<DiscussionContext> activityDiscussionContextIn =
+                this.discussionContextService.getOrCreate(ACTIVITYPUB_OBJECT,
+                    ACTIVITYPUB_OBJECT, ACTIVITYPUB_OBJECT,
+                    object.getId().toASCIIString());
+            Optional<DiscussionContext> eventDiscussionContext =
+                this.discussionContextService.getOrCreate(EVENT_STR, EVENT_STR, EVENT_STR, eventId);
+
+            String discussionTitle = String.format("Discussion for %s", activityId);
+            Optional<Discussion> discussionOpt = activityDiscussionContextIn.map(DiscussionContext::getReference)
+                .flatMap(z -> this.discussionService.getOrCreate(discussionTitle, discussionTitle, singletonList(z)));
+            discussionOpt.ifPresent(discussion -> {
+                activityDiscussionContextIn
+                    .ifPresent(discussionContext -> this.discussionContextService.link(discussionContext, discussion));
+                eventDiscussionContext
+                    .ifPresent(discussionContext -> this.discussionContextService.link(discussionContext, discussion));
+            });
+            discussionOpt.ifPresent(discussion -> {
+
+                // Link the actors as discussion context of discussion.
+                try {
+
+                    for (ProxyActor activityPubObjectReference : object.getTo()) {
+                        linkToActor(discussion, activityPubObjectReference);
+                    }
+
+                    List<ActivityPubObjectReference<AbstractActor>> attributedTo = object.getAttributedTo();
                     if (attributedTo != null) {
                         for (ActivityPubObjectReference<AbstractActor> a : attributedTo) {
                             linkToActor(discussion, this.resolver.resolveReference(a).getProxyActor());
                         }
                     }
+                } catch (ActivityPubException e) {
+                    e.printStackTrace();
+                    // TODO
                 }
-                if (object.getAttributedTo() != null) {
-                    for (ActivityPubObjectReference<AbstractActor> a : object.getAttributedTo()) {
-                        linkToActor(discussion, a.getObject().getProxyActor());
-                    }
-                }
-            } catch (ActivityPubException e) {
-                e.printStackTrace();
-            }
-        });
+            });
 
-        // Finally, creates the message.
-        return discussionOpt
-            // TODO: take into account the syntax and check if the conversion is required
-            .map(it -> this.messageService
-                .create(this.htmlConverter.fromHTML(content, Syntax.XWIKI_2_1.toIdString()), it.getReference())
-                .isPresent())
-            .orElse(false);
+            // Finally, creates the message.
+            return discussionOpt
+                // TODO: take into account the syntax and check if the conversion is required
+                .map(it -> this.messageService
+                    .create(this.htmlConverter.fromHTML(content, Syntax.XWIKI_2_1.toIdString()), it.getReference())
+                    .isPresent())
+                .orElse(false);
+        } catch (ActivityPubException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     private void linkToActor(Discussion discussion, ProxyActor activityPubObjectReference) throws ActivityPubException
@@ -151,19 +155,5 @@ public class ActivityPubDiscussionsScriptService
                 object1.getId().toASCIIString())
             .ifPresent(
                 discussionContext -> this.discussionContextService.link(discussionContext, discussion));
-    }
-
-    private List<DiscussionContext> initializeDiscussionContexts(DiscussionContext... discussionContextsIns)
-    {
-        List<DiscussionContext> discussionContexts = new ArrayList<>();
-        for (DiscussionContext discussionContextsIn : discussionContextsIns) {
-            String name = discussionContextsIn.getName();
-            String description = discussionContextsIn.getDescription();
-            String type = discussionContextsIn.getEntityReference().getType();
-            String reference = discussionContextsIn.getEntityReference().getReference();
-            this.discussionContextService.getOrCreate(name, description, type, reference)
-                .ifPresent(discussionContexts::add);
-        }
-        return discussionContexts;
     }
 }

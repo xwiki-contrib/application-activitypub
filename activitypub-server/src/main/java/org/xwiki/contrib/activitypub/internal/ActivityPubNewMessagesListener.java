@@ -26,6 +26,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.events.MessageEvent;
 import org.xwiki.observation.EventListener;
 import org.xwiki.observation.event.Event;
@@ -70,7 +71,12 @@ public class ActivityPubNewMessagesListener implements EventListener
     {
         if (event instanceof MessageEvent) {
             MessageEvent messageEvent = (MessageEvent) event;
-            this.activityPubDiscussionsService.handleActivity(messageEvent.getActivity());
+            try {
+                this.activityPubDiscussionsService.handleActivity(messageEvent.getActivity());
+            } catch (ActivityPubException e) {
+                e.printStackTrace();
+                // TODO log
+            }
         }
     }
 }

@@ -27,6 +27,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
@@ -36,12 +37,13 @@ import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
-import org.xwiki.contrib.activitypub.entities.ProxyActor;
+import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.discussions.DiscussionContextService;
 import org.xwiki.contrib.discussions.DiscussionService;
 import org.xwiki.contrib.discussions.MessageService;
 import org.xwiki.contrib.discussions.domain.Discussion;
 import org.xwiki.contrib.discussions.domain.DiscussionContext;
+import org.xwiki.contrib.discussions.domain.DiscussionContextEntityReference;
 import org.xwiki.contrib.discussions.domain.Message;
 
 /**
@@ -54,19 +56,20 @@ import org.xwiki.contrib.discussions.domain.Message;
 @Singleton
 public class ActivityPubDiscussionsService
 {
-    private static final String ACTIVITYPUB_ACTIVITY = "activitypub-activity";
-
     private static final String ACTIVITYPUB_ACTOR = "activitypub-actor";
 
     private static final String ACTIVITYPUB_OBJECT = "activitypub-object";
 
     @Inject
+    @Named("unsafe")
     private MessageService messageService;
 
     @Inject
+    @Named("unsafe")
     private DiscussionService discussionService;
 
     @Inject
+    @Named("unsafe")
     private DiscussionContextService discussionContextService;
 
     @Inject
@@ -74,69 +77,6 @@ public class ActivityPubDiscussionsService
 
     @Inject
     private ActivityPubObjectReferenceResolver activityPubObjectReferenceResolver;
-
-    /**
-     * Find or create a discussion for the activity, linked at least to the provided list of discussion contexts.
-     *
-     * @param activityId the activity id
-     * @param discussionContexts the list of discussion contexts
-     * @return the discussion
-     */
-    public Optional<Discussion> getOrCreateDiscussion(String activityId, List<DiscussionContext> discussionContexts)
-    {
-        List<String> discussionContextReferences =
-            discussionContexts.stream().map(DiscussionContext::getReference).collect(Collectors.toList());
-        String discussionTitle = String.format("Discussion for %s", activityId);
-        Optional<Discussion> discussionOpt = this.discussionService.getOrCreate(discussionTitle, discussionTitle,
-            discussionContextReferences);
-        // probably useless
-//        discussionOpt.ifPresent(discussion ->
-//            discussionContexts
-//                .forEach(discussionContext -> this.discussionContextService.link(discussionContext, discussion)));
-        return discussionOpt;
-    }
-
-    /**
-     * Links an activity to a discussion. The actor of the activity, as well as the objects related to the activity are
-     * linked too.
-     *
-     * @param activityId the id of the activity to link to the discussion
-     * @param discussion the discussion to link to the activity
-     */
-    public void linkActivityToDiscussion(String activityId, Discussion discussion)
-    {
-        try {
-            ActivityPubObject object =
-                this.resolver.resolveReference(new ActivityPubObjectReference<>().setLink(
-                    URI.create(activityId)));
-            for (ProxyActor activityPubObjectReference : object.getTo()) {
-                linkToActor(discussion, activityPubObjectReference);
-            }
-
-            if (object instanceof AbstractActivity) {
-                AbstractActivity abstractActivity = (AbstractActivity) object;
-                List<ActivityPubObjectReference<AbstractActor>> attributedTo =
-                    this.resolver.resolveReference(abstractActivity.getObject()).getAttributedTo();
-                if (attributedTo != null) {
-                    for (ActivityPubObjectReference<AbstractActor> a : attributedTo) {
-                        linkToActor(discussion, this.resolver.resolveReference(a).getProxyActor());
-                    }
-                }
-                if (abstractActivity.getObject() != null) {
-                    linkToObject(discussion, this.resolver.resolveReference(abstractActivity.getObject()));
-                }
-            } else {
-                linkToObject(discussion, object);
-            }
-            if (object.getAttributedTo() != null) {
-                for (ActivityPubObjectReference<AbstractActor> a : object.getAttributedTo()) {
-                    linkToActor(discussion, a.getObject().getProxyActor());
-                }
-            }
-        } catch (ActivityPubException e) {
-            e.printStackTrace();
-        }
-    }
 
     /**
      * Links a discussion and a discussion context.
@@ -150,89 +90,78 @@ public class ActivityPubDiscussionsService
     }
 
     /**
-     * Load the list of activitypub objects linked together by in-reply-to values. The first element of the reply chain
-     * is the object of the activity passed in parameter.
-     *
-     * @param activityId the id of the activity to analyze
-     * @return the list objects of the discussion
-     */
-    public List<ActivityPubObject> loadReplyChain(String activityId)
-    {
-        try {
-            ActivityPubObject object =
-                this.resolver.resolveReference(new ActivityPubObjectReference<>().setLink(URI.create(activityId)));
-            return loadReplyChain(object.getReference());
-        } catch (ActivityPubException e) {
-            e.printStackTrace();
-            return Arrays.asList();
-        }
-    }
-
-    /**
      * Checks if the activity is not already part of a discussion, and if not, created the discussions entities required
      * to add the message of the activity to a discussion.
      *
      * @param activity the activity to handle
      */
-    public void handleActivity(AbstractActivity activity)
+    public void handleActivity(AbstractActivity activity) throws ActivityPubException
     {
         boolean notAlreadyHandled = this.discussionService
             .findByDiscussionContext(ACTIVITYPUB_OBJECT, activity.getObject().getLink().toASCIIString());
-        if (!notAlreadyHandled) {
-            try {
-
-                ActivityPubObjectReference<ActivityPubObject> reference = activity.getReference();
-                ActivityPubObject object = this.activityPubObjectReferenceResolver.resolveReference(reference);
-                List<ActivityPubObject> replyChain = loadReplyChain(reference);
-                // The list of discussions that involves at least one of the message of the reply chain.
-                getOrCreateDiscussions(activity, replyChain).forEach(discussion -> {
-                    // TODO : link the actors and objects to the discussion.
-                    // TODO : make sure to avoid unwanted events propagations, or to add a stopping condition on AP
-                    // new events listener.
-                    // TODO: check that the context is initialized with an actor which has the rights
-                    // or simply allow to skip them.
-                    // or make sure that the current actors is guest, AP actors should not be allowed to participate
-                    // to private conversations.
-//                    this.messageService
-//                        .create(object.getContent(), discussion.getReference(), "activitypub", target.get(0));
-                    String authorId = activity.getActor().getLink().toASCIIString();
-                    createMessage(discussion, object.getContent(), "activitypub", authorId);
-                });
-            } catch (ActivityPubException e) {
-                e.printStackTrace();
-            }
+        if (!notAlreadyHandled && this.resolver.resolveReference(activity.getObject()).getType()
+            .equals(Note.class.getSimpleName()))
+        {
+            processActivity(activity);
         }
     }
 
-    private void linkToObject(Discussion discussion, ActivityPubObject activityPubObject)
+    private void processActivity(AbstractActivity activity)
     {
-        this.discussionContextService
-            .getOrCreate(activityPubObject.getName(), activityPubObject.getName(), ACTIVITYPUB_OBJECT,
-                activityPubObject.getId().toASCIIString())
-            .ifPresent(dc -> this.discussionContextService.link(dc, discussion));
-    }
+        try {
+            ActivityPubObjectReference<ActivityPubObject> reference = activity.getReference();
+            ActivityPubObject activityObject = this.activityPubObjectReferenceResolver.resolveReference(reference);
+            List<ActivityPubObject> replyChain = loadReplyChain(reference);
+            // The list of discussions that involves at least one of the message of the reply chain.
+            getOrCreateDiscussions(activity, replyChain).forEach(discussion -> {
+                replyChain.forEach(apo -> {
+                    String apoRef = apo.getId().toASCIIString();
+                    DiscussionContext discussionContext = new DiscussionContext(null, apoRef,
+                        apoRef, new DiscussionContextEntityReference(ACTIVITYPUB_OBJECT,
+                        apoRef));
+                    getOrCreateDiscussionContext(discussionContext)
+                        .ifPresent(ctx -> this.discussionContextService.link(ctx, discussion));
 
-    private void linkToActor(Discussion discussion, ProxyActor activityPubObjectReference) throws ActivityPubException
-    {
-        ActivityPubObject object = this.resolver.resolveReference(activityPubObjectReference);
-        this.discussionContextService
-            .getOrCreate(object.getName(), object.getName(), ACTIVITYPUB_ACTOR, object.getId().toASCIIString())
-            .ifPresent(discussionContext -> this.discussionContextService.link(discussionContext, discussion));
-    }
+                    apo.getTo().forEach(it -> {
+                        try {
+                            ActivityPubObject object1 = this.resolver.resolveReference(it);
+                            String actorId = object1.getId().toASCIIString();
+                            getOrCreateDiscussionContext(new DiscussionContext(null,
+                                actorId, actorId, new DiscussionContextEntityReference(ACTIVITYPUB_ACTOR, actorId)))
+                                .ifPresent(ctx -> this.discussionContextService.link(ctx, discussion));
+                        } catch (ActivityPubException e) {
+                            e.printStackTrace();
+                        }
+                    });
 
-    /**
-     * For each discussion context passed in parameter, find if it already exists and creates it otherwise?
-     *
-     * @param discussionContexts the discussion contexts to get of create
-     * @return the initialized list of discussion contexts
-     */
-    public List<DiscussionContext> initializeDiscussionContexts(DiscussionContext... discussionContexts)
-    {
-        return Arrays.stream(discussionContexts)
-            .map(this::getOrCreateDiscussionContext)
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .collect(Collectors.toList());
+                    List<ActivityPubObjectReference<AbstractActor>> attributedTo = apo.getAttributedTo();
+                    if (attributedTo != null) {
+                        attributedTo.forEach(it -> {
+                            try {
+                                ActivityPubObject object1 = this.resolver.resolveReference(it);
+                                String actorId = object1.getId().toASCIIString();
+                                getOrCreateDiscussionContext(new DiscussionContext(null,
+                                    actorId, actorId,
+                                    new DiscussionContextEntityReference(ACTIVITYPUB_ACTOR, actorId)))
+                                    .ifPresent(ctx -> this.discussionContextService.link(ctx, discussion));
+                            } catch (ActivityPubException e) {
+                                e.printStackTrace();
+                            }
+                        });
+                    }
+                });
+                String authorId = activity.getActor().getLink().toASCIIString();
+                try {
+                    ActivityPubObject object =
+                        this.resolver.resolveReference(((AbstractActivity) activityObject).getObject());
+                    createMessage(discussion, object.getContent(), "activitypub", authorId);
+                } catch (ActivityPubException e) {
+                    e.printStackTrace();
+                }
+            });
+        } catch (ActivityPubException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -248,18 +177,6 @@ public class ActivityPubDiscussionsService
         String type = discussionContext.getEntityReference().getType();
         String reference = discussionContext.getEntityReference().getReference();
         return this.discussionContextService.getOrCreate(name, description, type, reference);
-    }
-
-    /**
-     * Creates a message in a discussion, with the current user as the author.
-     *
-     * @param discussion the discussion of the message
-     * @param content the content of the message
-     * @return the created message
-     */
-    public Optional<Message> createMessage(Discussion discussion, String content)
-    {
-        return this.messageService.create(content, discussion.getReference());
     }
 
     /**
@@ -288,7 +205,7 @@ public class ActivityPubDiscussionsService
     public List<Discussion> getOrCreateDiscussions(AbstractActivity activity, List<ActivityPubObject> replyChain)
     {
         List<Discussion> discussions = replyChain.stream().flatMap(it -> this.discussionService
-            .findByEntityReference(ACTIVITYPUB_ACTOR, replyChain.get(0).getId().toASCIIString(), null,
+            .findByEntityReference(ACTIVITYPUB_OBJECT, it.getId().toASCIIString(), null,
                 null).stream())
             .distinct().collect(Collectors.toList());
         if (discussions.isEmpty()) {
@@ -310,15 +227,20 @@ public class ActivityPubDiscussionsService
     public List<ActivityPubObject> loadReplyChain(ActivityPubObjectReference<ActivityPubObject> reference)
         throws ActivityPubException
     {
-        ActivityPubObject object = this.activityPubObjectReferenceResolver.resolveReference(reference);
+        ActivityPubObject activityObject = this.activityPubObjectReferenceResolver.resolveReference(reference);
         ArrayList<ActivityPubObject> replyChain = new ArrayList<>();
-        replyChain.add(object);
+        if (activityObject instanceof AbstractActivity) {
+            AbstractActivity abstractActivity = (AbstractActivity) activityObject;
 
-        while (object.getInReplyTo() != null) {
-            URI inReplyTo = object.getInReplyTo();
-            object = this.activityPubObjectReferenceResolver
-                .resolveReference(new ActivityPubObjectReference<>().setLink(inReplyTo));
+            ActivityPubObject object = this.resolver.resolveReference(abstractActivity.getObject());
             replyChain.add(object);
+
+            while (object.getInReplyTo() != null) {
+                URI inReplyTo = object.getInReplyTo();
+                object = this.activityPubObjectReferenceResolver
+                    .resolveReference(new ActivityPubObjectReference<>().setLink(inReplyTo));
+                replyChain.add(object);
+            }
         }
         return replyChain;
     }
