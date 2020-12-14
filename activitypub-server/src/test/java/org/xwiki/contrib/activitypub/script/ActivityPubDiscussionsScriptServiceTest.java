@@ -20,6 +20,7 @@
 package org.xwiki.contrib.activitypub.script;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
 
@@ -47,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -98,11 +100,11 @@ class ActivityPubDiscussionsScriptServiceTest
                 "http://servr/path"))
             .thenReturn(Optional.of(dc2));
 
-        Discussion d = new Discussion("d1", "discussionTitle", "discussionDescription", new Date());
+        Discussion d1 = new Discussion("d1", "discussionTitle", "discussionDescription", new Date());
         when(this.discussionService
             .getOrCreate("Discussion for discussionContext2Ref", "Discussion for discussionContext2Ref",
                 singletonList(dc2.getReference())))
-            .thenReturn(Optional.of(d));
+            .thenReturn(Optional.of(d1));
 
         when(this.resolver
             .resolveReference(new ActivityPubObjectReference<>().setLink(URI.create("discussionContext2Ref"))))
@@ -112,14 +114,28 @@ class ActivityPubDiscussionsScriptServiceTest
         when(abstractActivityObject.getObject()).thenReturn(abstractActivityObjectReference);
         when(this.resolver.resolveReference(abstractActivityObjectReference)).thenReturn(activityPubObject);
         when(activityPubObject.getId()).thenReturn(URI.create("http://servr/path"));
+        ProxyActor toActor = new ProxyActor("toActor");
+        when(activityPubObject.getTo()).thenReturn(Arrays.asList(toActor));
+        ActivityPubObject toActorObject = new ActivityPubObject();
+        toActorObject.setName("TO ACTOR");
+        toActorObject.setId(URI.create("https://to/actor"));
+        when(this.resolver.resolveReference(toActor)).thenReturn(toActorObject);
+        DiscussionContext dc3 = new DiscussionContext("dc3", null, null, null);
+        when(this.discussionContextService
+            .getOrCreate("TO ACTOR", "TO ACTOR", "activitypub-actor",
+                "https://to/actor")).thenReturn(Optional.of(dc3));
 
-        when(this.messageService.create("messageContent", d.getReference())).thenReturn(
-            Optional.of(new Message("mr", "messageContent", "user", "actorRef", new Date(), new Date(), d)));
+        when(this.messageService.create("messageContent", d1.getReference())).thenReturn(
+            Optional.of(new Message("mr", "messageContent", "user", "actorRef", new Date(), new Date(), d1)));
 
         when(this.htmlConverter.fromHTML(eq("messageContent"), any())).thenReturn("messageContent");
 
         boolean b = this.activityPubDiscussionsScriptService
             .replyToEvent("discussionContext1Ref", "discussionContext2Ref", "messageContent");
         assertTrue(b);
+        verify(this.messageService).create("messageContent", "d1");
+        verify(this.discussionContextService).link(dc1, d1);
+        verify(this.discussionContextService).link(dc2, d1);
+        verify(this.discussionContextService).link(dc3, d1);
     }
 }

@@ -112,9 +112,6 @@ public class ActivityPubDiscussionsScriptService
                     .ifPresent(discussionContext -> this.discussionContextService.link(discussionContext, discussion));
                 eventDiscussionContext
                     .ifPresent(discussionContext -> this.discussionContextService.link(discussionContext, discussion));
-            });
-            discussionOpt.ifPresent(discussion -> {
-
                 // Link the actors as discussion context of discussion.
                 try {
 

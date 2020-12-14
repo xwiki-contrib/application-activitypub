@@ -73,9 +73,6 @@ public class ActivityPubDiscussionsService
     private DiscussionContextService discussionContextService;
 
     @Inject
-    private ActivityPubObjectReferenceResolver resolver;
-
-    @Inject
     private ActivityPubObjectReferenceResolver activityPubObjectReferenceResolver;
 
     /**
@@ -99,9 +96,8 @@ public class ActivityPubDiscussionsService
     {
         boolean notAlreadyHandled = this.discussionService
             .findByDiscussionContext(ACTIVITYPUB_OBJECT, activity.getObject().getLink().toASCIIString());
-        if (!notAlreadyHandled && this.resolver.resolveReference(activity.getObject()).getType()
-            .equals(Note.class.getSimpleName()))
-        {
+        ActivityPubObject object = this.activityPubObjectReferenceResolver.resolveReference(activity.getObject());
+        if (!notAlreadyHandled && object.getType().equals(Note.class.getSimpleName())) {
             processActivity(activity);
         }
     }
@@ -114,51 +110,46 @@ public class ActivityPubDiscussionsService
             List<ActivityPubObject> replyChain = loadReplyChain(reference);
             // The list of discussions that involves at least one of the message of the reply chain.
             getOrCreateDiscussions(activity, replyChain).forEach(discussion -> {
-                replyChain.forEach(apo -> {
-                    String apoRef = apo.getId().toASCIIString();
+                replyChain.forEach(replyChainObject -> {
+                    String apoRef = replyChainObject.getId().toASCIIString();
                     DiscussionContext discussionContext = new DiscussionContext(null, apoRef,
                         apoRef, new DiscussionContextEntityReference(ACTIVITYPUB_OBJECT,
                         apoRef));
                     getOrCreateDiscussionContext(discussionContext)
                         .ifPresent(ctx -> this.discussionContextService.link(ctx, discussion));
 
-                    apo.getTo().forEach(it -> {
-                        try {
-                            ActivityPubObject object1 = this.resolver.resolveReference(it);
-                            String actorId = object1.getId().toASCIIString();
-                            getOrCreateDiscussionContext(new DiscussionContext(null,
-                                actorId, actorId, new DiscussionContextEntityReference(ACTIVITYPUB_ACTOR, actorId)))
-                                .ifPresent(ctx -> this.discussionContextService.link(ctx, discussion));
-                        } catch (ActivityPubException e) {
-                            e.printStackTrace();
-                        }
-                    });
+                    if (replyChainObject.getTo() != null) {
+                        replyChainObject.getTo().forEach(it -> handleTo(discussion, it));
+                    }
 
-                    List<ActivityPubObjectReference<AbstractActor>> attributedTo = apo.getAttributedTo();
+                    List<ActivityPubObjectReference<AbstractActor>> attributedTo = replyChainObject.getAttributedTo();
                     if (attributedTo != null) {
-                        attributedTo.forEach(it -> {
-                            try {
-                                ActivityPubObject object1 = this.resolver.resolveReference(it);
-                                String actorId = object1.getId().toASCIIString();
-                                getOrCreateDiscussionContext(new DiscussionContext(null,
-                                    actorId, actorId,
-                                    new DiscussionContextEntityReference(ACTIVITYPUB_ACTOR, actorId)))
-                                    .ifPresent(ctx -> this.discussionContextService.link(ctx, discussion));
-                            } catch (ActivityPubException e) {
-                                e.printStackTrace();
-                            }
-                        });
+                        attributedTo.forEach(it -> handleTo(discussion, it));
                     }
                 });
                 String authorId = activity.getActor().getLink().toASCIIString();
                 try {
                     ActivityPubObject object =
-                        this.resolver.resolveReference(((AbstractActivity) activityObject).getObject());
+                        this.activityPubObjectReferenceResolver
+                            .resolveReference(((AbstractActivity) activityObject).getObject());
                     createMessage(discussion, object.getContent(), "activitypub", authorId);
                 } catch (ActivityPubException e) {
                     e.printStackTrace();
                 }
             });
+        } catch (ActivityPubException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private <T extends ActivityPubObject> void handleTo(Discussion discussion, ActivityPubObjectReference<T> it)
+    {
+        try {
+            T activityPubObject = this.activityPubObjectReferenceResolver.resolveReference(it);
+            String actorId = activityPubObject.getId().toASCIIString();
+            getOrCreateDiscussionContext(new DiscussionContext(null,
+                actorId, actorId, new DiscussionContextEntityReference(ACTIVITYPUB_ACTOR, actorId)))
+                .ifPresent(ctx -> this.discussionContextService.link(ctx, discussion));
         } catch (ActivityPubException e) {
             e.printStackTrace();
         }
@@ -232,7 +223,8 @@ public class ActivityPubDiscussionsService
         if (activityObject instanceof AbstractActivity) {
             AbstractActivity abstractActivity = (AbstractActivity) activityObject;
 
-            ActivityPubObject object = this.resolver.resolveReference(abstractActivity.getObject());
+            ActivityPubObject object =
+                this.activityPubObjectReferenceResolver.resolveReference(abstractActivity.getObject());
             replyChain.add(object);
 
             while (object.getInReplyTo() != null) {

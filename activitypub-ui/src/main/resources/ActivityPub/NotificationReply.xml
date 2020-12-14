@@ -139,6 +139,22 @@
     </property>
     <property>
       <code>require(['jquery', 'xwiki-meta'], function($, xm) {
+  function loadRequiredSkinExtensions(requiredSkinExtensions) {
+    var existingSkinExtensions;
+    var getExistingSkinExtensions = function () {
+      return $('link, script').map(function () {
+        return $(this).attr('href') || $(this).attr('src');
+      }).get();
+    };
+    $('&lt;div/&gt;').html(requiredSkinExtensions).find('link, script').filter(function () {
+      if (!existingSkinExtensions) {
+        existingSkinExtensions = getExistingSkinExtensions();
+      }
+      var url = $(this).attr('href') || $(this).attr('src');
+      return existingSkinExtensions.indexOf(url) &lt; 0;
+    }).appendTo('head');
+  }
+
   'use strict';
   var init = function() {
 
@@ -183,14 +199,20 @@
       var formGroup = replyModal.find('.form-group');
       formGroup.empty();
       const displayMessageFieldDoc = new XWiki.Document(XWiki.Model.resolve('Discussions.Code.DisplayMessage', XWiki.EntityType.DOCUMENT));
-      $.get(displayMessageFieldDoc.getURL("get"), {
-        "showContentField": "show"
-      }, function(res) {
-        formGroup.append(res);
-        $(document).trigger('xwiki:dom:updated', {
-          'elements': formGroup.toArray()
-        });
-        replyModal.modal('show');
+      $.ajax({
+        type: 'GET',
+        url:  displayMessageFieldDoc.getURL("get"),
+        data: {
+          "showContentField": "show"
+        }, 
+        success: function(res, textStatus, request) {
+          formGroup.append(res);
+          $(document).trigger('xwiki:dom:updated', {
+            'elements': formGroup.toArray()
+          });
+          loadRequiredSkinExtensions(request.getResponseHeader('X-XWIKI-HTML-HEAD'));
+          replyModal.modal('show');
+        }
       });
     });
   };

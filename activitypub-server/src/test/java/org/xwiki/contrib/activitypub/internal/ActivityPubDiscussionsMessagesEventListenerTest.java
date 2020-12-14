@@ -19,16 +19,26 @@
  */
 package org.xwiki.contrib.activitypub.internal;
 
+import java.net.URI;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
+import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.ActorHandler;
+import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Create;
+import org.xwiki.contrib.activitypub.entities.Note;
+import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.Update;
 import org.xwiki.contrib.discussions.DiscussionContextService;
 import org.xwiki.contrib.discussions.domain.Discussion;
+import org.xwiki.contrib.discussions.domain.DiscussionContext;
+import org.xwiki.contrib.discussions.domain.DiscussionContextEntityReference;
 import org.xwiki.contrib.discussions.domain.Message;
 import org.xwiki.contrib.discussions.events.MessageEvent;
 import org.xwiki.test.junit5.mockito.ComponentTest;
@@ -37,6 +47,10 @@ import org.xwiki.test.junit5.mockito.MockComponent;
 
 import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.xwiki.contrib.discussions.events.ActionType.*;
 
 /**
@@ -83,13 +97,60 @@ class ActivityPubDiscussionsMessagesEventListenerTest
         ), this.activityPubDiscussionsMessagesEventListener.getEvents());
     }
 
-//    @Test
-//    void onEvent()
-//    {
-//        Discussion discussion =
-//            new Discussion("discussionReference", "discussionTitle", "discussionDescription", new Date());
-//        Message message = new Message("reference", "content", "actorType", "actorReference", new Date(), new Date(),
-//            discussion);
-//        this.activityPubDiscussionsMessagesEventListener.onEvent(new MessageEvent(CREATE), "src", message);
-//    }
+    @Test
+    void onEvent() throws Exception
+    {
+        Discussion discussion =
+            new Discussion("discussionReference", "discussionTitle", "discussionDescription", new Date());
+        Message message = new Message("reference", "content", "actorType", "actorReference", new Date(), new Date(),
+            discussion);
+        URI link = URI.create("http://server/newnoteid");
+
+        DiscussionContext dc1 =
+            new DiscussionContext("dc1", "dc1", "dc1",
+                new DiscussionContextEntityReference("activitypub-actor", "https://server/actor"));
+        DiscussionContext dc2 =
+            new DiscussionContext("dc2", "dc2", "dc2",
+                new DiscussionContextEntityReference("activitypub-object", "https://server/object"));
+        DiscussionContext dc3 = new DiscussionContext("dc3", link.toASCIIString(), link.toASCIIString(),
+            new DiscussionContextEntityReference("activitypub-object", link.toASCIIString()));
+        Person emiter = new Person()
+            .setId(URI.create("https://server/emiter"));
+        Person actor = new Person()
+            .setId(URI.create("https://server/actor"));
+
+        when(this.discussionContextService.findByDiscussionReference("discussionReference"))
+            .thenReturn(asList(dc1, dc2));
+        when(this.actorHandler.getActor("actorReference")).thenReturn(emiter);
+        when(this.actorHandler.getActor("https://server/actor")).thenReturn(actor);
+        Note existingNote = new Note()
+            .setId(URI.create("https://server/object"));
+        when(this.activityPubObjectReferenceResolver
+            .resolveReference(new ActivityPubObjectReference<>().setLink(URI.create("https://server/object"))))
+            .thenReturn(existingNote);
+        when(this.discussionContextService
+            .getOrCreate(link.toASCIIString(), link.toASCIIString(), "activitypub-object", link.toASCIIString()))
+            .thenReturn(Optional.of(dc3));
+
+        doAnswer(invocation -> {
+            ActivityRequest argument = invocation.getArgument(0);
+            argument.getActivity().getObject().getObject().setId(link);
+            return null;
+        }).when(this.createActivityHandler).handleOutboxRequest(any());
+
+        this.activityPubDiscussionsMessagesEventListener.onEvent(new MessageEvent(CREATE), "src", message);
+
+        verify(this.createActivityHandler).handleOutboxRequest(new ActivityRequest<>(emiter, new Create()
+            .setActor(emiter)
+            .setPublished(message.getUpdateDate())
+            .<Create>setTo(Arrays.asList(actor.getProxyActor()))
+            .setObject(new Note()
+                .setId(link)
+                .setPublished(message.getUpdateDate())
+                .setTo(Arrays.asList(actor.getProxyActor()))
+                .setInReplyTo(existingNote.getId())
+            )
+        ));
+        verify(this.discussionContextService).link(dc3, discussion);
+    }
 }
