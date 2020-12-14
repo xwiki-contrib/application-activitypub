@@ -80,6 +80,7 @@ ActivityPub.ActivityPubConfigurationClass_pageNotifications.hint=Si las notifica
 ActivityPub.ActivityPubConfigurationClass_pageNotificationPolicy.hint=Se envía notificaciones de creación y modificación de página a los seguidores de los usuarios seleccionados.
 activitypub.dashboard.tab.sentMessagesList=Mensajes enviados
 activitypub.dashboard.tab.receivedMessagesList=Mensajes recibidos
+### Missing: activitypub.dashboard.tab.discussionsList=Discussions
 activitypub.dashboard.noactor=Solo puedes acceder a esta macro si un actor está definido.
 activitypub.dashboard.title=Cuadro de mando de {0}
 activitypub.message.display.from=De:
@@ -93,6 +94,7 @@ activitypub.like.livetable.type=Tipo
 activitypub.like.livetable.summary=Resumen
 activitypub.like.livetable.attributedTo=Atribuido a
 activitypub.like.livetable._actions=Acciones
-activitypub.dashboard.tab.likes=Nº de "me gusta"</content>
+activitypub.dashboard.tab.likes=Nº de "me gusta"
+</content>
   
 </xwikidoc>
