@@ -40,8 +40,8 @@
 activitypub.follow.input.hint=Introduce el identificador de un usuario para comenzar a seguirlo/a
 activitypub.follow.input.placeholder=@usuario@dominio
 activitypub.follow.button=Seguir
-activitypub.follow.followRequested=Se ha enviado la solicitud de seguir.
-activitypub.follow.followNotRequested=Ha fallado la solicitud de seguir.
+activitypub.follow.followRequested=Se ha enviado la solicitud de seguimiento.
+activitypub.follow.followNotRequested=Ha fallado la solicitud de seguimiento.
 activitypub.follow.followYourself=No puedes seguirte a ti mismo.
 activitypub.follow.alreadyFollowed=Ya sigues a este usuario.
 activitypub.follow.target.placeholder=Introduce aquí los identificadores de los usuarios
