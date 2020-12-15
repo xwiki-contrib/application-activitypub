@@ -91,6 +91,9 @@ public class ActivityPubDiscussionsMessagesEventListener implements EventListene
     private ActorHandler actorHandler;
 
     @Inject
+    private ActivityPubXDOMService activityPubXDOMService;
+
+    @Inject
     private Logger logger;
 
     @Override
@@ -140,7 +143,9 @@ public class ActivityPubDiscussionsMessagesEventListener implements EventListene
                             .ifPresent(itx -> sendMessage(message, actionType, actor, to, itx));
                     }
                 } catch (ActivityPubException e) {
-                    e.printStackTrace();
+                    this.logger
+                        .warn("Failed to share the message [{}] from event [{}] with the fediverse. Cause: [{}].",
+                            message, event, getRootCauseMessage(e));
                 }
             } else {
                 // TODO: handle delete messages
@@ -152,31 +157,37 @@ public class ActivityPubDiscussionsMessagesEventListener implements EventListene
     private void sendMessage(Message message, ActionType actionType, AbstractActor actor, List<ProxyActor> to,
         ActivityPubObject object)
     {
-        try {
-            ActivityPubObject note = new Note()
-                .<Note>setContent(message.getContent())
-                .setPublished(message.getUpdateDate());
 
-            // TODO: decide what to do: in mastodon if a Note in linked to a Follow object for instance, it get dropped 
-            // when received, so the sender is sending a message but the recipient will never be able to read it.
-            // But without a reply-to field filled, the message is received without any context with is not really 
-            // great.
-            if (object != null && object.getType().equals(Note.class.getSimpleName())) {
-                note = note.setInReplyTo(object.getId());
-            }
-            getActivityHandler(actionType)
-                .handleOutboxRequest(new ActivityRequest<>(actor, getActivity(actionType)
-                    .<AbstractActivity>setTo(to)
-                    .setActor(actor)
-                    .<AbstractActivity>setPublished(message.getUpdateDate())
-                    .setObject(note.setTo(to))));
-            // register the created note in the discussion 
-            String name = note.getId().toASCIIString();
-            this.discussionContextService.getOrCreate(name, name, ACTIVITYPUB_OBJECT, name)
-                .ifPresent(it -> this.discussionContextService.link(it, message.getDiscussion()));
-        } catch (IOException | ActivityPubException e) {
-            this.logger.warn("Failed to send the message [{}]. Cause: [{}].", message, getRootCauseMessage(e));
-        }
+        this.activityPubXDOMService.convertToHTML(message.getContent(), message.getSyntax()).
+            ifPresent(messageContent -> {
+                ActivityPubObject note = new Note()
+                    .<Note>setContent(messageContent)
+                    .setPublished(message.getUpdateDate());
+
+                // TODO: decide what to do: in mastodon if a Note in linked to a Follow object for instance, it get
+                //  dropped when received, so the sender is sending a message but the recipient will never be able to
+                // read it.
+                // But without a reply-to field filled, the message is received without any context with is not really 
+                // great.
+                if (object != null && object.getType().equals(Note.class.getSimpleName())) {
+                    note = note.setInReplyTo(object.getId());
+                }
+                try {
+                    getActivityHandler(actionType)
+                        .handleOutboxRequest(new ActivityRequest<>(actor, getActivity(actionType)
+                            .<AbstractActivity>setTo(to)
+                            .setActor(actor)
+                            .<AbstractActivity>setPublished(message.getUpdateDate())
+                            .setObject(note.setTo(to))));
+
+                    // register the created note in the discussion 
+                    String name = note.getId().toASCIIString();
+                    this.discussionContextService.getOrCreate(name, name, ACTIVITYPUB_OBJECT, name)
+                        .ifPresent(it -> this.discussionContextService.link(it, message.getDiscussion()));
+                } catch (IOException | ActivityPubException e) {
+                    this.logger.warn("Failed to send the message [{}]. Cause: [{}].", message, getRootCauseMessage(e));
+                }
+            });
     }
 
     private List<ProxyActor> getExternalRelatedActors(List<DiscussionContext> discussionContexts)
@@ -208,7 +219,7 @@ public class ActivityPubDiscussionsMessagesEventListener implements EventListene
                         new ActivityPubObjectReference<>()
                             .setLink(URI.create(it.getEntityReference().getReference()))));
                 } catch (ActivityPubException e) {
-                    e.printStackTrace();
+                    this.logger.warn("Failed to resolve [{}]. Cause: [{}].", it, getRootCauseMessage(e));
                     return Stream.empty();
                 }
             })

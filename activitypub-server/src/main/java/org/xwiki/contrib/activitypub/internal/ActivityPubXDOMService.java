@@ -39,8 +39,13 @@ import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.ObjectPropertyReference;
 import org.xwiki.rendering.block.XDOM;
+import org.xwiki.rendering.converter.ConversionException;
+import org.xwiki.rendering.converter.Converter;
 import org.xwiki.rendering.parser.ParseException;
 import org.xwiki.rendering.parser.Parser;
+import org.xwiki.rendering.renderer.printer.DefaultWikiPrinter;
+import org.xwiki.rendering.renderer.printer.WikiPrinter;
+import org.xwiki.rendering.syntax.Syntax;
 
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
@@ -49,6 +54,7 @@ import com.xpn.xwiki.objects.LargeStringProperty;
 import com.xpn.xwiki.objects.PropertyInterface;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
+import static org.xwiki.rendering.syntax.Syntax.XHTML_1_0;
 
 /**
  * Provides the operation to access the {@link XDOM} of document bodies and large string properties.
@@ -66,6 +72,9 @@ public class ActivityPubXDOMService
 
     @Inject
     private Logger logger;
+
+    @Inject
+    private Converter converter;
 
     @Inject
     private HTMLRenderer htmlRenderer;
@@ -119,5 +128,26 @@ public class ActivityPubXDOMService
     public String render(XDOM xdom, DocumentReference documentReference) throws ActivityPubException
     {
         return this.htmlRenderer.render(xdom, documentReference);
+    }
+
+    /**
+     * Convert the content written on a given syntax and returns it in html.
+     *
+     * @param content the content
+     * @param syntax the syntax of the content
+     * @return the content rendered in html, {@link Optional#empty()} in case of error
+     */
+    public Optional<String> convertToHTML(String content, Syntax syntax)
+    {
+        try {
+            WikiPrinter printer = new DefaultWikiPrinter();
+            this.converter.convert(new StringReader(content), syntax, XHTML_1_0, printer);
+            return Optional.of(printer.toString());
+        } catch (ConversionException e) {
+            this.logger
+                .warn("Failed to convert [{}] from [{}] to [{}]. Cause: [{}].", content, syntax, XHTML_1_0,
+                    getRootCauseMessage(e));
+            return Optional.empty();
+        }
     }
 }

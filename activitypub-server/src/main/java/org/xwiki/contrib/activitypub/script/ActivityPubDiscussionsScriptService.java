@@ -26,6 +26,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
@@ -42,6 +43,7 @@ import org.xwiki.contrib.discussions.domain.DiscussionContext;
 import org.xwiki.wysiwyg.converter.HTMLConverter;
 
 import static java.util.Collections.singletonList;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 import static org.xwiki.rendering.syntax.Syntax.XWIKI_2_1;
 
 /**
@@ -72,6 +74,9 @@ public class ActivityPubDiscussionsScriptService
 
     @Inject
     private HTMLConverter htmlConverter;
+
+    @Inject
+    private Logger logger;
 
     /**
      * Reply to an event by adding a message to a discussion.
@@ -126,8 +131,8 @@ public class ActivityPubDiscussionsScriptService
                         }
                     }
                 } catch (ActivityPubException e) {
-                    e.printStackTrace();
-                    // TODO
+                    this.logger.warn("Failed to link an actor to the discussion [{}]. Cause: [{}].", discussion,
+                        getRootCauseMessage(e));
                 }
             });
 
@@ -140,17 +145,19 @@ public class ActivityPubDiscussionsScriptService
                     .isPresent())
                 .orElse(false);
         } catch (ActivityPubException e) {
-            e.printStackTrace();
+            this.logger.warn("Failed to add a message content = [{}], "
+                    + "activityId = [{}], eventId = [{}] to a discussion. Cause: [{}].", content, activityId, eventId,
+                getRootCauseMessage(e));
             return false;
         }
     }
 
     private void linkToActor(Discussion discussion, ProxyActor activityPubObjectReference) throws ActivityPubException
     {
-        ActivityPubObject object1 = this.resolver.resolveReference(activityPubObjectReference);
+        ActivityPubObject object = this.resolver.resolveReference(activityPubObjectReference);
         this.discussionContextService
-            .getOrCreate(object1.getName(), object1.getName(), "activitypub-actor",
-                object1.getId().toASCIIString())
+            .getOrCreate(object.getName(), object.getName(), "activitypub-actor",
+                object.getId().toASCIIString())
             .ifPresent(
                 discussionContext -> this.discussionContextService.link(discussionContext, discussion));
     }

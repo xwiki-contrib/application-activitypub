@@ -25,13 +25,16 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.events.MessageEvent;
 import org.xwiki.observation.EventListener;
 import org.xwiki.observation.event.Event;
 
 import static java.util.Collections.singletonList;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 import static org.xwiki.contrib.activitypub.internal.ActivityPubNewMessagesListener.TYPE;
 
 /**
@@ -54,6 +57,9 @@ public class ActivityPubNewMessagesListener implements EventListener
     @Inject
     private ActivityPubDiscussionsService activityPubDiscussionsService;
 
+    @Inject
+    private Logger logger;
+
     @Override
     public String getName()
     {
@@ -71,11 +77,11 @@ public class ActivityPubNewMessagesListener implements EventListener
     {
         if (event instanceof MessageEvent) {
             MessageEvent messageEvent = (MessageEvent) event;
+            Create activity = messageEvent.getActivity();
             try {
-                this.activityPubDiscussionsService.handleActivity(messageEvent.getActivity());
+                this.activityPubDiscussionsService.handleActivity(activity);
             } catch (ActivityPubException e) {
-                e.printStackTrace();
-                // TODO log
+                this.logger.warn("Failed to handle the activity [{}]. Cause: [{}].", activity, getRootCauseMessage(e));
             }
         }
     }

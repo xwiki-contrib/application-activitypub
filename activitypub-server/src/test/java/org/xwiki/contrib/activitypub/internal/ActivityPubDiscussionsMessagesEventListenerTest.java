@@ -24,6 +24,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
 
+import javax.inject.Inject;
+
 import org.junit.jupiter.api.Test;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
@@ -83,6 +85,9 @@ class ActivityPubDiscussionsMessagesEventListenerTest
     @MockComponent
     private ActorHandler actorHandler;
 
+    @MockComponent
+    private ActivityPubXDOMService activityPubXDOMService;
+
     @Test
     void getName()
     {
@@ -141,6 +146,9 @@ class ActivityPubDiscussionsMessagesEventListenerTest
             argument.getActivity().getObject().getObject().setId(link);
             return null;
         }).when(this.createActivityHandler).handleOutboxRequest(any());
+
+        when(this.activityPubXDOMService.convertToHTML("content", XWIKI_2_1))
+            .thenReturn(Optional.of("<h1>content</h1>"));
 
         this.activityPubDiscussionsMessagesEventListener.onEvent(new MessageEvent(CREATE), "src", message);
 

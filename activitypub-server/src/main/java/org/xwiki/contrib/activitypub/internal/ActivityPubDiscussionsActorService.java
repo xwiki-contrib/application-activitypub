@@ -25,12 +25,15 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.discussions.DiscussionsActorService;
 import org.xwiki.contrib.discussions.domain.ActorDescriptor;
+
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 /**
  * Creates an actor descriptor from an activitypub actor ID.
@@ -46,19 +49,20 @@ public class ActivityPubDiscussionsActorService implements DiscussionsActorServi
     @Inject
     private ActorHandler actorHandler;
 
+    @Inject
+    private Logger logger;
+
     @Override
     public Optional<ActorDescriptor> resolve(String reference)
     {
         try {
             AbstractActor actor = this.actorHandler.getActor(reference);
-
             ActorDescriptor actorDescriptor = new ActorDescriptor();
             initializeName(actor, actorDescriptor);
             actorDescriptor.setLink(actor.getId());
             return Optional.of(actorDescriptor);
         } catch (ActivityPubException e) {
-            e.printStackTrace();
-            // TODO log
+            this.logger.warn("Failed to revolve the actor [{}]. Cause: [{}].", reference, getRootCauseMessage(e));
             return Optional.empty();
         }
     }

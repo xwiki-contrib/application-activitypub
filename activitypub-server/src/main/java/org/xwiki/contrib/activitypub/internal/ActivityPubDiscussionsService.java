@@ -30,6 +30,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
@@ -43,10 +44,10 @@ import org.xwiki.contrib.discussions.DiscussionService;
 import org.xwiki.contrib.discussions.MessageService;
 import org.xwiki.contrib.discussions.domain.Discussion;
 import org.xwiki.contrib.discussions.domain.DiscussionContext;
-import org.xwiki.contrib.discussions.domain.DiscussionContextEntityReference;
 import org.xwiki.contrib.discussions.domain.Message;
 import org.xwiki.rendering.syntax.Syntax;
 
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 import static org.xwiki.rendering.syntax.Syntax.XHTML_1_0;
 
 /**
@@ -77,6 +78,9 @@ public class ActivityPubDiscussionsService
 
     @Inject
     private ActivityPubObjectReferenceResolver activityPubObjectReferenceResolver;
+
+    @Inject
+    private Logger logger;
 
     /**
      * Links a discussion and a discussion context.
@@ -128,17 +132,20 @@ public class ActivityPubDiscussionsService
                     }
                 });
                 String authorId = activity.getActor().getLink().toASCIIString();
+                ActivityPubObjectReference<? extends ActivityPubObject> activityPubObjectReference =
+                    ((AbstractActivity) activityObject).getObject();
                 try {
                     ActivityPubObject object =
                         this.activityPubObjectReferenceResolver
-                            .resolveReference(((AbstractActivity) activityObject).getObject());
+                            .resolveReference(activityPubObjectReference);
                     createMessage(discussion, object.getContent(), XHTML_1_0, "activitypub", authorId);
                 } catch (ActivityPubException e) {
-                    e.printStackTrace();
+                    this.logger.warn("Failed to resolve [{}]. Cause: [{}].", activityPubObjectReference,
+                        getRootCauseMessage(e));
                 }
             });
         } catch (ActivityPubException e) {
-            e.printStackTrace();
+            this.logger.warn("Failed to process the activity [{}]. Cause: [{}]", activity, getRootCauseMessage(e));
         }
     }
 
@@ -150,7 +157,7 @@ public class ActivityPubDiscussionsService
             this.discussionContextService.getOrCreate(actorId, actorId, ACTIVITYPUB_ACTOR, actorId)
                 .ifPresent(ctx -> this.discussionContextService.link(ctx, discussion));
         } catch (ActivityPubException e) {
-            e.printStackTrace();
+            this.logger.warn("Failed to resolve the reference for [{}]. Cause: [{}].", it, getRootCauseMessage(e));
         }
     }
 
