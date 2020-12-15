@@ -39,10 +39,10 @@ import org.xwiki.contrib.discussions.DiscussionService;
 import org.xwiki.contrib.discussions.MessageService;
 import org.xwiki.contrib.discussions.domain.Discussion;
 import org.xwiki.contrib.discussions.domain.DiscussionContext;
-import org.xwiki.rendering.syntax.Syntax;
 import org.xwiki.wysiwyg.converter.HTMLConverter;
 
 import static java.util.Collections.singletonList;
+import static org.xwiki.rendering.syntax.Syntax.XWIKI_2_1;
 
 /**
  * Script services for the discussions operations.
@@ -135,7 +135,8 @@ public class ActivityPubDiscussionsScriptService
             return discussionOpt
                 // TODO: take into account the syntax and check if the conversion is required
                 .map(it -> this.messageService
-                    .create(this.htmlConverter.fromHTML(content, Syntax.XWIKI_2_1.toIdString()), it.getReference())
+                    .create(this.htmlConverter.fromHTML(content, XWIKI_2_1.toIdString()), XWIKI_2_1,
+                        it.getReference())
                     .isPresent())
                 .orElse(false);
         } catch (ActivityPubException e) {

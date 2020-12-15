@@ -37,12 +37,12 @@ import org.xwiki.contrib.discussions.domain.Discussion;
 import org.xwiki.contrib.discussions.domain.DiscussionContext;
 import org.xwiki.contrib.discussions.domain.DiscussionContextEntityReference;
 import org.xwiki.contrib.discussions.domain.Message;
+import org.xwiki.contrib.discussions.domain.MessageContent;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
 import org.xwiki.wysiwyg.converter.HTMLConverter;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -50,6 +50,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.xwiki.rendering.syntax.Syntax.XWIKI_2_1;
 
 /**
  * Test of {@link ActivityPubDiscussionsScriptService}.
@@ -125,15 +126,16 @@ class ActivityPubDiscussionsScriptServiceTest
             .getOrCreate("TO ACTOR", "TO ACTOR", "activitypub-actor",
                 "https://to/actor")).thenReturn(Optional.of(dc3));
 
-        when(this.messageService.create("messageContent", d1.getReference())).thenReturn(
-            Optional.of(new Message("mr", "messageContent", "user", "actorRef", new Date(), new Date(), d1)));
+        when(this.messageService.create("messageContent", XWIKI_2_1, d1.getReference())).thenReturn(
+            Optional.of(new Message("mr", new MessageContent("messageContent", XWIKI_2_1), "user", "actorRef",
+                new Date(), new Date(), d1)));
 
         when(this.htmlConverter.fromHTML(eq("messageContent"), any())).thenReturn("messageContent");
 
         boolean b = this.activityPubDiscussionsScriptService
             .replyToEvent("discussionContext1Ref", "discussionContext2Ref", "messageContent");
         assertTrue(b);
-        verify(this.messageService).create("messageContent", "d1");
+        verify(this.messageService).create("messageContent", XWIKI_2_1, "d1");
         verify(this.discussionContextService).link(dc1, d1);
         verify(this.discussionContextService).link(dc2, d1);
         verify(this.discussionContextService).link(dc3, d1);

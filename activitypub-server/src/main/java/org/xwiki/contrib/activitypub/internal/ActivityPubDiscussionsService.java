@@ -45,6 +45,9 @@ import org.xwiki.contrib.discussions.domain.Discussion;
 import org.xwiki.contrib.discussions.domain.DiscussionContext;
 import org.xwiki.contrib.discussions.domain.DiscussionContextEntityReference;
 import org.xwiki.contrib.discussions.domain.Message;
+import org.xwiki.rendering.syntax.Syntax;
+
+import static org.xwiki.rendering.syntax.Syntax.XHTML_1_0;
 
 /**
  * Services to interact with the discussions from ActivityPub.
@@ -111,11 +114,8 @@ public class ActivityPubDiscussionsService
             // The list of discussions that involves at least one of the message of the reply chain.
             getOrCreateDiscussions(activity, replyChain).forEach(discussion -> {
                 replyChain.forEach(replyChainObject -> {
-                    String apoRef = replyChainObject.getId().toASCIIString();
-                    DiscussionContext discussionContext = new DiscussionContext(null, apoRef,
-                        apoRef, new DiscussionContextEntityReference(ACTIVITYPUB_OBJECT,
-                        apoRef));
-                    getOrCreateDiscussionContext(discussionContext)
+                    String objectID = replyChainObject.getId().toASCIIString();
+                    this.discussionContextService.getOrCreate(objectID, objectID, ACTIVITYPUB_OBJECT, objectID)
                         .ifPresent(ctx -> this.discussionContextService.link(ctx, discussion));
 
                     if (replyChainObject.getTo() != null) {
@@ -132,7 +132,7 @@ public class ActivityPubDiscussionsService
                     ActivityPubObject object =
                         this.activityPubObjectReferenceResolver
                             .resolveReference(((AbstractActivity) activityObject).getObject());
-                    createMessage(discussion, object.getContent(), "activitypub", authorId);
+                    createMessage(discussion, object.getContent(), XHTML_1_0, "activitypub", authorId);
                 } catch (ActivityPubException e) {
                     e.printStackTrace();
                 }
@@ -147,8 +147,7 @@ public class ActivityPubDiscussionsService
         try {
             T activityPubObject = this.activityPubObjectReferenceResolver.resolveReference(it);
             String actorId = activityPubObject.getId().toASCIIString();
-            getOrCreateDiscussionContext(new DiscussionContext(null,
-                actorId, actorId, new DiscussionContextEntityReference(ACTIVITYPUB_ACTOR, actorId)))
+            this.discussionContextService.getOrCreate(actorId, actorId, ACTIVITYPUB_ACTOR, actorId)
                 .ifPresent(ctx -> this.discussionContextService.link(ctx, discussion));
         } catch (ActivityPubException e) {
             e.printStackTrace();
@@ -156,33 +155,20 @@ public class ActivityPubDiscussionsService
     }
 
     /**
-     * Find or create a discussion context.
-     *
-     * @param discussionContext the discussion context to find or create
-     * @return the discussion context, possibly new
-     */
-    public Optional<DiscussionContext> getOrCreateDiscussionContext(DiscussionContext discussionContext)
-    {
-        String name = discussionContext.getName();
-        String description = discussionContext.getDescription();
-        String type = discussionContext.getEntityReference().getType();
-        String reference = discussionContext.getEntityReference().getReference();
-        return this.discussionContextService.getOrCreate(name, description, type, reference);
-    }
-
-    /**
      * Create a message in a discussion, for the actor type and reference passed in parameter.
      *
      * @param discussion the discussion of the message
      * @param content the content of the message
+     * @param syntax the syntax of the content of the message
      * @param actorType the actor type
      * @param actorReference the actor reference
      * @return the created message
      */
-    public Optional<Message> createMessage(Discussion discussion, String content, String actorType,
+    public Optional<Message> createMessage(Discussion discussion, String content,
+        Syntax syntax, String actorType,
         String actorReference)
     {
-        return this.messageService.create(content, discussion.getReference(), actorType, actorReference);
+        return this.messageService.create(content, syntax, discussion.getReference(), actorType, actorReference);
     }
 
     /**

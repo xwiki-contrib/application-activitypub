@@ -25,7 +25,6 @@ import java.util.Date;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
 import org.xwiki.contrib.activitypub.ActivityRequest;
@@ -40,18 +39,22 @@ import org.xwiki.contrib.discussions.domain.Discussion;
 import org.xwiki.contrib.discussions.domain.DiscussionContext;
 import org.xwiki.contrib.discussions.domain.DiscussionContextEntityReference;
 import org.xwiki.contrib.discussions.domain.Message;
+import org.xwiki.contrib.discussions.domain.MessageContent;
 import org.xwiki.contrib.discussions.events.MessageEvent;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
 
 import static java.util.Arrays.asList;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.xwiki.contrib.discussions.events.ActionType.*;
+import static org.xwiki.contrib.discussions.events.ActionType.CREATE;
+import static org.xwiki.contrib.discussions.events.ActionType.DELETE;
+import static org.xwiki.contrib.discussions.events.ActionType.UPDATE;
+import static org.xwiki.rendering.syntax.Syntax.XWIKI_2_1;
 
 /**
  * Test of {@link ActivityPubDiscussionsMessagesEventListener}.
@@ -102,8 +105,9 @@ class ActivityPubDiscussionsMessagesEventListenerTest
     {
         Discussion discussion =
             new Discussion("discussionReference", "discussionTitle", "discussionDescription", new Date());
-        Message message = new Message("reference", "content", "actorType", "actorReference", new Date(), new Date(),
-            discussion);
+        Message message =
+            new Message("reference", new MessageContent("content", XWIKI_2_1), "actorType", "actorReference",
+                new Date(), new Date(), discussion);
         URI link = URI.create("http://server/newnoteid");
 
         DiscussionContext dc1 =
