@@ -102,7 +102,7 @@ $services.localization.render('activitypub.webfinger.notconfigured')
     &lt;/li&gt;
     &lt;li role="presentation"&gt;
       #set ($discussionsDoc = $xwiki.getDocument('ActivityPub.Discussions'))
-      &lt;a href="$discussionsDoc.getURL('view')" role="tab"&gt;
+      &lt;a href="$discussionsDoc.getURL('view')?actor=$escapetool.url($actor.id)" role="tab"&gt;
         $services.localization.render('activitypub.dashboard.tab.discussionsList')
       &lt;/a&gt;
     &lt;/li&gt;
