@@ -94,7 +94,9 @@ activitypub.like.livetable.type=Type
 activitypub.like.livetable.summary=Summary
 activitypub.like.livetable.attributedTo=Attributed To
 activitypub.like.livetable._actions=Actions
-activitypub.dashboard.tab.likes=Likes</content>
+activitypub.dashboard.tab.likes=Likes
+activitypub.notifications.reply.success=Reply successfully sent.
+activitypub.notifications.reply.failure=Failed to send the message.</content>
   <object>
     <name>ActivityPub.ActivityPubTranslations</name>
     <number>0</number>

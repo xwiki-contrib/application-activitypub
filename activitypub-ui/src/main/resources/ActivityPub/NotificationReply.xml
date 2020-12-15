@@ -181,10 +181,10 @@
         "content": form.find('[name="content"]').val(),
       }, function(res) {
         if(res.success) {
-          new XWiki.widgets.Notification('Reply successfully sent.', 'done');
+          new XWiki.widgets.Notification("$services.localization.render('activitypub.notifications.reply.success')", 'done');
           modalWindow.modal('hide');
         } else {
-          new XWiki.widgets.Notification('Failed to send the message.', 'error');
+          new XWiki.widgets.Notification("$services.localization.render('activitypub.notifications.reply.failure')", 'error');
         }
       });
     });
@@ -224,7 +224,7 @@
       <name>Notifications Reply Action</name>
     </property>
     <property>
-      <parse>0</parse>
+      <parse>1</parse>
     </property>
     <property>
       <use>onDemand</use>
