@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
+import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
@@ -41,10 +42,12 @@ import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.discussions.DiscussionContextService;
 import org.xwiki.contrib.discussions.DiscussionService;
+import org.xwiki.contrib.discussions.DiscussionsRightService;
 import org.xwiki.contrib.discussions.MessageService;
 import org.xwiki.contrib.discussions.domain.Discussion;
 import org.xwiki.contrib.discussions.domain.DiscussionContext;
 import org.xwiki.contrib.discussions.domain.Message;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.rendering.syntax.Syntax;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
@@ -65,19 +68,22 @@ public class ActivityPubDiscussionsService
     private static final String ACTIVITYPUB_OBJECT = "activitypub-object";
 
     @Inject
-    @Named("unsafe")
     private MessageService messageService;
 
     @Inject
-    @Named("unsafe")
     private DiscussionService discussionService;
 
     @Inject
-    @Named("unsafe")
     private DiscussionContextService discussionContextService;
 
     @Inject
     private ActivityPubObjectReferenceResolver activityPubObjectReferenceResolver;
+
+    @Inject
+    private DiscussionsRightService discussionsRightService;
+
+    @Inject
+    private ActorHandler actorHandler;
 
     @Inject
     private Logger logger;
@@ -156,6 +162,12 @@ public class ActivityPubDiscussionsService
             String actorId = activityPubObject.getId().toASCIIString();
             this.discussionContextService.getOrCreate(actorId, actorId, ACTIVITYPUB_ACTOR, actorId)
                 .ifPresent(ctx -> this.discussionContextService.link(ctx, discussion));
+            AbstractActor actor = (AbstractActor) activityPubObject;
+            if (this.actorHandler.isLocalActor(actor)) {
+                DocumentReference storeDocument = this.actorHandler.getStoreDocument(actor);
+                this.discussionsRightService.setRead(discussion, storeDocument);
+                this.discussionsRightService.setWrite(discussion, storeDocument);
+            }
         } catch (ActivityPubException e) {
             this.logger.warn("Failed to resolve the reference for [{}]. Cause: [{}].", it, getRootCauseMessage(e));
         }

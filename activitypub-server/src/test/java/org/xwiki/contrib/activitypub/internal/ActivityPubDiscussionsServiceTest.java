@@ -64,15 +64,12 @@ class ActivityPubDiscussionsServiceTest
     private ActivityPubDiscussionsService activityPubDiscussionsService;
 
     @MockComponent
-    @Named("unsafe")
     private MessageService messageService;
 
     @MockComponent
-    @Named("unsafe")
     private DiscussionService discussionService;
 
     @MockComponent
-    @Named("unsafe")
     private DiscussionContextService discussionContextService;
 
     @MockComponent
