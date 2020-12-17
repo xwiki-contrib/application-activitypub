@@ -127,14 +127,7 @@ public class ActivityPubDiscussionsService
                     this.discussionContextService.getOrCreate(objectID, objectID, ACTIVITYPUB_OBJECT, objectID)
                         .ifPresent(ctx -> this.discussionContextService.link(ctx, discussion));
 
-                    if (replyChainObject.getTo() != null) {
-                        replyChainObject.getTo().forEach(it -> handleTo(discussion, it));
-                    }
-
-                    List<ActivityPubObjectReference<AbstractActor>> attributedTo = replyChainObject.getAttributedTo();
-                    if (attributedTo != null) {
-                        attributedTo.forEach(it -> handleTo(discussion, it));
-                    }
+                    registerActors(discussion, replyChainObject);
                 });
                 String authorId = activity.getActor().getLink().toASCIIString();
                 ActivityPubObjectReference<? extends ActivityPubObject> activityPubObjectReference =
@@ -151,6 +144,24 @@ public class ActivityPubDiscussionsService
             });
         } catch (ActivityPubException e) {
             this.logger.warn("Failed to process the activity [{}]. Cause: [{}]", activity, getRootCauseMessage(e));
+        }
+    }
+
+    /**
+     * Registers the actors related to an activitypub object in a discussion.
+     *
+     * @param discussion the discussion
+     * @param object the activitypub object
+     */
+    public void registerActors(Discussion discussion, ActivityPubObject object)
+    {
+        if (object.getTo() != null) {
+            object.getTo().forEach(it -> handleTo(discussion, it));
+        }
+
+        List<ActivityPubObjectReference<AbstractActor>> attributedTo = object.getAttributedTo();
+        if (attributedTo != null) {
+            attributedTo.forEach(it -> handleTo(discussion, it));
         }
     }
 
