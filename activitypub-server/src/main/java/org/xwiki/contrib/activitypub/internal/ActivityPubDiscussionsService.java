@@ -27,7 +27,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.slf4j.Logger;
@@ -162,11 +161,14 @@ public class ActivityPubDiscussionsService
             String actorId = activityPubObject.getId().toASCIIString();
             this.discussionContextService.getOrCreate(actorId, actorId, ACTIVITYPUB_ACTOR, actorId)
                 .ifPresent(ctx -> this.discussionContextService.link(ctx, discussion));
-            AbstractActor actor = (AbstractActor) activityPubObject;
-            if (this.actorHandler.isLocalActor(actor)) {
-                DocumentReference storeDocument = this.actorHandler.getStoreDocument(actor);
-                this.discussionsRightService.setRead(discussion, storeDocument);
-                this.discussionsRightService.setWrite(discussion, storeDocument);
+            // TODO: handle the cases where the target is "public" or "followers"
+            if (activityPubObject instanceof AbstractActor) {
+                AbstractActor actor = (AbstractActor) activityPubObject;
+                if (this.actorHandler.isLocalActor(actor)) {
+                    DocumentReference storeDocument = this.actorHandler.getStoreDocument(actor);
+                    this.discussionsRightService.setRead(discussion, storeDocument);
+                    this.discussionsRightService.setWrite(discussion, storeDocument);
+                }
             }
         } catch (ActivityPubException e) {
             this.logger.warn("Failed to resolve the reference for [{}]. Cause: [{}].", it, getRootCauseMessage(e));
@@ -232,11 +234,17 @@ public class ActivityPubDiscussionsService
                 this.activityPubObjectReferenceResolver.resolveReference(abstractActivity.getObject());
             replyChain.add(object);
 
-            while (object.getInReplyTo() != null) {
-                URI inReplyTo = object.getInReplyTo();
-                object = this.activityPubObjectReferenceResolver
-                    .resolveReference(new ActivityPubObjectReference<>().setLink(inReplyTo));
-                replyChain.add(object);
+            try {
+                while (object.getInReplyTo() != null) {
+                    URI inReplyTo = object.getInReplyTo();
+                    object = this.activityPubObjectReferenceResolver
+                        .resolveReference(new ActivityPubObjectReference<>().setLink(inReplyTo));
+                    replyChain.add(object);
+                }
+            } catch (ActivityPubException e) {
+                this.logger.debug(
+                    "Stop getting the messages of the chain since one element [{}] cannot be resolved. Cause: [{}].",
+                    object.getInReplyTo(), getRootCauseMessage(e));
             }
         }
         return replyChain;

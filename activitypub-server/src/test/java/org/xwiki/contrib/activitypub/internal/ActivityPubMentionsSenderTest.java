@@ -29,7 +29,6 @@ import org.mockito.Mock;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.ActorHandler;
-import org.xwiki.contrib.activitypub.HTMLRenderer;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Create;
@@ -60,7 +59,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.ACTIVITYPUB_MENTION_TYPE;
-import static org.xwiki.contrib.activitypub.internal.ActivityPubMentionsSender.*;
 
 /**
  * Test of {@link ActivityPubMentionsSender}.
@@ -91,10 +89,13 @@ class ActivityPubMentionsSenderTest
     private UserReferenceResolver<String> userReferenceResolver;
 
     @MockComponent
-    private HTMLRenderer htmlRenderer;
+    private MentionFormatterProvider mentionFormatterProvider;
 
     @MockComponent
-    private MentionFormatterProvider mentionFormatterProvider;
+    private ActivityPubXDOMService activityPubXDOMService;
+
+    @MockComponent
+    private DateProvider dateProvider;
 
     @Mock
     private MentionsFormatter mentionsFormatter;
@@ -105,14 +106,7 @@ class ActivityPubMentionsSenderTest
     void setUp()
     {
         this.currentTime = new Date();
-        this.activityPubMentionsSender.setDateProvider(new DateProvider()
-        {
-            @Override
-            public Date currentTime()
-            {
-                return ActivityPubMentionsSenderTest.this.currentTime;
-            }
-        });
+        when(this.dateProvider.currentTime()).thenReturn(this.currentTime);
     }
 
     @Test
@@ -129,7 +123,6 @@ class ActivityPubMentionsSenderTest
         verifyNoInteractions(this.updateActivityHandler);
         verifyNoInteractions(this.actorHandler);
         verifyNoInteractions(this.userReferenceResolver);
-        verifyNoInteractions(this.htmlRenderer);
         verifyNoInteractions(this.mentionsFormatter);
     }
 
@@ -158,8 +151,6 @@ class ActivityPubMentionsSenderTest
         XDOM xdom = new XDOM(asList());
         when(doc.getXDOM()).thenReturn(xdom);
         when(doc.getPreviousVersion()).thenReturn(null);
-        when(this.htmlRenderer.render(xdom, DOCUMENT_REFERENCE)).thenReturn("rendered content");
-
         this.activityPubMentionsSender.sendNotification(mentionNotificationParameters, doc, documentUrl);
 
         Mention mention = new Mention()
@@ -208,8 +199,6 @@ class ActivityPubMentionsSenderTest
         XDOM xdom = new XDOM(asList());
         when(doc.getXDOM()).thenReturn(xdom);
         when(doc.getPreviousVersion()).thenReturn("1.5");
-        when(this.htmlRenderer.render(xdom, DOCUMENT_REFERENCE)).thenReturn("rendered content");
-
         this.activityPubMentionsSender.sendNotification(mentionNotificationParameters, doc, documentUrl);
 
         Mention mention = new Mention()

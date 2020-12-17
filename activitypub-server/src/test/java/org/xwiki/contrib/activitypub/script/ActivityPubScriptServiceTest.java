@@ -26,16 +26,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
 
 import org.apache.commons.httpclient.HttpMethod;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.mockito.ArgumentCaptor;
-import org.xwiki.component.manager.ComponentManager;
-import org.xwiki.component.util.DefaultParameterizedType;
+import org.mockito.Mock;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubException;
@@ -49,18 +46,17 @@ import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Announce;
-import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Like;
 import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
 import org.xwiki.contrib.activitypub.entities.Page;
 import org.xwiki.contrib.activitypub.entities.Person;
-import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Service;
+import org.xwiki.contrib.activitypub.internal.DateProvider;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.contrib.activitypub.internal.InternalURINormalizer;
-import org.xwiki.contrib.activitypub.internal.activities.CreateActivityHandler;
 import org.xwiki.contrib.activitypub.internal.activities.LikeActivityHandler;
+import org.xwiki.contrib.activitypub.internal.scipt.ActivityPubScriptServiceActor;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.WikiReference;
@@ -82,18 +78,17 @@ import com.xpn.xwiki.user.api.XWikiRightService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.xwiki.contrib.activitypub.script.ActivityPubScriptService.DateProvider;
 import static org.xwiki.test.LogLevel.ERROR;
 
 /**
@@ -112,10 +107,13 @@ class ActivityPubScriptServiceTest
     private ActivityPubScriptService scriptService;
 
     @MockComponent
-    private ActorHandler actorHandler;
+    private DateProvider dateProvider;
 
     @MockComponent
     private ActivityPubClient activityPubClient;
+
+    @MockComponent
+    private ActorHandler actorHandler;
 
     @MockComponent
     private ActivityPubStorage activityPubStorage;
@@ -126,8 +124,15 @@ class ActivityPubScriptServiceTest
     @MockComponent
     private UserReferenceResolver<CurrentUserReference> userReferenceResolver;
 
+
     @MockComponent
     private Provider<XWikiContext> contextProvider;
+
+    @Mock
+    private XWikiContext xWikiContext;
+
+    @MockComponent
+    private HTMLRenderer htmlRenderer;
 
     @MockComponent
     private DocumentReferenceResolver<String> documentReferenceResolver;
@@ -136,20 +141,22 @@ class ActivityPubScriptServiceTest
     private AuthorizationManager authorizationManager;
 
     @MockComponent
-    private HTMLRenderer htmlRenderer;
-
+    private InternalURINormalizer internalURINormalizer;
+    
     @MockComponent
     private DefaultURLHandler urlHandler;
-
+    
     @MockComponent
-    @Named("context")
-    private ComponentManager componentManager;
-
-    @MockComponent
-    private InternalURINormalizer internalURINormalizer;
+    private ActivityPubScriptServiceActor activityPubScriptServiceActor;
 
     @RegisterExtension
     LogCaptureExtension logCapture = new LogCaptureExtension(ERROR);
+
+    @BeforeEach
+    void setUp()
+    {
+        when(this.contextProvider.get()).thenReturn(this.xWikiContext);
+    }
 
     @Test
     void follow() throws Exception
@@ -167,12 +174,14 @@ class ActivityPubScriptServiceTest
         when(this.actorHandler.getActor("test")).thenReturn(targetActor);
 
         when(this.activityPubClient.postInbox(any(), any())).thenReturn(mock(HttpMethod.class));
+        when(this.activityPubScriptServiceActor.getSourceActor(null)).thenReturn(currentActor);
+        when(this.activityPubScriptServiceActor.getSourceActor(currentActor)).thenReturn(targetActor);
         FollowResult actual = this.scriptService.follow(remoteActor);
         assertTrue(actual.isSuccess());
         assertEquals("activitypub.follow.followRequested", actual.getMessage());
-        verify(this.activityPubStorage, times(1)).storeEntity(any());
-        verify(this.activityPubClient, times(1)).postInbox(eq(remoteActor), any());
-        verify(this.activityPubClient, times(1)).checkAnswer(any());
+        verify(this.activityPubStorage).storeEntity(any());
+        verify(this.activityPubClient).postInbox(eq(remoteActor), any());
+        verify(this.activityPubClient).checkAnswer(any());
     }
 
     @Test
@@ -187,6 +196,7 @@ class ActivityPubScriptServiceTest
         ActivityPubObjectReference targetActorReference = mock(ActivityPubObjectReference.class);
         when(targetActor.getReference()).thenReturn(targetActorReference);
         when(this.actorHandler.getActor("test")).thenReturn(targetActor);
+        when(this.activityPubScriptServiceActor.getSourceActor(null)).thenReturn(actor);
 
         when(this.activityPubClient.postInbox(any(), any())).thenReturn(mock(HttpMethod.class));
         FollowResult actual = this.scriptService.follow(actor);
@@ -221,7 +231,7 @@ class ActivityPubScriptServiceTest
         ActivityPubObjectReference targetActorReference = mock(ActivityPubObjectReference.class);
         when(targetActor.getReference()).thenReturn(targetActorReference);
         when(this.actorHandler.getActor("test")).thenReturn(targetActor);
-
+        when(this.activityPubScriptServiceActor.getSourceActor(null)).thenReturn(current);
         when(this.activityPubClient.postInbox(any(), any())).thenReturn(mock(HttpMethod.class));
         FollowResult actual = this.scriptService.follow(actor);
         assertFalse(actual.isSuccess());
@@ -256,93 +266,7 @@ class ActivityPubScriptServiceTest
     }
 
     @Test
-    public void publishNoteNoTarget() throws Exception
-    {
-        Person actor = mock(Person.class);
-        ActivityPubObjectReference actorReference = mock(ActivityPubObjectReference.class);
-        when(actor.getReference()).thenReturn(actorReference);
-        when(this.actorHandler.getCurrentActor()).thenReturn(actor);
-
-        ActivityHandler activityHandler = mock(ActivityHandler.class);
-        when(this.componentManager.getInstance(new DefaultParameterizedType(null, ActivityHandler.class, Create.class)))
-            .thenReturn(activityHandler);
-        String noteContent = "some content";
-        this.scriptService.publishNote(null, noteContent);
-        Note note = new Note()
-            .setContent(noteContent)
-            .setAttributedTo(Collections.singletonList(actor.getReference()));
-
-        ArgumentCaptor<ActivityPubObject> argumentCaptor = ArgumentCaptor.forClass(ActivityPubObject.class);
-        verify(this.activityPubStorage, times(2)).storeEntity(argumentCaptor.capture());
-        List<ActivityPubObject> allValues = argumentCaptor.getAllValues();
-        assertEquals(2, allValues.size());
-        assertTrue(allValues.get(0) instanceof Note);
-        assertTrue(allValues.get(1) instanceof Create);
-        Note obtainedNote = (Note) allValues.get(0);
-        assertNotNull(obtainedNote.getPublished());
-        obtainedNote.setPublished(null);
-        assertEquals(note, allValues.get(0));
-
-        Create create = (Create) allValues.get(1);
-        assertEquals(note, create.getObject().getObject());
-        assertSame(actorReference, create.getActor());
-        assertEquals(note.getAttributedTo(), create.getAttributedTo());
-        assertEquals(note.getTo(), create.getTo());
-        assertNotNull(create.getPublished());
-        verify(activityHandler).handleOutboxRequest(new ActivityRequest<>(actor, create));
-    }
-
-    @Test
-    public void publishNoteFollowersAndActor() throws Exception
-    {
-        Person actor = mock(Person.class);
-        ActivityPubObjectReference actorReference = mock(ActivityPubObjectReference.class);
-        when(actor.getReference()).thenReturn(actorReference);
-
-        ActivityPubObjectReference followersReference = mock(ActivityPubObjectReference.class);
-        when(followersReference.getLink()).thenReturn(new URI("http://followers"));
-        when(actor.getFollowers()).thenReturn(followersReference);
-        when(this.actorHandler.getCurrentActor()).thenReturn(actor);
-
-        ActivityHandler activityHandler = mock(ActivityHandler.class);
-        when(this.componentManager.getInstance(new DefaultParameterizedType(null, ActivityHandler.class, Create.class)))
-            .thenReturn(activityHandler);
-
-        AbstractActor targetActor = mock(AbstractActor.class);
-        ProxyActor targetProxyActor = mock(ProxyActor.class);
-        when(targetActor.getProxyActor()).thenReturn(targetProxyActor);
-        when(actorHandler.getActor("@targetActor")).thenReturn(targetActor);
-
-        String noteContent = "some content";
-        this.scriptService.publishNote(Arrays.asList("followers", "@targetActor"), noteContent);
-
-        Note note = new Note()
-            .setContent(noteContent)
-            .setAttributedTo(Collections.singletonList(actor.getReference()))
-            .setTo(Arrays.asList(new ProxyActor(followersReference.getLink()), targetProxyActor));
-
-        ArgumentCaptor<ActivityPubObject> argumentCaptor = ArgumentCaptor.forClass(ActivityPubObject.class);
-        verify(this.activityPubStorage, times(2)).storeEntity(argumentCaptor.capture());
-        List<ActivityPubObject> allValues = argumentCaptor.getAllValues();
-        assertEquals(2, allValues.size());
-        assertTrue(allValues.get(0) instanceof Note);
-        assertTrue(allValues.get(1) instanceof Create);
-        Note obtainedNote = (Note) allValues.get(0);
-        assertNotNull(obtainedNote.getPublished());
-        obtainedNote.setPublished(null);
-        assertEquals(note, allValues.get(0));
-
-        Create create = (Create) allValues.get(1);
-        assertEquals(note, create.getObject().getObject());
-        assertSame(actorReference, create.getActor());
-        assertEquals(note.getAttributedTo(), create.getAttributedTo());
-        assertEquals(note.getTo(), create.getTo());
-        assertNotNull(create.getPublished());
-        verify(activityHandler).handleOutboxRequest(new ActivityRequest<>(actor, create));
-    }
-
-    @Test
-    public void isCurrentUser() throws ActivityPubException
+    void isCurrentUser() throws ActivityPubException
     {
         Person actor = mock(Person.class);
         UserReference userReference = mock(UserReference.class);
@@ -356,7 +280,7 @@ class ActivityPubScriptServiceTest
     }
 
     @Test
-    public void currentUserCanActFor() throws Exception
+    void currentUserCanActFor() throws Exception
     {
         UserReference userReference = mock(UserReference.class);
         Person person = mock(Person.class);
@@ -370,16 +294,14 @@ class ActivityPubScriptServiceTest
 
         when(this.userReferenceResolver.resolve(null)).thenReturn(GuestUserReference.INSTANCE);
         assertFalse(this.scriptService.currentUserCanActFor(person));
-        verify(this.actorHandler, times(2)).isAuthorizedToActFor(any(), any());
+        verify(this.actorHandler, times(3)).isAuthorizedToActFor(any(), any());
     }
 
     @Test
-    public void getCurrentWikiActor() throws Exception
+    void getCurrentWikiActor() throws Exception
     {
-        XWikiContext context = mock(XWikiContext.class);
-        when(this.contextProvider.get()).thenReturn(context);
         WikiReference wikiReference = new WikiReference("foobar");
-        when(context.getWikiReference()).thenReturn(wikiReference);
+        when(xWikiContext.getWikiReference()).thenReturn(wikiReference);
         Service service = mock(Service.class);
         when(this.actorHandler.getActor(wikiReference)).thenReturn(service);
 
@@ -397,19 +319,14 @@ class ActivityPubScriptServiceTest
         when(this.actorHandler.getCurrentActor()).thenReturn(currentActor);
 
         ActivityHandler activityHandler = mock(ActivityHandler.class);
-        when(this.componentManager
-            .getInstance(new DefaultParameterizedType(null, ActivityHandler.class, Announce.class)))
-            .thenReturn(activityHandler);
 
-        XWikiContext xWikiContext = mock(XWikiContext.class);
-        when(this.contextProvider.get()).thenReturn(xWikiContext);
         XWiki xWiki = mock(XWiki.class);
-        when(xWikiContext.getWiki()).thenReturn(xWiki);
+        when(this.xWikiContext.getWiki()).thenReturn(xWiki);
         XWikiDocument xwikiDoc = mock(XWikiDocument.class);
-        when(xWiki.getDocument(documentReference, xWikiContext)).thenReturn(xwikiDoc);
+        when(xWiki.getDocument(documentReference, this.xWikiContext)).thenReturn(xwikiDoc);
         when(this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, documentReference)).thenReturn(true);
         when(xwikiDoc.getTitle()).thenReturn("Doc Title");
-        when(xwikiDoc.getURL("view", xWikiContext)).thenReturn("http://wiki/view/page");
+        when(xwikiDoc.getURL("view", this.xWikiContext)).thenReturn("http://wiki/view/page");
         when(xwikiDoc.getContentUpdateDate()).thenReturn(new Date(200));
         when(this.urlHandler.getAbsoluteURI(URI.create("http://wiki/view/page"))).thenReturn(URI.create(
             "http://wiki/view/page"));
@@ -417,11 +334,15 @@ class ActivityPubScriptServiceTest
         AbstractActor u1 = new Person().setName("U1").setId(URI.create("http://wiki/person/u1"));
         when(this.actorHandler.getActor("U1")).thenReturn(u1);
 
-        DateProvider dateProvider = mock(DateProvider.class);
-        this.scriptService.setDateProvider(dateProvider);
-        // fix the date to make it deterministic
         Date currentDate = new Date();
-        when(dateProvider.currentTime()).thenReturn(currentDate);
+        when(this.dateProvider.currentTime()).thenReturn(currentDate);
+        when(this.activityPubScriptServiceActor.getSourceActor(null)).thenReturn(currentActor);
+        when(this.activityPubScriptServiceActor.getActivityHandler(any())).thenReturn(activityHandler);
+        doAnswer(args -> {
+            ActivityPubObject object = args.getArgument(2);
+            object.setTo(Collections.singletonList(u1.getProxyActor()));
+            return null;
+        }).when(this.activityPubScriptServiceActor).fillRecipients(any(), any(), any());
 
         boolean actual = this.scriptService.sharePage(Collections.singletonList("U1"), "xwiki:XWiki.MyPage");
 
@@ -450,22 +371,17 @@ class ActivityPubScriptServiceTest
         when(this.documentReferenceResolver.resolve("xwiki:XWiki.MyPage"))
             .thenReturn(documentReference);
 
-        when(this.actorHandler.getCurrentActor()).thenReturn(new Person());
+        when(this.activityPubScriptServiceActor.getSourceActor(null)).thenReturn(new Person());
 
         ActivityHandler activityHandler = mock(ActivityHandler.class);
-        when(this.componentManager
-            .getInstance(new DefaultParameterizedType(null, ActivityHandler.class, Announce.class)))
-            .thenReturn(activityHandler);
 
-        XWikiContext xWikiContext = mock(XWikiContext.class);
-        when(this.contextProvider.get()).thenReturn(xWikiContext);
         XWiki xWiki = mock(XWiki.class);
-        when(xWikiContext.getWiki()).thenReturn(xWiki);
+        when(this.xWikiContext.getWiki()).thenReturn(xWiki);
         XWikiDocument xwikiDoc = mock(XWikiDocument.class);
-        when(xWiki.getDocument(documentReference, xWikiContext)).thenReturn(xwikiDoc);
+        when(xWiki.getDocument(documentReference, this.xWikiContext)).thenReturn(xwikiDoc);
         when(this.activityPubStorage.storeEntity(any())).thenThrow(new ActivityPubException("ERR"));
         when(this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, documentReference)).thenReturn(true);
-        when(xwikiDoc.getURL("view", xWikiContext)).thenReturn("http://wiki/view/page");
+        when(xwikiDoc.getURL("view", this.xWikiContext)).thenReturn("http://wiki/view/page");
 
         boolean actual = this.scriptService.sharePage(Collections.singletonList("U1"), "xwiki:XWiki.MyPage");
 
@@ -485,12 +401,7 @@ class ActivityPubScriptServiceTest
         when(this.actorHandler.getCurrentActor()).thenReturn(null);
 
         ActivityHandler activityHandler = mock(ActivityHandler.class);
-        when(this.componentManager
-            .getInstance(new DefaultParameterizedType(null, ActivityHandler.class, Announce.class)))
-            .thenReturn(activityHandler);
 
-        XWikiContext xWikiContext = mock(XWikiContext.class);
-        when(this.contextProvider.get()).thenReturn(xWikiContext);
         XWiki xWiki = mock(XWiki.class);
         when(xWikiContext.getWiki()).thenReturn(xWiki);
         when(xWiki.getDocument(documentReference, xWikiContext)).thenReturn(mock(XWikiDocument.class));
@@ -515,12 +426,7 @@ class ActivityPubScriptServiceTest
 
         when(this.actorHandler.getCurrentActor()).thenReturn(new Person());
         ActivityHandler activityHandler = mock(ActivityHandler.class);
-        when(this.componentManager
-            .getInstance(new DefaultParameterizedType(null, ActivityHandler.class, Announce.class)))
-            .thenReturn(activityHandler);
 
-        XWikiContext xWikiContext = mock(XWikiContext.class);
-        when(this.contextProvider.get()).thenReturn(xWikiContext);
         XWiki xWiki = mock(XWiki.class);
         when(xWikiContext.getWiki()).thenReturn(xWiki);
         when(xWiki.getDocument(documentReference, xWikiContext)).thenReturn(mock(XWikiDocument.class));
@@ -609,9 +515,8 @@ class ActivityPubScriptServiceTest
             .thenReturn(activityObject);
         Like likeActivity = new Like().setActor(actor).setObject(activityObject);
         LikeActivityHandler likeActivityHandler = mock(LikeActivityHandler.class);
-        when(this.componentManager.getInstance(new DefaultParameterizedType(null, ActivityHandler.class, Like.class)))
+        when(this.activityPubScriptServiceActor.getActivityHandler(likeActivity))
             .thenReturn(likeActivityHandler);
-
         assertTrue(this.scriptService.likeActivity(activityId));
         verify(this.activityPubStorage).storeEntity(likeActivity);
         verify(likeActivityHandler).handleOutboxRequest(new ActivityRequest<>(actor, likeActivity));
@@ -639,6 +544,7 @@ class ActivityPubScriptServiceTest
         URI inputURI = URI.create("https://server/actor");
         when(targetActor.getId()).thenReturn(inputURI);
         when(this.internalURINormalizer.relativizeURI(inputURI)).thenReturn(inputURI);
+        when(this.activityPubScriptServiceActor.getSourceActor(targetActor)).thenReturn(targetActor);
 
         List<Note> value = Arrays.asList();
         when(this.activityPubStorage.query(Note.class, "filter(authors:https\\:\\/\\/server\\/actor)", 10)).thenReturn(

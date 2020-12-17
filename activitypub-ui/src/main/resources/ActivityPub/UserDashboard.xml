@@ -36,219 +36,213 @@
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
-  <content>{{include reference="ActivityPub.ActivityPubUserPicker"/}}
-{{include reference="ActivityPub.ListMessages"/}}
+  <content>{{include reference='ActivityPub.ActivityPubUserPicker'/}}
+{{include reference='ActivityPub.ListMessages'/}}
+{{include reference='Discussions.Code.DisplayMessage'/}}
 {{velocity}}
 ## Display the ActivityPub Dashboard for the actor given in parameter.
 #macro(activitypubDashboard $actor)
-#set ($discard = $xwiki.jsx.use('ActivityPub.UserDashboard'))
-#set ($discard = $xwiki.ssx.use('ActivityPub.UserDashboard'))
-#set ($canSeeDashboard = ("$!actor" != "" &amp;&amp; $services.activitypub.currentUserCanActFor($actor)))
+  #set ($discard = $xwiki.jsx.use('ActivityPub.UserDashboard'))
+  #set ($discard = $xwiki.ssx.use('ActivityPub.UserDashboard'))
+  #set ($canSeeDashboard = ("$!actor" != "" &amp;&amp; $services.activitypub.currentUserCanActFor($actor)))
 
-#if (!$services.activitypub.isStorageReady())
-{{warning}}
-$services.localization.render('activitypub.storage.needrestart')
-{{/warning}}
-#elseif ("$!actor" == "")
-{{warning}}
-$services.localization.render('activitypub.dashboard.noactor')
-{{/warning}}
-#else
-## The various interactions needs to send the actor id, so we put it in the document directly.
-{{html}}
-&lt;input type="hidden" id="actorId" value="$actor.id" /&gt;
-{{/html}}
-  #if ($services.webfinger.isWebfingerConfigured())
-    #set ($userIdentifier = $services.webfinger.getWebfingerId($actor))
+  #if (!$services.activitypub.isStorageReady())
+    {{warning}}
+      $services.localization.render('activitypub.storage.needrestart')
+    {{/warning}}
+  #elseif ("$!actor" == "")
+    {{warning}}
+      $services.localization.render('activitypub.dashboard.noactor')
+    {{/warning}}
   #else
-    #set ($userIdentifier = $actor.id)
-  #end
+    ## The various interactions needs to send the actor id, so we put it in the document directly.
+    {{html}}
+      &lt;input type="hidden" id="actorId" value="$actor.id" /&gt;
+    {{/html}}
+    #if ($services.webfinger.isWebfingerConfigured())
+      #set ($userIdentifier = $services.webfinger.getWebfingerId($actor))
+    #else
+      #set ($userIdentifier = $actor.id)
+    #end
 
-  #if ("$!actor.name" != "")
-    #set($username = $actor.name)
-  #else
-    #set($username = $actor.preferredUsername)
-  #end
-  #set($dashboardTitle = $services.localization.render('activitypub.dashboard.title', [$username]))
-  {{html clean='false'}}
-    &lt;h2&gt;$dashboardTitle&lt;/h2&gt;
-    &lt;span class="noitems"&gt;$services.localization.render('activitypub.user.identifier.tip')&lt;/span&gt;
-    &lt;div class="identifier-group"&gt;
-      &lt;span class="form-control" id="user-identifier"&gt;$userIdentifier&lt;/span&gt;
-      &lt;div class="btn btn-default" id="ap-button-paste" title="$services.localization.render('activitypub.user.identifier.copyButton')"&gt;
-        $services.icon.renderHTML('paste')
-      &lt;/div&gt;
-    &lt;/div&gt;
-  {{/html}}
-
-  #if ($canSeeDashboard)
-  #if (!$services.webfinger.isWebfingerConfigured())
-{{warning}}
-$services.localization.render('activitypub.webfinger.notconfigured')
-{{/warning}}
-  #end
-
-  {{html clean='false' wiki='true'}}
-  &lt;ul class="nav nav-tabs" role="tablist"&gt;
-    &lt;li role="presentation" class="active"&gt;
-      &lt;a href="#follow" aria-controls="follow" role="tab" data-toggle="tab"&gt;
-        $services.localization.render('activitypub.dashboard.tab.follow')
-      &lt;/a&gt;
-    &lt;/li&gt;
-    &lt;li role="presentation"&gt;
-      &lt;a href="#messaging" aria-controls="messaging" role="tab" data-toggle="tab"&gt;
-        $services.localization.render('activitypub.dashboard.tab.message')
-      &lt;/a&gt;
-    &lt;/li&gt;
-    &lt;li role="presentation"&gt;
-      #set ($discussionsDoc = $xwiki.getDocument('ActivityPub.Discussions'))
-      &lt;a href="$discussionsDoc.getURL('view')?actor=$escapetool.url($actor.id)" role="tab"&gt;
-        $services.localization.render('activitypub.dashboard.tab.discussionsList')
-      &lt;/a&gt;
-    &lt;/li&gt;
-    &lt;li role="presentation"&gt;
-      &lt;a href="#likes" aria-controls="likes" role="tab" data-toggle="tab"&gt;
-        $services.localization.render('activitypub.dashboard.tab.likes')
-      &lt;/a&gt;
-    &lt;/li&gt;
-  &lt;/ul&gt;
-  &lt;div class="tab-content"&gt;
-    &lt;div role="tabpanel" class="tab-pane active" id="follow"&gt;
-       &lt;form id="followForm" class='xform'&gt;
-        &lt;dl&gt;
-          &lt;dt&gt;
-            &lt;label for="followInput"&gt;$services.localization.render('activitypub.follow.input.label')&lt;/label&gt;
-            &lt;span class='xHint'&gt;$services.localization.render('activitypub.follow.input.hint')&lt;/span&gt;
-          &lt;/dt&gt;
-          &lt;dd&gt;
-          #set ($APUsersPickerParams = {
-            'name': 'followInput',
-            'multiple': 'false',
-            'placeholder': $services.localization.render('activitypub.follow.target.placeholder')
-          })
-          #APUsersPicker($APUsersPickerParams)
-          &lt;/dd&gt;
-        &lt;/dl&gt;
-        &lt;div class='buttonwrapper'&gt;
-          &lt;input value="$services.localization.render('activitypub.follow.button')" class='button' type='submit'&gt;
+    #if ("$!actor.name" != "")
+      #set($username = $actor.name)
+    #else
+      #set($username = $actor.preferredUsername)
+    #end
+    #set($dashboardTitle = $services.localization.render('activitypub.dashboard.title', [$username]))
+    {{html clean='false'}}
+      &lt;h2&gt;$dashboardTitle&lt;/h2&gt;
+      &lt;span class="noitems"&gt;$services.localization.render('activitypub.user.identifier.tip')&lt;/span&gt;
+      &lt;div class="identifier-group"&gt;
+        &lt;span class="form-control" id="user-identifier"&gt;$userIdentifier&lt;/span&gt;
+        &lt;div class="btn btn-default" id="ap-button-paste" title="$services.localization.render('activitypub.user.identifier.copyButton')"&gt;
+          $services.icon.renderHTML('paste')
         &lt;/div&gt;
-      &lt;/form&gt;
-    &lt;/div&gt;
-    &lt;div role="tabpanel" class="tab-pane" id="messaging"&gt;
-      &lt;form id="messageForm" class='xform'&gt;
-      &lt;dl&gt;
-        &lt;dt&gt;
-          &lt;label for="messageTarget"&gt;$services.localization.render('activitypub.message.target.label')&lt;/label&gt;
-          &lt;span class='xHint'&gt;$services.localization.render('activitypub.message.target.hint')&lt;/span&gt;
-        &lt;/dt&gt;
-        &lt;dd&gt;
-          #set ($APUsersPickerParams = {
-             'name': 'messageTarget',
-             'public': 'allowed',
-             'followers': 'allowed',
-             'placeholder': $services.localization.render('activitypub.message.target.placeholder')
-          })
-          #APUsersPicker($APUsersPickerParams)
-        &lt;/dd&gt;
-      &lt;/dl&gt;
-      &lt;dl&gt;
-        &lt;dt&gt;
-          &lt;label for="messageContent"&gt;$services.localization.render('activitypub.message.content.label')&lt;/label&gt;
-          &lt;span class='xHint'&gt;$services.localization.render('activitypub.message.content.hint')&lt;/span&gt;
-        &lt;/dt&gt;
-        &lt;dd&gt;
-          &lt;textarea name="messageContent" id="messageContent" class="form-control"&gt;&lt;/textarea&gt;
-        &lt;/dd&gt;
-      &lt;/dl&gt;
-      &lt;div class='buttonwrapper'&gt;
-        &lt;input value="$services.localization.render('activitypub.message.button')" class='button' type='submit'/&gt;
       &lt;/div&gt;
-      &lt;/form&gt;
-    &lt;/div&gt;
-    &lt;div role="tabpanel" class="tab-pane" id="messageOutbox"&gt;
-    
-      #displaySentMessages($actor, 10)
-    &lt;/div&gt;
-    &lt;div role="tabpanel" class="tab-pane" id="messageInbox"&gt;
-    
-      #displayReceivedMessages($actor, 10)
-    &lt;/div&gt;
-    &lt;div role="tabpanel" class="tab-pane" id="discussions"&gt;
-      #displayDiscussions($actor)
-    &lt;/div&gt;
-    &lt;div role="tabpanel" class="tab-pane" id="likes"&gt;
-      #set($columns = ["published", "type", "attributedTo", "_actions"])
-      #set($columnsProperties = {
-        "published" : { "type" : "date", "sortable": false, "filterable": false },
-        "type" : { "type" : "text", "sortable": false, "filterable": false },
-        "attributedTo" : { "type" : "text", "sortable": false, "filterable": false, "html": true},
-        "_actions": {"actions": [{
-          'id': 'view',
-          'label': 'view',
-          'icon': 'eye',
-          'async': false
-        }]}
-      })
-      #set ($currentActor = $services.activitypub.getActor(""))
-      #set ($queryParams = {
-        "livetable": "true",
-        "outputSyntax": "plain",
-        "actor": $currentActor.id
-      })
-      #set ($docLiveTableRef = $services.model.resolveDocument("ActivityPub.UserLikes"))
-      #set ($docLiveTable = $xwiki.getDocument($docLiveTableRef))
-      #set($options = {
-        'url': $docLiveTable.getURL('get', $escapetool.url($queryParams)),
-        'translationPrefix' : "activitypub.like.livetable."
-      })
+    {{/html}}
 
-      #livetable("activitypubLikes" $columns $columnsProperties $options)
-    &lt;/div&gt;
-  &lt;/div&gt;
-  {{/html}}
+    #if ($canSeeDashboard)
+      #if (!$services.webfinger.isWebfingerConfigured())
+        {{warning}}
+          $services.localization.render('activitypub.webfinger.notconfigured')
+        {{/warning}}
+      #end
+
+      {{html}}
+
+        &lt;ul class="nav nav-tabs" role="tablist"&gt;
+          &lt;li role="presentation" class="active"&gt;
+            &lt;a href="#follow" aria-controls="follow" role="tab" data-toggle="tab"&gt;
+              $services.localization.render('activitypub.dashboard.tab.follow')
+            &lt;/a&gt;
+          &lt;/li&gt;
+          &lt;li role="presentation"&gt;
+            &lt;a href="#messaging" aria-controls="messaging" role="tab" data-toggle="tab"&gt;
+              $services.localization.render('activitypub.dashboard.tab.message')
+            &lt;/a&gt;
+          &lt;/li&gt;
+          &lt;li role="presentation"&gt;
+            #set ($discussionsDoc = $xwiki.getDocument('ActivityPub.Discussions'))
+            &lt;a href="$discussionsDoc.getURL('view')?actor=$escapetool.url($actor.id)" role="tab"&gt;
+              $services.localization.render('activitypub.dashboard.tab.discussionsList')
+            &lt;/a&gt;
+          &lt;/li&gt;
+          &lt;li role="presentation"&gt;
+            &lt;a href="#likes" aria-controls="likes" role="tab" data-toggle="tab"&gt;
+              $services.localization.render('activitypub.dashboard.tab.likes')
+            &lt;/a&gt;
+          &lt;/li&gt;
+        &lt;/ul&gt;
+        &lt;div class="tab-content"&gt;
+          &lt;div role="tabpanel" class="tab-pane active" id="follow"&gt;
+            &lt;form id="followForm" class='xform'&gt;
+              &lt;dl&gt;
+                &lt;dt&gt;
+                  &lt;label for="followInput"&gt;$services.localization.render('activitypub.follow.input.label')&lt;/label&gt;
+                  &lt;span class='xHint'&gt;$services.localization.render('activitypub.follow.input.hint')&lt;/span&gt;
+                &lt;/dt&gt;
+                &lt;dd&gt;
+                  #set ($APUsersPickerParams = {
+                    'name': 'followInput',
+                    'multiple': 'false',
+                    'placeholder': $services.localization.render('activitypub.follow.target.placeholder')
+                  })
+                  #APUsersPicker($APUsersPickerParams)
+                &lt;/dd&gt;
+              &lt;/dl&gt;
+              &lt;div class='buttonwrapper'&gt;
+                &lt;input value="$services.localization.render('activitypub.follow.button')" class='button' type='submit'&gt;
+              &lt;/div&gt;
+            &lt;/form&gt;
+          &lt;/div&gt;
+          &lt;div role="tabpanel" class="tab-pane" id="messaging"&gt;
+            &lt;form id="messageForm" class='xform'&gt;
+              &lt;dl&gt;
+                &lt;dt&gt;
+                  &lt;label for="messageTarget"&gt;$services.localization.render('activitypub.message.target.label')&lt;/label&gt;
+                  &lt;span class='xHint'&gt;$services.localization.render('activitypub.message.target.hint')&lt;/span&gt;
+                &lt;/dt&gt;
+                &lt;dd&gt;
+                  #set ($APUsersPickerParams = {
+                    'name': 'messageTarget',
+                    'public': 'allowed',
+                    'followers': 'allowed',
+                    'placeholder': $services.localization.render('activitypub.message.target.placeholder')
+                  })
+                  #APUsersPicker($APUsersPickerParams)
+                &lt;/dd&gt;
+              &lt;/dl&gt;
+              &lt;dl&gt;
+                &lt;dt&gt;
+                  &lt;label for="messageContent"&gt;$services.localization.render('activitypub.message.content.label')&lt;/label&gt;
+                  &lt;span class='xHint'&gt;$services.localization.render('activitypub.message.content.hint')&lt;/span&gt;
+                &lt;/dt&gt;
+                &lt;dd&gt;
+                  #displayMessageContentField()
+                &lt;/dd&gt;
+              &lt;/dl&gt;
+              &lt;div class='buttonwrapper'&gt;
+                &lt;input value="$services.localization.render('activitypub.message.button')" class='button' type='submit'/&gt;
+              &lt;/div&gt;
+            &lt;/form&gt;
+          &lt;/div&gt;
+          &lt;div role="tabpanel" class="tab-pane" id="likes"&gt;
+            #set($columns = ["published", "type", "attributedTo", "_actions"])
+            #set($columnsProperties = {
+              "published" : { "type" : "date", "sortable": false, "filterable": false },
+              "type" : { "type" : "text", "sortable": false, "filterable": false },
+              "attributedTo" : { "type" : "text", "sortable": false, "filterable": false, "html": true},
+              "_actions": {"actions": [{
+                'id': 'view',
+                'label': 'view',
+                'icon': 'eye',
+                'async': false
+              }]}
+            })
+            #set ($currentActor = $services.activitypub.getActor(""))
+            #set ($queryParams = {
+              "livetable": "true",
+              "outputSyntax": "plain",
+              "actor": $currentActor.id
+            })
+            #set ($docLiveTableRef = $services.model.resolveDocument("ActivityPub.UserLikes"))
+            #set ($docLiveTable = $xwiki.getDocument($docLiveTableRef))
+            #set($options = {
+              'url': $docLiveTable.getURL('get', $escapetool.url($queryParams)),
+              'translationPrefix' : "activitypub.like.livetable."
+            })
+{{/html}}
+            #livetable("activitypubLikes" $columns $columnsProperties $options)
+{{html}}
+          &lt;/div&gt;
+        &lt;/div&gt;
+
+      {{/html}}
+
+    #end
+    {{html clean="false" wiki="true"}}
+      &lt;div id="linkActors"&gt;
+        #listFollowing($actor)
+        #listFollowers($actor)
+      &lt;/div&gt;
+    {{/html}}
   #end
-  {{html clean="false" wiki="true"}}
-    &lt;div id="linkActors"&gt;
-      #listFollowing($actor)
-      #listFollowers($actor)
-    &lt;/div&gt;
-  {{/html}}
-#end
 #end
 
 #macro(listFollowing $actor)
-{{html clean="false" wiki="true"}}
-&lt;div&gt;
+  {{html clean="false" wiki="true"}}
+  &lt;div&gt;
     &lt;h1&gt;$services.localization.render('activitypub.following.title')&lt;/h1&gt;
-#set ($following = $services.activitypub.following($actor))
-#if ($following.empty)
-  &lt;p&gt;$services.localization.render('activitypub.following.empty')&lt;/p&gt;
-#else
-    &lt;ul&gt;
-  #foreach ($factor in $following)
-    &lt;li&gt;#displayActor($factor)&lt;/li&gt;
-  #end
-    &lt;/ul&gt;
-#end
-&lt;/div&gt;
-{{/html}}
+    #set ($following = $services.activitypub.following($actor))
+    #if ($following.empty)
+      &lt;p&gt;$services.localization.render('activitypub.following.empty')&lt;/p&gt;
+    #else
+      &lt;ul&gt;
+        #foreach ($factor in $following)
+          &lt;li&gt;#displayActor($factor)&lt;/li&gt;
+        #end
+      &lt;/ul&gt;
+    #end
+  &lt;/div&gt;
+  {{/html}}
 #end
 
 #macro (listFollowers $actor)
 {{html clean="false" wiki="true"}}
-&lt;div&gt;
-  &lt;h1&gt;$services.localization.render('activitypub.followers.title')&lt;/h1&gt;
-  #set ($followers = $services.activitypub.followers($actor))
-  #if ($followers.empty)
-  &lt;p&gt;$services.localization.render('activitypub.followers.empty')&lt;/p&gt;
-  #else
-  &lt;ul&gt;
-    #foreach ($factor in $followers)
-     &lt;li&gt;#displayActor($factor)&lt;/li&gt;
+  &lt;div&gt;
+    &lt;h1&gt;$services.localization.render('activitypub.followers.title')&lt;/h1&gt;
+    #set ($followers = $services.activitypub.followers($actor))
+    #if ($followers.empty)
+      &lt;p&gt;$services.localization.render('activitypub.followers.empty')&lt;/p&gt;
+      #else
+      &lt;ul&gt;
+        #foreach ($factor in $followers)
+          &lt;li&gt;#displayActor($factor)&lt;/li&gt;
+        #end
+      &lt;/ul&gt;
     #end
-  &lt;/ul&gt;
-  #end
-&lt;/div&gt;
+  &lt;/div&gt;
 {{/html}}
 #end
 {{/velocity}}
@@ -376,10 +370,15 @@ $services.localization.render('activitypub.webfinger.notconfigured')
     $('#messageForm').submit(function(event) {
       event.preventDefault();
 
+      document.fire('xwiki:actions:beforeSave');
+
       const data = {
         'form_token': xm.form_token,
         'messageTarget': $('#messageForm select[name=messageTarget]').first().val(),
-        'messageContent': $('#messageContent').val(),
+        'content': $('#messageForm [name="content"]').val(),
+        'RequiresHTMLConversion':  $('#messageForm [name="RequiresHTMLConversion"]').val(),
+        'content_syntax': $('#messageForm [name="content_syntax"]').val(),
+        'syntax': $('#messageForm [name="content_syntax"]').val(),
         'actorId': actorId
       };
       $.post(messageUserDoc.getURL("view") + '?outputSyntax=plain', $.param(data, true), function(data) {

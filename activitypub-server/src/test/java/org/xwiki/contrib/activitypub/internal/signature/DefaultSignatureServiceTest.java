@@ -25,15 +25,18 @@ import java.security.KeyPairGenerator;
 import java.util.Objects;
 
 import javax.inject.Named;
+import javax.inject.Provider;
 
 import org.apache.commons.httpclient.HttpMethod;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.InOrder;
+import org.mockito.Mock;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.CryptoService;
 import org.xwiki.contrib.activitypub.entities.Person;
+import org.xwiki.contrib.activitypub.internal.DateProvider;
 import org.xwiki.crypto.params.cipher.asymmetric.PrivateKeyParameters;
 import org.xwiki.crypto.pkix.params.CertifiedKeyPair;
 import org.xwiki.crypto.store.FileStoreReference;
@@ -65,17 +68,23 @@ class DefaultSignatureServiceTest
     private DefaultSignatureService signatureService;
 
     @MockComponent
+    private DateProvider dateProvider;
+
+    @MockComponent
     @Named("X509file")
     private KeyStore keyStore;
+
+    @MockComponent
+    private Provider<ActorHandler> actorHandlerProvider;
+
+    @Mock
+    private ActorHandler actorHandler;
 
     @MockComponent
     private CryptoService cryptoService;
 
     @MockComponent
     private Environment environment;
-
-    @MockComponent
-    private ActorHandler actorHandler;
 
     private final static byte[] PK = new byte[] {
         48, -126, 1, 84, 2, 1, 0, 48, 13, 6, 9, 42, -122, 72, -122, -9, 13, 1, 1, 1, 5, 0, 4, -126, 1, 62, 48, -126, 1,
@@ -98,6 +107,7 @@ class DefaultSignatureServiceTest
     void setUp(@TempDir Path tempDir)
     {
         when(this.environment.getPermanentDirectory()).thenReturn(tempDir.toFile());
+        when(this.actorHandlerProvider.get()).thenReturn(this.actorHandler);
     }
 
     @Test
@@ -120,6 +130,7 @@ class DefaultSignatureServiceTest
         when(certifiedKeyPair.getPrivateKey()).thenReturn(privateKeyParameters);
         when(privateKeyParameters.getEncoded())
             .thenReturn(KeyPairGenerator.getInstance("RSA").generateKeyPair().getPrivate().getEncoded());
+        when(this.dateProvider.getFormattedDate()).thenReturn("formated date");
 
         this.signatureService.generateSignature(postMethod, actor, "{}");
         InOrder inOrder = inOrder(postMethod, postMethod);
@@ -149,22 +160,21 @@ class DefaultSignatureServiceTest
         when(certifiedKeyPair.getPrivateKey()).thenReturn(privateKeyParameters);
         when(privateKeyParameters.getEncoded())
             .thenReturn(KeyPairGenerator.getInstance("RSA").generateKeyPair().getPrivate().getEncoded());
+        when(this.dateProvider.getFormattedDate()).thenReturn("formatted date");
 
         this.signatureService.generateSignature(postMethod, actor, "{}");
         InOrder inOrder = inOrder(postMethod, postMethod);
         inOrder.verify(postMethod).addRequestHeader(eq("Signature"), matches(
             "keyId=\"http:\\/\\/actoruri\\/\",headers=\"\\(request-target\\) host date digest\","
                 + "signature=\"[^\"]*\""));
-        inOrder.verify(postMethod).addRequestHeader(eq("Date"), anyString());
+        inOrder.verify(postMethod).addRequestHeader(eq("Date"), eq("formatted date"));
     }
 
     @Test
     void generateSignatureWithoutInit() throws Exception
     {
-        DefaultSignatureService.DateProvider dateProvider = mock(DefaultSignatureService.DateProvider.class);
-        this.signatureService.setDateProvider(dateProvider);
         // override the date to make it deterministic
-        when(dateProvider.getFormatedDate()).thenReturn("Mon, 06 Apr 2020 08:39:20 GMT");
+        when(this.dateProvider.getFormattedDate()).thenReturn("Mon, 06 Apr 2020 08:39:20 GMT");
 
         HttpMethod postMethod = mock(HttpMethod.class);
         org.apache.commons.httpclient.URI postURI = mock(org.apache.commons.httpclient.URI.class);
@@ -180,9 +190,9 @@ class DefaultSignatureServiceTest
         CertifiedKeyPair certifiedKeyPair = mock(CertifiedKeyPair.class);
         when(this.keyStore.retrieve(argThat(
             storeReference -> (storeReference instanceof FileStoreReference)
-                                  && Objects.equals(((FileStoreReference) storeReference).getFile().getName(),
+                && Objects.equals(((FileStoreReference) storeReference).getFile().getName(),
                 documentReference.toString() + ".key"))))
-                .thenReturn(certifiedKeyPair);
+            .thenReturn(certifiedKeyPair);
         PrivateKeyParameters privateKeyParameters = mock(PrivateKeyParameters.class);
         when(certifiedKeyPair.getPrivateKey()).thenReturn(privateKeyParameters);
         when(privateKeyParameters.getEncoded()).thenReturn(PK);
@@ -190,8 +200,8 @@ class DefaultSignatureServiceTest
         this.signatureService.generateSignature(postMethod, actor, "{}");
         InOrder inOrder = inOrder(postMethod, postMethod);
         inOrder.verify(postMethod).addRequestHeader(eq("Signature"),
-                eq("keyId=\"http://actoruri/\",headers=\"(request-target) host date digest\""
-                        + ",signature=\"gyFYtjF/9JX9moeR9yYHVYf7/B222obL1IIJDqDf5AK7ThyqIKoJHpARj1+eljAkEvXdQrUUg5y/Su7ljmhpCQ==\""));
+            eq("keyId=\"http://actoruri/\",headers=\"(request-target) host date digest\""
+                + ",signature=\"gyFYtjF/9JX9moeR9yYHVYf7/B222obL1IIJDqDf5AK7ThyqIKoJHpARj1+eljAkEvXdQrUUg5y/Su7ljmhpCQ==\""));
         inOrder.verify(postMethod).addRequestHeader(eq("Date"), anyString());
     }
 }

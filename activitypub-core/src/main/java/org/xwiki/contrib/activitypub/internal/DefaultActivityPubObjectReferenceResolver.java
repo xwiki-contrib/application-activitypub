@@ -31,7 +31,6 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
@@ -53,21 +52,8 @@ import org.xwiki.contrib.activitypub.entities.ProxyActor;
 @Singleton
 public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObjectReferenceResolver
 {
-    @FunctionalInterface
-    interface DateProvider
-    {
-        /**
-         * Check if a given number has elapse between the last update and the current date.
-         *
-         * @param currentDate the current date.
-         * @param lastUpdated the last update.
-         * @return true if the period has elapsed.
-         */
-        boolean isElapsed(Date currentDate, Date lastUpdated);
-    }
-
-    private DateProvider dateProvider =
-        (currentDate, lastUpdated) -> currentDate.after(DateUtils.addDays(lastUpdated, MAX_DAY_BEFORE_REFRESH));
+    @Inject
+    private DateProvider dateProvider;
 
     @Inject
     private ActivityPubJsonParser activityPubJsonParser;
@@ -97,24 +83,26 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
         }
 
         // We try first to retrieve the object from the storage
+        ActivityPubStorage activityPubStorage = this.activityPubStorageProvider.get();
         if (result == null) {
-            result = this.activityPubStorageProvider.get().retrieveEntity(reference.getLink());
+            result = activityPubStorage.retrieveEntity(reference.getLink());
             reference.setObject(result);
         }
 
         // If the storage didn't provide any result, or if it provided outdated result, then we need to reload the
-        // informations.
+        // information.
         if (result == null || this.shouldBeRefreshed(result)) {
             try {
-                HttpMethod getMethod = this.activityPubClientProvider.get().get(reference.getLink());
+                ActivityPubClient activityPubClient = this.activityPubClientProvider.get();
+                HttpMethod getMethod = activityPubClient.get(reference.getLink());
                 try {
-                    this.activityPubClientProvider.get().checkAnswer(getMethod);
+                    activityPubClient.checkAnswer(getMethod);
                     result = this.activityPubJsonParser.parse(getMethod.getResponseBodyAsString());
                 } finally {
                     getMethod.releaseConnection();
                 }
                 reference.setObject(result);
-                this.activityPubStorageProvider.get().storeEntity(result);
+                activityPubStorage.storeEntity(result);
             } catch (IOException | ActivityPubException e) {
                 // We might be trying to refresh an information, in that case we just rely on the information we already
                 // manage to retrieve from the storage.
@@ -151,7 +139,7 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
         return (CLASSES_TO_REFRESH.contains(activityPubObject.getClass())
             && !this.defaultURLHandler.belongsToCurrentInstance(activityPubObject.getId())
             && activityPubObject.getLastUpdated() != null
-            && this.dateProvider.isElapsed(date, lastUpdated));
+            && this.dateProvider.isElapsed(date, lastUpdated, MAX_DAY_BEFORE_REFRESH));
     }
 
     private void resolveProxyActorList(List<ProxyActor> proxyActorList, Set<AbstractActor> resolvedTargets)
@@ -181,16 +169,5 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
                 }
             }
         }
-    }
-
-    /**
-     * This method is for test purpose.
-     *
-     * @param dateProvider a date provider.
-     * @since 1.2
-     */
-    void setDateProvider(DateProvider dateProvider)
-    {
-        this.dateProvider = dateProvider;
     }
 }

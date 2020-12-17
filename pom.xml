@@ -96,69 +96,56 @@
           <analysisConfiguration>
             <revapi.ignore>
               <item>
-                <code>java.method.removed</code>
-                <old>method void org.xwiki.contrib.activitypub.entities.Inbox::addActivity(org.xwiki.contrib.activitypub.entities.AbstractActivity)</old>
-                <justification>Young API: this method was wrong, you should now use Inbox#addItem.</justification>
+                <code>java.class.removed</code>
+                <old>class org.xwiki.contrib.activitypub.script.ActivityPubScriptService.DateProvider</old>
+                <justification>Unstable API. DateProvider moved to commons.</justification>
               </item>
               <item>
                 <code>java.method.removed</code>
-                <old>method java.util.Collection&lt;org.xwiki.contrib.activitypub.entities.AbstractActivity&gt; org.xwiki.contrib.activitypub.entities.Inbox::getAllActivities()</old>
-                <justification>Young API: this method was wrong, you should rely on AbstractCollection methods.</justification>
-              </item>
-              <item>
-                <code>java.class.nonFinalClassInheritsFromNewClass</code>
-                <old>class org.xwiki.contrib.activitypub.entities.Inbox</old>
-                <new>class org.xwiki.contrib.activitypub.entities.Inbox</new>
-                <justification>Young API: boxes now inherits from AbstractBox.</justification>
+                <old>method boolean org.xwiki.contrib.activitypub.script.ActivityPubScriptService::publishNote(java.util.List&lt;java.lang.String&gt;, java.lang.String)</old>
+                <justification>Unstable API. publishNote moved to PublishNoteScriptService.</justification>
               </item>
               <item>
                 <code>java.method.removed</code>
-                <old>method void org.xwiki.contrib.activitypub.entities.Outbox::addActivity(org.xwiki.contrib.activitypub.entities.AbstractActivity)</old>
-                <justification>Young API: this method was wrong, you should now use Outbox#addItem.</justification>
+                <old>method boolean org.xwiki.contrib.activitypub.script.ActivityPubScriptService::publishNote(java.util.List&lt;java.lang.String&gt;, java.lang.String, org.xwiki.contrib.activitypub.entities.AbstractActor)</old>
+                <justification>Unstable API. publishNote moved to PublishNoteScriptService.</justification>
               </item>
               <item>
                 <code>java.method.removed</code>
-                <old>method java.util.Collection&lt;org.xwiki.contrib.activitypub.entities.AbstractActivity&gt; org.xwiki.contrib.activitypub.entities.Outbox::getAllActivities()</old>
-                <justification>Young API: this method was wrong, you should rely on AbstractCollection methods.</justification>
+                <old>method void org.xwiki.contrib.activitypub.script.ActivityPubScriptService::setDateProvider(org.xwiki.contrib.activitypub.script.ActivityPubScriptService.DateProvider)</old>
+                <justification>Unstable API. DateProvider moved to commons.</justification>
               </item>
-              <item>
-                <code>java.class.nonFinalClassInheritsFromNewClass</code>
-                <old>class org.xwiki.contrib.activitypub.entities.Outbox</old>
-                <new>class org.xwiki.contrib.activitypub.entities.Outbox</new>
-                <justification>Young API: boxes now inherits from AbstractBox.</justification>
-              </item>
-              <!-- Apparently I had to declare twice those ignores for some reason, looks like a bug in revapi -->
+              <!-- item declarations needs to be duplicated to make revapi pass 
+              (see https://github.com/revapi/revapi/issues/220) -->
               <item>
                 <code>java.method.removed</code>
-                <old>method void org.xwiki.contrib.activitypub.entities.Inbox::addActivity(org.xwiki.contrib.activitypub.entities.AbstractActivity)</old>
-                <justification>Young API: this method was wrong, you should now use Inbox#addItem.</justification>
+                <old>method boolean org.xwiki.contrib.activitypub.script.ActivityPubScriptService::publishNote(java.util.List&lt;java.lang.String&gt;, java.lang.String)</old>
+                <justification>ADD YOUR EXPLANATION FOR THE NECESSITY OF THIS CHANGE</justification>
               </item>
               <item>
                 <code>java.method.removed</code>
-                <old>method java.util.Collection&lt;org.xwiki.contrib.activitypub.entities.AbstractActivity&gt; org.xwiki.contrib.activitypub.entities.Inbox::getAllActivities()</old>
-                <justification>Young API: this method was wrong, you should rely on AbstractCollection methods.</justification>
+                <old>method void org.xwiki.contrib.activitypub.script.ActivityPubScriptService::setDateProvider(org.xwiki.contrib.activitypub.script.ActivityPubScriptService.DateProvider)</old>
+                <justification>ADD YOUR EXPLANATION FOR THE NECESSITY OF THIS CHANGE</justification>
               </item>
-                <item>
-                <code>java.method.removed</code>
-                <old>method void org.xwiki.contrib.activitypub.entities.Outbox::addActivity(org.xwiki.contrib.activitypub.entities.AbstractActivity)</old>
-                <justification>Young API: this method was wrong, you should now use Outbox#addItem.</justification>
+              <item>
+                <code>java.class.removed</code>
+                <old>class org.xwiki.contrib.activitypub.script.ActivityPubScriptService.DateProvider</old>
+                <justification>ADD YOUR EXPLANATION FOR THE NECESSITY OF THIS CHANGE</justification>
               </item>
               <item>
                 <code>java.method.removed</code>
-                <old>method java.util.Collection&lt;org.xwiki.contrib.activitypub.entities.AbstractActivity&gt; org.xwiki.contrib.activitypub.entities.Inbox::getAllActivities()</old>
-                <justification>Young API: this method was wrong, you should rely on AbstractCollection methods.</justification>
+                <old>method boolean org.xwiki.contrib.activitypub.script.ActivityPubScriptService::publishNote(java.util.List&lt;java.lang.String&gt;, java.lang.String, org.xwiki.contrib.activitypub.entities.AbstractActor)</old>
+                <justification>ADD YOUR EXPLANATION FOR THE NECESSITY OF THIS CHANGE</justification>
               </item>
               <item>
-                <code>java.method.parameterTypeChanged</code>
-                <old>parameter &lt;O extends org.xwiki.contrib.activitypub.entities.AbstractCollection&lt;T&gt;&gt; O org.xwiki.contrib.activitypub.entities.OrderedCollection&lt;T extends org.xwiki.contrib.activitypub.entities.ActivityPubObject&gt;::addItem(===T===) @ org.xwiki.contrib.activitypub.entities.Inbox</old>
-                <new>parameter &lt;O extends org.xwiki.contrib.activitypub.entities.AbstractCollection&lt;org.xwiki.contrib.activitypub.entities.AbstractActivity&gt;&gt; O org.xwiki.contrib.activitypub.entities.AbstractBox::addItem(===org.xwiki.contrib.activitypub.entities.AbstractActivity===) @ org.xwiki.contrib.activitypub.entities.Inbox</new>
-                <justification>Young API and not a breakage.</justification>
+                <code>java.method.removed</code>
+                <old>method void org.xwiki.contrib.activitypub.script.ActivityPubScriptService::setDateProvider(org.xwiki.contrib.activitypub.script.ActivityPubScriptService.DateProvider)</old>
+                <justification>ADD YOUR EXPLANATION FOR THE NECESSITY OF THIS CHANGE</justification>
               </item>
               <item>
-                <code>java.method.parameterTypeChanged</code>
-                <old>parameter &lt;O extends org.xwiki.contrib.activitypub.entities.AbstractCollection&lt;T&gt;&gt; O org.xwiki.contrib.activitypub.entities.OrderedCollection&lt;T extends org.xwiki.contrib.activitypub.entities.ActivityPubObject&gt;::addItem(===T===) @ org.xwiki.contrib.activitypub.entities.Outbox</old>
-                <new>parameter &lt;O extends org.xwiki.contrib.activitypub.entities.AbstractCollection&lt;org.xwiki.contrib.activitypub.entities.AbstractActivity&gt;&gt; O org.xwiki.contrib.activitypub.entities.AbstractBox::addItem(===org.xwiki.contrib.activitypub.entities.AbstractActivity===) @ org.xwiki.contrib.activitypub.entities.Outbox</new>
-                <justification>Young API and not a breakage.</justification>
+                <code>java.method.removed</code>
+                <old>method boolean org.xwiki.contrib.activitypub.script.ActivityPubScriptService::publishNote(java.util.List&lt;java.lang.String&gt;, java.lang.String, org.xwiki.contrib.activitypub.entities.AbstractActor)</old>
+                <justification>ADD YOUR EXPLANATION FOR THE NECESSITY OF THIS CHANGE</justification>
               </item>
             </revapi.ignore>
           </analysisConfiguration>

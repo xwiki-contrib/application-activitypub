@@ -37,9 +37,9 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
   <content>{{velocity}}
-#if ("$!request.messageContent" != "" &amp;&amp; $services.csrf.isTokenValid($request.form_token) &amp;&amp; $request.outputSyntax == "plain")
+#if ("$!request.content" != "" &amp;&amp; $services.csrf.isTokenValid($request.form_token) &amp;&amp; $request.outputSyntax == "plain")
   #set ($sourceActor = $services.activitypub.getActor($request.actorId))
-  #set ($messageSent = $services.activitypub.publishNote($request.getParameterValues('messageTarget'), $request.messageContent, $sourceActor))
+  #set ($messageSent = $services.activitypub.publishNote.publishNote($request.getParameterValues('messageTarget'), $request.content, $sourceActor, $request.syntax))
   #if ($messageSent)
     #set ($messageSent = true)
     #set ($messageSentMessage = $services.localization.render('activitypub.message.messageSent'))

@@ -92,7 +92,8 @@ public class ActivityPubMentionsSender
     @Inject
     private Logger logger;
 
-    private DateProvider dateProvider = new DateProvider();
+    @Inject
+    private DateProvider dateProvider;
 
     /**
      * Send the notifications of the mentions to the fediverse actors.
@@ -204,22 +205,5 @@ public class ActivityPubMentionsSender
             abstractActivity = new Create();
         }
         return abstractActivity;
-    }
-
-    static class DateProvider
-    {
-        public Date currentTime()
-        {
-            return new Date();
-        }
-    }
-
-    /**
-     * @param dateProvider the date provider
-     * @since 1.4
-     */
-    void setDateProvider(DateProvider dateProvider)
-    {
-        this.dateProvider = dateProvider;
     }
 }

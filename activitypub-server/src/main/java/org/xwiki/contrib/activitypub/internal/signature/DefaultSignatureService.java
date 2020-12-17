@@ -28,12 +28,7 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.text.SimpleDateFormat;
 import java.util.Base64;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -50,6 +45,7 @@ import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.CryptoService;
 import org.xwiki.contrib.activitypub.SignatureService;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
+import org.xwiki.contrib.activitypub.internal.DateProvider;
 import org.xwiki.crypto.params.cipher.asymmetric.PrivateKeyParameters;
 import org.xwiki.crypto.pkix.params.CertifiedKeyPair;
 import org.xwiki.crypto.store.FileStoreReference;
@@ -70,25 +66,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @Singleton
 public class DefaultSignatureService implements SignatureService
 {
-    /**
-     * Protected date provider class.
-     */
-    static class DateProvider
-    {
-        /**
-         * @return the formated current date.
-         */
-        String getFormatedDate()
-        {
-            Calendar calendar = Calendar.getInstance();
-            Date time = calendar.getTime();
-            SimpleDateFormat dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
-            dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-            return dateFormat.format(time);
-        }
-    }
-
-    private DateProvider dateProvider = new DateProvider();
+    @Inject
+    private DateProvider dateProvider;
 
     @Inject
     @Named("X509file")
@@ -107,7 +86,7 @@ public class DefaultSignatureService implements SignatureService
     public void generateSignature(HttpMethod postMethod, AbstractActor actor, String content)
         throws ActivityPubException
     {
-        String date = this.dateProvider.getFormatedDate();
+        String date = this.dateProvider.getFormattedDate();
 
         try {
             URI postMethodURI = postMethod.getURI();
@@ -129,14 +108,13 @@ public class DefaultSignatureService implements SignatureService
         } catch (URIException e) {
             throw new ActivityPubException("Error while retrieving the URI from post method", e);
         }
-
     }
 
     private CertifiedKeyPair getCertifiedKeyPair(AbstractActor actor) throws ActivityPubException
     {
         DocumentReference dr = this.actorHandlerProvider
-                .get()
-                .getStoreDocument(actor);
+            .get()
+            .getStoreDocument(actor);
 
         CertifiedKeyPair stored;
         try {
@@ -178,7 +156,7 @@ public class DefaultSignatureService implements SignatureService
             return ret;
         } catch (KeyStoreException e) {
             throw new ActivityPubException(
-                    String.format("Error while initializing the cryptographic keys for [%s]", user), e);
+                String.format("Error while initializing the cryptographic keys for [%s]", user), e);
         }
     }
 
@@ -195,29 +173,13 @@ public class DefaultSignatureService implements SignatureService
     public String getPublicKeyPEM(AbstractActor actor) throws ActivityPubException
     {
         byte[] encoded = this
-                .getCertifiedKeyPair(actor)
-                .getPublicKey()
-                .getEncoded();
+            .getCertifiedKeyPair(actor)
+            .getPublicKey()
+            .getEncoded();
 
         return String.format("-----BEGIN PUBLIC KEY-----\n"
-                        + "%s\n"
-                        + "-----END PUBLIC KEY-----\n",
-                Base64.getEncoder().encodeToString(encoded));
-    }
-
-    /**
-     * @return the date provider.
-     */
-    public DateProvider getDateProvider()
-    {
-        return this.dateProvider;
-    }
-
-    /**
-     * @param dateProvider the date provider.
-     */
-    public void setDateProvider(DateProvider dateProvider)
-    {
-        this.dateProvider = dateProvider;
+                + "%s\n"
+                + "-----END PUBLIC KEY-----\n",
+            Base64.getEncoder().encodeToString(encoded));
     }
 }
