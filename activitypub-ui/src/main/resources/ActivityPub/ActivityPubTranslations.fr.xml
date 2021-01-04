@@ -80,8 +80,10 @@ ActivityPub.ActivityPubConfigurationClass_pageNotifications.hint=Configure si le
 ActivityPub.ActivityPubConfigurationClass_pageNotificationPolicy.hint=Les notifications de création et de modification des pages sont envoyées aux followers des utilisateurs sélectionnés.
 activitypub.dashboard.tab.sentMessagesList=Messages envoyés
 activitypub.dashboard.tab.receivedMessagesList=Messages reçus
+activitypub.dashboard.tab.discussionsList=Discussions
 activitypub.dashboard.noactor=Vous ne pouvez accéder à cette macro que si un acteur est défini.
 activitypub.dashboard.title=Tableau de bord de {0}
+activitypub.dashboard.selectActor.label=Acteurs ActivityPub disponibles :
 activitypub.message.display.from=De :
 activitypub.message.display.to=À :
 activitypub.message.display.date=Date :
@@ -94,5 +96,6 @@ activitypub.like.livetable.summary=Résumé
 activitypub.like.livetable.attributedTo=Attribué à
 activitypub.like.livetable._actions=Actions
 activitypub.dashboard.tab.likes=J'aime
-</content>
+activitypub.notifications.reply.success=Réponse envoyée avec succès.
+activitypub.notifications.reply.failure=Le message n'a pas été envoyé.</content>
 </xwikidoc>
