@@ -384,6 +384,7 @@
       $.post(messageUserDoc.getURL("view") + '?outputSyntax=plain', $.param(data, true), function(data) {
         if(data.success) {
           new XWiki.widgets.Notification(data.message, 'success');
+          $(document).trigger('xwiki:actions:cancel');
         } else {
           new XWiki.widgets.Notification(data.message, 'error');
         }
