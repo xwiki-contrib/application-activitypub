@@ -83,6 +83,7 @@ activitypub.dashboard.tab.receivedMessagesList=Mensajes recibidos
 ### Missing: activitypub.dashboard.tab.discussionsList=Discussions
 activitypub.dashboard.noactor=Solo puedes acceder a esta macro si un actor está definido.
 activitypub.dashboard.title=Cuadro de mando de {0}
+### Missing: activitypub.dashboard.selectActor.label=Available ActivityPub actors:
 activitypub.message.display.from=De:
 activitypub.message.display.to=A:
 activitypub.message.display.date=Fecha:
@@ -95,6 +96,7 @@ activitypub.like.livetable.summary=Resumen
 activitypub.like.livetable.attributedTo=Atribuido a
 activitypub.like.livetable._actions=Acciones
 activitypub.dashboard.tab.likes=Nº de "me gusta"
-</content>
+### Missing: activitypub.notifications.reply.success=Reply successfully sent.
+### Missing: activitypub.notifications.reply.failure=Failed to send the message.</content>
   
 </xwikidoc>
