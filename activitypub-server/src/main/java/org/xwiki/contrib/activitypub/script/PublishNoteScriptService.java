@@ -32,13 +32,11 @@ import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.ActivityRequest;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
-import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.internal.ActivityPubDiscussionsService;
 import org.xwiki.contrib.activitypub.internal.DateProvider;
 import org.xwiki.contrib.activitypub.internal.scipt.ActivityPubScriptServiceActor;
-import org.xwiki.contrib.discussions.domain.Discussion;
 import org.xwiki.rendering.parser.ParseException;
 import org.xwiki.rendering.syntax.Syntax;
 import org.xwiki.stability.Unstable;
@@ -160,11 +158,7 @@ public class PublishNoteScriptService
             create.getObject().setExpand(true);
             this.activityPubScriptServiceActor.getActivityHandler(create)
                 .handleOutboxRequest(new ActivityRequest<>(currentActor, create));
-            List<ActivityPubObject> replyChain =
-                this.activityPubDiscussionsService.loadReplyChain(create.getReference());
-            List<Discussion> orCreateDiscussions =
-                this.activityPubDiscussionsService.getOrCreateDiscussions(create, replyChain);
-            orCreateDiscussions.forEach(it -> this.activityPubDiscussionsService.registerActors(it, create));
+            this.activityPubDiscussionsService.handleActivity(create, false);
             return true;
         } catch (IOException | ActivityPubException e) {
             this.logger.error("Error while posting a note.", e);

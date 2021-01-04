@@ -99,22 +99,37 @@ public class ActivityPubDiscussionsService
     }
 
     /**
-     * Checks if the activity is not already part of a discussion, and if not, created the discussions entities required
+     * Checks if the activity is not already part of a discussion, and if not, creates the discussions entities required
      * to add the message of the activity to a discussion.
      *
      * @param activity the activity to handle
+     * @throws ActivityPubException if something unexpected happens during activity resolution
      */
     public void handleActivity(AbstractActivity activity) throws ActivityPubException
+    {
+        handleActivity(activity, true);
+    }
+
+    /**
+     * Checks if the activity is not already part of a discussion, and if not, creates the discussions entities required
+     * to add the message of the activity to a discussion.
+     *
+     * @param activity the activity to handle
+     * @param notify if {@code true} a notification will be sent when the message is created, if {@code false} no
+     *     notification is sent for the message creation
+     * @throws ActivityPubException if something unexpected happens during activity resolution
+     */
+    public void handleActivity(AbstractActivity activity, boolean notify) throws ActivityPubException
     {
         boolean notAlreadyHandled = this.discussionService
             .findByDiscussionContext(ACTIVITYPUB_OBJECT, activity.getObject().getLink().toASCIIString());
         ActivityPubObject object = this.activityPubObjectReferenceResolver.resolveReference(activity.getObject());
         if (!notAlreadyHandled && object.getType().equals(Note.class.getSimpleName())) {
-            processActivity(activity);
+            processActivity(activity, notify);
         }
     }
 
-    private void processActivity(AbstractActivity activity)
+    private void processActivity(AbstractActivity activity, boolean notify)
     {
         try {
             ActivityPubObjectReference<ActivityPubObject> reference = activity.getReference();
@@ -136,7 +151,7 @@ public class ActivityPubDiscussionsService
                     ActivityPubObject object =
                         this.activityPubObjectReferenceResolver
                             .resolveReference(activityPubObjectReference);
-                    createMessage(discussion, object.getContent(), XHTML_1_0, "activitypub", authorId);
+                    createMessage(discussion, object.getContent(), XHTML_1_0, "activitypub", authorId, notify);
                 } catch (ActivityPubException e) {
                     this.logger.warn("Failed to resolve [{}]. Cause: [{}].", activityPubObjectReference,
                         getRootCauseMessage(e));
@@ -200,7 +215,15 @@ public class ActivityPubDiscussionsService
         Syntax syntax, String actorType,
         String actorReference)
     {
-        return this.messageService.create(content, syntax, discussion.getReference(), actorType, actorReference);
+        return createMessage(discussion, content, syntax, actorType, actorReference, true);
+    }
+
+    private Optional<Message> createMessage(Discussion discussion, String content,
+        Syntax syntax, String actorType,
+        String actorReference, boolean notify)
+    {
+        return this.messageService
+            .create(content, syntax, discussion.getReference(), actorType, actorReference, notify);
     }
 
     /**
