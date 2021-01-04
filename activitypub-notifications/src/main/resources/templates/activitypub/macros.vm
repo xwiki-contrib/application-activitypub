@@ -50,32 +50,77 @@
 #macro (insertReplyButton $event)
   #set ($activity = $eventActivities.get($event))
   #set ($isLiked = $services.activitypub.isLiked($activity.id))
+
+  ## TODO: Duplicate from ActivityPub.WebHome, move to script service?
+  #set($availableActors = [])
+  #if (!$isGuest)
+    #set($actor = $services.activitypub.getActor(""))
+    #set($discard = $availableActors.add({'label': 'Current User', 'actor': $actor}))
+    #set($wikiActor = $services.activitypub.getCurrentWikiActor())
+    #if ($services.activitypub.currentUserCanActFor($wikiActor))
+      #set($discard = $availableActors.add({'label': 'Current Wiki', 'actor': $wikiActor}))
+    #end
+  #else
+    #set($actor = $services.activitypub.getCurrentWikiActor())
+  #end
+  #if ("$!request.actor" != "")
+    #set($actor = $services.activitypub.getActor($request.actor))
+  #end
+
   <input type="hidden" class="reply-event-id" value="$event.id" />
   <button class="btn btn-xs notification-reply hidden" title="Reply" data-activity-id="$activity.id">
     $services.icon.renderHTML('comment')
   </button>
-  <div class="modal fade activitypub-modal-reply-notification" tabindex="-1" role="dialog" id="activitypub-modal-reply-notification-$event.id" style="text-align: left;">
+  <div class="modal fade activitypub-modal-reply-notification" tabindex="-1" role="dialog"
+      id="activitypub-modal-reply-notification-$event.id" style="text-align: left;">
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <h4 class="modal-title">Reply</h4>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <h4 class="modal-title">$services.localization.render('activitypub.event.activity.reply.title')</h4>
         </div>
         <div class="modal-body">
-          <form>
-            <form method="post" action="$url" class="message-form">
-                <div class="form-group">
-                    <!-- empty: loaded lazily -->
-                </div>
-                <input type="hidden" name="eventId" value="$event.id" />
-                <input type="hidden" name="activityId" value="$activity.id" />
-            </form>
-            #set ($discard = $xwiki.jsx.use('Discussions.Code.DiscussionMacro'))
+          <form method="post" action="$url" class="message-form">
+            #if ($availableActors.size() > 1)
+              <dl>
+                <dt>
+                  <label for="actor_select">
+                     $services.localization.render('activitypub.event.activity.reply.selectActor.label')
+                  </label>
+                </dt>
+                <dd>
+                  <select name="actor" id="actor_select">
+                    #foreach($availableActor in $availableActors)
+                     <option value="$availableActor.actor.id"
+                         #if ($availableActor.actor.equals($actor)) selected="selected"#end>
+                       $availableActor.label
+                     </option>
+                    #end
+                  </select>
+                </dd>
+              </dl>
+            #else
+              <input type="hidden" name="actor" value="$availableActors[0].actor.id" />
+            #end
+            <dl>
+              <dd class='editor-placeholder'>
+                <!-- empty: loaded lazily -->
+              </dd>
+            </dl>
+            <input type="hidden" name="eventId" value="$event.id" />
+            <input type="hidden" name="activityId" value="$activity.id" />
           </form>
+          #set ($discard = $xwiki.jsx.use('Discussions.Code.DiscussionMacro'))
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary activitypub-button-reply-button">Reply</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">
+            $services.localization.render('activitypub.event.activity.reply.action.cancel')
+          </button>
+          <button type="button" class="btn btn-primary activitypub-button-reply-button">
+            $services.localization.render('activitypub.event.activity.reply.action.submit')
+          </button>
         </div>
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->

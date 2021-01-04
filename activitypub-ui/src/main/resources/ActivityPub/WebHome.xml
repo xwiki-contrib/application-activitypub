@@ -56,7 +56,7 @@
 #if ($availableActors.size() &gt; 1)
 {{html}}
 &lt;form class="xformInline"&gt;
-    &lt;label for="actor_select"&gt;Available ActivityPub actors: &lt;/label&gt;
+    &lt;label for="actor_select"&gt;$services.localization.render('activitypub.dashboard.selectActor.label')&lt;/label&gt;
     &lt;select name="actor" id="actor_select"&gt;
       #foreach($availableActor in $availableActors)
         &lt;option value="$availableActor.actor.id" #if ($availableActor.actor.equals($actor))selected="selected"#end&gt;$availableActor.label&lt;/option&gt;

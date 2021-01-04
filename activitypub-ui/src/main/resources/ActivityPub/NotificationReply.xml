@@ -39,7 +39,8 @@
   <content>{{velocity}}
 #if ($request.getMethod().toLowerCase() == 'post')
 #try("replyToEventException")
-#set ($success = $services.activitypub.discussions.replyToEvent($request.eventId, $request.activityId, $request.content))
+#set ($success = $services.activitypub.discussions.replyToEvent($request.eventId, $request.activityId, $request.actor,
+    $request.content))
 #end
 
 #if ("$!replyToEventException" != '')
@@ -179,6 +180,7 @@
         "eventId": form.find('[name="eventId"]').val(),
         "activityId": form.find('[name="activityId"]').val(),
         "content": form.find('[name="content"]').val(),
+        "actor": form.find('[name="actor"]').val(),
       }, function(res) {
         if(res.success) {
           new XWiki.widgets.Notification("$services.localization.render('activitypub.notifications.reply.success')", 'done');
@@ -196,8 +198,8 @@
       var replyModal = $("#activitypub-modal-reply-notification-" + eventId)
       replyModal.prependTo("body");
 
-      var formGroup = replyModal.find('.form-group');
-      formGroup.empty();
+      var editorPlaceholder = replyModal.find('.editor-placeholder');
+      editorPlaceholder.empty();
       const displayMessageFieldDoc = new XWiki.Document(XWiki.Model.resolve('Discussions.Code.DisplayMessage', XWiki.EntityType.DOCUMENT));
       $.ajax({
         type: 'GET',
@@ -206,9 +208,9 @@
           "showContentField": "show"
         }, 
         success: function(res, textStatus, request) {
-          formGroup.append(res);
+          editorPlaceholder.append(res);
           $(document).trigger('xwiki:dom:updated', {
-            'elements': formGroup.toArray()
+            'elements': editorPlaceholder.toArray()
           });
           loadRequiredSkinExtensions(request.getResponseHeader('X-XWIKI-HTML-HEAD'));
           replyModal.modal('show');

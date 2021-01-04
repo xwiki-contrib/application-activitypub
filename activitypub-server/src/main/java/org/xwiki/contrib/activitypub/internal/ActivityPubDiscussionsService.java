@@ -50,6 +50,7 @@ import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.rendering.syntax.Syntax;
 
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
+import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.ACTIVITYPUB_DISCUSSION_TYPE;
 import static org.xwiki.rendering.syntax.Syntax.XHTML_1_0;
 
 /**
@@ -151,7 +152,8 @@ public class ActivityPubDiscussionsService
                     ActivityPubObject object =
                         this.activityPubObjectReferenceResolver
                             .resolveReference(activityPubObjectReference);
-                    createMessage(discussion, object.getContent(), XHTML_1_0, "activitypub", authorId, notify);
+                    createMessage(discussion, object.getContent(), XHTML_1_0, ACTIVITYPUB_DISCUSSION_TYPE, authorId,
+                        notify);
                 } catch (ActivityPubException e) {
                     this.logger.warn("Failed to resolve [{}]. Cause: [{}].", activityPubObjectReference,
                         getRootCauseMessage(e));

@@ -126,16 +126,17 @@ class ActivityPubDiscussionsScriptServiceTest
             .getOrCreate("TO ACTOR", "TO ACTOR", "activitypub-actor",
                 "https://to/actor")).thenReturn(Optional.of(dc3));
 
-        when(this.messageService.create("messageContent", XWIKI_2_1, d1.getReference())).thenReturn(
-            Optional.of(new Message("mr", new MessageContent("messageContent", XWIKI_2_1), "user", "actorRef",
-                new Date(), new Date(), d1)));
+        when(this.messageService.create("messageContent", XWIKI_2_1, d1.getReference(), "activitypub", "actorId"))
+            .thenReturn(
+                Optional.of(new Message("mr", new MessageContent("messageContent", XWIKI_2_1), "user", "actorRef",
+                    new Date(), new Date(), d1)));
 
         when(this.htmlConverter.fromHTML(eq("messageContent"), any())).thenReturn("messageContent");
 
         boolean b = this.activityPubDiscussionsScriptService
-            .replyToEvent("discussionContext1Ref", "discussionContext2Ref", "messageContent");
+            .replyToEvent("discussionContext1Ref", "discussionContext2Ref", "actorId", "messageContent");
         assertTrue(b);
-        verify(this.messageService).create("messageContent", XWIKI_2_1, "d1");
+        verify(this.messageService).create("messageContent", XWIKI_2_1, "d1", "activitypub", "actorId");
         verify(this.discussionContextService).link(dc1, d1);
         verify(this.discussionContextService).link(dc2, d1);
         verify(this.discussionContextService).link(dc3, d1);

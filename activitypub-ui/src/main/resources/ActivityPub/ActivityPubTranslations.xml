@@ -83,6 +83,7 @@ activitypub.dashboard.tab.receivedMessagesList=Received messages
 activitypub.dashboard.tab.discussionsList=Discussions
 activitypub.dashboard.noactor=You can only access this macro if an actor is defined.
 activitypub.dashboard.title=Dashboard of {0}
+activitypub.dashboard.selectActor.label=Available ActivityPub actors:
 activitypub.message.display.from=From:
 activitypub.message.display.to=To:
 activitypub.message.display.date=Date:
@@ -96,7 +97,8 @@ activitypub.like.livetable.attributedTo=Attributed To
 activitypub.like.livetable._actions=Actions
 activitypub.dashboard.tab.likes=Likes
 activitypub.notifications.reply.success=Reply successfully sent.
-activitypub.notifications.reply.failure=Failed to send the message.</content>
+activitypub.notifications.reply.failure=Failed to send the message.
+</content>
   <object>
     <name>ActivityPub.ActivityPubTranslations</name>
     <number>0</number>

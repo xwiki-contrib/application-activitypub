@@ -40,7 +40,15 @@ public interface ActivityPubConfiguration
      */
     @Unstable
     String ACTIVITYPUB_MENTION_TYPE = "activitypub";
-    
+
+    /**
+     * The type of the discussions to activitypub actors.
+     *
+     * @since 1.5
+     */
+    @Unstable
+    String ACTIVITYPUB_DISCUSSION_TYPE = "activitypub";
+
     /**
      * Behaviour to adopt in case of Follow request.
      */

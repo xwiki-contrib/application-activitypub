@@ -44,6 +44,7 @@ import org.xwiki.wysiwyg.converter.HTMLConverter;
 
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
+import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.ACTIVITYPUB_DISCUSSION_TYPE;
 import static org.xwiki.rendering.syntax.Syntax.XWIKI_2_1;
 
 /**
@@ -86,10 +87,11 @@ public class ActivityPubDiscussionsScriptService
      *
      * @param eventId the event id
      * @param activityId the activity id
+     * @param actorId the ID of the actor sending the message
      * @param content the message content
      * @return {@code} true if the operation succeeded, {@code false} otherwise
      */
-    public boolean replyToEvent(String eventId, String activityId, String content)
+    public boolean replyToEvent(String eventId, String activityId, String actorId, String content)
     {
         // First search or creates a discussion according to the discussion contexts for the event and the activity of 
         // the message.
@@ -124,10 +126,10 @@ public class ActivityPubDiscussionsScriptService
                         linkToActor(discussion, activityPubObjectReference);
                     }
 
-                    List<ActivityPubObjectReference<AbstractActor>> attributedTo = object.getAttributedTo();
-                    if (attributedTo != null) {
-                        for (ActivityPubObjectReference<AbstractActor> a : attributedTo) {
-                            linkToActor(discussion, this.resolver.resolveReference(a).getProxyActor());
+                    List<ActivityPubObjectReference<AbstractActor>> attributedToList = object.getAttributedTo();
+                    if (attributedToList != null) {
+                        for (ActivityPubObjectReference<AbstractActor> attributedTo : attributedToList) {
+                            linkToActor(discussion, this.resolver.resolveReference(attributedTo).getProxyActor());
                         }
                     }
                 } catch (ActivityPubException e) {
@@ -141,7 +143,7 @@ public class ActivityPubDiscussionsScriptService
                 // TODO: take into account the syntax and check if the conversion is required
                 .map(it -> this.messageService
                     .create(this.htmlConverter.fromHTML(content, XWIKI_2_1.toIdString()), XWIKI_2_1,
-                        it.getReference())
+                        it.getReference(), ACTIVITYPUB_DISCUSSION_TYPE, actorId)
                     .isPresent())
                 .orElse(false);
         } catch (ActivityPubException e) {
