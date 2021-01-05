@@ -123,34 +123,47 @@ public class ActivityPubDiscussionsMessagesEventListener implements EventListene
                 List<DiscussionContext> discussionContexts =
                     this.discussionContextService.findByDiscussionReference(message.getDiscussion().getReference());
 
-                try {
-                    AbstractActor actor = this.actorHandler.getActor(message.getActorReference());
-                    List<ProxyActor> to = getExternalRelatedActors(discussionContexts);
-                    to.remove(actor.getProxyActor());
+                // Handles only messages with activitypub discussion contexts.
+                if (discussionContexts.stream()
+                    .anyMatch(it -> it != null && it.getName() != null && it.getName().startsWith(
+                        "activitypub-")))
+                {
 
-                    List<ActivityPubObject> objects = getRelatedObjects(discussionContexts);
-
-                    /*
-                     If some activities are found, we send the note multiple times, to each activity, with the 
-                     in-reply-to filled with the activity id.
-                     Otherwise, we send the note only once
-                    */
-                    if (objects.isEmpty()) {
-                        sendMessage(message, actionType, actor, to, null);
-                    } else {
-                        objects.stream()
-                            .max(Comparator.comparing(ActivityPubObject::getLastUpdated))
-                            .ifPresent(itx -> sendMessage(message, actionType, actor, to, itx));
-                    }
-                } catch (ActivityPubException e) {
-                    this.logger
-                        .warn("Failed to share the message [{}] from event [{}] with the fediverse. Cause: [{}].",
-                            message, event, getRootCauseMessage(e));
+                    handleMessage(event, message, actionType, discussionContexts);
                 }
             } else {
                 // TODO: handle delete messages
                 this.logger.debug("Delete event are not handled currently.");
             }
+        }
+    }
+
+    private void handleMessage(Event event, Message message, ActionType actionType,
+        List<DiscussionContext> discussionContexts)
+    {
+        try {
+            AbstractActor actor = this.actorHandler.getActor(message.getActorReference());
+            List<ProxyActor> to = getExternalRelatedActors(discussionContexts);
+            to.remove(actor.getProxyActor());
+
+            List<ActivityPubObject> objects = getRelatedObjects(discussionContexts);
+
+        /*
+         If some activities are found, we send the note multiple times, to each activity, with the
+         in-reply-to filled with the activity id.
+         Otherwise, we send the note only once
+        */
+            if (objects.isEmpty()) {
+                sendMessage(message, actionType, actor, to, null);
+            } else {
+                objects.stream()
+                    .max(Comparator.comparing(ActivityPubObject::getLastUpdated))
+                    .ifPresent(itx -> sendMessage(message, actionType, actor, to, itx));
+            }
+        } catch (ActivityPubException e) {
+            this.logger
+                .warn("Failed to share the message [{}] from event [{}] with the fediverse. Cause: [{}].",
+                    message, event, getRootCauseMessage(e));
         }
     }
 
