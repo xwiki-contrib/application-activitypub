@@ -56,7 +56,7 @@ import org.xwiki.contrib.activitypub.internal.DateProvider;
 import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.contrib.activitypub.internal.InternalURINormalizer;
 import org.xwiki.contrib.activitypub.internal.activities.LikeActivityHandler;
-import org.xwiki.contrib.activitypub.internal.scipt.ActivityPubScriptServiceActor;
+import org.xwiki.contrib.activitypub.internal.script.ActivityPubScriptServiceActor;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.WikiReference;

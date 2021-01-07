@@ -36,7 +36,7 @@ import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.internal.ActivityPubDiscussionsService;
 import org.xwiki.contrib.activitypub.internal.DateProvider;
-import org.xwiki.contrib.activitypub.internal.scipt.ActivityPubScriptServiceActor;
+import org.xwiki.contrib.activitypub.internal.script.ActivityPubScriptServiceActor;
 import org.xwiki.rendering.parser.ParseException;
 import org.xwiki.rendering.syntax.Syntax;
 import org.xwiki.stability.Unstable;

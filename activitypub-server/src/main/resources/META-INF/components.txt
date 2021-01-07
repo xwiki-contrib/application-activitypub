@@ -34,4 +34,4 @@ org.xwiki.contrib.activitypub.internal.ActivityPubMentionsFormatter
 org.xwiki.contrib.activitypub.script.ActivityPubDiscussionsScriptService
 org.xwiki.contrib.activitypub.script.PublishNoteScriptService
 org.xwiki.contrib.activitypub.internal.ActivityPubDiscussionsActorService
-org.xwiki.contrib.activitypub.internal.scipt.ActivityPubScriptServiceActor
+org.xwiki.contrib.activitypub.internal.script.ActivityPubScriptServiceActor

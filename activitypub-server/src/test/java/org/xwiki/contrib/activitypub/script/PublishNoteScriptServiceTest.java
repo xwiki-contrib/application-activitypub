@@ -44,7 +44,7 @@ import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.internal.DateProvider;
-import org.xwiki.contrib.activitypub.internal.scipt.ActivityPubScriptServiceActor;
+import org.xwiki.contrib.activitypub.internal.script.ActivityPubScriptServiceActor;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;

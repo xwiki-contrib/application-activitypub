@@ -239,7 +239,7 @@ public class ActivityPubDiscussionsService
     public List<Discussion> getOrCreateDiscussions(AbstractActivity activity, List<ActivityPubObject> replyChain)
     {
         List<Discussion> discussions = replyChain.stream().flatMap(it -> this.discussionService
-            .findByEntityReference(ACTIVITYPUB_OBJECT, it.getId().toASCIIString(), null,
+            .findByEntityReferences(ACTIVITYPUB_OBJECT, Arrays.asList(it.getId().toASCIIString()), null,
                 null).stream())
             .distinct().collect(Collectors.toList());
         if (discussions.isEmpty()) {
