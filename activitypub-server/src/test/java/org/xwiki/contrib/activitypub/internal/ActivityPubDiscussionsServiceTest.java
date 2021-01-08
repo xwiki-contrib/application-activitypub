@@ -45,6 +45,7 @@ import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
 
+import static java.util.Arrays.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.verify;
@@ -125,16 +126,17 @@ class ActivityPubDiscussionsServiceTest
             .setId(URI.create("https://server/actor"));
         Create create = new Create()
             .<Create>setId(URI.create("https://server/create"))
-            .setActor(actor);
+            .setActor(actor)
+            .setSummary("Discussion for the Create activity of January 8, 2021 at 15:56");
         URI recipientID = URI.create("https://server/recipient");
         ProxyActor recipientReference = new ProxyActor(recipientID);
         Person recipient = new Person()
             .setId(recipientID);
         Note document = new Note()
             .setId(URI.create("https://server/note"))
-            .setTo(Arrays.asList(recipientReference));
+            .setTo(asList(recipientReference));
         create.setObject(document);
-        String title = "Discussion for https://server/create";
+        String title = "Discussion for the Create activity of January 8, 2021 at 15:56";
         Discussion d1 = new Discussion("d1", title, title, new Date());
         DiscussionContext dc1 = new DiscussionContext("dc1", "https://server/note", "https://server/note",
             new DiscussionContextEntityReference("activitypub-object", "https://server/note"));
@@ -162,25 +164,5 @@ class ActivityPubDiscussionsServiceTest
         this.activityPubDiscussionsService.handleActivity(create);
         verify(this.discussionContextService).link(dc1, d1);
         verify(this.discussionContextService).link(dc2, d1);
-    }
-
-    @Test
-    void getOrCreateDiscussionContext()
-    {
-    }
-
-    @Test
-    void createMessage()
-    {
-    }
-
-    @Test
-    void getOrCreateDiscussions()
-    {
-    }
-
-    @Test
-    void loadReplyChain()
-    {
     }
 }

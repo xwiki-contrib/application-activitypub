@@ -20,8 +20,10 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import java.net.URI;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -243,7 +245,18 @@ public class ActivityPubDiscussionsService
                 null).stream())
             .distinct().collect(Collectors.toList());
         if (discussions.isEmpty()) {
-            String title = "Discussion for " + activity.getId();
+            String title;
+            if (activity.getSummary() != null) {
+                title = activity.getSummary();
+            } else {
+                Date lastUpdated = activity.getLastUpdated();
+                if (lastUpdated == null) {
+                    lastUpdated = new Date();
+                }
+                String dateFormat = new SimpleDateFormat("MMMM d, yyyy 'at' HH:mm").format(lastUpdated);
+                title = "Discussion for the " + activity.getType() + " activity of " + dateFormat;
+            }
+
             discussions = this.discussionService.create(title, title)
                 .map(Arrays::asList)
                 .orElseGet(Arrays::asList);
