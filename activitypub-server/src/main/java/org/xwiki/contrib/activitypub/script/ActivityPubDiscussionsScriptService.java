@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.slf4j.Logger;
@@ -40,6 +41,7 @@ import org.xwiki.contrib.discussions.DiscussionService;
 import org.xwiki.contrib.discussions.MessageService;
 import org.xwiki.contrib.discussions.domain.Discussion;
 import org.xwiki.contrib.discussions.domain.DiscussionContext;
+import org.xwiki.script.service.ScriptService;
 import org.xwiki.wysiwyg.converter.HTMLConverter;
 
 import static java.util.Collections.singletonList;
@@ -53,9 +55,10 @@ import static org.xwiki.rendering.syntax.Syntax.XWIKI_2_1;
  * @version $Id$
  * @since 1.5
  */
-@Component(roles = { ActivityPubDiscussionsScriptService.class })
+@Component
+@Named("activitypub.discussions")
 @Singleton
-public class ActivityPubDiscussionsScriptService
+public class ActivityPubDiscussionsScriptService implements ScriptService
 {
     private static final String EVENT_STR = "event";
 

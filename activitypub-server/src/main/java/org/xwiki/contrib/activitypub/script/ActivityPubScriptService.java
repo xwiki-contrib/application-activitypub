@@ -68,6 +68,7 @@ import org.xwiki.contrib.activitypub.internal.stream.StreamActivityPubObjectRefe
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.script.service.ScriptService;
+import org.xwiki.script.service.ScriptServiceManager;
 import org.xwiki.security.authorization.AuthorizationManager;
 import org.xwiki.security.authorization.Right;
 import org.xwiki.stability.Unstable;
@@ -91,10 +92,18 @@ import static org.apache.solr.client.solrj.util.ClientUtils.escapeQueryChars;
  */
 @Component
 @Singleton
-@Named("activitypub")
+@Named(ActivityPubScriptService.ROLEHINT)
 @Unstable
 public class ActivityPubScriptService implements ScriptService
 {
+    /**
+     * The role hint of this component.
+     *
+     * @since 1.5
+     */
+    @Unstable
+    public static final String ROLEHINT = "activitypub";
+
     private static final String GET_CURRENT_ACTOR_ERR_MSG = "Failed to retrieve the current actor. Cause [{}].";
 
     private static final String GET_ACTOR_ERROR_MSG = "Error while trying to get the actor [{}].";
@@ -153,13 +162,26 @@ public class ActivityPubScriptService implements ScriptService
     private DefaultURLHandler urlHandler;
 
     @Inject
-    private ActivityPubDiscussionsScriptService activityPubDiscussionsScriptService;
+    private ScriptServiceManager scriptServiceManager;
 
     @Inject
     private PublishNoteScriptService publishNoteScriptService;
 
     @Inject
     private ActivityPubScriptServiceActor activityPubScriptServiceActor;
+
+    /**
+     * @param <S> the type of the {@link ScriptService}
+     * @param serviceName the name of the sub {@link ScriptService}
+     * @return the {@link ScriptService} or null if none could be found
+     * @since 1.5
+     */
+    @Unstable
+    @SuppressWarnings("unchecked")
+    public <S extends ScriptService> S get(String serviceName)
+    {
+        return (S) this.scriptServiceManager.get(ROLEHINT + '.' + serviceName);
+    }
 
     /**
      * Retrieve an ActivityPub actor to be used in the methods of the script service. It follows this strategy for
@@ -641,16 +663,6 @@ public class ActivityPubScriptService implements ScriptService
         } catch (Exception e) {
             return false;
         }
-    }
-
-    /**
-     * @return the discussions script service
-     * @since 1.5
-     */
-    @Unstable
-    public ActivityPubDiscussionsScriptService getDiscussions()
-    {
-        return this.activityPubDiscussionsScriptService;
     }
 
     /**
