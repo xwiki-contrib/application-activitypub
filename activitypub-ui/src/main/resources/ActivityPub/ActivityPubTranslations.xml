@@ -97,7 +97,8 @@ activitypub.like.livetable.attributedTo=Attributed To
 activitypub.like.livetable._actions=Actions
 activitypub.dashboard.tab.likes=Likes
 activitypub.notifications.reply.success=Reply successfully sent.
-activitypub.notifications.reply.failure=Failed to send the message.</content>
+activitypub.notifications.reply.failure=Failed to send the message.
+activitypub.like.button.title=Number of likes from the fediverse: </content>
   <object>
     <name>ActivityPub.ActivityPubTranslations</name>
     <number>0</number>

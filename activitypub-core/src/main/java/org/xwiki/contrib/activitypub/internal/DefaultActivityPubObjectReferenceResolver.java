@@ -41,7 +41,10 @@ import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.contrib.activitypub.entities.AbstractActor;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
+import org.xwiki.contrib.activitypub.entities.Page;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
+import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.EntityReferenceSerializer;
 
 /**
  * Default implementation of {@link ActivityPubObjectReferenceResolver}.
@@ -69,6 +72,9 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
 
     @Inject
     private Logger logger;
+
+    @Inject
+    private EntityReferenceSerializer<String> serializer;
 
     @Override
     public <T extends ActivityPubObject> T resolveReference(ActivityPubObjectReference<T> reference)
@@ -140,6 +146,25 @@ public class DefaultActivityPubObjectReferenceResolver implements ActivityPubObj
             && !this.defaultURLHandler.belongsToCurrentInstance(activityPubObject.getId())
             && activityPubObject.getLastUpdated() != null
             && this.dateProvider.isElapsed(date, lastUpdated, MAX_DAY_BEFORE_REFRESH));
+    }
+
+    @Override
+    public Page resolveDocumentReference(DocumentReference documentReference) throws ActivityPubException
+    {
+        ActivityPubStorage storage = this.activityPubStorageProvider.get();
+        String docIdSolr = this.serializer.serialize(documentReference);
+        List<Page> pages = storage.query(Page.class, String.format("filter(%s:%s)",
+                ActivityPubStorage.XWIKI_REFERENCE_FIELD,
+                storage.escapeQueryChars(docIdSolr)), 1);
+
+        Page result;
+        if (pages.isEmpty()) {
+            result = new Page().setXwikiReference(docIdSolr);
+            storage.storeEntity(result);
+        } else {
+            result = pages.get(0);
+        }
+        return result;
     }
 
     private void resolveProxyActorList(List<ProxyActor> proxyActorList, Set<AbstractActor> resolvedTargets)

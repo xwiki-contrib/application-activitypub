@@ -46,8 +46,11 @@ import org.xwiki.contrib.activitypub.entities.Accept;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
+import org.xwiki.contrib.activitypub.entities.Page;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
+import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
@@ -98,6 +101,9 @@ class DefaultActivityPubObjectReferenceResolverTest
 
     @MockComponent
     private DefaultURLHandler defaultURLHandler;
+
+    @MockComponent
+    private EntityReferenceSerializer<String> serializer;
 
     @BeforeEach
     public void setup() throws Exception
@@ -313,5 +319,34 @@ class DefaultActivityPubObjectReferenceResolverTest
         verify(this.activityPubStorage).retrieveEntity(uri);
         verify(this.activityPubClient).get(uri);
         verify(this.activityPubStorage, never()).storeEntity(any());
+    }
+
+    @Test
+    void resolveDocumentReferenceAlreadyStored() throws Exception
+    {
+        DocumentReference documentReference = new DocumentReference("mywiki", "Foo", "Bar");
+        when(this.serializer.serialize(documentReference)).thenReturn("mywiki:Foo.Bar");
+        when(this.activityPubStorage.escapeQueryChars("mywiki:Foo.Bar")).thenReturn("mywiki\\:Foo.Bar");
+        Page expectedPage = mock(Page.class);
+        when(this.activityPubStorage.query(Page.class, "filter(xwikiReference:mywiki\\:Foo.Bar)", 1))
+            .thenReturn(Collections.singletonList(expectedPage));
+
+        assertEquals(expectedPage, this.resolver.resolveDocumentReference(documentReference));
+        verify(this.activityPubStorage, never()).storeEntity(any());
+    }
+
+    @Test
+    void resolveDocumentReferenceNotStored() throws Exception
+    {
+        DocumentReference documentReference = new DocumentReference("mywiki", "Foo", "Bar");
+        when(this.serializer.serialize(documentReference)).thenReturn("mywiki:Foo.Bar");
+        when(this.activityPubStorage.escapeQueryChars("mywiki:Foo.Bar")).thenReturn("mywiki\\:Foo.Bar");
+        Page expectedPage = new Page().setXwikiReference("mywiki:Foo.Bar");
+        when(this.activityPubStorage.query(Page.class, "filter(xwikiReference:mywiki\\:Foo.Bar)", 1))
+            .thenReturn(Collections.emptyList());
+
+        assertEquals(expectedPage, this.resolver.resolveDocumentReference(documentReference));
+        verify(this.activityPubStorage).storeEntity(expectedPage);
+        verify(this.activityPubStorage).query(Page.class, "filter(xwikiReference:mywiki\\:Foo.Bar)", 1);
     }
 }

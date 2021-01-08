@@ -92,15 +92,17 @@ public class PageCreatedNotificationJob extends AbstractPageNotificationJob
 
         URI documentUrl = this.urlHandler.getAbsoluteURI(new URI(view));
         List<ActivityPubObjectReference<AbstractActor>> attributedTo = Collections.singletonList(author.getReference());
-        Page page = new Page()
-            .setName(title)
+
+        Page page = this.objectReferenceResolver.resolveDocumentReference(this.request.getDocumentReference());
+
+        // Fill the information about the page.
+        page.setName(title)
             .setAttributedTo(attributedTo)
             .setPublished(creationDate)
             .setContent(this.htmlRenderer.render(content, this.request.getDocumentReference()))
             // We cannot put it as a document id, since we need to be able to resolve it 
             // with an activitypub answer.
-            .setUrl(Collections.singletonList(documentUrl))
-            .setXwikiReference(this.stringEntityReferenceSerializer.serialize(this.request.getDocumentReference()));
+            .setUrl(Collections.singletonList(documentUrl));
 
         // Make sure it's stored so it can be resolved later.
         this.storage.storeEntity(page);

@@ -46,8 +46,6 @@ import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.rendering.block.XDOM;
 
-import static org.apache.solr.client.solrj.util.ClientUtils.escapeQueryChars;
-
 /**
  * Handles asynchronous ActivityPub tasks on page update events.
  *
@@ -99,28 +97,15 @@ public class PageUpdatedNotificationJob extends AbstractPageNotificationJob
 
         List<ActivityPubObjectReference<AbstractActor>> attributedTo = Collections.singletonList(author.getReference());
 
-        String docIdSolr = this.stringEntityReferenceSerializer.serialize(documentReference);
-
-        List<Page> pages = this.storage.query(Page.class, String.format("filter(%s:%s)",
-            ActivityPubStorage.XWIKI_REFERENCE_FIELD,
-            escapeQueryChars(docIdSolr)), 1);
         String contentRendered = this.htmlRenderer.render(content, documentReference);
-        Page page;
-        if (pages.isEmpty()) {
-            // the document was created before the installation of this extension.
-            page = new Page()
-                .setName(title)
-                .setAttributedTo(attributedTo)
-                .setPublished(creationDate)
-                .setContent(contentRendered)
-                .setUrl(Collections.singletonList(documentUrl))
-                .setXwikiReference(docIdSolr);
-        } else {
-            // if the document was already existing in storage, we update it
-            page = pages.get(0)
-                .setContent(contentRendered)
-                .setAttributedTo(attributedTo);
-        }
+        Page page = this.objectReferenceResolver.resolveDocumentReference(documentReference);
+
+        // Fill the information about the page.
+        page.setName(title)
+            .setAttributedTo(attributedTo)
+            .setPublished(creationDate)
+            .setContent(contentRendered)
+            .setUrl(Collections.singletonList(documentUrl));
 
         // Make sure it's stored so it can be resolved later.
         this.storage.storeEntity(page);

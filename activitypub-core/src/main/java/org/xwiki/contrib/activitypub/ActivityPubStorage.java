@@ -141,4 +141,17 @@ public interface ActivityPubStorage
      */
     @Unstable
     <T extends ActivityPubObject> List<T> query(Class<T> type, String query, int limit) throws ActivityPubException;
+
+    /**
+     * Escaping utility for parts of the queries to be performed.
+     *
+     * @param queryElement part of the query to be escaped
+     * @return an escaped string.
+     * @since 1.5
+     */
+    @Unstable
+    default String escapeQueryChars(String queryElement)
+    {
+        return queryElement;
+    }
 }

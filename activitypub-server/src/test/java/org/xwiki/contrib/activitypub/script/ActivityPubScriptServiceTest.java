@@ -343,6 +343,8 @@ class ActivityPubScriptServiceTest
             object.setTo(Collections.singletonList(u1.getProxyActor()));
             return null;
         }).when(this.activityPubScriptServiceActor).fillRecipients(any(), any(), any());
+        when(this.activityPubObjectReferenceResolver.resolveDocumentReference(documentReference))
+            .thenReturn(new Page());
 
         boolean actual = this.scriptService.sharePage(Collections.singletonList("U1"), "xwiki:XWiki.MyPage");
 
@@ -362,6 +364,7 @@ class ActivityPubScriptServiceTest
             .setPublished(currentDate)
             .<Announce>setTo(Collections.singletonList(u1.getProxyActor())));
         verify(activityHandler).handleOutboxRequest(any(ActivityRequest.class));
+        verify(this.activityPubObjectReferenceResolver).resolveDocumentReference(documentReference);
     }
 
     @Test
@@ -379,6 +382,8 @@ class ActivityPubScriptServiceTest
         when(this.xWikiContext.getWiki()).thenReturn(xWiki);
         XWikiDocument xwikiDoc = mock(XWikiDocument.class);
         when(xWiki.getDocument(documentReference, this.xWikiContext)).thenReturn(xwikiDoc);
+        when(this.activityPubObjectReferenceResolver.resolveDocumentReference(documentReference))
+            .thenReturn(new Page());
         when(this.activityPubStorage.storeEntity(any())).thenThrow(new ActivityPubException("ERR"));
         when(this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, documentReference)).thenReturn(true);
         when(xwikiDoc.getURL("view", this.xWikiContext)).thenReturn("http://wiki/view/page");
@@ -387,6 +392,7 @@ class ActivityPubScriptServiceTest
 
         assertFalse(actual);
         verify(activityHandler, never()).handleOutboxRequest(any(ActivityRequest.class));
+        verify(this.activityPubObjectReferenceResolver).resolveDocumentReference(documentReference);
         assertEquals(1, this.logCapture.size());
         assertEquals("Error while sharing a page.", this.logCapture.getMessage(0));
     }
@@ -517,7 +523,17 @@ class ActivityPubScriptServiceTest
         LikeActivityHandler likeActivityHandler = mock(LikeActivityHandler.class);
         when(this.activityPubScriptServiceActor.getActivityHandler(likeActivity))
             .thenReturn(likeActivityHandler);
+        Person otherActor = mock(Person.class);
+        ActivityPubObjectReference<AbstractActor> otherActorRef = new ActivityPubObjectReference<AbstractActor>()
+            .setObject(otherActor);
+        when(this.activityPubObjectReferenceResolver.resolveReference(otherActorRef)).thenReturn(otherActor);
+        when(activity.getActor()).thenReturn(otherActorRef);
+
+        HttpMethod httpMethod = mock(HttpMethod.class);
+        when(this.activityPubClient.postInbox(otherActor, likeActivity)).thenReturn(httpMethod);
         assertTrue(this.scriptService.likeActivity(activityId));
+        verify(this.activityPubClient).checkAnswer(httpMethod);
+        verify(httpMethod).releaseConnection();
         verify(this.activityPubStorage).storeEntity(likeActivity);
         verify(likeActivityHandler).handleOutboxRequest(new ActivityRequest<>(actor, likeActivity));
     }
@@ -551,5 +567,34 @@ class ActivityPubScriptServiceTest
             value);
         List<Note> sentMessages = this.scriptService.getSentMessages(targetActor, 10);
         assertSame(value, sentMessages);
+    }
+
+    @Test
+    void getLikeNumberNoLikes() throws Exception
+    {
+        DocumentReference documentReference = mock(DocumentReference.class);
+        when(this.activityPubObjectReferenceResolver.resolveDocumentReference(documentReference))
+            .thenReturn(new Page());
+        assertEquals(0, this.scriptService.getLikeNumber(documentReference));
+    }
+
+    @Test
+    void getLikeNumber() throws Exception
+    {
+        DocumentReference documentReference = mock(DocumentReference.class);
+        Page page = mock(Page.class);
+        when(this.activityPubObjectReferenceResolver.resolveDocumentReference(documentReference))
+            .thenReturn(page);
+        OrderedCollection<Like> orderedCollection = new OrderedCollection<>().setOrderedItems(Arrays.asList(
+            mock(ActivityPubObjectReference.class),
+            mock(ActivityPubObjectReference.class),
+            mock(ActivityPubObjectReference.class),
+            mock(ActivityPubObjectReference.class),
+            mock(ActivityPubObjectReference.class)
+        ));
+        when(page.getLikes()).thenReturn(orderedCollection.getReference());
+        when(this.activityPubObjectReferenceResolver.resolveReference(orderedCollection.getReference()))
+            .thenReturn(orderedCollection);
+        assertEquals(5, this.scriptService.getLikeNumber(documentReference));
     }
 }

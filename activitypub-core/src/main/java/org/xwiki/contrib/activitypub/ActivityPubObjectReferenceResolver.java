@@ -29,8 +29,10 @@ import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 import org.xwiki.contrib.activitypub.entities.Collection;
 import org.xwiki.contrib.activitypub.entities.OrderedCollection;
+import org.xwiki.contrib.activitypub.entities.Page;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.Service;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.stability.Unstable;
 
 /**
@@ -96,4 +98,21 @@ public interface ActivityPubObjectReferenceResolver
      *         on the current implementation.
      */
     <T extends ActivityPubObject> boolean shouldBeRefreshed(T activityPubObject);
+
+    /**
+     * Resolve an XWiki {@link DocumentReference} to an ActivityPub {@link Page}.
+     * Note that the resolved page is already stored but might have several attributes not defined:
+     * the page might have been created from the given document reference.
+     * In all cases, this method ensures that only one occurence of a {@link Page} is stored for a given
+     * {@link DocumentReference}.
+     *
+     * @param documentReference the reference for which to retrieve an associated page instance.
+     * @return a page matching the given reference.
+     * @since 1.5
+     */
+    @Unstable
+    default Page resolveDocumentReference(DocumentReference documentReference) throws ActivityPubException
+    {
+        return new Page();
+    }
 }

@@ -39,7 +39,6 @@ import org.xwiki.contrib.activitypub.internal.async.PageChangedRequest;
 import org.xwiki.contrib.activitypub.internal.async.PageChangedStatus;
 import org.xwiki.job.AbstractJob;
 import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.security.authorization.AuthorizationManager;
 import org.xwiki.security.authorization.Right;
 import org.xwiki.user.UserReference;
@@ -62,13 +61,10 @@ public abstract class AbstractPageNotificationJob extends AbstractJob<PageChange
         new DocumentReference("xwiki", "XWiki", XWikiRightService.GUEST_USER);
 
     @Inject
-    protected EntityReferenceSerializer<String> stringEntityReferenceSerializer;
+    protected ActivityPubObjectReferenceResolver objectReferenceResolver;
 
     @Inject
     private XWikiUserBridge xWikiUserBridge;
-
-    @Inject
-    private ActivityPubObjectReferenceResolver objectReferenceResolver;
 
     @Inject
     private AuthorizationManager authorizationManager;

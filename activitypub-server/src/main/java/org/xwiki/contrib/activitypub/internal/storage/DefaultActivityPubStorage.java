@@ -37,6 +37,7 @@ import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
@@ -291,6 +292,12 @@ public class DefaultActivityPubStorage implements ActivityPubStorage
                     query, type.getSimpleName(), limit), e);
         }
         return result;
+    }
+
+    @Override
+    public String escapeQueryChars(String queryElement)
+    {
+        return ClientUtils.escapeQueryChars(queryElement);
     }
 
     private <T extends ActivityPubObject> T createObjectFromResult(SolrDocument queryResult) throws ActivityPubException

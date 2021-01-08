@@ -155,6 +155,7 @@ class PageCreatedNotificationJobTest
         when(this.objectReferenceResolver.resolveReference(followers)).thenReturn(this.serviceFollowers);
         when(this.serviceFollowers.isEmpty()).thenReturn(true);
         when(this.configuration.getPageNotificationPolicy()).thenReturn(WIKIANDUSER);
+        when(this.objectReferenceResolver.resolveDocumentReference(any())).thenReturn(new Page());
     }
 
     @Test

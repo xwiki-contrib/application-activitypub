@@ -376,9 +376,9 @@ public class ActivityPubScriptService implements ScriptService
             // get current actor
             AbstractActor currentActor = this.activityPubScriptServiceActor.getSourceActor(null);
 
-            DocumentReference dr = this.documentReferenceResolver.resolve(pageReference);
+            DocumentReference documentReference = this.documentReferenceResolver.resolve(pageReference);
             boolean guestAccess =
-                this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, dr);
+                this.authorizationManager.hasAccess(Right.VIEW, GUEST_USER, documentReference);
 
             /*
              * Pages that cannot be viewed by the guest user are not allowed to be shared.
@@ -386,11 +386,11 @@ public class ActivityPubScriptService implements ScriptService
              */
             if (guestAccess && currentActor != null) {
                 XWikiContext context = this.contextProvider.get();
-                XWikiDocument xwikiDoc = context.getWiki().getDocument(dr, context);
-                String content = this.htmlRenderer.render(xwikiDoc.getXDOM(), dr);
+                XWikiDocument xwikiDoc = context.getWiki().getDocument(documentReference, context);
+                String content = this.htmlRenderer.render(xwikiDoc.getXDOM(), documentReference);
                 URI documentUrl = this.urlHandler.getAbsoluteURI(URI.create(xwikiDoc.getURL("view", context)));
-                Page page = new Page()
-                    .setName(xwikiDoc.getTitle())
+                Page page = this.activityPubObjectReferenceResolver.resolveDocumentReference(documentReference);
+                page.setName(xwikiDoc.getTitle())
                     .setAttributedTo(singletonList(currentActor.getReference()))
                     .setUrl(singletonList(documentUrl))
                     .setContent(content)
@@ -587,6 +587,14 @@ public class ActivityPubScriptService implements ScriptService
                     this.activityPubStorage.storeEntity(likeActivity);
                     this.activityPubScriptServiceActor.getActivityHandler(likeActivity)
                         .handleOutboxRequest(new ActivityRequest<>(currentActor, likeActivity));
+                    AbstractActor originalActivityActor =
+                        this.activityPubObjectReferenceResolver.resolveReference(activity.getActor());
+                    HttpMethod httpMethod = this.activityPubClient.postInbox(originalActivityActor, likeActivity);
+                    try {
+                        this.activityPubClient.checkAnswer(httpMethod);
+                    } finally {
+                        httpMethod.releaseConnection();
+                    }
                     return true;
                 }
             } catch (ActivityPubException | ClassCastException | IOException e) {
@@ -597,6 +605,29 @@ public class ActivityPubScriptService implements ScriptService
             this.logger.debug("Activity [{}] has already been liked.", activityId);
         }
         return false;
+    }
+
+    /**
+     * Retrieve the number of likes associated to the document but performed on the fediverse.
+     * @param reference the reference for which to retrieve the like number.
+     * @return the number of like realized on the fediverse.
+     * @since 1.5
+     */
+    @Unstable
+    public int getLikeNumber(DocumentReference reference)
+    {
+        int result = 0;
+        try {
+            Page page = this.activityPubObjectReferenceResolver.resolveDocumentReference(reference);
+            if (page.getLikes() != null) {
+                OrderedCollection<Like> likes =
+                    this.activityPubObjectReferenceResolver.resolveReference(page.getLikes());
+                result = likes.getTotalItems();
+            }
+        } catch (ActivityPubException e) {
+            this.logger.warn("Error while computing like number for [{}]", reference, e);
+        }
+        return result;
     }
 
     /**
