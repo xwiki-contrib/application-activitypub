@@ -98,7 +98,12 @@ activitypub.like.livetable._actions=Actions
 activitypub.dashboard.tab.likes=Likes
 activitypub.notifications.reply.success=Reply successfully sent.
 activitypub.notifications.reply.failure=Failed to send the message.
-activitypub.like.button.title=Number of likes from the fediverse: </content>
+activitypub.like.button.title=Number of likes from the fediverse: 
+activitypub.like.menu.likers=Likes from the fediverse
+activitypub.like.likers.title=People from fediverse who likes a page
+activitypub.like.likers.nolikes=Nobody from the fediverse like the page ''{0}'' yet.
+activitypub.like.likers.subtitle={0} people from fediverse like the page ''{1}'':
+</content>
   <object>
     <name>ActivityPub.ActivityPubTranslations</name>
     <number>0</number>

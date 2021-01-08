@@ -364,6 +364,23 @@ public class ActivityPubScriptService implements ScriptService
     }
 
     /**
+     * Resolve the given document reference as a {@link Page}.
+     * @param documentReference the document reference to resolve.
+     * @return a page corresponding to the document reference.
+     * @since 1.5
+     */
+    @Unstable
+    public Page resolveDocument(DocumentReference documentReference)
+    {
+        try {
+            return this.activityPubObjectReferenceResolver.resolveDocumentReference(documentReference);
+        } catch (ActivityPubException e) {
+            this.logger.error("Error while trying to resolve document reference [{}]", documentReference, e);
+            return null;
+        }
+    }
+
+    /**
      * Share a page.
      *
      * @param targets List of recipients of the sharing.
