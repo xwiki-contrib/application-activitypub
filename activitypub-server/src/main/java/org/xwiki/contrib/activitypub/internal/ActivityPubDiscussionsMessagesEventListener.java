@@ -125,8 +125,8 @@ public class ActivityPubDiscussionsMessagesEventListener implements EventListene
 
                 // Handles only messages with activitypub discussion contexts.
                 if (discussionContexts.stream()
-                    .anyMatch(it -> it != null && it.getName() != null && it.getName().startsWith(
-                        "activitypub-")))
+                    .anyMatch(it -> it != null && it.getName() != null && it.getEntityReference().getType()
+                        .startsWith("activitypub-")))
                 {
 
                     handleMessage(event, message, actionType, discussionContexts);
