@@ -104,8 +104,6 @@ public class CollectionTest extends AbstractEntityTest
     @Test
     void parsing() throws Exception
     {
-
-        // FIXME items pas bien parsés...
         Collection<ActivityPubObject> collection = new Collection<>();
         HashSet<ActivityPubObjectReference<ActivityPubObject>> items = new HashSet<>();
         items.add(new ActivityPubObjectReference<>().setLink(URI.create("http://test/follow/1")));
