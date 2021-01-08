@@ -21,6 +21,7 @@ package org.xwiki.contrib.activitypub.internal;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 import org.junit.jupiter.api.Test;
 import org.xwiki.test.junit5.mockito.ComponentTest;
@@ -80,7 +81,8 @@ class DateProviderTest
     {
         Calendar calendar = getInstance();
         calendar.set(1910, MARCH, 3, 4, 5, 6);
+        calendar.setTimeZone(TimeZone.getTimeZone("GMT"));
         String formattedDate = this.dateProvider.getFormattedDate(calendar.getTime());
-        assertEquals("Thu, 03 Mar 1910 03:55:45 GMT", formattedDate);
+        assertEquals("Thu, 03 Mar 1910 04:05:06 GMT", formattedDate);
     }
 }
