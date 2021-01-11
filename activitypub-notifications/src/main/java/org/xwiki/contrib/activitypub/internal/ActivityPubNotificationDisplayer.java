@@ -36,6 +36,7 @@ import org.xwiki.contrib.activitypub.entities.AbstractActivity;
 import org.xwiki.contrib.activitypub.events.AnnounceEvent;
 import org.xwiki.contrib.activitypub.events.CreateEvent;
 import org.xwiki.contrib.activitypub.events.FollowEvent;
+import org.xwiki.contrib.activitypub.events.LikeEvent;
 import org.xwiki.contrib.activitypub.events.MentionEvent;
 import org.xwiki.contrib.activitypub.events.MessageEvent;
 import org.xwiki.contrib.activitypub.events.UpdateEvent;
@@ -147,7 +148,8 @@ public class ActivityPubNotificationDisplayer implements NotificationDisplayer
             AnnounceEvent.EVENT_TYPE,
             MessageEvent.EVENT_TYPE,
             MentionEvent.EVENT_TYPE,
-            UpdateEvent.EVENT_TYPE
+            UpdateEvent.EVENT_TYPE,
+            LikeEvent.EVENT_TYPE
         );
     }
 }

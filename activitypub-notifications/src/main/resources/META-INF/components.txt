@@ -8,3 +8,4 @@ org.xwiki.contrib.activitypub.internal.descriptors.FollowEventDescriptor
 org.xwiki.contrib.activitypub.internal.descriptors.MentionEventDescriptor
 org.xwiki.contrib.activitypub.internal.descriptors.MessageEventDescriptor
 org.xwiki.contrib.activitypub.internal.descriptors.UpdateEventDescriptor
+org.xwiki.contrib.activitypub.internal.descriptors.LikeEventDescriptor

@@ -29,6 +29,7 @@
   <creator>xwiki:XWiki.Admin</creator>
   <author>xwiki:XWiki.Admin</author>
   <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <parent>Main.WebHome</parent>
   <version>1.1</version>
   <title>$escapetool.xml($services.localization.render('activitypub.like.likers.title'))</title>
   <comment/>

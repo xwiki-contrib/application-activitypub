@@ -20,6 +20,7 @@
 package org.xwiki.contrib.activitypub.internal.activities;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
@@ -66,6 +67,7 @@ public class LikeActivityHandler extends AbstractActivityHandler<Like>
             this.activityPubStorage.storeEntity(likedObject);
         }
 
+        this.notifier.notify(activity, Collections.singleton(activityRequest.getActor()));
         this.answer(activityRequest.getResponse(), HttpServletResponse.SC_OK, activity);
     }
 

@@ -40,6 +40,7 @@ import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.Announce;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Follow;
+import org.xwiki.contrib.activitypub.entities.Like;
 import org.xwiki.contrib.activitypub.entities.Mention;
 import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.Reject;
@@ -48,6 +49,7 @@ import org.xwiki.contrib.activitypub.events.AbstractActivityPubEvent;
 import org.xwiki.contrib.activitypub.events.AnnounceEvent;
 import org.xwiki.contrib.activitypub.events.CreateEvent;
 import org.xwiki.contrib.activitypub.events.FollowEvent;
+import org.xwiki.contrib.activitypub.events.LikeEvent;
 import org.xwiki.contrib.activitypub.events.MentionEvent;
 import org.xwiki.contrib.activitypub.events.MessageEvent;
 import org.xwiki.contrib.activitypub.events.UpdateEvent;
@@ -99,6 +101,9 @@ public class DefaultActivityPubNotifier implements ActivityPubNotifier
             notifyUpdate((Update) activity, targetedActor, activityObject);
         } else if (activity instanceof Announce) {
             AnnounceEvent event = new AnnounceEvent((Announce) activity, serializeTargets(singleton(targetedActor)));
+            this.observationManager.notify(event, EVENT_SOURCE, event.getType());
+        } else if (activity instanceof Like) {
+            LikeEvent event = new LikeEvent((Like) activity, serializeTargets(singleton(targetedActor)));
             this.observationManager.notify(event, EVENT_SOURCE, event.getType());
         } else if (activity instanceof Follow || activity instanceof Reject || activity instanceof Accept) {
             FollowEvent<T> event = new FollowEvent<>(activity, serializeTargets(singleton(targetedActor)));

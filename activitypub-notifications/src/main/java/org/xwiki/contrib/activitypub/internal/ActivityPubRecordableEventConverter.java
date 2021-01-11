@@ -34,6 +34,7 @@ import org.xwiki.contrib.activitypub.events.AbstractActivityPubEvent;
 import org.xwiki.contrib.activitypub.events.AnnounceEvent;
 import org.xwiki.contrib.activitypub.events.CreateEvent;
 import org.xwiki.contrib.activitypub.events.FollowEvent;
+import org.xwiki.contrib.activitypub.events.LikeEvent;
 import org.xwiki.contrib.activitypub.events.MentionEvent;
 import org.xwiki.contrib.activitypub.events.UpdateEvent;
 import org.xwiki.contrib.activitypub.events.MessageEvent;
@@ -94,7 +95,8 @@ public class ActivityPubRecordableEventConverter implements RecordableEventConve
             new AnnounceEvent(null, null),
             new MessageEvent(null, null),
             new MentionEvent(null, null),
-            new UpdateEvent(null, null)
+            new UpdateEvent(null, null),
+            new LikeEvent(null, null)
         );
     }
 }

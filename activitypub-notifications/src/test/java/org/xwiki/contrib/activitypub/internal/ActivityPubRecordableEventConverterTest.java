@@ -31,6 +31,7 @@ import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.events.AnnounceEvent;
 import org.xwiki.contrib.activitypub.events.CreateEvent;
 import org.xwiki.contrib.activitypub.events.FollowEvent;
+import org.xwiki.contrib.activitypub.events.LikeEvent;
 import org.xwiki.contrib.activitypub.events.MentionEvent;
 import org.xwiki.contrib.activitypub.events.UpdateEvent;
 import org.xwiki.contrib.activitypub.events.MessageEvent;
@@ -131,12 +132,13 @@ public class ActivityPubRecordableEventConverterTest
     {
         List<RecordableEvent> actual =
                 this.activityPubRecordableEventConverter.getSupportedEvents();
-        assertEquals(6, actual.size());
+        assertEquals(7, actual.size());
         assertEquals(CreateEvent.class, actual.get(0).getClass());
         assertEquals(FollowEvent.class, actual.get(1).getClass());
         assertEquals(AnnounceEvent.class, actual.get(2).getClass());
         assertEquals(MessageEvent.class, actual.get(3).getClass());
         assertEquals(MentionEvent.class, actual.get(4).getClass());
         assertEquals(UpdateEvent.class, actual.get(5).getClass());
+        assertEquals(LikeEvent.class, actual.get(6).getClass());
     }
 }
