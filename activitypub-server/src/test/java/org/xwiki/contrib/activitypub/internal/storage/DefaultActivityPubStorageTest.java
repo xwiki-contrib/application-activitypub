@@ -38,6 +38,7 @@ import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.xwiki.contrib.activitypub.ActivityPubException;
@@ -60,15 +61,21 @@ import org.xwiki.contrib.activitypub.webfinger.entities.JSONResourceDescriptor;
 import org.xwiki.resource.ResourceReferenceSerializer;
 import org.xwiki.search.solr.Solr;
 import org.xwiki.search.solr.SolrException;
+import org.xwiki.test.LogLevel;
 import org.xwiki.test.annotation.BeforeComponent;
+import org.xwiki.test.junit5.LogCaptureExtension;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
 
+import ch.qos.logback.classic.Level;
+
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -119,6 +126,9 @@ class DefaultActivityPubStorageTest
 
     @Mock
     private SolrClient solrClient;
+
+    @RegisterExtension
+    LogCaptureExtension logCapture = new LogCaptureExtension(LogLevel.DEBUG);
 
     @BeforeComponent
     public void setup() throws Exception
@@ -416,5 +426,32 @@ class DefaultActivityPubStorageTest
         ArgumentCaptor<SolrQuery> argumentCaptor = ArgumentCaptor.forClass(SolrQuery.class);
         verify(this.solrClient).query(argumentCaptor.capture());
         assertEquals(solrQuery.toString(), argumentCaptor.getValue().toString());
+    }
+
+    @Test
+    void isStorageReadyNoClient() throws Exception
+    {
+        when(this.solrInstance.getClient("activitypub")).thenReturn(null);
+        boolean actual = this.activityPubStorage.isStorageReady();
+        assertFalse(actual);
+    }
+
+    @Test
+    void isStorageReadyGetClientException() throws Exception
+    {
+        when(this.solrInstance.getClient("activitypub")).thenThrow(SolrException.class);
+        boolean actual = this.activityPubStorage.isStorageReady();
+        assertFalse(actual);
+        assertEquals(1, this.logCapture.size());
+        assertEquals(Level.DEBUG, this.logCapture.getLogEvent(0).getLevel());
+        assertEquals("Error while initializing solr client.", this.logCapture.getMessage(0));
+    }
+
+    @Test
+    void isStorageReady() throws Exception
+    {
+        when(this.solrInstance.getClient("activitypub")).thenReturn(mock(SolrClient.class));
+        boolean actual = this.activityPubStorage.isStorageReady();
+        assertTrue(actual);
     }
 }
