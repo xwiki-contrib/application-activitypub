@@ -89,7 +89,7 @@
         {{/warning}}
       #end
 
-      {{html}}
+      {{html wiki='true'}}
 
         &lt;ul class="nav nav-tabs" role="tablist"&gt;
           &lt;li role="presentation" class="active"&gt;
@@ -192,9 +192,7 @@
               'url': $docLiveTable.getURL('get', $escapetool.url($queryParams)),
               'translationPrefix' : "activitypub.like.livetable."
             })
-{{/html}}
             #livetable("activitypubLikes" $columns $columnsProperties $options)
-{{html}}
           &lt;/div&gt;
         &lt;/div&gt;
 
