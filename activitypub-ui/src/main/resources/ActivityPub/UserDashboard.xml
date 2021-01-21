@@ -89,7 +89,7 @@
         {{/warning}}
       #end
 
-      {{html wiki='true'}}
+      {{html}}
 
         &lt;ul class="nav nav-tabs" role="tablist"&gt;
           &lt;li role="presentation" class="active"&gt;
@@ -114,7 +114,11 @@
             &lt;/a&gt;
           &lt;/li&gt;
         &lt;/ul&gt;
-        &lt;div class="tab-content"&gt;
+{{/html}}
+(% class="tab-content" %)
+(((
+
+{{html}}
           &lt;div role="tabpanel" class="tab-pane active" id="follow"&gt;
             &lt;form id="followForm" class='xform'&gt;
               &lt;dl&gt;
@@ -136,6 +140,9 @@
               &lt;/div&gt;
             &lt;/form&gt;
           &lt;/div&gt;
+{{/html}}
+
+{{html}}
           &lt;div role="tabpanel" class="tab-pane" id="messaging"&gt;
             &lt;form id="messageForm" class='xform'&gt;
               &lt;dl&gt;
@@ -167,6 +174,10 @@
               &lt;/div&gt;
             &lt;/form&gt;
           &lt;/div&gt;
+
+{{/html}}
+
+{{html wiki='true'}}
           &lt;div role="tabpanel" class="tab-pane" id="likes"&gt;
             #set($columns = ["published", "type", "attributedTo", "_actions"])
             #set($columnsProperties = {
@@ -194,9 +205,9 @@
             })
             #livetable("activitypubLikes" $columns $columnsProperties $options)
           &lt;/div&gt;
-        &lt;/div&gt;
+{{/html}}
 
-      {{/html}}
+)))
 
     #end
     {{html clean="false" wiki="true"}}
