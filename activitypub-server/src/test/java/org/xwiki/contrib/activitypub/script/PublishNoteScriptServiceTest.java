@@ -53,7 +53,7 @@ import org.xwiki.test.junit5.mockito.MockComponent;
  * Test of {@link PublishNoteScriptService}.
  *
  * @version $Id$
- * @since X.Y.X
+ * @since 1.5
  */
 @ComponentTest
 class PublishNoteScriptServiceTest

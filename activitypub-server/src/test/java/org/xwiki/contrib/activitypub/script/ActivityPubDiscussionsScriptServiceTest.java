@@ -101,7 +101,7 @@ class ActivityPubDiscussionsScriptServiceTest
                 "http://servr/path"))
             .thenReturn(Optional.of(dc2));
 
-        Discussion d1 = new Discussion("d1", "discussionTitle", "discussionDescription", new Date());
+        Discussion d1 = new Discussion("d1", "discussionTitle", "discussionDescription", new Date(), null);
         when(this.discussionService
             .getOrCreate("Discussion for discussionContext2Ref", "Discussion for discussionContext2Ref",
                 singletonList(dc2.getReference())))

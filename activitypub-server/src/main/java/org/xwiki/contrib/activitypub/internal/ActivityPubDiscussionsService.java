@@ -257,7 +257,7 @@ public class ActivityPubDiscussionsService
                 title = "Discussion for the " + activity.getType() + " activity of " + dateFormat;
             }
 
-            discussions = this.discussionService.create(title, title)
+            discussions = this.discussionService.create(title, title, "ActivityPub.Discussion")
                 .map(Arrays::asList)
                 .orElseGet(Arrays::asList);
         }

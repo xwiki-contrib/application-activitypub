@@ -23,28 +23,20 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.mentions.events.NewMentionsEvent;
 import org.xwiki.mentions.notifications.MentionNotificationParameters;
-import org.xwiki.model.EntityType;
-import org.xwiki.model.reference.DocumentReference;
-import org.xwiki.model.reference.EntityReference;
-import org.xwiki.observation.EventListener;
 import org.xwiki.observation.event.Event;
 import org.xwiki.security.authorization.AuthorizationManager;
 import org.xwiki.security.authorization.Right;
 
 import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.XWikiException;
-import com.xpn.xwiki.doc.DocumentRevisionProvider;
 import com.xpn.xwiki.doc.XWikiDocument;
 
 import static java.util.Collections.singletonList;
@@ -59,7 +51,7 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMess
 @Component
 @Named(ActivityPubMentionEventListener.TYPE)
 @Singleton
-public class ActivityPubMentionEventListener implements EventListener
+public class ActivityPubMentionEventListener extends AbstractActivityPubMentionEventListener
 {
     /**
      * Type of the component.
@@ -73,16 +65,10 @@ public class ActivityPubMentionEventListener implements EventListener
     private AuthorizationManager authorizationManager;
 
     @Inject
-    private DocumentRevisionProvider documentRevisionProvider;
-
-    @Inject
     private Provider<XWikiContext> contextProvider;
 
     @Inject
     private DefaultURLHandler urlHandler;
-
-    @Inject
-    private Logger logger;
 
     @Override
     public String getName()
@@ -119,22 +105,5 @@ public class ActivityPubMentionEventListener implements EventListener
                     });
             }
         }
-    }
-
-    private Optional<XWikiDocument> resolveDoc(MentionNotificationParameters mentionNotificationParameters)
-    {
-        Optional<XWikiDocument> xWikiDocument;
-        EntityReference document =
-            mentionNotificationParameters.getEntityReference().extractReference(EntityType.DOCUMENT);
-        String version = mentionNotificationParameters.getVersion();
-        try {
-            xWikiDocument =
-                Optional.of(this.documentRevisionProvider.getRevision((DocumentReference) document, version));
-        } catch (XWikiException e) {
-            this.logger
-                .warn("Failed to resolve [{}] in version [{}]. Cause: [{}]", document, version, getRootCauseMessage(e));
-            xWikiDocument = Optional.empty();
-        }
-        return xWikiDocument;
     }
 }

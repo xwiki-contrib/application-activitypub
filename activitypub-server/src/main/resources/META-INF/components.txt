@@ -35,3 +35,4 @@ org.xwiki.contrib.activitypub.script.ActivityPubDiscussionsScriptService
 org.xwiki.contrib.activitypub.script.PublishNoteScriptService
 org.xwiki.contrib.activitypub.internal.ActivityPubDiscussionsActorService
 org.xwiki.contrib.activitypub.internal.script.ActivityPubScriptServiceActor
+org.xwiki.contrib.activitypub.internal.ActivityPubMentionDiscussionEventListener

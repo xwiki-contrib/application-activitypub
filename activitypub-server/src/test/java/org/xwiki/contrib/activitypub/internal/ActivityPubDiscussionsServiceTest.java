@@ -80,7 +80,7 @@ class ActivityPubDiscussionsServiceTest
     void link()
     {
         DiscussionContext discussionContext = new DiscussionContext(null, null, null, null);
-        Discussion discussion = new Discussion(null, null, null, null);
+        Discussion discussion = new Discussion(null, null, null, null, null);
         this.activityPubDiscussionsService.link(discussionContext, discussion);
         verify(this.discussionContextService).link(discussionContext, discussion);
     }
@@ -137,7 +137,7 @@ class ActivityPubDiscussionsServiceTest
             .setTo(asList(recipientReference));
         create.setObject(document);
         String title = "Discussion for the Create activity of January 8, 2021 at 15:56";
-        Discussion d1 = new Discussion("d1", title, title, new Date());
+        Discussion d1 = new Discussion("d1", title, title, new Date(), null);
         DiscussionContext dc1 = new DiscussionContext("dc1", "https://server/note", "https://server/note",
             new DiscussionContextEntityReference("activitypub-object", "https://server/note"));
         DiscussionContext dc2 = new DiscussionContext("dc2", recipientID.toASCIIString(), recipientID.toASCIIString(),
@@ -148,7 +148,7 @@ class ActivityPubDiscussionsServiceTest
         when(this.discussionService
             .findByDiscussionContext("activitypub-object", "http//server/note"))
             .thenReturn(false);
-        when(this.discussionService.create(title, title))
+        when(this.discussionService.create(title, title, "ActivityPub.Discussion"))
             .thenReturn(Optional.of(d1));
         when(this.activityPubObjectReferenceResolver.resolveReference(create.getReference())).thenReturn(create);
         when(this.discussionContextService

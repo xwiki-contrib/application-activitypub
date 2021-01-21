@@ -142,17 +142,21 @@ public class ActivityPubDiscussionsMessagesEventListener implements EventListene
         List<DiscussionContext> discussionContexts)
     {
         try {
-            AbstractActor actor = this.actorHandler.getActor(message.getActorReference());
+            String actorReference = message.getActorReference();
+            if (actorReference.startsWith("xwiki:")) {
+                actorReference = actorReference.substring(6);
+            }
+            AbstractActor actor = this.actorHandler.getActor(actorReference);
             List<ProxyActor> to = getExternalRelatedActors(discussionContexts);
             to.remove(actor.getProxyActor());
 
             List<ActivityPubObject> objects = getRelatedObjects(discussionContexts);
 
-        /*
-         If some activities are found, we send the note multiple times, to each activity, with the
-         in-reply-to filled with the activity id.
-         Otherwise, we send the note only once
-        */
+            /*
+             If some activities are found, we send the note multiple times, to each activity, with the
+             in-reply-to filled with the activity id.
+             Otherwise, we send the note only once
+            */
             if (objects.isEmpty()) {
                 sendMessage(message, actionType, actor, to, null);
             } else {

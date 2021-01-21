@@ -109,7 +109,7 @@ class ActivityPubDiscussionsMessagesEventListenerTest
     void onEvent() throws Exception
     {
         Discussion discussion =
-            new Discussion("discussionReference", "discussionTitle", "discussionDescription", new Date());
+            new Discussion("discussionReference", "discussionTitle", "discussionDescription", new Date(), null);
         Message message =
             new Message("reference", new MessageContent("content", XWIKI_2_1), "actorType", "actorReference",
                 new Date(), new Date(), discussion);
