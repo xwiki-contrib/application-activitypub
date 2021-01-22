@@ -20,6 +20,7 @@
 package org.xwiki.contrib.activitypub.internal;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -65,6 +66,19 @@ public class ActivityPubDiscussionsActorService implements DiscussionsActorServi
             this.logger.warn("Failed to revolve the actor [{}]. Cause: [{}].", reference, getRootCauseMessage(e));
             return Optional.empty();
         }
+    }
+
+    @Override
+    public Stream<ActorDescriptor> listUsers(String discussionReference)
+    {
+        // TODO: currently listing users is not supported by AP.
+        return Stream.empty();
+    }
+
+    @Override
+    public long countUsers(String discussionReference)
+    {
+        return 0;
     }
 
     private void initializeName(AbstractActor actor, ActorDescriptor actorDescriptor)

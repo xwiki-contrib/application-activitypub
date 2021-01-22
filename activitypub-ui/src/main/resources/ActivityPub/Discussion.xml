@@ -38,7 +38,7 @@
   <hidden>true</hidden>
   <content>{{velocity}}
 
-{{discussion reference="$request.reference" namespace="APDiscussion"/}}
+{{discussion reference="$request.reference" namespace='APDiscussion' type='activitypub'/}}
 
 {{/velocity}}
 </content>
