@@ -36,7 +36,9 @@
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
-  <content>{{velocity}}
+  <content>[[$services.localization.render('activitypub.discussions.discussions.back')&gt;&gt;ActivityPub.WebHome||class="btn btn-primary"]]
+
+{{velocity}}
 #if ("$!request.actor" != "")
   #set($currentActor = $services.activitypub.getActor($request.actor))
 #else 
@@ -46,7 +48,7 @@
 
 #if ($canSeeDashboard)
   #set ($discussionDoc = $xwiki.getDocument('ActivityPub.Discussion'))
-  #set ($url = "$discussionDoc.getURL('view')?reference=__REFERENCE__")
+  #set ($url = "$discussionDoc.getURL('view')?reference=__REFERENCE__&amp;actor=$escapetool.url($request.actor)")
 
   {{listDiscussions listId="discussionsAPDashboard" type="activitypub-actor" 
     reference="$currentActor.id" linkTemplate="$url"}}

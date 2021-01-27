@@ -103,6 +103,8 @@ activitypub.like.menu.likers=Likes from the fediverse
 activitypub.like.likers.title=People from fediverse who likes a page
 activitypub.like.likers.nolikes=Nobody from the fediverse like the page ''{0}'' yet.
 activitypub.like.likers.subtitle={0} people from fediverse like the page ''{1}'':
+activitypub.discussions.discussion.back=Back to the Discussions
+activitypub.discussions.discussions.back=Back to the Dashboard
 </content>
   <object>
     <name>ActivityPub.ActivityPubTranslations</name>

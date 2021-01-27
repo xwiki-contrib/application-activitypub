@@ -37,6 +37,7 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
   <content>{{velocity}}
+[[$services.localization.render('activitypub.discussions.discussion.back')&gt;&gt;ActivityPub.Discussions||class="btn btn-primary" queryString="actor=$escapetool.url($request.actor)"]]
 
 {{discussion reference="$request.reference" namespace='APDiscussion' type='activitypub'/}}
 
