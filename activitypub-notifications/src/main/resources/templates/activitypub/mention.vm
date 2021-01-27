@@ -19,12 +19,12 @@
 ## ---------------------------------------------------------------------------
 #template('activitypub/macros.vm')
 
-#set ($smallIcon = "comment")
+#set ($smallIcon = 'comment')
 #define ($content)
-<div class="notification-description">
-  <div class="activity-type">$services.localization.render('activitypub.event.mention.type')</div>
-  <div class="activity-summary">#getAPEventSummary('activitypub.event.mention.summary')</div>
-  <div><small class="text-muted">$compositeEventDate</small></div>
+<div class='notification-description'>
+  <div class='activity-type'>$services.localization.render('activitypub.event.mention.type')</div>
+  <div class='activity-summary'>#getAPEventSummary('activitypub.event.mention.summary')</div>
+  <div><small class='text-muted'>$compositeEventDate</small></div>
 </div>
 #end
 
@@ -44,11 +44,11 @@
         #set ($linkText = "$object.name")
       #else
         #set ($linkText =
-          $services.localization.render("activitypub.event.mention.description.withoutName.linkName"))
+          $services.localization.render('activitypub.event.mention.description.withoutName.linkName'))
       #end
 
       ## Compute the link of the object.
-      #if ("$!object.url" != "")
+      #if ("$!object.url" != '')
         #if ($services.activitypub.belongsToCurrentInstance("$object.url.get(0)"))
           #set($objectLink = "<a href='$object.url.get(0)'>$linkText</a>")
         #else
