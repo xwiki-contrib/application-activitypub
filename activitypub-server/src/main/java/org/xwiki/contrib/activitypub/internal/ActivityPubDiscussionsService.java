@@ -178,6 +178,10 @@ public class ActivityPubDiscussionsService
             object.getTo().forEach(it -> handleTo(discussion, it));
         }
 
+        if (object.getCc() != null) {
+            object.getCc().forEach(it -> handleTo(discussion, it));
+        }
+
         List<ActivityPubObjectReference<AbstractActor>> attributedTo = object.getAttributedTo();
         if (attributedTo != null) {
             attributedTo.forEach(it -> handleTo(discussion, it));
