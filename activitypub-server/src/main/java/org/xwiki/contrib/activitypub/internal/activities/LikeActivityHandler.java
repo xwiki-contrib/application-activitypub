@@ -60,6 +60,7 @@ public class LikeActivityHandler extends AbstractActivityHandler<Like>
         }
         likes.addItem(activity);
         this.activityPubStorage.storeEntity(likes);
+        this.activityPubStorage.storeEntity(activity);
 
         // If it's the first like then we just created the ordered collection and we need to store its reference.
         if (likesReference == null) {

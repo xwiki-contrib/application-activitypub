@@ -43,7 +43,7 @@ import static org.mockito.Mockito.when;
  * @version $Id$
  */
 @ComponentTest
-public class LikeActivityHandlerTest extends AbstractHandlerTest
+class LikeActivityHandlerTest extends AbstractHandlerTest
 {
     @InjectMockComponents
     private LikeActivityHandler likeActivityHandler;
@@ -76,6 +76,7 @@ public class LikeActivityHandlerTest extends AbstractHandlerTest
         verifyResponse(like);
         verify(likes).addItem(like);
         verify(this.activityPubStorage).storeEntity(likes);
+        verify(this.activityPubStorage).storeEntity(like);
     }
 
     @Test
@@ -118,7 +119,7 @@ public class LikeActivityHandlerTest extends AbstractHandlerTest
         OrderedCollection<ActivityPubObject> liked = mock(OrderedCollection.class);
         when(this.activityPubObjectReferenceResolver.resolveReference(likedRef)).thenReturn(liked);
         when(this.activityPubObjectReferenceResolver
-            .resolveReference((ActivityPubObjectReference<Note>)like.getObject())).thenReturn(likedObject);
+            .resolveReference((ActivityPubObjectReference<Note>) like.getObject())).thenReturn(likedObject);
 
         this.likeActivityHandler.handleOutboxRequest(
             new ActivityRequest<>(person, like, this.servletRequest, this.servletResponse));
@@ -135,7 +136,7 @@ public class LikeActivityHandlerTest extends AbstractHandlerTest
         when(likedObject.getReference()).thenReturn(new ActivityPubObjectReference<>().setObject(likedObject));
         Like like = new Like().setActor(person).setObject(likedObject);
         when(this.activityPubObjectReferenceResolver
-            .resolveReference((ActivityPubObjectReference<Note>)like.getObject())).thenReturn(likedObject);
+            .resolveReference((ActivityPubObjectReference<Note>) like.getObject())).thenReturn(likedObject);
 
         when(this.activityPubStorage.storeEntity(any(OrderedCollection.class))).then(invocation -> {
             assertTrue(((OrderedCollection) invocation.getArgument(0))
