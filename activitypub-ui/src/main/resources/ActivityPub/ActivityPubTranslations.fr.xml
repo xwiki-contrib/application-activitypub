@@ -97,5 +97,13 @@ activitypub.like.livetable.attributedTo=Attribué à
 activitypub.like.livetable._actions=Actions
 activitypub.dashboard.tab.likes=J'aime
 activitypub.notifications.reply.success=Réponse envoyée avec succès.
-activitypub.notifications.reply.failure=Le message n'a pas été envoyé.</content>
+activitypub.notifications.reply.failure=Le message n'a pas été envoyé.
+activitypub.like.button.title=Nombre de "j'aime" du fediverse : 
+activitypub.like.menu.likers="j'aime" du Fediverse
+activitypub.like.likers.title=Des acteurs du Fediverse qui aiment une page
+activitypub.like.likers.nolikes=Personne du Fediverse n''a aimé la page ''{0}'' pour le moment.
+activitypub.like.likers.subtitle={0} acteurs du Fediverse aiment la page ''{1}'' :
+activitypub.discussions.discussion.back=Retour aux Discussions
+activitypub.discussions.discussions.back=Retour au tableau de bord
+</content>
 </xwikidoc>
