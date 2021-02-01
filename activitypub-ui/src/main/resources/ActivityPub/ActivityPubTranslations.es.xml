@@ -80,10 +80,10 @@ ActivityPub.ActivityPubConfigurationClass_pageNotifications.hint=Si las notifica
 ActivityPub.ActivityPubConfigurationClass_pageNotificationPolicy.hint=Se envía notificaciones de creación y modificación de página a los seguidores de los usuarios seleccionados.
 activitypub.dashboard.tab.sentMessagesList=Mensajes enviados
 activitypub.dashboard.tab.receivedMessagesList=Mensajes recibidos
-### Missing: activitypub.dashboard.tab.discussionsList=Discussions
+activitypub.dashboard.tab.discussionsList=Discusiones
 activitypub.dashboard.noactor=Solo puedes acceder a esta macro si un actor está definido.
 activitypub.dashboard.title=Cuadro de mando de {0}
-### Missing: activitypub.dashboard.selectActor.label=Available ActivityPub actors:
+activitypub.dashboard.selectActor.label=Actores de ActivityPub disponibles:
 activitypub.message.display.from=De:
 activitypub.message.display.to=A:
 activitypub.message.display.date=Fecha:
@@ -96,7 +96,15 @@ activitypub.like.livetable.summary=Resumen
 activitypub.like.livetable.attributedTo=Atribuido a
 activitypub.like.livetable._actions=Acciones
 activitypub.dashboard.tab.likes=Nº de "me gusta"
-### Missing: activitypub.notifications.reply.success=Reply successfully sent.
-### Missing: activitypub.notifications.reply.failure=Failed to send the message.</content>
+activitypub.notifications.reply.success=Respuesta envíada con éxito.
+activitypub.notifications.reply.failure=Error al envíar el mensaje.
+activitypub.like.button.title=Número de "me gusta" en el fediverse: 
+activitypub.like.menu.likers="Me gusta" en el fediverse
+activitypub.like.likers.title=Gente del fediverse a la que le gusta la página
+activitypub.like.likers.nolikes=La página ''{0}'' no tiene "me gusta" del fediverse todavía.
+activitypub.like.likers.subtitle=A {0} personas del fediverse les gusta la página ''{1}'':
+activitypub.discussions.discussion.back=Volver a las Discusiones
+activitypub.discussions.discussions.back=Volver al cuadro de mando
+</content>
   
 </xwikidoc>
