@@ -36,9 +36,9 @@
   <minorEdit>false</minorEdit>
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
-  <content>[[$services.localization.render('activitypub.discussions.discussions.back')&gt;&gt;ActivityPub.WebHome||class="btn btn-primary"]]
-
-{{velocity}}
+  <content>{{velocity}}
+[[$services.localization.render('activitypub.discussions.discussions.back')&gt;&gt;ActivityPub.WebHome||class="btn btn-primary"]]
+  
 #if ("$!request.actor" != "")
   #set($currentActor = $services.activitypub.getActor($request.actor))
 #else 
