@@ -25,10 +25,10 @@
   <parent>
     <groupId>org.xwiki.contrib</groupId>
     <artifactId>application-activitypub</artifactId>
-    <version>1.5</version>
+    <version>1.6-SNAPSHOT</version>
   </parent>
   <artifactId>activitypub-ui</artifactId>
-  <version>1.5</version>
+  <version>1.6-SNAPSHOT</version>
   <name>XWiki ActivityPub - UI</name>
   <description>A social application to allow XWiki to be part of the fediverse</description>
   <packaging>xar</packaging>
