@@ -80,9 +80,6 @@ class ActivityPubMentionsSenderTest
     private ActivityHandler<Create> createActivityHandler;
 
     @MockComponent
-    private ActivityHandler<Update> updateActivityHandler;
-
-    @MockComponent
     private ActorHandler actorHandler;
 
     @MockComponent
@@ -120,7 +117,6 @@ class ActivityPubMentionsSenderTest
             URI.create("http://wiki/page/1"));
 
         verifyNoInteractions(this.createActivityHandler);
-        verifyNoInteractions(this.updateActivityHandler);
         verifyNoInteractions(this.actorHandler);
         verifyNoInteractions(this.userReferenceResolver);
         verifyNoInteractions(this.mentionsFormatter);
@@ -171,54 +167,5 @@ class ActivityPubMentionsSenderTest
         ActivityRequest<Create> activityRequest = new ActivityRequest<>(authorActor, create);
 
         verify(this.createActivityHandler).handleOutboxRequest(activityRequest);
-        verifyNoInteractions(this.updateActivityHandler);
-    }
-
-    @Test
-    void sendNotificationUpdatedDocument() throws Exception
-    {
-        UserReference userReference = mock(UserReference.class);
-        XWikiDocument doc = mock(XWikiDocument.class);
-        URI documentUrl = URI.create("http://wiki/page/1");
-        String mentionedActorReference = "@U1@ap.tld";
-        MentionNotificationParameters mentionNotificationParameters =
-            new MentionNotificationParameters(AUTHOR_REFERENCE, DOCUMENT_REFERENCE, MentionLocation.DOCUMENT, "1.6")
-                .addNewMention(ACTIVITYPUB_MENTION_TYPE,
-                    new MentionNotificationParameter(mentionedActorReference, "anchor0", DisplayStyle.FIRST_NAME));
-        URI u1URI = URI.create("http://s1.org/U1");
-        AbstractActor u1Actor = new Person().setName("U1").setId(u1URI);
-        URI actorURI = URI.create("http://wiki/Author");
-        Person authorActor = new Person().setName("Author").setId(actorURI);
-
-        when(this.mentionFormatterProvider.get(ACTIVITYPUB_MENTION_TYPE)).thenReturn(this.mentionsFormatter);
-        when(this.userReferenceResolver.resolve(AUTHOR_REFERENCE)).thenReturn(userReference);
-        when(this.actorHandler.getActor(mentionedActorReference)).thenReturn(u1Actor);
-        when(this.actorHandler.getActor(userReference)).thenReturn(authorActor);
-        when(this.mentionsFormatter.formatMention(mentionedActorReference, DisplayStyle.FIRST_NAME))
-            .thenReturn("User1");
-        XDOM xdom = new XDOM(asList());
-        when(doc.getXDOM()).thenReturn(xdom);
-        when(doc.getPreviousVersion()).thenReturn("1.5");
-        this.activityPubMentionsSender.sendNotification(mentionNotificationParameters, doc, documentUrl);
-
-        Mention mention = new Mention()
-            .setName("User1");
-        List<ProxyActor> to = asList(new ProxyActor(u1URI));
-        Page page = new Page()
-            .setTo(to)
-            .setPublished(this.currentTime)
-            .setContent("rendered content")
-            .setTag(asList(new ActivityPubObjectReference<>().setObject(mention)))
-            .setAttributedTo(asList(new ActivityPubObjectReference<AbstractActor>().setObject(authorActor)))
-            .setUrl(asList(documentUrl));
-        Update create = new Update()
-            .<Update>setPublished(this.currentTime)
-            .setActor(authorActor)
-            .setObject(page)
-            .setTo(to);
-        ActivityRequest<Update> activityRequest = new ActivityRequest<>(authorActor, create);
-
-        verify(this.updateActivityHandler).handleOutboxRequest(activityRequest);
-        verifyNoInteractions(this.createActivityHandler);
     }
 }

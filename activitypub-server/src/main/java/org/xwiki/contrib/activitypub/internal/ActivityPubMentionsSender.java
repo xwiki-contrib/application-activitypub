@@ -46,6 +46,8 @@ import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.Page;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Update;
+import org.xwiki.contrib.discussions.DiscussionContextService;
+import org.xwiki.contrib.discussions.MessageService;
 import org.xwiki.mentions.MentionLocation;
 import org.xwiki.mentions.internal.MentionFormatterProvider;
 import org.xwiki.mentions.notifications.MentionNotificationParameter;
@@ -71,12 +73,11 @@ import static org.xwiki.contrib.activitypub.ActivityPubConfiguration.ACTIVITYPUB
 @Singleton
 public class ActivityPubMentionsSender
 {
+    private static final String ACTIVITYPUB_OBJECT = "activitypub-object";
+
     @Inject
     private ActivityHandler<Create> createActivityHandler;
-
-    @Inject
-    private ActivityHandler<Update> updateActivityHandler;
-
+    
     @Inject
     private ActorHandler actorHandler;
 
@@ -94,6 +95,12 @@ public class ActivityPubMentionsSender
 
     @Inject
     private DateProvider dateProvider;
+
+    @Inject
+    private DiscussionContextService discussionContextService;
+
+    @Inject
+    private MessageService messageService;
 
     /**
      * Send the notifications of the mentions to the fediverse actors.
@@ -134,27 +141,29 @@ public class ActivityPubMentionsSender
                     .collect(Collectors.toList());
 
                 Date currentTime = this.dateProvider.currentTime();
-                AbstractActivity abstractActivity = initActivity(doc)
+                ActivityPubObject page = initObject(mentionNotificationParameters)
+                    .setPublished(currentTime)
+                    .setName(doc.getTitle())
+                    .setUrl(singletonList(documentUrl))
+                    .setAttributedTo(singletonList(authorAbstractActor.getReference()))
+                    .setTo(to)
+                    .setContent(content)
+                    .setTag(mentions);
+                AbstractActivity abstractActivity = new Create()
                     .setActor(authorAbstractActor)
                     .<AbstractActivity>setTo(to)
                     .<AbstractActivity>setPublished(currentTime)
-                    .setObject(initObject(mentionNotificationParameters)
-                        .setPublished(currentTime)
-                        .setName(doc.getTitle())
-                        .setUrl(singletonList(documentUrl))
-                        .setAttributedTo(singletonList(authorAbstractActor.getReference()))
-                        .setTo(to)
-                        .setContent(content)
-                        .<Page>setTag(mentions));
-                if (abstractActivity instanceof Create) {
-                    this.createActivityHandler
-                        .handleOutboxRequest(
-                            new ActivityRequest<>(authorAbstractActor, (Create) abstractActivity));
-                } else if (abstractActivity instanceof Update) {
-                    this.updateActivityHandler
-                        .handleOutboxRequest(
-                            new ActivityRequest<>(authorAbstractActor, (Update) abstractActivity));
-                }
+                    .setObject(page);
+                this.createActivityHandler
+                    .handleOutboxRequest(
+                        new ActivityRequest<>(authorAbstractActor, (Create) abstractActivity));
+
+                this.messageService.getByEntity(mentionNotificationParameters.getEntityReference())
+                    .ifPresent(message -> this.discussionContextService.getOrCreate(ACTIVITYPUB_OBJECT,
+                        ACTIVITYPUB_OBJECT, ACTIVITYPUB_OBJECT,
+                        page.getId().toASCIIString()).ifPresent(discussionContext ->
+                        this.discussionContextService.link(discussionContext, message.getDiscussion())
+                    ));
             } catch (Exception e) {
                 this.logger.warn("A error occurred while sending ActivityPub mentions for [{}]. Cause: [{}].",
                     mentionNotificationParameters, getRootCauseMessage(e));
