@@ -240,6 +240,8 @@
           ));
           button.removeClass('not-liked');
           button.prop('disabled',true);
+          // Call blur to ensure that the style is applied.
+          button.blur();
         } else {
           notification.replace(new XWiki.widgets.Notification(
             $jsontool.serialize($services.localization.render('activitypub.notification.like.error')),
