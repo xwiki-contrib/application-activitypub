@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.slf4j.Logger;
@@ -45,7 +46,6 @@ import org.xwiki.contrib.activitypub.entities.Mention;
 import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.Page;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
-import org.xwiki.contrib.activitypub.entities.Update;
 import org.xwiki.contrib.discussions.DiscussionContextService;
 import org.xwiki.contrib.discussions.MessageService;
 import org.xwiki.mentions.MentionLocation;
@@ -97,10 +97,10 @@ public class ActivityPubMentionsSender
     private DateProvider dateProvider;
 
     @Inject
-    private DiscussionContextService discussionContextService;
+    private Provider<DiscussionContextService> discussionContextService;
 
     @Inject
-    private MessageService messageService;
+    private Provider<MessageService> messageService;
 
     /**
      * Send the notifications of the mentions to the fediverse actors.
@@ -158,11 +158,11 @@ public class ActivityPubMentionsSender
                     .handleOutboxRequest(
                         new ActivityRequest<>(authorAbstractActor, (Create) abstractActivity));
 
-                this.messageService.getByEntity(mentionNotificationParameters.getEntityReference())
-                    .ifPresent(message -> this.discussionContextService.getOrCreate(ACTIVITYPUB_OBJECT,
+                getMessageService().getByEntity(mentionNotificationParameters.getEntityReference())
+                    .ifPresent(message -> getDiscussionContextService().getOrCreate(ACTIVITYPUB_OBJECT,
                         ACTIVITYPUB_OBJECT, ACTIVITYPUB_OBJECT,
                         page.getId().toASCIIString()).ifPresent(discussionContext ->
-                        this.discussionContextService.link(discussionContext, message.getDiscussion())
+                        getDiscussionContextService().link(discussionContext, message.getDiscussion())
                     ));
             } catch (Exception e) {
                 this.logger.warn("A error occurred while sending ActivityPub mentions for [{}]. Cause: [{}].",
@@ -205,14 +205,13 @@ public class ActivityPubMentionsSender
         return object;
     }
 
-    private AbstractActivity initActivity(XWikiDocument doc)
+    private DiscussionContextService getDiscussionContextService()
     {
-        AbstractActivity abstractActivity;
-        if (doc.getPreviousVersion() != null) {
-            abstractActivity = new Update();
-        } else {
-            abstractActivity = new Create();
-        }
-        return abstractActivity;
+        return this.discussionContextService.get();
+    }
+
+    private MessageService getMessageService()
+    {
+        return this.messageService.get();
     }
 }

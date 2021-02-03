@@ -17,7 +17,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.internal;
+package org.xwiki.contrib.activitypub.internal.listeners;
 
 import java.io.IOException;
 import java.net.URI;
@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.slf4j.Logger;
@@ -45,6 +46,7 @@ import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.entities.Update;
+import org.xwiki.contrib.activitypub.internal.ActivityPubXDOMService;
 import org.xwiki.contrib.discussions.DiscussionContextService;
 import org.xwiki.contrib.discussions.domain.DiscussionContext;
 import org.xwiki.contrib.discussions.domain.Message;
@@ -55,7 +57,7 @@ import org.xwiki.observation.event.Event;
 
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
-import static org.xwiki.contrib.activitypub.internal.ActivityPubDiscussionsMessagesEventListener.TYPE;
+import static org.xwiki.contrib.activitypub.internal.listeners.ActivityPubDiscussionsMessagesEventListener.TYPE;
 
 /**
  * Event listener for the discussions messages.
@@ -76,7 +78,7 @@ public class ActivityPubDiscussionsMessagesEventListener implements EventListene
     private static final String ACTIVITYPUB_OBJECT = "activitypub-object";
 
     @Inject
-    private DiscussionContextService discussionContextService;
+    private Provider<DiscussionContextService> discussionContextService;
 
     @Inject
     private ActivityPubObjectReferenceResolver activityPubObjectReferenceResolver;
@@ -121,7 +123,7 @@ public class ActivityPubDiscussionsMessagesEventListener implements EventListene
             ActionType actionType = messageEvent.getActionType();
             if (actionType == ActionType.CREATE || actionType == ActionType.UPDATE) {
                 List<DiscussionContext> discussionContexts =
-                    this.discussionContextService.findByDiscussionReference(message.getDiscussion().getReference());
+                    getDiscussionContextService().findByDiscussionReference(message.getDiscussion().getReference());
 
                 // Handles only messages with activitypub discussion contexts.
                 if (discussionContexts.stream()
@@ -199,8 +201,8 @@ public class ActivityPubDiscussionsMessagesEventListener implements EventListene
 
                     // register the created note in the discussion 
                     String name = note.getId().toASCIIString();
-                    this.discussionContextService.getOrCreate(name, name, ACTIVITYPUB_OBJECT, name)
-                        .ifPresent(it -> this.discussionContextService.link(it, message.getDiscussion()));
+                    getDiscussionContextService().getOrCreate(name, name, ACTIVITYPUB_OBJECT, name)
+                        .ifPresent(it -> getDiscussionContextService().link(it, message.getDiscussion()));
                 } catch (IOException | ActivityPubException e) {
                     this.logger.warn("Failed to send the message [{}]. Cause: [{}].", message, getRootCauseMessage(e));
                 }
@@ -259,5 +261,10 @@ public class ActivityPubDiscussionsMessagesEventListener implements EventListene
         } else {
             return new Update();
         }
+    }
+
+    private DiscussionContextService getDiscussionContextService()
+    {
+        return this.discussionContextService.get();
     }
 }

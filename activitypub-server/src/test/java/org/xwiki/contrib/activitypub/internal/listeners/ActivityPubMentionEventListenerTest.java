@@ -17,13 +17,15 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.internal;
+package org.xwiki.contrib.activitypub.internal.listeners;
 
 import java.net.URI;
 
 import javax.inject.Provider;
 
 import org.junit.jupiter.api.Test;
+import org.xwiki.contrib.activitypub.internal.ActivityPubMentionsSender;
+import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.mentions.MentionLocation;
 import org.xwiki.mentions.notifications.MentionNotificationParameters;
 import org.xwiki.model.reference.DocumentReference;

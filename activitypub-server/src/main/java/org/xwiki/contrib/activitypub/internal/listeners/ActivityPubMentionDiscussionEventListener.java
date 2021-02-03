@@ -17,7 +17,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.internal;
+package org.xwiki.contrib.activitypub.internal.listeners;
 
 import java.util.Arrays;
 import java.util.List;
@@ -76,19 +76,19 @@ public class ActivityPubMentionDiscussionEventListener extends AbstractActivityP
     private Provider<XWikiContext> contextProvider;
 
     @Inject
-    private DiscussionService discussionService;
+    private Provider<DiscussionService> discussionService;
 
     @Inject
-    private DiscussionContextService discussionContextService;
+    private Provider<DiscussionContextService> discussionContextService;
+
+    @Inject
+    private Provider<DiscussionsRightService> discussionsRightService;
 
     @Inject
     private ActivityPubObjectReferenceResolver activityPubObjectReferenceResolver;
 
     @Inject
     private ActorHandler actorHandler;
-
-    @Inject
-    private DiscussionsRightService discussionsRightService;
 
     @Override
     public String getName()
@@ -128,9 +128,9 @@ public class ActivityPubMentionDiscussionEventListener extends AbstractActivityP
 
     private void addMentionedUserToDiscussion(String discussionReference, String mentionedRef)
     {
-        this.discussionService.get(discussionReference).ifPresent(discussion -> {
+        getDiscussionService().get(discussionReference).ifPresent(discussion -> {
             List<DiscussionContext> byDiscussionReference =
-                this.discussionContextService.findByDiscussionReference(discussion.getReference());
+                getDiscussionContextService().findByDiscussionReference(discussion.getReference());
             boolean isActivitypub = byDiscussionReference.stream()
                 .anyMatch(it -> it.getEntityReference().getType().startsWith(ACTIVITYPUB));
             if (isActivitypub) {
@@ -139,13 +139,13 @@ public class ActivityPubMentionDiscussionEventListener extends AbstractActivityP
                     ActivityPubObject activityPubObject =
                         this.activityPubObjectReferenceResolver.resolveReference(actor.getReference());
                     String actorId = activityPubObject.getId().toASCIIString();
-                    this.discussionContextService.getOrCreate("", "", "activitypub-actor", actorId).ifPresent(dc -> {
-                            this.discussionContextService.link(dc, discussion);
+                    getDiscussionContextService().getOrCreate("", "", "activitypub-actor", actorId).ifPresent(dc -> {
+                            getDiscussionContextService().link(dc, discussion);
                             if (this.actorHandler.isLocalActor(actor)) {
                                 try {
                                     DocumentReference storeDocument = this.actorHandler.getStoreDocument(actor);
-                                    this.discussionsRightService.setRead(discussion, storeDocument);
-                                    this.discussionsRightService.setWrite(discussion, storeDocument);
+                                    getDiscussionsRightService().setRead(discussion, storeDocument);
+                                    getDiscussionsRightService().setWrite(discussion, storeDocument);
                                 } catch (ActivityPubException e) {
                                     e.printStackTrace();
                                 }
@@ -157,5 +157,20 @@ public class ActivityPubMentionDiscussionEventListener extends AbstractActivityP
                 }
             }
         });
+    }
+
+    private DiscussionsRightService getDiscussionsRightService()
+    {
+        return this.discussionsRightService.get();
+    }
+
+    private DiscussionContextService getDiscussionContextService()
+    {
+        return this.discussionContextService.get();
+    }
+
+    private DiscussionService getDiscussionService()
+    {
+        return this.discussionService.get();
     }
 }

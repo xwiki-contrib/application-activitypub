@@ -17,14 +17,12 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.internal;
+package org.xwiki.contrib.activitypub.internal.listeners;
 
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
-
-import javax.inject.Inject;
 
 import org.junit.jupiter.api.Test;
 import org.xwiki.contrib.activitypub.ActivityHandler;
@@ -36,6 +34,7 @@ import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.Update;
+import org.xwiki.contrib.activitypub.internal.ActivityPubXDOMService;
 import org.xwiki.contrib.discussions.DiscussionContextService;
 import org.xwiki.contrib.discussions.domain.Discussion;
 import org.xwiki.contrib.discussions.domain.DiscussionContext;

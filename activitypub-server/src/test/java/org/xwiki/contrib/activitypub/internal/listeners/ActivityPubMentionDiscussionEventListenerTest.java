@@ -17,21 +17,14 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.internal;
+package org.xwiki.contrib.activitypub.internal.listeners;
 
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Optional;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
 import org.xwiki.contrib.activitypub.ActivityPubObjectReferenceResolver;
@@ -60,6 +53,11 @@ import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.doc.DocumentRevisionProvider;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.objects.BaseObject;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 /**
  * Test of {@link ActivityPubMentionDiscussionEventListener}.

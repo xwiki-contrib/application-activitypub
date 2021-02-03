@@ -17,7 +17,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.internal;
+package org.xwiki.contrib.activitypub.internal.listeners;
 
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -30,6 +30,8 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
+import org.xwiki.contrib.activitypub.internal.ActivityPubMentionsSender;
+import org.xwiki.contrib.activitypub.internal.DefaultURLHandler;
 import org.xwiki.mentions.events.NewMentionsEvent;
 import org.xwiki.mentions.notifications.MentionNotificationParameters;
 import org.xwiki.observation.event.Event;

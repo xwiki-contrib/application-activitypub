@@ -17,7 +17,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.contrib.activitypub.internal;
+package org.xwiki.contrib.activitypub.internal.listeners;
 
 import java.util.List;
 
@@ -30,12 +30,13 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.entities.Create;
 import org.xwiki.contrib.activitypub.events.MessageEvent;
+import org.xwiki.contrib.activitypub.internal.ActivityPubDiscussionsService;
 import org.xwiki.observation.EventListener;
 import org.xwiki.observation.event.Event;
 
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
-import static org.xwiki.contrib.activitypub.internal.ActivityPubNewMessagesListener.TYPE;
+import static org.xwiki.contrib.activitypub.internal.listeners.ActivityPubNewMessagesListener.TYPE;
 
 /**
  * Event listener for the ActivityPub messages received from the fediverse. New discussions are created from the new

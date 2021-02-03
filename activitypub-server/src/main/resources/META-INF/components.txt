@@ -5,8 +5,8 @@ org.xwiki.contrib.activitypub.internal.activities.FollowActivityHandler
 org.xwiki.contrib.activitypub.internal.activities.RejectActivityHandler
 org.xwiki.contrib.activitypub.internal.activities.UpdateActivityHandler
 org.xwiki.contrib.activitypub.internal.activities.LikeActivityHandler
-org.xwiki.contrib.activitypub.internal.ActivityPubDiscussionsMessagesEventListener
-org.xwiki.contrib.activitypub.internal.ActivityPubMentionEventListener
+org.xwiki.contrib.activitypub.internal.listeners.ActivityPubDiscussionsMessagesEventListener
+org.xwiki.contrib.activitypub.internal.listeners.ActivityPubMentionEventListener
 org.xwiki.contrib.activitypub.internal.ActivityPubDiscussionsService
 org.xwiki.contrib.activitypub.internal.async.jobs.PageCreatedNotificationJob
 org.xwiki.contrib.activitypub.internal.async.jobs.PageUpdatedNotificationJob
@@ -22,7 +22,7 @@ org.xwiki.contrib.activitypub.internal.signature.DefaultSignatureService
 org.xwiki.contrib.activitypub.internal.storage.ActivityPubSolrInitializer
 org.xwiki.contrib.activitypub.internal.storage.DefaultActivityPubStorage
 org.xwiki.contrib.activitypub.internal.ActivityPubConfigurationSource
-org.xwiki.contrib.activitypub.internal.ActivityPubNewMessagesListener
+org.xwiki.contrib.activitypub.internal.listeners.ActivityPubNewMessagesListener
 org.xwiki.contrib.activitypub.internal.DefaultActivityPubClient
 org.xwiki.contrib.activitypub.internal.DefaultActivityPubConfiguration
 org.xwiki.contrib.activitypub.internal.DefaultActorHandler
@@ -35,4 +35,4 @@ org.xwiki.contrib.activitypub.script.ActivityPubDiscussionsScriptService
 org.xwiki.contrib.activitypub.script.PublishNoteScriptService
 org.xwiki.contrib.activitypub.internal.ActivityPubDiscussionsActorService
 org.xwiki.contrib.activitypub.internal.script.ActivityPubScriptServiceActor
-org.xwiki.contrib.activitypub.internal.ActivityPubMentionDiscussionEventListener
+org.xwiki.contrib.activitypub.internal.listeners.ActivityPubMentionDiscussionEventListener

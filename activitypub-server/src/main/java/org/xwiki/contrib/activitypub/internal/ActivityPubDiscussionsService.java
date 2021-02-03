@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.slf4j.Logger;
@@ -70,19 +71,19 @@ public class ActivityPubDiscussionsService
     private static final String ACTIVITYPUB_OBJECT = "activitypub-object";
 
     @Inject
-    private MessageService messageService;
+    private Provider<MessageService> messageService;
 
     @Inject
-    private DiscussionService discussionService;
+    private Provider<DiscussionService> discussionService;
 
     @Inject
-    private DiscussionContextService discussionContextService;
+    private Provider<DiscussionContextService> discussionContextService;
+
+    @Inject
+    private Provider<DiscussionsRightService> discussionsRightService;
 
     @Inject
     private ActivityPubObjectReferenceResolver activityPubObjectReferenceResolver;
-
-    @Inject
-    private DiscussionsRightService discussionsRightService;
 
     @Inject
     private ActorHandler actorHandler;
@@ -98,7 +99,7 @@ public class ActivityPubDiscussionsService
      */
     public void link(DiscussionContext discussionContext, Discussion discussion)
     {
-        this.discussionContextService.link(discussionContext, discussion);
+        getDiscussionContextService().link(discussionContext, discussion);
     }
 
     /**
@@ -124,7 +125,7 @@ public class ActivityPubDiscussionsService
      */
     public void handleActivity(AbstractActivity activity, boolean notify) throws ActivityPubException
     {
-        boolean notAlreadyHandled = this.discussionService
+        boolean notAlreadyHandled = getDiscussionService()
             .findByDiscussionContext(ACTIVITYPUB_OBJECT, activity.getObject().getLink().toASCIIString());
         ActivityPubObject object = this.activityPubObjectReferenceResolver.resolveReference(activity.getObject());
         if (!notAlreadyHandled && object.getType().equals(Note.class.getSimpleName())) {
@@ -142,8 +143,8 @@ public class ActivityPubDiscussionsService
             getOrCreateDiscussions(activity, replyChain).forEach(discussion -> {
                 replyChain.forEach(replyChainObject -> {
                     String objectID = replyChainObject.getId().toASCIIString();
-                    this.discussionContextService.getOrCreate(objectID, objectID, ACTIVITYPUB_OBJECT, objectID)
-                        .ifPresent(ctx -> this.discussionContextService.link(ctx, discussion));
+                    getDiscussionContextService().getOrCreate(objectID, objectID, ACTIVITYPUB_OBJECT, objectID)
+                        .ifPresent(ctx -> getDiscussionContextService().link(ctx, discussion));
 
                     registerActors(discussion, replyChainObject);
                 });
@@ -193,15 +194,15 @@ public class ActivityPubDiscussionsService
         try {
             T activityPubObject = this.activityPubObjectReferenceResolver.resolveReference(it);
             String actorId = activityPubObject.getId().toASCIIString();
-            this.discussionContextService.getOrCreate(actorId, actorId, ACTIVITYPUB_ACTOR, actorId)
-                .ifPresent(ctx -> this.discussionContextService.link(ctx, discussion));
+            getDiscussionContextService().getOrCreate(actorId, actorId, ACTIVITYPUB_ACTOR, actorId)
+                .ifPresent(ctx -> getDiscussionContextService().link(ctx, discussion));
             // TODO: handle the cases where the target is "public" or "followers"
             if (activityPubObject instanceof AbstractActor) {
                 AbstractActor actor = (AbstractActor) activityPubObject;
                 if (this.actorHandler.isLocalActor(actor)) {
                     DocumentReference storeDocument = this.actorHandler.getStoreDocument(actor);
-                    this.discussionsRightService.setRead(discussion, storeDocument);
-                    this.discussionsRightService.setWrite(discussion, storeDocument);
+                    getDiscussionsRightService().setRead(discussion, storeDocument);
+                    getDiscussionsRightService().setWrite(discussion, storeDocument);
                 }
             }
         } catch (ActivityPubException e) {
@@ -230,7 +231,7 @@ public class ActivityPubDiscussionsService
         Syntax syntax, String actorType,
         String actorReference, boolean notify)
     {
-        return this.messageService
+        return getMessageService()
             .create(content, syntax, discussion.getReference(), actorType, actorReference, notify);
     }
 
@@ -244,7 +245,7 @@ public class ActivityPubDiscussionsService
      */
     public List<Discussion> getOrCreateDiscussions(AbstractActivity activity, List<ActivityPubObject> replyChain)
     {
-        List<Discussion> discussions = replyChain.stream().flatMap(it -> this.discussionService
+        List<Discussion> discussions = replyChain.stream().flatMap(it -> getDiscussionService()
             .findByEntityReferences(ACTIVITYPUB_OBJECT, Arrays.asList(it.getId().toASCIIString()), null,
                 null).stream())
             .distinct().collect(Collectors.toList());
@@ -261,7 +262,7 @@ public class ActivityPubDiscussionsService
                 title = "Discussion for the " + activity.getType() + " activity of " + dateFormat;
             }
 
-            discussions = this.discussionService.create(title, title, "ActivityPub.Discussion")
+            discussions = getDiscussionService().create(title, title, "ActivityPub.Discussion")
                 .map(Arrays::asList)
                 .orElseGet(Arrays::asList);
         }
@@ -301,5 +302,25 @@ public class ActivityPubDiscussionsService
             }
         }
         return replyChain;
+    }
+
+    private DiscussionContextService getDiscussionContextService()
+    {
+        return this.discussionContextService.get();
+    }
+
+    private DiscussionService getDiscussionService()
+    {
+        return this.discussionService.get();
+    }
+
+    private DiscussionsRightService getDiscussionsRightService()
+    {
+        return this.discussionsRightService.get();
+    }
+
+    private MessageService getMessageService()
+    {
+        return this.messageService.get();
     }
 }

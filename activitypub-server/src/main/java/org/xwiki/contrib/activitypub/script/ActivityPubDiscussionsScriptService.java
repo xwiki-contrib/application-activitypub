@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.slf4j.Logger;
@@ -65,13 +66,13 @@ public class ActivityPubDiscussionsScriptService implements ScriptService
     private static final String ACTIVITYPUB_OBJECT = "activitypub-object";
 
     @Inject
-    private DiscussionContextService discussionContextService;
+    private Provider<DiscussionContextService> discussionContextService;
 
     @Inject
-    private DiscussionService discussionService;
+    private Provider<DiscussionService> discussionService;
 
     @Inject
-    private MessageService messageService;
+    private Provider<MessageService> messageService;
 
     @Inject
     private ActivityPubObjectReferenceResolver resolver;
@@ -108,20 +109,22 @@ public class ActivityPubDiscussionsScriptService implements ScriptService
 
             // Replace with an optional since only one parameter.
             Optional<DiscussionContext> activityDiscussionContextIn =
-                this.discussionContextService.getOrCreate(ACTIVITYPUB_OBJECT,
+                getDiscussionContextService().getOrCreate(ACTIVITYPUB_OBJECT,
                     ACTIVITYPUB_OBJECT, ACTIVITYPUB_OBJECT,
                     object.getId().toASCIIString());
             Optional<DiscussionContext> eventDiscussionContext =
-                this.discussionContextService.getOrCreate(EVENT_STR, EVENT_STR, EVENT_STR, eventId);
+                getDiscussionContextService().getOrCreate(EVENT_STR, EVENT_STR, EVENT_STR, eventId);
 
             String discussionTitle = String.format("Discussion for %s", activityId);
             Optional<Discussion> discussionOpt = activityDiscussionContextIn.map(DiscussionContext::getReference)
-                .flatMap(z -> this.discussionService.getOrCreate(discussionTitle, discussionTitle, singletonList(z)));
+                .flatMap(z -> getDiscussionService().getOrCreate(discussionTitle, discussionTitle, singletonList(z)));
             discussionOpt.ifPresent(discussion -> {
                 activityDiscussionContextIn
-                    .ifPresent(discussionContext -> this.discussionContextService.link(discussionContext, discussion));
+                    .ifPresent(
+                        discussionContext -> getDiscussionContextService().link(discussionContext, discussion));
                 eventDiscussionContext
-                    .ifPresent(discussionContext -> this.discussionContextService.link(discussionContext, discussion));
+                    .ifPresent(
+                        discussionContext -> getDiscussionContextService().link(discussionContext, discussion));
                 // Link the actors as discussion context of discussion.
                 try {
 
@@ -144,7 +147,7 @@ public class ActivityPubDiscussionsScriptService implements ScriptService
             // Finally, creates the message.
             return discussionOpt
                 // TODO: take into account the syntax and check if the conversion is required
-                .map(it -> this.messageService
+                .map(it -> getMessageService()
                     .create(this.htmlConverter.fromHTML(content, XWIKI_2_1.toIdString()), XWIKI_2_1,
                         it.getReference(), ACTIVITYPUB_DISCUSSION_TYPE, actorId)
                     .isPresent())
@@ -160,10 +163,24 @@ public class ActivityPubDiscussionsScriptService implements ScriptService
     private void linkToActor(Discussion discussion, ProxyActor activityPubObjectReference) throws ActivityPubException
     {
         ActivityPubObject object = this.resolver.resolveReference(activityPubObjectReference);
-        this.discussionContextService
-            .getOrCreate(object.getName(), object.getName(), "activitypub-actor",
-                object.getId().toASCIIString())
+        getDiscussionContextService().getOrCreate(object.getName(), object.getName(), "activitypub-actor",
+            object.getId().toASCIIString())
             .ifPresent(
-                discussionContext -> this.discussionContextService.link(discussionContext, discussion));
+                discussionContext -> getDiscussionContextService().link(discussionContext, discussion));
+    }
+
+    private MessageService getMessageService()
+    {
+        return this.messageService.get();
+    }
+
+    private DiscussionService getDiscussionService()
+    {
+        return this.discussionService.get();
+    }
+
+    private DiscussionContextService getDiscussionContextService()
+    {
+        return this.discussionContextService.get();
     }
 }
