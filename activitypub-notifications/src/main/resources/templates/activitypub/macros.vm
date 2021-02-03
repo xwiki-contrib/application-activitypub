@@ -83,8 +83,7 @@
         </div>
         <div class="modal-body">
           ## Find the discussion linked to the object of the activity.
-          #set ($inReplyTo = $services.activitypub.resolve($activity.object).inReplyTo)
-          #set ($discussion = $services.discussions.getDiscussionByDiscussionContext("activitypub-object", $inReplyTo))
+          #set ($discussion = $services.discussions.getDiscussionByDiscussionContext("activitypub-object", $activity.object.link))
           #if ($discussion)
             <div>
               #set ($discussionDoc = $xwiki.getDocument('ActivityPub.Discussion'))
