@@ -175,7 +175,7 @@
       var modalWindow = $(this).parents('.activitypub-modal-reply-notification');
 
       const notificationReplyDoc = new XWiki.Document(XWiki.Model.resolve('ActivityPub.NotificationReply', XWiki.EntityType.DOCUMENT));
-
+      var notification = new XWiki.widgets.Notification("$services.localization.render('activitypub.notifications.reply.inprogress')", 'inprogress');
       $.post(notificationReplyDoc.getURL("get"), {
         "eventId": form.find('[name="eventId"]').val(),
         "activityId": form.find('[name="activityId"]').val(),
@@ -183,10 +183,10 @@
         "actor": form.find('[name="actor"]').val(),
       }, function(res) {
         if(res.success) {
-          new XWiki.widgets.Notification("$services.localization.render('activitypub.notifications.reply.success')", 'done');
+          notification.replace(new XWiki.widgets.Notification("$services.localization.render('activitypub.notifications.reply.success')", 'done'));
           modalWindow.modal('hide');
         } else {
-          new XWiki.widgets.Notification("$services.localization.render('activitypub.notifications.reply.failure')", 'error');
+          notification.replace(new XWiki.widgets.Notification("$services.localization.render('activitypub.notifications.reply.failure')", 'error'));
         }
       });
     });

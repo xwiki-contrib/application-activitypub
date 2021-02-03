@@ -158,6 +158,7 @@
 
       const shareDoc = new XWiki.Document(XWiki.Model.resolve('ActivityPub.ShareDocument', XWiki.EntityType.DOCUMENT));
 
+      var notification = new XWiki.widgets.Notification("$services.localization.render('activitypub.shareDocument.inprogress')", 'inprogress');
       const data = {
         'form_token': xm.form_token,
         'messageTarget': $('#activitypub-form-share-page select[name=messageTarget]').first().val(),
@@ -166,9 +167,9 @@
       $.post(shareDoc.getURL("view") + '?outputSyntax=plain', $.param(data, true), function(data) {
         $('#activitypub-modal-share-page').modal('hide');
         if(data.success) {
-          new XWiki.widgets.Notification(data.message, 'success');
+          notification.replace(new XWiki.widgets.Notification(data.message, 'done'));
         } else {
-          new XWiki.widgets.Notification(data.message, 'error');
+          notification.replace(new XWiki.widgets.Notification(data.message, 'error'));
         }
       })
     });
@@ -179,7 +180,7 @@
       <name/>
     </property>
     <property>
-      <parse>0</parse>
+      <parse>1</parse>
     </property>
     <property>
       <use>onDemand</use>

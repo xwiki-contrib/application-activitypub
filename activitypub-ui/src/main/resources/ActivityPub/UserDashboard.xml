@@ -364,11 +364,13 @@
         'followInput': $('#followForm select[name=followInput]').val(),
         'actorId': actorId
       };
+
+      var notification = new XWiki.widgets.Notification("$services.localization.render('activitypub.follow.inprogress')", 'inprogress');
       $.post(followUserDoc.getURL("view") + '?outputSyntax=plain', data, function(data) {
         if(data.success) {
-          new XWiki.widgets.Notification(data.message, 'success');
+          notification.replace(new XWiki.widgets.Notification(data.message, 'done'));
         } else {
-          new XWiki.widgets.Notification(data.message, 'error');
+          notification.replace(new XWiki.widgets.Notification(data.message, 'error'));
         }
         updateFollowing();
       })
@@ -390,12 +392,13 @@
         'syntax': $('#messageForm [name="content_syntax"]').val(),
         'actorId': actorId
       };
+      var notification = new XWiki.widgets.Notification("$services.localization.render('activitypub.message.messageInprogress')", 'inprogress');
       $.post(messageUserDoc.getURL("view") + '?outputSyntax=plain', $.param(data, true), function(data) {
         if(data.success) {
-          new XWiki.widgets.Notification(data.message, 'success');
+          notification.replace(new XWiki.widgets.Notification(data.message, 'done'));
           $(document).trigger('xwiki:actions:cancel');
         } else {
-          new XWiki.widgets.Notification(data.message, 'error');
+          notification.replace(new XWiki.widgets.Notification(data.message, 'error'));
         }
       })
     });
