@@ -52,11 +52,10 @@
         #else
           #set($objectLink = "<span class='wikiexternallink'><a href='$object.url.get(0)'>$linkText</a></span>")
         #end
-      #elseif ($linkText == "Note")
+      #elseif ($object.type == "Note")
         ## Find the discussion linked to the object of the activity.
         ## Inspired from the snippet in macros.vm
-        #set ($inReplyTo = $object.inReplyTo)
-        #set ($discussion = $services.discussions.getDiscussionByDiscussionContext("activitypub-object", $inReplyTo))
+        #set ($discussion = $services.discussions.getDiscussionByDiscussionContext("activitypub-object", $object.id))
         #if ($discussion)
           #set ($discussionDoc = $xwiki.getDocument('ActivityPub.Discussion'))
           #set ($url = "$discussionDoc.getURL('view')?reference=$escapetool.url($discussion.reference)")
