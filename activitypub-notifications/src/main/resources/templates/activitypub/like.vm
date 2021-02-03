@@ -52,7 +52,20 @@
         #else
           #set($objectLink = "<span class='wikiexternallink'><a href='$object.url.get(0)'>$linkText</a></span>")
         #end
-      #else
+      #elseif ($linkText == "Note")
+        ## Find the discussion linked to the object of the activity.
+        ## Inspired from the snippet in macros.vm
+        #set ($inReplyTo = $object.inReplyTo)
+        #set ($discussion = $services.discussions.getDiscussionByDiscussionContext("activitypub-object", $inReplyTo))
+        #if ($discussion)
+          #set ($discussionDoc = $xwiki.getDocument('ActivityPub.Discussion'))
+          #set ($url = "$discussionDoc.getURL('view')?reference=$escapetool.url($discussion.reference)")
+          #set ($linkTitle = $services.localization.render('activitypub.event.activity.reply.goToDiscussion'))
+          #set ($objectLink = "<a href='$url' title='$linkTitle'>$linkText</a>")
+        #end
+      #end
+
+      #if ("$!objectLink" == "")
         #set($objectLink = $linkText)
       #end
       #if ($object.isDocument())
@@ -89,8 +102,10 @@
           </script>
         </div>
         #end
+      #elseif ($object.type == 'Note')
+        #set ($description = "<blockquote class='activitypub notifications'>$object.content</blockquote>")
       #else
-        #set($description = '')
+        #set ($description = '')
       #end
       #if ($object.name)
         #set ($introduction = $services.localization.render('activitypub.event.like.description.withActor', [$actorLink, $objectLink]))
