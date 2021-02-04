@@ -20,12 +20,12 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.4" reference="ActivityPub.ActivityPubTranslations" locale="">
+<xwikidoc version="1.4" reference="ActivityPub.ActivityPubTranslations" locale="en">
   <web>ActivityPub</web>
   <name>ActivityPubTranslations</name>
-  <language/>
+  <language>en</language>
   <defaultLanguage>en</defaultLanguage>
-  <translation>0</translation>
+  <translation>1</translation>
   <creator>xwiki:XWiki.Admin</creator>
   <parent>ActivityPub.WebHome</parent>
   <author>xwiki:XWiki.Admin</author>
@@ -47,10 +47,10 @@ activitypub.follow.followYourself=You can't follow yourself.
 activitypub.follow.alreadyFollowed=You already follow this user.
 activitypub.follow.target.placeholder=Insert here the identifier(s) of user(s)
 activitypub.message.target.label=Target users of the message
-activitypub.message.target.hint=You can select your followers and/or some specif users.
+activitypub.message.target.hint=You can select your followers and/or some specific users.
 activitypub.message.target.placeholder=Insert here the identifier(s) of user(s)
 activitypub.message.content.label=Content of your message
-activitypub.message.content.hint=Type here the message you want to send
+activitypub.message.content.hint=Type here the message you want to send.
 activitypub.message.button=Send the message
 activitypub.following.title=Following
 activitypub.following.empty=This user is not following anyone.
@@ -110,41 +110,4 @@ activitypub.like.likers.subtitle={0} people from fediverse like the page ''{1}''
 activitypub.discussions.discussion.back=Back to the Discussions
 activitypub.discussions.discussions.back=Back to the Dashboard
 </content>
-  <object>
-    <name>ActivityPub.ActivityPubTranslations</name>
-    <number>0</number>
-    <className>XWiki.TranslationDocumentClass</className>
-    <guid>c31f64a2-df00-4ad4-9118-90709c6a2812</guid>
-    <class>
-      <name>XWiki.TranslationDocumentClass</name>
-      <customClass/>
-      <customMapping/>
-      <defaultViewSheet/>
-      <defaultEditSheet/>
-      <defaultWeb/>
-      <nameField/>
-      <validationScript/>
-      <scope>
-        <cache>0</cache>
-        <disabled>0</disabled>
-        <displayType>select</displayType>
-        <freeText>forbidden</freeText>
-        <largeStorage>0</largeStorage>
-        <multiSelect>0</multiSelect>
-        <name>scope</name>
-        <number>1</number>
-        <prettyName>Scope</prettyName>
-        <relationalStorage>0</relationalStorage>
-        <separator> </separator>
-        <separators>|, </separators>
-        <size>1</size>
-        <unmodifiable>0</unmodifiable>
-        <values>GLOBAL|WIKI|USER|ON_DEMAND</values>
-        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
-      </scope>
-    </class>
-    <property>
-      <scope>WIKI</scope>
-    </property>
-  </object>
-</xwikidoc>
+  </xwikidoc>
