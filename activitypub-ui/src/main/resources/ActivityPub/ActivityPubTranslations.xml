@@ -37,7 +37,7 @@
   <syntaxId>plain/1.0</syntaxId>
   <hidden>true</hidden>
   <content>activitypub.follow.input.label=Follow the given user
-activitypub.follow.input.hint=Enter the identifier of an user to start following him/her
+activitypub.follow.input.hint=Enter the identifier of an user to start following him/her.
 activitypub.follow.input.placeholder=@foo@domain
 activitypub.follow.button=Follow
 activitypub.follow.followRequested=The follow request has been sent.
