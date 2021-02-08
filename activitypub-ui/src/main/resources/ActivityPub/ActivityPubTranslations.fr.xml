@@ -36,13 +36,13 @@
   <minorEdit>false</minorEdit>
   <syntaxId>plain/1.0</syntaxId>
   <hidden>true</hidden>
-  <content>activitypub.follow.input.label=Suivre l'utilisateur spécifié
-activitypub.follow.input.hint=Entrez l'identifiant d'un utilisateur pour commencer à le suivre
+  <content>activitypub.follow.input.label=Suivre l'utilisateur spécifié.
+activitypub.follow.input.hint=Entrez l'identifiant d'un utilisateur pour commencer à le suivre.
 activitypub.follow.input.placeholder=@foo@domaine
 activitypub.follow.button=Suivre
 activitypub.follow.followRequested=La requête de suivi a été envoyée.
 activitypub.follow.followNotRequested=La requête de suivi a échoué.
-activitypub.follow.inprogress=La requête de suivi est en cours d'envoi...
+activitypub.follow.inprogress=La requête de suivi est en cours d'envoi…
 activitypub.follow.followYourself=Vous ne pouvez pas vous suivre vous-même.
 activitypub.follow.alreadyFollowed=Vous suivez déjà cet utilisateur.
 activitypub.follow.target.placeholder=Insérer ici le(s) identifiant(s) du (des) utilisateur(s)
@@ -50,7 +50,7 @@ activitypub.message.target.label=Destinataire du message
 activitypub.message.target.hint=Vous pouvez sélectionner vos followers et/ou des utilisateurs spécifiques.
 activitypub.message.target.placeholder=Insérez ici le(s) identifiant(s) du ou des utilisateur(s)
 activitypub.message.content.label=Contenu de votre message
-activitypub.message.content.hint=Tapez ici le message que vous voulez envoyer
+activitypub.message.content.hint=Tapez ici le message que vous voulez envoyer.
 activitypub.message.button=Envoyer le message
 activitypub.following.title=Comptes suivis
 activitypub.following.empty=Cet utilisateur ne suit personne.
@@ -67,10 +67,10 @@ activitypub.user.identifier.copyButton=Copier l'identifiant utilisateur Activity
 activitypub.user.identifier.copied=L'identifiant a été copié dans votre presse-papier.
 activitypub.message.messageSent=Message envoyé.
 activitypub.message.messageError=Erreur lors de l'envoi du message.
-activitypub.message.messageInprogress=Le message est en cours d'envoi...
+activitypub.message.messageInprogress=Le message est en cours d'envoi…
 activitypub.shareDocument.success=Page partagée avec succès
 activitypub.shareDocument.failure=Le partage de page a échoué
-activitypub.shareDocument.inprogress=La page est en train d'être partagée...
+activitypub.shareDocument.inprogress=La page est en train d'être partagée…
 activitypub.shareDocument.modalTitle=Partage de document
 activitypub.shareDocument.target.label=Utilisateurs cibles du partage de document
 activitypub.shareDocument.target.hint=Vous pouvez sélectionner vos followers et/ou certains utilisateurs spécifiques.
@@ -101,7 +101,7 @@ activitypub.like.livetable._actions=Actions
 activitypub.dashboard.tab.likes=J'aime
 activitypub.notifications.reply.success=Réponse envoyée avec succès.
 activitypub.notifications.reply.failure=Le message n'a pas été envoyé.
-activitypub.notifications.reply.inprogress=La réponse est en cours d'envoi...
+activitypub.notifications.reply.inprogress=La réponse est en cours d'envoi…
 activitypub.like.button.title=Nombre de "j'aime" du fediverse : 
 activitypub.like.menu.likers="j'aime" du Fediverse
 activitypub.like.likers.title=Des acteurs du Fediverse qui aiment une page
