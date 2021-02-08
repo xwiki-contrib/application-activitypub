@@ -36,13 +36,13 @@
   <minorEdit>false</minorEdit>
   <syntaxId>plain/1.0</syntaxId>
   <hidden>true</hidden>
-  <content>activitypub.follow.input.label=Follow the given user
+  <content>activitypub.follow.input.label=Follow the given user.
 activitypub.follow.input.hint=Enter the identifier of an user to start following him/her.
 activitypub.follow.input.placeholder=@foo@domain
 activitypub.follow.button=Follow
 activitypub.follow.followRequested=The follow request has been sent.
 activitypub.follow.followNotRequested=The follow request failed.
-activitypub.follow.inprogress=The follow request is being sent...
+activitypub.follow.inprogress=The follow request is being sent…
 activitypub.follow.followYourself=You can't follow yourself.
 activitypub.follow.alreadyFollowed=You already follow this user.
 activitypub.follow.target.placeholder=Insert here the identifier(s) of user(s)
@@ -50,7 +50,7 @@ activitypub.message.target.label=Target users of the message
 activitypub.message.target.hint=You can select your followers and/or some specific users.
 activitypub.message.target.placeholder=Insert here the identifier(s) of user(s)
 activitypub.message.content.label=Content of your message
-activitypub.message.content.hint=Type here the message you want to send
+activitypub.message.content.hint=Type here the message you want to send.
 activitypub.message.button=Send the message
 activitypub.following.title=Following
 activitypub.following.empty=This user is not following anyone.
@@ -67,10 +67,10 @@ activitypub.user.identifier.copyButton=Copy the ActivityPub user identifier
 activitypub.user.identifier.copied=The identifier has been copied into your clipboard.
 activitypub.message.messageSent=Message sent.
 activitypub.message.messageError=Error when sending the message.
-activitypub.message.messageInprogress=Message is being sent...
+activitypub.message.messageInprogress=Message is being sent…
 activitypub.shareDocument.success=Page shared successfully
 activitypub.shareDocument.failure=Page share failed
-activitypub.shareDocument.inprogress=Page is being shared...
+activitypub.shareDocument.inprogress=Page is being shared…
 activitypub.shareDocument.modalTitle=Document Share
 activitypub.shareDocument.target.label=Target users of the document sharing
 activitypub.shareDocument.target.hint=You can select your followers and/or some specif users.
@@ -101,7 +101,7 @@ activitypub.like.livetable._actions=Actions
 activitypub.dashboard.tab.likes=Likes
 activitypub.notifications.reply.success=Reply successfully sent.
 activitypub.notifications.reply.failure=Failed to send the message.
-activitypub.notifications.reply.inprogress=Reply is being sent...
+activitypub.notifications.reply.inprogress=Reply is being sent…
 activitypub.like.button.title=Number of likes from the fediverse: 
 activitypub.like.menu.likers=Likes from the fediverse
 activitypub.like.likers.title=People from fediverse who likes a page
