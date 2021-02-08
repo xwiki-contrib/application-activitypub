@@ -36,12 +36,13 @@
   <minorEdit>false</minorEdit>
   <syntaxId>plain/1.0</syntaxId>
   <hidden>true</hidden>
-  <content>activitypub.follow.input.label=Seguir al usuario dado
+  <content>activitypub.follow.input.label=Seguir al usuario dado.
 activitypub.follow.input.hint=Introduce el identificador de un usuario para comenzar a seguirlo/a
 activitypub.follow.input.placeholder=@usuario@dominio
 activitypub.follow.button=Seguir
 activitypub.follow.followRequested=Se ha enviado la solicitud de seguimiento.
 activitypub.follow.followNotRequested=Ha fallado la solicitud de seguimiento.
+### Missing: activitypub.follow.inprogress=The follow request is being sent...
 activitypub.follow.followYourself=No puedes seguirte a ti mismo.
 activitypub.follow.alreadyFollowed=Ya sigues a este usuario.
 activitypub.follow.target.placeholder=Introduce aquí los identificadores de los usuarios
@@ -66,8 +67,10 @@ activitypub.user.identifier.copyButton=Copiar el identificador de usuario de Act
 activitypub.user.identifier.copied=Se ha copiado el identificador a tu portapapeles.
 activitypub.message.messageSent=Mensaje enviado.
 activitypub.message.messageError=Error al enviar el mensaje.
+### Missing: activitypub.message.messageInprogress=Message is being sent...
 activitypub.shareDocument.success=Página compartida exitosamente
 activitypub.shareDocument.failure=Fallo de compartición de página
+### Missing: activitypub.shareDocument.inprogress=Page is being shared...
 activitypub.shareDocument.modalTitle=Compartir documento
 activitypub.shareDocument.target.label=Usuarios destinatarios de la compartición del documento
 activitypub.shareDocument.target.hint=Puedes escoger a tus seguidores y/o algunos usuarios específicos.
@@ -98,6 +101,7 @@ activitypub.like.livetable._actions=Acciones
 activitypub.dashboard.tab.likes=Nº de "me gusta"
 activitypub.notifications.reply.success=Respuesta envíada con éxito.
 activitypub.notifications.reply.failure=Error al envíar el mensaje.
+### Missing: activitypub.notifications.reply.inprogress=Reply is being sent...
 activitypub.like.button.title=Número de "me gusta" en el fediverse: 
 activitypub.like.menu.likers="Me gusta" en el fediverse
 activitypub.like.likers.title=Gente del fediverse a la que le gusta la página
