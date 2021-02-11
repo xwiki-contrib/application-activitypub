@@ -70,30 +70,37 @@ class NoteTest extends AbstractEntityTest
     @Test
     void parsingUnexpectedTagType() throws Exception
     {
-        ActivityPubObject expectedNote = new Note()
-            .setId(new URI("http://localhost:8080/xwiki/activitypub/Note/XWiki.Foo-note"));
+        ActivityPubObject expectedNote = initializeNoteWithUnknownTag();
 
         String json = this.readResource("note/note4.json");
         Note actual0 = this.parser.parse(json, Note.class);
         assertEquals(expectedNote, actual0);
 
         assertEquals(1, this.logCapture.size());
-        assertEquals(Level.DEBUG, this.logCapture.getLogEvent(0).getLevel());
+        assertEquals(Level.WARN, this.logCapture.getLogEvent(0).getLevel());
         assertEquals("ActivityPub Object type [UnknownType] not found.", this.logCapture.getMessage(0));
     }
-    
+
+    private ActivityPubObject initializeNoteWithUnknownTag() throws URISyntaxException
+    {
+        return new Note()
+            .setId(new URI("http://localhost:8080/xwiki/activitypub/Note/XWiki.Foo-note"))
+            .setTag(singletonList(new ActivityPubObjectReference<>().setObject(new UnknownTypeObject()
+                .setType("UnknownType")
+                .setId(URI.create("https://localhost:8080/xwiki/activitypub/UnknownType/id")))));
+    }
+
     @Test
     void parsingUnexpectedTagTypeWithImplicitReturnType() throws Exception
     {
-        ActivityPubObject expectedNote = new Note()
-            .setId(new URI("http://localhost:8080/xwiki/activitypub/Note/XWiki.Foo-note"));
+        ActivityPubObject expectedNote = initializeNoteWithUnknownTag();
 
         String json = this.readResource("note/note4.json");
         ActivityPubObject actual1 = this.parser.parse(json);
         assertEquals(expectedNote, actual1);
 
         assertEquals(1, this.logCapture.size());
-        assertEquals(Level.DEBUG, this.logCapture.getLogEvent(0).getLevel());
+        assertEquals(Level.WARN, this.logCapture.getLogEvent(0).getLevel());
         assertEquals("ActivityPub Object type [UnknownType] not found.", this.logCapture.getMessage(0));
     }
 

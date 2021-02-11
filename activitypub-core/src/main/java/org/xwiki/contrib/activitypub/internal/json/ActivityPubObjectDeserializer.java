@@ -26,6 +26,7 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
+import org.xwiki.contrib.activitypub.entities.UnknownTypeObject;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -37,9 +38,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import static org.xwiki.contrib.activitypub.internal.json.AbstractActivityPubJsonParser.LOGGER_KEY;
 
 /**
- * A custom Jackson deserializer for {@link ActivityPubObject}.
- * The main role of this deserializer is to check the type property of a JSON to create the right objects. Some utility
- * methods are provided to allow finding the POJO in various packages.
+ * A custom Jackson deserializer for {@link ActivityPubObject}. The main role of this deserializer is to check the type
+ * property of a JSON to create the right objects. Some utility methods are provided to allow finding the POJO in
+ * various packages.
+ *
  * @version $Id$
  */
 public class ActivityPubObjectDeserializer extends JsonDeserializer<ActivityPubObject>
@@ -53,6 +55,7 @@ public class ActivityPubObjectDeserializer extends JsonDeserializer<ActivityPubO
 
     /**
      * {@inheritDoc}
+     * <p>
      * Deserialize the current object based on the given "type" property. If the type attribute does not exist, or  if
      * no class is found with the same type name, then the object is deserialized using {@link ActivityPubObject} as
      * fallback.
@@ -67,17 +70,13 @@ public class ActivityPubObjectDeserializer extends JsonDeserializer<ActivityPubO
         Logger logger = (Logger) deserializationContext.findInjectableValue(LOGGER_KEY, null, null);
 
         JsonNode type = root.get("type");
-        Optional<Class<? extends ActivityPubObject>> instanceClass;
+        Class<? extends ActivityPubObject> instanceClass;
         if (type != null) {
-            instanceClass = findClass(type.asText(), logger);
+            instanceClass = findClass(type.asText(), logger).orElse(UnknownTypeObject.class);
         } else {
-            instanceClass = Optional.of(ActivityPubObject.class);
+            instanceClass = UnknownTypeObject.class;
         }
-        if (instanceClass.isPresent()) {
-            return mapper.treeToValue(root, instanceClass.get());
-        } else {
-            return null;
-        }
+        return mapper.treeToValue(root, instanceClass);
     }
 
     private Optional<Class<? extends ActivityPubObject>> findClass(String type, Logger logger)
@@ -89,8 +88,10 @@ public class ActivityPubObjectDeserializer extends JsonDeserializer<ActivityPubO
                 return Optional.of(classInPackage);
             }
         }
-        
-        logger.debug("ActivityPub Object type [{}] not found.", type);
+
+        // The level is set to warn to ease the access to this information but this log level should be decreased to 
+        // info or debug once the application gain in stability.
+        logger.warn("ActivityPub Object type [{}] not found.", type);
 
         return Optional.empty();
     }
