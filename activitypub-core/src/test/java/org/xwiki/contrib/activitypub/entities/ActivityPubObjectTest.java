@@ -19,14 +19,17 @@
  */
 package org.xwiki.contrib.activitypub.entities;
 
-import java.util.Calendar;
-import java.util.Date;
-
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.xwiki.contrib.activitypub.ActivityPubException;
+import org.xwiki.test.junit5.LogCaptureExtension;
+
+import ch.qos.logback.classic.Level;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.xwiki.test.LogLevel.DEBUG;
 
 /**
  * Test of {@link ActivityPubObject} with a focus on parsing and serialization of their json representations.
@@ -34,8 +37,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * @since 1.0
  * @version $Id$
  */
-public class ActivityPubObjectTest extends AbstractEntityTest
+class ActivityPubObjectTest extends AbstractEntityTest
 {
+    @RegisterExtension
+    LogCaptureExtension logCapture = new LogCaptureExtension(DEBUG);
+
     @Test
     void parseWithExplicitType() throws Exception
     {
@@ -49,7 +55,9 @@ public class ActivityPubObjectTest extends AbstractEntityTest
     void parseWithImplicitType() throws Exception
     {
         String json = this.readResource("wrongtype.json");
-        ActivityPubException e = assertThrows(ActivityPubException.class, () -> this.parser.parse(json));
-        assertEquals("Error while parsing request with unknown type.", e.getMessage());
+        assertNull(this.parser.parse(json));
+        assertEquals(1, this.logCapture.size());
+        assertEquals(Level.DEBUG, this.logCapture.getLogEvent(0).getLevel());
+        assertEquals("ActivityPub Object type [Wrong] not found.", this.logCapture.getMessage(0));
     }
 }
