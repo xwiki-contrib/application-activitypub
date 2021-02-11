@@ -1,0 +1,9 @@
+{
+  "@context" : [ "https://www.w3.org/ns/activitystreams" ],
+  "id" : "http://localhost:8080/xwiki/activitypub/Note/XWiki.Foo-note",
+  "tag" : [{
+      "type": "UnknownType",
+      "id": "https://localhost:8080/xwiki/activitypub/UnknownType/id"
+    }],
+  "type" : "Note"
+}

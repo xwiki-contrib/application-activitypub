@@ -23,11 +23,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 
+import javax.inject.Inject;
+
+import org.slf4j.Logger;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubJsonParser;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.InjectableValues;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -40,8 +43,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public abstract class AbstractActivityPubJsonParser implements ActivityPubJsonParser
 {
+    /**
+     * Logger injection key.
+     */
+    public static final String LOGGER_KEY = "logger";
+
     private static final String ERROR_MSG_KNOWN_TYPE = "Error while parsing request with type [%s].";
+
     private static final String ERROR_MSG_UNKNOWN_TYPE = "Error while parsing request with unknown type.";
+
+    @Inject
+    private Logger logger;
 
     /**
      * Retrieve an object mapper for the parsing operations: this is generally provided by
@@ -61,8 +73,8 @@ public abstract class AbstractActivityPubJsonParser implements ActivityPubJsonPa
     public <T extends ActivityPubObject> T parse(String requestBody, Class<T> type) throws ActivityPubException
     {
         try {
-            return this.getObjectMapper().readValue(requestBody, type);
-        } catch (JsonProcessingException e) {
+            return getInitializedReader().readValue(requestBody, type);
+        } catch (IOException e) {
             throw new ActivityPubException(String.format(ERROR_MSG_KNOWN_TYPE, type), e);
         } catch (RuntimeException e) {
             throw new ActivityPubException(ERROR_MSG_UNKNOWN_TYPE, e);
@@ -79,7 +91,7 @@ public abstract class AbstractActivityPubJsonParser implements ActivityPubJsonPa
     public <T extends ActivityPubObject> T parse(Reader requestBodyReader, Class<T> type) throws ActivityPubException
     {
         try {
-            return this.getObjectMapper().readValue(requestBodyReader, type);
+            return getInitializedReader().readValue(requestBodyReader, type);
         } catch (IOException e) {
             throw new ActivityPubException(String.format(ERROR_MSG_KNOWN_TYPE, type), e);
         }
@@ -96,9 +108,16 @@ public abstract class AbstractActivityPubJsonParser implements ActivityPubJsonPa
         throws ActivityPubException
     {
         try {
-            return this.getObjectMapper().readValue(requestBodyInputStream, type);
+            return getInitializedReader().readValue(requestBodyInputStream, type);
         } catch (IOException e) {
             throw new ActivityPubException(String.format(ERROR_MSG_KNOWN_TYPE, type), e);
         }
+    }
+
+    private ObjectMapper getInitializedReader()
+    {
+        ObjectMapper objectMapper = this.getObjectMapper();
+        objectMapper.setInjectableValues(new InjectableValues.Std().addValue(LOGGER_KEY, this.logger));
+        return objectMapper;
     }
 }

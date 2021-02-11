@@ -27,7 +27,6 @@ import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObjectReference;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -48,15 +47,24 @@ public abstract class AbstractActivityPubObjectReferenceDeserializer
 {
     @Override
     public ActivityPubObjectReference<ActivityPubObject> deserialize(JsonParser jsonParser,
-        DeserializationContext deserializationContext) throws IOException, JsonProcessingException
+        DeserializationContext deserializationContext) throws IOException
     {
         ObjectMapper mapper = (ObjectMapper) jsonParser.getCodec();
 
-        ActivityPubObjectReference<ActivityPubObject> objectReference = new ActivityPubObjectReference<>();
+        ActivityPubObjectReference<ActivityPubObject> objectReference;
         if (jsonParser.currentToken() == JsonToken.START_OBJECT) {
-            objectReference.setObject(mapper.readValue(jsonParser, ActivityPubObject.class));
+            // If reading the contained object returns null, we skip the reference creation and return the null value 
+            // too.
+            ActivityPubObject object = mapper.readValue(jsonParser, ActivityPubObject.class);
+            if (object != null) {
+                objectReference = new ActivityPubObjectReference<>();
+                objectReference.setObject(object);
+            } else {
+                objectReference = null;
+            }
         } else {
             try {
+                objectReference = new ActivityPubObjectReference<>();
                 objectReference.setLink(this.transformURI(mapper.readValue(jsonParser, URI.class)));
             } catch (ActivityPubException e) {
                 throw new IOException("Error when deserializing link", e);

@@ -20,19 +20,21 @@
 package org.xwiki.contrib.activitypub.internal.json;
 
 import java.io.IOException;
-import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
+import org.slf4j.Logger;
 import org.xwiki.contrib.activitypub.entities.ActivityPubObject;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import static org.xwiki.contrib.activitypub.internal.json.AbstractActivityPubJsonParser.LOGGER_KEY;
 
 /**
  * A custom Jackson deserializer for {@link ActivityPubObject}.
@@ -57,32 +59,40 @@ public class ActivityPubObjectDeserializer extends JsonDeserializer<ActivityPubO
      */
     @Override
     public ActivityPubObject deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
-        throws IOException, JsonProcessingException
+        throws IOException
     {
         ObjectMapper mapper = (ObjectMapper) jsonParser.getCodec();
         ObjectNode root = mapper.readTree(jsonParser);
 
+        Logger logger = (Logger) deserializationContext.findInjectableValue(LOGGER_KEY, null, null);
+
         JsonNode type = root.get("type");
-        Class<? extends ActivityPubObject> instanceClass;
+        Optional<Class<? extends ActivityPubObject>> instanceClass;
         if (type != null) {
-            instanceClass = findClass(type.asText());
+            instanceClass = findClass(type.asText(), logger);
         } else {
-            instanceClass = ActivityPubObject.class;
+            instanceClass = Optional.of(ActivityPubObject.class);
         }
-        return mapper.treeToValue(root, instanceClass);
+        if (instanceClass.isPresent()) {
+            return mapper.treeToValue(root, instanceClass.get());
+        } else {
+            return null;
+        }
     }
 
-    private Class<? extends ActivityPubObject> findClass(String type)
+    private Optional<Class<? extends ActivityPubObject>> findClass(String type, Logger logger)
     {
         Class<? extends ActivityPubObject> classInPackage;
         for (String packageExtension : PACKAGES_ENTITIES) {
             classInPackage = findClassInPackage(packageExtension, type);
             if (classInPackage != null) {
-                return classInPackage;
+                return Optional.of(classInPackage);
             }
         }
-        // TODO: validate that this fail fast strategy is relevant.
-        throw new RuntimeException(MessageFormat.format("Type [{0}] not found", type));
+        
+        logger.debug("ActivityPub Object type [{}] not found.", type);
+
+        return Optional.empty();
     }
 
     private Class<? extends ActivityPubObject> findClassInPackage(String packageName, String type)

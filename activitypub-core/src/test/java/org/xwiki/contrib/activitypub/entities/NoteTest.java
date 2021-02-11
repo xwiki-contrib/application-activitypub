@@ -23,9 +23,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.xwiki.test.junit5.LogCaptureExtension;
+
+import ch.qos.logback.classic.Level;
 
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.xwiki.test.LogLevel.DEBUG;
 
 /**
  * Test of {@link Note}.
@@ -35,6 +40,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 class NoteTest extends AbstractEntityTest
 {
+    @RegisterExtension
+    LogCaptureExtension logCapture = new LogCaptureExtension(DEBUG);
+
     @Test
     void serialization() throws Exception
     {
@@ -57,6 +65,36 @@ class NoteTest extends AbstractEntityTest
         assertEquals(expectedNote, actual0);
         ActivityPubObject actual1 = this.parser.parse(json);
         assertEquals(expectedNote, actual1);
+    }
+
+    @Test
+    void parsingUnexpectedTagType() throws Exception
+    {
+        ActivityPubObject expectedNote = new Note()
+            .setId(new URI("http://localhost:8080/xwiki/activitypub/Note/XWiki.Foo-note"));
+
+        String json = this.readResource("note/note4.json");
+        Note actual0 = this.parser.parse(json, Note.class);
+        assertEquals(expectedNote, actual0);
+
+        assertEquals(1, this.logCapture.size());
+        assertEquals(Level.DEBUG, this.logCapture.getLogEvent(0).getLevel());
+        assertEquals("ActivityPub Object type [UnknownType] not found.", this.logCapture.getMessage(0));
+    }
+    
+    @Test
+    void parsingUnexpectedTagTypeWithImplicitReturnType() throws Exception
+    {
+        ActivityPubObject expectedNote = new Note()
+            .setId(new URI("http://localhost:8080/xwiki/activitypub/Note/XWiki.Foo-note"));
+
+        String json = this.readResource("note/note4.json");
+        ActivityPubObject actual1 = this.parser.parse(json);
+        assertEquals(expectedNote, actual1);
+
+        assertEquals(1, this.logCapture.size());
+        assertEquals(Level.DEBUG, this.logCapture.getLogEvent(0).getLevel());
+        assertEquals("ActivityPub Object type [UnknownType] not found.", this.logCapture.getMessage(0));
     }
 
     private Note initializeNote() throws URISyntaxException
