@@ -19,6 +19,8 @@
  */
 package org.xwiki.contrib.activitypub.entities;
 
+import org.xwiki.stability.Unstable;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
@@ -28,6 +30,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * @version $Id$
  * @since 1.7.1
  */
+@Unstable
 @JsonDeserialize(as = UnknownTypeObject.class)
 public class UnknownTypeObject extends ActivityPubObject
 {
