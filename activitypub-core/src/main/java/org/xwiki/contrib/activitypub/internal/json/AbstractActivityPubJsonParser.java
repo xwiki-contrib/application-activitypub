@@ -117,6 +117,9 @@ public abstract class AbstractActivityPubJsonParser implements ActivityPubJsonPa
     private ObjectMapper getInitializedReader()
     {
         ObjectMapper objectMapper = this.getObjectMapper();
+        // Give access to a logger to the deserializer using Jackson's injection mechanism.
+        // We need to do it than way instead of components because deserializers are declared by annotating 
+        // parsed classes.
         objectMapper.setInjectableValues(new InjectableValues.Std().addValue(LOGGER_KEY, this.logger));
         return objectMapper;
     }

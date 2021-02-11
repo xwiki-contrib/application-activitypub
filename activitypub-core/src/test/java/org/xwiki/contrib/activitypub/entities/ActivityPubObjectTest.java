@@ -19,6 +19,8 @@
  */
 package org.xwiki.contrib.activitypub.entities;
 
+import java.net.URI;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.xwiki.contrib.activitypub.ActivityPubException;
@@ -27,7 +29,6 @@ import org.xwiki.test.junit5.LogCaptureExtension;
 import ch.qos.logback.classic.Level;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.xwiki.test.LogLevel.DEBUG;
 
@@ -54,10 +55,13 @@ class ActivityPubObjectTest extends AbstractEntityTest
     @Test
     void parseWithImplicitType() throws Exception
     {
+        ActivityPubObject expected = new UnknownTypeObject().setType("WrongType")
+            .setId(URI.create("http://localhost:8080/xwiki/activitypub/Note/XWiki.Foo-note"));
         String json = this.readResource("wrongtype.json");
-        assertNull(this.parser.parse(json));
+        
+        assertEquals(expected, this.parser.parse(json));
         assertEquals(1, this.logCapture.size());
-        assertEquals(Level.DEBUG, this.logCapture.getLogEvent(0).getLevel());
+        assertEquals(Level.WARN, this.logCapture.getLogEvent(0).getLevel());
         assertEquals("ActivityPub Object type [Wrong] not found.", this.logCapture.getMessage(0));
     }
 }

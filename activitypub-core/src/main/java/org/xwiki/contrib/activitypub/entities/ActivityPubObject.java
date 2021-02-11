@@ -28,7 +28,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.xwiki.contrib.activitypub.internal.json.ActivityPubObjectDeserializer;
-import org.xwiki.contrib.activitypub.internal.json.ActivityPubObjectReferenceArrayJsonDeserializer;
 import org.xwiki.stability.Unstable;
 import org.xwiki.text.XWikiToStringBuilder;
 
@@ -388,7 +387,6 @@ public class ActivityPubObject extends JSONLDObjects
      * @since 1.4
      */
     @Unstable
-    @JsonDeserialize(using = ActivityPubObjectReferenceArrayJsonDeserializer.class)
     public List<ActivityPubObjectReference<?>> getTag()
     {
         return this.tag;
