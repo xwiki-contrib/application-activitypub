@@ -28,7 +28,7 @@
     <version>12.10</version>
   </parent>
   <artifactId>application-activitypub</artifactId>
-  <version>1.7.1</version>
+  <version>1.8-SNAPSHOT</version>
   <name>XWiki ActivityPub - Parent</name>
   <packaging>pom</packaging>
   <developers>
@@ -56,7 +56,7 @@
     <connection>scm:git:git://github.com/xwiki-contrib/application-activitypub.git</connection>
     <developerConnection>scm:git:git@github.com:xwiki-contrib/application-activitypub.git</developerConnection>
     <url>https://github.com/xwiki-contrib/application-activitypub/tree/master</url>
-    <tag>application-activitypub-1.7.1</tag>
+    <tag>HEAD</tag>
   </scm>
   <properties>
     <xwiki.release.jira.skip>false</xwiki.release.jira.skip>
