@@ -138,6 +138,7 @@ class DefaultSignatureServiceTest
             "keyId=\"http:\\/\\/actoruri\\/\",headers=\"\\(request-target\\) host date digest\","
                 + "signature=\"[^\"]*\""));
         inOrder.verify(postMethod).addRequestHeader(eq("Date"), anyString());
+        inOrder.verify(postMethod).addRequestHeader("Digest", "SHA-256=RBNvo1WzZ4oRRq0W9+hknpT7T8If536DEMBg9hyq/4o=");
     }
 
     @Test
@@ -168,6 +169,7 @@ class DefaultSignatureServiceTest
             "keyId=\"http:\\/\\/actoruri\\/\",headers=\"\\(request-target\\) host date digest\","
                 + "signature=\"[^\"]*\""));
         inOrder.verify(postMethod).addRequestHeader(eq("Date"), eq("formatted date"));
+        inOrder.verify(postMethod).addRequestHeader("Digest", "SHA-256=RBNvo1WzZ4oRRq0W9+hknpT7T8If536DEMBg9hyq/4o=");
     }
 
     @Test
@@ -203,5 +205,6 @@ class DefaultSignatureServiceTest
             eq("keyId=\"http://actoruri/\",headers=\"(request-target) host date digest\""
                 + ",signature=\"gyFYtjF/9JX9moeR9yYHVYf7/B222obL1IIJDqDf5AK7ThyqIKoJHpARj1+eljAkEvXdQrUUg5y/Su7ljmhpCQ==\""));
         inOrder.verify(postMethod).addRequestHeader(eq("Date"), anyString());
+        inOrder.verify(postMethod).addRequestHeader("Digest", "SHA-256=RBNvo1WzZ4oRRq0W9+hknpT7T8If536DEMBg9hyq/4o=");
     }
 }

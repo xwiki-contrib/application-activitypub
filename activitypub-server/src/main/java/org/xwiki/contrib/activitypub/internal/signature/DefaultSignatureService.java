@@ -105,6 +105,7 @@ public class DefaultSignatureService implements SignatureService
                     actorAPURL, signatureB64);
             postMethod.addRequestHeader("Signature", signature);
             postMethod.addRequestHeader("Date", date);
+            postMethod.addRequestHeader("Digest", "SHA-256=" + digest);
         } catch (URIException e) {
             throw new ActivityPubException("Error while retrieving the URI from post method", e);
         }
