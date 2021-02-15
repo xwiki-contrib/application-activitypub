@@ -351,7 +351,8 @@
 
   function updateFollowing() {
     $.get(followingDoc.getURL("get"), { "actorId": actorId }, function(res) {
-      $('#linkActors&gt;:first-child').replaceWith($(res)[1]);
+      const content = $(res).filter(function(k, v) {  return v.nodeName === 'DIV' })[0];
+      $('#linkActors&gt;:first-child').empty().append(content);
     });
   };
   
