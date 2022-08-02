@@ -22,13 +22,11 @@ package org.xwiki.contrib.activitypub.internal.activities;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import javax.inject.Inject;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.methods.PostMethod;
-import org.junit.jupiter.api.BeforeAll;
 import org.mockito.Mock;
 import org.xwiki.contrib.activitypub.ActivityPubClient;
 import org.xwiki.contrib.activitypub.ActivityPubConfiguration;

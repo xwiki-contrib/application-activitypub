@@ -36,7 +36,6 @@ import org.xwiki.contrib.activitypub.entities.Mention;
 import org.xwiki.contrib.activitypub.entities.Page;
 import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
-import org.xwiki.contrib.activitypub.entities.Update;
 import org.xwiki.mentions.DisplayStyle;
 import org.xwiki.mentions.MentionLocation;
 import org.xwiki.mentions.MentionsFormatter;

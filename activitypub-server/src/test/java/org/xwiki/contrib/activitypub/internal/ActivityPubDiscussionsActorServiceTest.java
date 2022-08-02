@@ -22,11 +22,6 @@ package org.xwiki.contrib.activitypub.internal;
 import java.net.URI;
 import java.util.Optional;
 
-import javax.inject.Inject;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
-
 import org.junit.jupiter.api.Test;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.entities.Person;
@@ -34,6 +29,9 @@ import org.xwiki.contrib.discussions.domain.ActorDescriptor;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
 
 /**
  * Test of {@link ActivityPubDiscussionsActorService}.
