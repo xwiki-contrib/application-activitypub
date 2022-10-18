@@ -70,7 +70,7 @@
     #else
       #set($username = $actor.preferredUsername)
     #end
-    #set($dashboardTitle = $services.localization.render('activitypub.dashboard.title', [$username]))
+    #set($dashboardTitle = $services.localization.render('activitypub.dashboard.title', [$escapetool.xml($username)]))
     {{html clean='false'}}
       &lt;h2&gt;$dashboardTitle&lt;/h2&gt;
       &lt;span class="noitems"&gt;$services.localization.render('activitypub.user.identifier.tip')&lt;/span&gt;
