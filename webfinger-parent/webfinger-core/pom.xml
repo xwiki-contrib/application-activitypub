@@ -25,10 +25,10 @@
   <parent>
     <groupId>org.xwiki.contrib</groupId>
     <artifactId>webfinger-parent</artifactId>
-    <version>1.7.5</version>
+    <version>1.8-SNAPSHOT</version>
   </parent>
   <artifactId>webfinger-core</artifactId>
-  <version>1.7.5</version>
+  <version>1.8-SNAPSHOT</version>
   <name>XWiki Webfinger - Core</name>
   <packaging>jar</packaging>
   <properties>
