@@ -39,7 +39,7 @@
   <content>activitypub.follow.input.label=指定したユーザーをフォロー。
 ### Missing: activitypub.follow.input.hint=Enter the identifier of an user to start following him/her.
 ### Missing: activitypub.follow.input.placeholder=@foo@domain
-### Missing: activitypub.follow.button=Follow
+activitypub.follow.button=フォロー
 ### Missing: activitypub.follow.followRequested=The follow request has been sent.
 ### Missing: activitypub.follow.followNotRequested=The follow request failed.
 ### Missing: activitypub.follow.inprogress=The follow request is being sent…
