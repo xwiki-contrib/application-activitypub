@@ -1,0 +1,113 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.4" reference="ActivityPub.ActivityPubTranslations" locale="ja">
+  <web>ActivityPub</web>
+  <name>ActivityPubTranslations</name>
+  <language>ja</language>
+  <defaultLanguage>en</defaultLanguage>
+  <translation>1</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>ActivityPub.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>ActivityPubTranslations</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>plain/1.0</syntaxId>
+  <hidden>true</hidden>
+  <content>activitypub.follow.input.label=指定したユーザーをフォロー。
+### Missing: activitypub.follow.input.hint=Enter the identifier of an user to start following him/her.
+### Missing: activitypub.follow.input.placeholder=@foo@domain
+activitypub.follow.button=フォロー
+activitypub.follow.followRequested=フォローのリクエストを送信しました。
+activitypub.follow.followNotRequested=フォローをリクエストできませんでした。
+activitypub.follow.inprogress=フォローのリクエストを送信しています…
+activitypub.follow.followYourself=自分自身をフォローすることはできません。
+activitypub.follow.alreadyFollowed=このユーザーは既にフォローしています。
+activitypub.follow.target.placeholder=ユーザーの識別子をここに挿入
+### Missing: activitypub.message.target.label=Target users of the message
+### Missing: activitypub.message.target.hint=You can select your followers and/or some specific users.
+### Missing: activitypub.message.target.placeholder=Insert here the identifier(s) of user(s)
+### Missing: activitypub.message.content.label=Content of your message
+### Missing: activitypub.message.content.hint=Type here the message you want to send.
+### Missing: activitypub.message.button=Send the message
+### Missing: activitypub.following.title=Following
+### Missing: activitypub.following.empty=This user is not following anyone.
+### Missing: activitypub.followers.title=Followers
+### Missing: activitypub.followers.empty=This user does not have any follower yet.
+### Missing: activitypub.user.profile.menu=ActivityPub
+### Missing: activitypub.webfinger=Webfinger
+### Missing: activitypub.follow.actornotfound=The user you specified cannot be found.
+### Missing: activitypub.storage.needrestart=The ActivityPub storage is not ready. Please ask the administrator to restart the server to initialize it.
+### Missing: activitypub.webfinger.notconfigured=The WebFinger endpoint is not configured on this server. You might want to ask your administrator to configure it in order to help using ActivityPub.
+### Missing: activitypub.user.identifier=ActivityPub user identifier
+### Missing: activitypub.user.identifier.tip=Use this identifier if you want to interact with this user.
+### Missing: activitypub.user.identifier.copyButton=Copy the ActivityPub user identifier
+### Missing: activitypub.user.identifier.copied=The identifier has been copied into your clipboard.
+### Missing: activitypub.message.messageSent=Message sent.
+### Missing: activitypub.message.messageError=Error when sending the message.
+### Missing: activitypub.message.messageInprogress=Message is being sent…
+### Missing: activitypub.shareDocument.success=Page shared successfully
+### Missing: activitypub.shareDocument.failure=Page share failed
+### Missing: activitypub.shareDocument.inprogress=Page is being shared…
+### Missing: activitypub.shareDocument.modalTitle=Document Share
+### Missing: activitypub.shareDocument.target.label=Target users of the document sharing
+### Missing: activitypub.shareDocument.target.hint=You can select your followers and/or some specif users.
+### Missing: activitypub.shareDocument.target.placeholder=Insert here the identifier(s) of user(s)
+### Missing: activitypub.shareDocument.publicRecipientWarning=Be aware that pages shared without "public" being part of the recipients can be ignored by some instances of the fediverse.
+### Missing: activitypub.dashboard.tab.follow=Follow
+### Missing: activitypub.dashboard.tab.message=New message
+### Missing: activitypub.dashboard.guest=You cannot use this application as guest user, please log in.
+### Missing: ActivityPub.ActivityPubConfigurationClass_pageNotifications.hint=Whether page creation and modification notifications are active or not.
+### Missing: ActivityPub.ActivityPubConfigurationClass_pageNotificationPolicy.hint=Page creation and modifications notifications are send to the followers of the selected users.
+### Missing: activitypub.dashboard.tab.sentMessagesList=Sent messages
+### Missing: activitypub.dashboard.tab.receivedMessagesList=Received messages
+### Missing: activitypub.dashboard.tab.discussionsList=Discussions
+### Missing: activitypub.dashboard.noactor=You can only access this macro if an actor is defined.
+### Missing: activitypub.dashboard.title=Dashboard of {0}
+### Missing: activitypub.dashboard.selectActor.label=Available ActivityPub actors:
+### Missing: activitypub.message.display.from=From:
+### Missing: activitypub.message.display.to=To:
+### Missing: activitypub.message.display.date=Date:
+### Missing: activitypub.message.display.content=Content:
+### Missing: activitypub.message.nomessage=There is currently no message to display.
+### Missing: activitypub.message.display.public=Public message
+### Missing: activitypub.like.livetable.published=Publication Date
+### Missing: activitypub.like.livetable.type=Type
+### Missing: activitypub.like.livetable.summary=Summary
+### Missing: activitypub.like.livetable.attributedTo=Attributed To
+### Missing: activitypub.like.livetable._actions=Actions
+### Missing: activitypub.dashboard.tab.likes=Likes
+### Missing: activitypub.notifications.reply.success=Reply successfully sent.
+### Missing: activitypub.notifications.reply.failure=Failed to send the message.
+### Missing: activitypub.notifications.reply.inprogress=Reply is being sent…
+### Missing: activitypub.like.button.title=Number of likes from the fediverse: 
+### Missing: activitypub.like.menu.likers=Likes from the fediverse
+### Missing: activitypub.like.likers.title=People from fediverse who likes a page
+### Missing: activitypub.like.likers.nolikes=Nobody from the fediverse like the page ''{0}'' yet.
+### Missing: activitypub.like.likers.subtitle={0} people from fediverse like the page ''{1}'':
+### Missing: activitypub.discussions.discussion.back=Back to the Discussions
+### Missing: activitypub.discussions.discussions.back=Back to the Dashboard
+</content>
+  </xwikidoc>
