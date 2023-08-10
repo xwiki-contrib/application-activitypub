@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.xwiki.contrib</groupId>
     <artifactId>parent-platform</artifactId>
-    <version>12.10</version>
+    <version>12.10-1</version>
   </parent>
   <artifactId>application-activitypub</artifactId>
   <version>1.7.7-SNAPSHOT</version>
