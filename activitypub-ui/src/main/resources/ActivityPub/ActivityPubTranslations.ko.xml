@@ -1,1 +1,113 @@
+<?xml version="1.1" encoding="UTF-8"?>
 
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.4" reference="ActivityPub.ActivityPubTranslations" locale="ko">
+  <web>ActivityPub</web>
+  <name>ActivityPubTranslations</name>
+  <language>ko</language>
+  <defaultLanguage>en</defaultLanguage>
+  <translation>1</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>ActivityPub.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>ActivityPubTranslations</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>plain/1.0</syntaxId>
+  <hidden>true</hidden>
+  <content>activitypub.follow.input.label=지정된 사용자를 팔로우합니다.
+activitypub.follow.input.hint=팔로우를 시작하려면 사용자의 식별자를 입력하세요.
+activitypub.follow.input.placeholder=@foo@도메인
+activitypub.follow.button=따르다
+activitypub.follow.followRequested=팔로우 요청이 전송되었습니다.
+activitypub.follow.followNotRequested=팔로우 요청이 실패했습니다.
+activitypub.follow.inprogress=팔로우 요청을 보내는 중입니다…
+activitypub.follow.followYourself=당신은 자신을 따라갈 수 없습니다.
+activitypub.follow.alreadyFollowed=이미 이 사용자를 팔로우하고 있습니다.
+activitypub.follow.target.placeholder=여기에 사용자의 식별자를 입력하세요.
+activitypub.message.target.label=메시지의 대상 사용자
+activitypub.message.target.hint=팔로어 및/또는 일부 특정 사용자를 선택할 수 있습니다.
+activitypub.message.target.placeholder=여기에 사용자의 식별자를 입력하세요.
+activitypub.message.content.label=메시지 내용
+activitypub.message.content.hint=여기에 보내려는 메시지를 입력하세요.
+activitypub.message.button=메시지 보내기
+activitypub.following.title=수행원
+activitypub.following.empty=이 사용자는 팔로우하는 사람이 없습니다.
+activitypub.followers.title=추종자
+activitypub.followers.empty=이 사용자는 아직 팔로어가 없습니다.
+activitypub.user.profile.menu=액티비티펍
+activitypub.webfinger=웹핑거
+activitypub.follow.actornotfound=지정한 사용자를 찾을 수 없습니다.
+activitypub.storage.needrestart=ActivityPub 저장소 가 준비되지 않았습니다. 서버를 초기화하려면 관리자에게 서버를 다시 시작하도록 요청하세요.
+activitypub.webfinger.notconfigured=WebFinger 엔드포인트가 이 서버에 구성되어 있지 않습니다. ActivityPub 사용에 도움이 되도록 관리자에게 구성을 요청할 수도 있습니다 .
+activitypub.user.identifier=ActivityPub 사용자 식별자
+activitypub.user.identifier.tip=역이 저장되었지만, 일부 새롭게 실패한 검사가 있습니다: 일치하지 않는 콜론(:)
+activitypub.user.identifier.copyButton=역이 저장되었지만, 일부 새롭게 실패한 검사가 있습니다: 일치하지 않는 콜론(:)
+activitypub.user.identifier.copied=삭제 진행 중...
+activitypub.message.messageSent=삭제 진행 중...
+activitypub.message.messageError=삭제 진행 중...
+activitypub.message.messageInprogress=삭제 진행 중…
+activitypub.shareDocument.success=삭제 진행 중...
+activitypub.shareDocument.failure=삭제 진행 중...
+activitypub.shareDocument.inprogress=삭제 진행 중…
+activitypub.shareDocument.modalTitle=삭제 진행 중...
+activitypub.shareDocument.target.label=삭제 진행 중...
+activitypub.shareDocument.target.hint=삭제 진행 중...
+activitypub.shareDocument.target.placeholder=삭제 진행 중...
+activitypub.shareDocument.publicRecipientWarning=삭제 진행 중...
+activitypub.dashboard.tab.follow=삭제 진행 중...
+activitypub.dashboard.tab.message=삭제 진행 중...
+activitypub.dashboard.guest=이 저장되었지만, 일부 새롭게 실패한 검사가 있습니다: 일치하지 않는 마침표(.), 일치하지 않는 물음표(?)
+ActivityPub.ActivityPubConfigurationClass_pageNotifications.hint=이 저장되었지만, 일부 새롭게 실패한 검사가 있습니다: 일치하지 않는 마침표(.), 일치하지 않는 물음표(?)
+ActivityPub.ActivityPubConfigurationClass_pageNotificationPolicy.hint=이 저장되었지만, 일부 새롭게 실패한 검사가 있습니다: 일치하지 않는 마침표(.), 일치하지 않는 물음표(?)
+activitypub.dashboard.tab.sentMessagesList=이 저장되었지만, 일부 새롭게 실패한 검사가 있습니다: 일치하지 않는 마침표(.), 일치하지 않는 물음표(?)
+activitypub.dashboard.tab.receivedMessagesList=이 저장되었지만, 일부 새롭게 실패한 검사가 있습니다: 일치하지 않는 마침표(.)
+activitypub.dashboard.tab.discussionsList=이 저장되었지만, 일부 새롭게 실패한 검사가 있습니다: 일치하지 않는 마침표(.)
+activitypub.dashboard.noactor=이 저장되었지만, 일부 새롭게 실패한 검사가 있습니다: 일치하지 않는 콜론(:)
+activitypub.dashboard.title=이 저장되었지만, 일부 새롭게 실패한 검사가 있습니다: 일치하지 않는 콜론(:)
+activitypub.dashboard.selectActor.label=이 저장되었지만, 일부 새롭게 실패한 검사가 있습니다: 일치하지 않는 마침표(.)
+activitypub.message.display.from=이 저장되었지만, 일부 새롭게 실패한 검사가 있습니다: 일치하지 않는 마침표(.)
+activitypub.message.display.to=이 저장되었지만, 일부 새롭게 실패한 검사가 있습니다: 일치하지 않는 마침표(.)
+activitypub.message.display.date=이 저장되었지만, 일부 새롭게 실패한 검사가 있습니다: 일치하지 않는 마침표(.)
+### Missing: activitypub.message.display.content=Content:
+### Missing: activitypub.message.nomessage=There is currently no message to display.
+### Missing: activitypub.message.display.public=Public message
+### Missing: activitypub.like.livetable.published=Publication Date
+### Missing: activitypub.like.livetable.type=Type
+### Missing: activitypub.like.livetable.summary=Summary
+### Missing: activitypub.like.livetable.attributedTo=Attributed To
+### Missing: activitypub.like.livetable._actions=Actions
+### Missing: activitypub.dashboard.tab.likes=Likes
+### Missing: activitypub.notifications.reply.success=Reply successfully sent.
+### Missing: activitypub.notifications.reply.failure=Failed to send the message.
+### Missing: activitypub.notifications.reply.inprogress=Reply is being sent…
+### Missing: activitypub.like.button.title=Number of likes from the fediverse: 
+### Missing: activitypub.like.menu.likers=Likes from the fediverse
+### Missing: activitypub.like.likers.title=People from fediverse who likes a page
+### Missing: activitypub.like.likers.nolikes=Nobody from the fediverse like the page ''{0}'' yet.
+### Missing: activitypub.like.likers.subtitle={0} people from fediverse like the page ''{1}'':
+### Missing: activitypub.discussions.discussion.back=Back to the Discussions
+### Missing: activitypub.discussions.discussions.back=Back to the Dashboard
+</content>
+  </xwikidoc>
