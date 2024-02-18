@@ -1,0 +1,113 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.4" reference="ActivityPub.ActivityPubTranslations" locale="ko">
+  <web>ActivityPub</web>
+  <name>ActivityPubTranslations</name>
+  <language>ko</language>
+  <defaultLanguage>en</defaultLanguage>
+  <translation>1</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>ActivityPub.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>ActivityPubTranslations</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>plain/1.0</syntaxId>
+  <hidden>true</hidden>
+  <content>activitypub.follow.input.label=지정된 사용자를 팔로우합니다.
+activitypub.follow.input.hint=팔로우를 시작하려면 사용자의 식별자를 입력하세요.
+activitypub.follow.input.placeholder=@foo@도메인
+activitypub.follow.button=따르다
+activitypub.follow.followRequested=팔로우 요청이 전송되었습니다.
+activitypub.follow.followNotRequested=팔로우 요청이 실패했습니다.
+activitypub.follow.inprogress=팔로우 요청을 보내는 중입니다…
+activitypub.follow.followYourself=당신은 자신을 따라갈 수 없습니다.
+activitypub.follow.alreadyFollowed=이미 이 사용자를 팔로우하고 있습니다.
+activitypub.follow.target.placeholder=여기에 사용자의 식별자를 입력하세요
+activitypub.message.target.label=메시지의 대상 사용자
+activitypub.message.target.hint=팔로어 및/또는 일부 특정 사용자를 선택할 수 있습니다.
+activitypub.message.target.placeholder=여기에 사용자의 식별자를 입력하세요
+activitypub.message.content.label=메시지 내용
+activitypub.message.content.hint=여기에 보내려는 메시지를 입력하세요.
+activitypub.message.button=메시지 보내기
+activitypub.following.title=수행원
+activitypub.following.empty=이 사용자는 팔로우하는 사람이 없습니다.
+activitypub.followers.title=추종자
+activitypub.followers.empty=이 사용자는 아직 팔로어가 없습니다.
+activitypub.user.profile.menu=액티비티펍
+activitypub.webfinger=웹핑거
+activitypub.follow.actornotfound=지정한 사용자를 찾을 수 없습니다.
+activitypub.storage.needrestart=ActivityPub 저장소 가 준비되지 않았습니다. 서버를 초기화하려면 관리자에게 서버를 다시 시작하도록 요청하세요.
+activitypub.webfinger.notconfigured=WebFinger 엔드포인트가 이 서버에 구성되어 있지 않습니다. ActivityPub 사용에 도움이 되도록 관리자에게 구성을 요청할 수도 있습니다 .
+activitypub.user.identifier=ActivityPub 사용자 식별자
+activitypub.user.identifier.tip=이 사용자와 상호 작용하려면 이 식별자를 사용하십시오.
+activitypub.user.identifier.copyButton=ActivityPub 사용자 식별자 복사
+activitypub.user.identifier.copied=식별자가 클립보드에 복사되었습니다.
+activitypub.message.messageSent=메시지 전송 됨.
+activitypub.message.messageError=메시지를 보내는 중에 오류가 발생했습니다.
+activitypub.message.messageInprogress=삭제 진행 중…
+activitypub.shareDocument.success=페이지가 성공적으로 공유되었습니다
+activitypub.shareDocument.failure=페이지 공유 실패
+activitypub.shareDocument.inprogress=삭제 진행 중…
+activitypub.shareDocument.modalTitle=문서 공유
+activitypub.shareDocument.target.label=문서공유 대상 사용자
+activitypub.shareDocument.target.hint=팔로어 및/또는 일부 특정 사용자를 선택할 수 있습니다.
+activitypub.shareDocument.target.placeholder=여기에 사용자의 식별자를 입력하세요
+activitypub.shareDocument.publicRecipientWarning=수신자의 일부가 아닌 "공개"가 공유된 페이지는 페다이버스의 일부 인스턴스에서 무시될 수 있다는 점에 유의하십시오.
+activitypub.dashboard.tab.follow=따르다
+activitypub.dashboard.tab.message=새로운 메시지
+activitypub.dashboard.guest=이 애플리케이션은 게스트 사용자로 사용할 수 없습니다. 로그인하십시오.
+ActivityPub.ActivityPubConfigurationClass_pageNotifications.hint=페이지 생성 및 수정 알림이 활성화되어 있는지 여부입니다.
+ActivityPub.ActivityPubConfigurationClass_pageNotificationPolicy.hint=페이지 생성 및 수정 알림은 선택된 사용자의 팔로어에게 전송됩니다.
+activitypub.dashboard.tab.sentMessagesList=보낸 메시지
+activitypub.dashboard.tab.receivedMessagesList=받은 메시지
+activitypub.dashboard.tab.discussionsList=토론
+activitypub.dashboard.noactor=액터가 정의된 경우에만 이 매크로에 액세스할 수 있습니다.
+activitypub.dashboard.title={0}의 대시보드
+activitypub.dashboard.selectActor.label=사용 가능한 ActivityPub 액터:
+activitypub.message.display.from=에서:
+activitypub.message.display.to=에게:
+activitypub.message.display.date=날짜:
+activitypub.message.display.content=콘텐츠:
+activitypub.message.nomessage=현재 표시할 메시지가 없습니다.
+activitypub.message.display.public=공개 메시지
+activitypub.like.livetable.published=발행일
+activitypub.like.livetable.type=유형
+activitypub.like.livetable.summary=요약
+activitypub.like.livetable.attributedTo=귀속 대상
+activitypub.like.livetable._actions=행위
+activitypub.dashboard.tab.likes=좋아요
+activitypub.notifications.reply.success=답장이 성공적으로 전송되었습니다.
+activitypub.notifications.reply.failure=메시지를 보내지 못했습니다.
+activitypub.notifications.reply.inprogress=답장을 보내는 중입니다…
+activitypub.like.button.title=Fediverse의 좋아요 수: 
+activitypub.like.menu.likers=Fediverse의 좋아요
+activitypub.like.likers.title=페이지를 좋아하는 fediverse의 사람들
+activitypub.like.likers.nolikes=아직 ''{0}'' 페이지와 같은 Fediverse의 사람이 없습니다.
+activitypub.like.likers.subtitle=''{1}'' 페이지를 좋아하는 fediverse의 {0}명:
+activitypub.discussions.discussion.back=토론으로 돌아가기
+activitypub.discussions.discussions.back=대시보드로 돌아가기
+</content>
+  </xwikidoc>
