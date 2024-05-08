@@ -1,1 +1,113 @@
+<?xml version="1.1" encoding="UTF-8"?>
 
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.4" reference="ActivityPub.ActivityPubTranslations" locale="pt">
+  <web>ActivityPub</web>
+  <name>ActivityPubTranslations</name>
+  <language>pt</language>
+  <defaultLanguage>en</defaultLanguage>
+  <translation>1</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>ActivityPub.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>ActivityPubTranslations</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>plain/1.0</syntaxId>
+  <hidden>true</hidden>
+  <content>activitypub.follow.input.label=Siga o usuário fornecido.
+activitypub.follow.input.hint=Insira o identificador de um usuário para começar a segui-lo.
+activitypub.follow.input.placeholder=@foo@domínio
+activitypub.follow.button=Seguir
+activitypub.follow.followRequested=A solicitação de acompanhamento foi enviada.
+activitypub.follow.followNotRequested=A solicitação de acompanhamento falhou.
+activitypub.follow.inprogress=A solicitação de acompanhamento está sendo enviada…
+activitypub.follow.followYourself=Você não pode seguir a si mesmo.
+activitypub.follow.alreadyFollowed=Você já segue este usuário.
+activitypub.follow.target.placeholder=Insira aqui o(s) identificador(es) do(s) usuário(s)
+activitypub.message.target.label=Segmentar usuários da mensagem
+activitypub.message.target.hint=Você pode selecionar seus seguidores e/ou alguns usuários específicos.
+activitypub.message.target.placeholder=Insira aqui o(s) identificador(es) do(s) usuário(s)
+activitypub.message.content.label=Conteúdo da sua mensagem
+activitypub.message.content.hint=Digite aqui a mensagem que deseja enviar.
+activitypub.message.button=Envie a mensagem
+activitypub.following.title=Seguindo
+activitypub.following.empty=Este usuário não está seguindo ninguém.
+activitypub.followers.title=Seguidores
+activitypub.followers.empty=Este usuário ainda não tem nenhum seguidor.
+activitypub.user.profile.menu=ActivityPub
+activitypub.webfinger=Webfinger
+activitypub.follow.actornotfound=O usuário que você especificou não pode ser encontrado.
+activitypub.storage.needrestart=O armazenamento do ActivityPub não está pronto. Peça ao administrador para reiniciar o servidor para inicializá-lo.
+activitypub.webfinger.notconfigured=O endpoint WebFinger não está configurado neste servidor. Você pode pedir ao seu administrador para configurá-lo para ajudar no uso do ActivityPub.
+activitypub.user.identifier=Identificador de usuário do ActivityPub
+activitypub.user.identifier.tip=Use este identificador se quiser interagir com este usuário.
+activitypub.user.identifier.copyButton=Copie o identificador de usuário do ActivityPub
+activitypub.user.identifier.copied=O identificador foi copiado para sua área de transferência.
+activitypub.message.messageSent=Mensagem enviada.
+activitypub.message.messageError=Erro ao enviar a mensagem.
+activitypub.message.messageInprogress=A mensagem está sendo enviada…
+activitypub.shareDocument.success=Página compartilhada com sucesso
+activitypub.shareDocument.failure=Falha no compartilhamento de página
+activitypub.shareDocument.inprogress=A página está sendo compartilhada…
+activitypub.shareDocument.modalTitle=Compartilhamento de documentos
+activitypub.shareDocument.target.label=Usuários-alvo do compartilhamento de documentos
+activitypub.shareDocument.target.hint=Você pode selecionar seus seguidores e/ou alguns usuários específicos.
+activitypub.shareDocument.target.placeholder=Insira aqui o(s) identificador(es) do(s) usuário(s)
+activitypub.shareDocument.publicRecipientWarning=Esteja ciente de que páginas compartilhadas sem que o “público” faça parte dos destinatários podem ser ignoradas por algumas instâncias do fediverse.
+activitypub.dashboard.tab.follow=Seguir
+activitypub.dashboard.tab.message=Nova mensagem
+activitypub.dashboard.guest=Você não pode usar este aplicativo como usuário convidado, faça login.
+ActivityPub.ActivityPubConfigurationClass_pageNotifications.hint=Se as notificações de criação e modificação de páginas estão ativas ou não.
+ActivityPub.ActivityPubConfigurationClass_pageNotificationPolicy.hint=Notificações de criação e modificação de páginas são enviadas aos seguidores dos usuários selecionados.
+activitypub.dashboard.tab.sentMessagesList=Mensagens enviadas
+activitypub.dashboard.tab.receivedMessagesList=Mensagens recebidas
+activitypub.dashboard.tab.discussionsList=Discussões
+activitypub.dashboard.noactor=Você só poderá acessar esta macro se um ator estiver definido.
+activitypub.dashboard.title=Painel de {0}
+activitypub.dashboard.selectActor.label=Atores disponíveis do ActivityPub:
+activitypub.message.display.from=De:
+activitypub.message.display.to=Para:
+activitypub.message.display.date=Data:
+activitypub.message.display.content=Contente:
+activitypub.message.nomessage=Atualmente não há nenhuma mensagem para exibir.
+activitypub.message.display.public=Mensagem pública
+activitypub.like.livetable.published=Mensagem pública
+activitypub.like.livetable.type=Tipo
+activitypub.like.livetable.summary=Resumo
+activitypub.like.livetable.attributedTo=Atribuído a
+activitypub.like.livetable._actions=Ações
+activitypub.dashboard.tab.likes=Curtidas
+activitypub.notifications.reply.success=Resposta enviada com sucesso.
+activitypub.notifications.reply.failure=Falha no envio da mensagem.
+activitypub.notifications.reply.inprogress=A resposta está sendo enviada…
+activitypub.like.button.title=Número de curtidas do fediverse: 
+activitypub.like.menu.likers=Curtidas do fediverse
+activitypub.like.likers.title=Pessoas da fediverse que curtem uma página
+activitypub.like.likers.nolikes=Ninguém do fediverse curtiu a página ''{0}'' ainda.
+activitypub.like.likers.subtitle={0} pessoas da fediverse curtiram a página ''{1}'':
+activitypub.discussions.discussion.back=De volta às discussões
+activitypub.discussions.discussions.back=Voltar ao painel
+</content>
+  </xwikidoc>
