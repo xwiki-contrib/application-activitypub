@@ -25,10 +25,10 @@
   <parent>
     <groupId>org.xwiki.contrib</groupId>
     <artifactId>application-activitypub</artifactId>
-    <version>1.7.10</version>
+    <version>1.7.11-SNAPSHOT</version>
   </parent>
   <artifactId>activitypub-commons</artifactId>
-  <version>1.7.10</version>
+  <version>1.7.11-SNAPSHOT</version>
   <name>XWiki ActivityPub - Commons</name>
   <packaging>jar</packaging>
   <properties>
