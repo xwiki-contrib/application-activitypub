@@ -20,10 +20,10 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 -->
 
-<xwikidoc version="1.4" reference="ActivityPub.ActivityPubTranslations" locale="pt-BR">
+<xwikidoc version="1.4" reference="ActivityPub.ActivityPubTranslations" locale="pt_BR">
   <web>ActivityPub</web>
   <name>ActivityPubTranslations</name>
-  <language>pt-BR</language>
+  <language>pt_BR</language>
   <defaultLanguage>en</defaultLanguage>
   <translation>1</translation>
   <creator>xwiki:XWiki.Admin</creator>
