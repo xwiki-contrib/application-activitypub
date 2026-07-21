@@ -1,0 +1,113 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<!--
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+
+<xwikidoc version="1.4" reference="ActivityPub.ActivityPubTranslations" locale="en_GB">
+  <web>ActivityPub</web>
+  <name>ActivityPubTranslations</name>
+  <language>en_GB</language>
+  <defaultLanguage>en</defaultLanguage>
+  <translation>1</translation>
+  <creator>xwiki:XWiki.Admin</creator>
+  <parent>ActivityPub.WebHome</parent>
+  <author>xwiki:XWiki.Admin</author>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <version>1.1</version>
+  <title>ActivityPubTranslations</title>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>plain/1.0</syntaxId>
+  <hidden>true</hidden>
+  <content>### Missing: activitypub.follow.input.label=
+### Missing: activitypub.follow.input.hint=
+### Missing: activitypub.follow.input.placeholder=
+### Missing: activitypub.follow.button=
+### Missing: activitypub.follow.followRequested=
+### Missing: activitypub.follow.followNotRequested=
+### Missing: activitypub.follow.inprogress=
+### Missing: activitypub.follow.followYourself=
+### Missing: activitypub.follow.alreadyFollowed=
+### Missing: activitypub.follow.target.placeholder=
+### Missing: activitypub.message.target.label=
+### Missing: activitypub.message.target.hint=
+### Missing: activitypub.message.target.placeholder=
+### Missing: activitypub.message.content.label=
+### Missing: activitypub.message.content.hint=
+### Missing: activitypub.message.button=
+### Missing: activitypub.following.title=
+### Missing: activitypub.following.empty=
+### Missing: activitypub.followers.title=
+### Missing: activitypub.followers.empty=
+### Missing: activitypub.user.profile.menu=
+### Missing: activitypub.webfinger=
+### Missing: activitypub.follow.actornotfound=
+### Missing: activitypub.storage.needrestart=
+### Missing: activitypub.webfinger.notconfigured=
+### Missing: activitypub.user.identifier=
+### Missing: activitypub.user.identifier.tip=
+### Missing: activitypub.user.identifier.copyButton=
+### Missing: activitypub.user.identifier.copied=
+### Missing: activitypub.message.messageSent=
+### Missing: activitypub.message.messageError=
+### Missing: activitypub.message.messageInprogress=
+### Missing: activitypub.shareDocument.success=
+### Missing: activitypub.shareDocument.failure=
+### Missing: activitypub.shareDocument.inprogress=
+### Missing: activitypub.shareDocument.modalTitle=
+### Missing: activitypub.shareDocument.target.label=
+### Missing: activitypub.shareDocument.target.hint=
+### Missing: activitypub.shareDocument.target.placeholder=
+### Missing: activitypub.shareDocument.publicRecipientWarning=
+### Missing: activitypub.dashboard.tab.follow=
+### Missing: activitypub.dashboard.tab.message=
+### Missing: activitypub.dashboard.guest=
+### Missing: ActivityPub.ActivityPubConfigurationClass_pageNotifications.hint=
+### Missing: ActivityPub.ActivityPubConfigurationClass_pageNotificationPolicy.hint=
+### Missing: activitypub.dashboard.tab.sentMessagesList=
+### Missing: activitypub.dashboard.tab.receivedMessagesList=
+### Missing: activitypub.dashboard.tab.discussionsList=
+### Missing: activitypub.dashboard.noactor=
+### Missing: activitypub.dashboard.title=
+### Missing: activitypub.dashboard.selectActor.label=
+### Missing: activitypub.message.display.from=
+### Missing: activitypub.message.display.to=
+### Missing: activitypub.message.display.date=
+### Missing: activitypub.message.display.content=
+### Missing: activitypub.message.nomessage=
+### Missing: activitypub.message.display.public=
+### Missing: activitypub.like.livetable.published=
+### Missing: activitypub.like.livetable.type=
+### Missing: activitypub.like.livetable.summary=
+### Missing: activitypub.like.livetable.attributedTo=
+### Missing: activitypub.like.livetable._actions=
+### Missing: activitypub.dashboard.tab.likes=
+### Missing: activitypub.notifications.reply.success=
+### Missing: activitypub.notifications.reply.failure=
+### Missing: activitypub.notifications.reply.inprogress=
+### Missing: activitypub.like.button.title=
+### Missing: activitypub.like.menu.likers=
+### Missing: activitypub.like.likers.title=
+### Missing: activitypub.like.likers.nolikes=
+### Missing: activitypub.like.likers.subtitle=
+### Missing: activitypub.discussions.discussion.back=
+### Missing: activitypub.discussions.discussions.back=
+</content>
+</xwikidoc>
