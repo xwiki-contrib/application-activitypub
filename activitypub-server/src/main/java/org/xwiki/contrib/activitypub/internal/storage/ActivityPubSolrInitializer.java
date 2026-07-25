@@ -19,16 +19,9 @@
  */
 package org.xwiki.contrib.activitypub.internal.storage;
 
-import java.io.IOException;
-import java.util.Map;
-
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.request.schema.SchemaRequest;
-import org.apache.solr.client.solrj.response.schema.SchemaResponse;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
 import org.xwiki.search.solr.AbstractSolrCoreInitializer;
@@ -45,7 +38,6 @@ import org.xwiki.search.solr.SolrException;
 @Singleton
 public class ActivityPubSolrInitializer extends AbstractSolrCoreInitializer
 {
-    private static final String NAME = "name";
     private static final long CURRENT_VERSION = 10200000;
 
     @Override
@@ -54,43 +46,24 @@ public class ActivityPubSolrInitializer extends AbstractSolrCoreInitializer
         return CURRENT_VERSION;
     }
 
-    /**
-     * This returns true if there's already an ActivityPub core containing a content field.
-     */
-    private boolean oldSchemaAlreadyExists(SolrClient client) throws IOException, SolrServerException
-    {
-        SchemaResponse.FieldsResponse response = new SchemaRequest.Fields().process(client);
-        if (response != null) {
-            for (Map<String, Object> field : response.getFields()) {
-                if (ActivityPubStorage.CONTENT_FIELD.equals(field.get(NAME))) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     @Override
     protected void createSchema() throws SolrException
     {
-        try {
-            // we normally enter here only if there's no version on the core,
-            // so if there's already an existing schema it means a user installed an older version of AP.
-            if (oldSchemaAlreadyExists(this.client)) {
-                throw new SolrException("This version of ActivityPub is incompatible with previous version, "
-                    + "you need to remove the existing ActivityPub Solr core before proceeding.");
-            } else {
-                this.addStringField(ActivityPubStorage.TYPE_FIELD, false, false);
-                this.addStringField(ActivityPubStorage.CONTENT_FIELD, false, false);
-                this.addStringField(ActivityPubStorage.XWIKI_REFERENCE_FIELD, false, false);
-                this.addPDateField(ActivityPubStorage.UPDATED_DATE_FIELD, false, false);
-                this.addBooleanField(ActivityPubStorage.IS_PUBLIC_FIELD, false, false);
-                this.addStringField(ActivityPubStorage.AUTHORS_FIELD, true, false);
-                this.addStringField(ActivityPubStorage.TARGETED_FIELD, true, false);
-            }
-        } catch (IOException | SolrServerException e) {
-            throw new SolrException("Error while checking if the schema already exist.", e);
+        // We only reach this method when the core has no recorded version. If the ActivityPub content field is
+        // nonetheless already present, an incompatible pre-versioning core was installed and must be removed first.
+        // getFields() reads the schema through the base class, which owns the Solr client, rather than a field of
+        // our own, so it works whichever way the platform wires that client.
+        if (this.getFields(false).containsKey(ActivityPubStorage.CONTENT_FIELD)) {
+            throw new SolrException("This version of ActivityPub is incompatible with previous version, "
+                + "you need to remove the existing ActivityPub Solr core before proceeding.");
         }
+        this.addStringField(ActivityPubStorage.TYPE_FIELD, false, false);
+        this.addStringField(ActivityPubStorage.CONTENT_FIELD, false, false);
+        this.addStringField(ActivityPubStorage.XWIKI_REFERENCE_FIELD, false, false);
+        this.addPDateField(ActivityPubStorage.UPDATED_DATE_FIELD, false, false);
+        this.addBooleanField(ActivityPubStorage.IS_PUBLIC_FIELD, false, false);
+        this.addStringField(ActivityPubStorage.AUTHORS_FIELD, true, false);
+        this.addStringField(ActivityPubStorage.TARGETED_FIELD, true, false);
     }
 
     @Override
