@@ -65,6 +65,16 @@ public class FollowTest extends AbstractEntityTest
     }
 
     @Test
+    void parsingTimestampDate() throws FileNotFoundException, URISyntaxException, ActivityPubException
+    {
+        // Dates are serialized as ISO-8601 strings, but a date given as epoch milliseconds is still accepted: that is
+        // the format used by the entities stored before the switch to ISO-8601.
+        Follow expectedFollow = this.initFollow();
+        String json = this.readResource("follow/follow1-timestamp-date.json");
+        assertEquals(expectedFollow, this.parser.parse(json));
+    }
+
+    @Test
     void parsingNextcloud() throws Exception
     {
         String json = this.readResource("follow/nextcloud.json");

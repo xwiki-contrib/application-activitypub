@@ -35,6 +35,7 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.ACCEPT_SINGL
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.MapperFeature.SORT_PROPERTIES_ALPHABETICALLY;
 import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
+import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
 
 /**
  * This allows to configure a Jackson {@link ObjectMapper} ready to be used in the parser and serializer.
@@ -90,6 +91,11 @@ public abstract class AbstractObjectMapperConfiguration implements ObjectMapperC
             .disable(FAIL_ON_UNKNOWN_PROPERTIES)
             // Order properties alphabetically: easier to test the result.
             .enable(SORT_PROPERTIES_ALPHABETICALLY)
+            // Dates (published, lastUpdated...) are typed xsd:dateTime by the ActivityStreams vocabulary, so they
+            // must be serialized as ISO-8601 strings and not as the epoch milliseconds Jackson writes by default:
+            // receivers parse them as dates and fail on a number. Reading is unaffected, Jackson still accepts a
+            // JSON number as a timestamp, which keeps the entities already stored with the previous format readable.
+            .disable(WRITE_DATES_AS_TIMESTAMPS)
             .enable(INDENT_OUTPUT)
             .registerModule(module);
     }

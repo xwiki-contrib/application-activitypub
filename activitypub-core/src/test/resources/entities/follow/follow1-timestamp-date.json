@@ -5,7 +5,7 @@
   "content" : "test content",
   "id" : "https://social.example/alyssa/posts/a29a6843-9feb-4c74-a7f7-081b9c9201d3",
   "object" : "https://social.example/alyssa/posts/49e2d03d-b53a-4c4c-a95c-94a6abf45a19",
-  "published" : "2000-02-22T02:07:05.201+00:00",
+  "published" : 951185225201,
   "to" : [ "https://chatty.example/ben/" ],
   "type" : "Follow",
   "url" : [ "http://myurl" ]
