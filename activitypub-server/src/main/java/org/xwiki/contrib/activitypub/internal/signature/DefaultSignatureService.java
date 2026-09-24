@@ -99,10 +99,18 @@ public class DefaultSignatureService implements SignatureService
 
             byte[] bytess = this.sign(actor, signatureStr);
             String signatureB64 = Base64.getEncoder().encodeToString(bytess);
-            String actorAPURL = actor.getId().toASCIIString();
+            // The keyId must match the id the actor advertises for its public key (actor#main-key), not the
+            // bare actor URI: strict receivers (e.g. Mastodon) look the key up by the exact keyId and reject
+            // the signature otherwise.
+            String keyId;
+            if (actor.getPublicKey() != null && actor.getPublicKey().getId() != null) {
+                keyId = actor.getPublicKey().getId();
+            } else {
+                keyId = actor.getId().toASCIIString() + "#main-key";
+            }
             String signature =
                 String.format("keyId=\"%s\",headers=\"(request-target) host date digest\",signature=\"%s\"",
-                    actorAPURL, signatureB64);
+                    keyId, signatureB64);
             postMethod.addRequestHeader("Signature", signature);
             postMethod.addRequestHeader("Date", date);
             postMethod.addRequestHeader("Digest", "SHA-256=" + digest);

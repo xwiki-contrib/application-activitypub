@@ -36,6 +36,7 @@ import org.mockito.Mock;
 import org.xwiki.contrib.activitypub.ActorHandler;
 import org.xwiki.contrib.activitypub.CryptoService;
 import org.xwiki.contrib.activitypub.entities.Person;
+import org.xwiki.contrib.activitypub.entities.PublicKey;
 import org.xwiki.contrib.activitypub.internal.DateProvider;
 import org.xwiki.crypto.params.cipher.asymmetric.PrivateKeyParameters;
 import org.xwiki.crypto.pkix.params.CertifiedKeyPair;
@@ -53,6 +54,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -135,7 +137,7 @@ class DefaultSignatureServiceTest
         this.signatureService.generateSignature(postMethod, actor, "{}");
         InOrder inOrder = inOrder(postMethod, postMethod);
         inOrder.verify(postMethod).addRequestHeader(eq("Signature"), matches(
-            "keyId=\"http:\\/\\/actoruri\\/\",headers=\"\\(request-target\\) host date digest\","
+            "keyId=\"http:\\/\\/actoruri\\/#main-key\",headers=\"\\(request-target\\) host date digest\","
                 + "signature=\"[^\"]*\""));
         inOrder.verify(postMethod).addRequestHeader(eq("Date"), anyString());
         inOrder.verify(postMethod).addRequestHeader("Digest", "SHA-256=RBNvo1WzZ4oRRq0W9+hknpT7T8If536DEMBg9hyq/4o=");
@@ -166,10 +168,40 @@ class DefaultSignatureServiceTest
         this.signatureService.generateSignature(postMethod, actor, "{}");
         InOrder inOrder = inOrder(postMethod, postMethod);
         inOrder.verify(postMethod).addRequestHeader(eq("Signature"), matches(
-            "keyId=\"http:\\/\\/actoruri\\/\",headers=\"\\(request-target\\) host date digest\","
+            "keyId=\"http:\\/\\/actoruri\\/#main-key\",headers=\"\\(request-target\\) host date digest\","
                 + "signature=\"[^\"]*\""));
         inOrder.verify(postMethod).addRequestHeader(eq("Date"), eq("formatted date"));
         inOrder.verify(postMethod).addRequestHeader("Digest", "SHA-256=RBNvo1WzZ4oRRq0W9+hknpT7T8If536DEMBg9hyq/4o=");
+    }
+
+    @Test
+    void generateSignatureWithPublicKeyId() throws Exception
+    {
+        HttpMethod postMethod = mock(HttpMethod.class);
+        org.apache.commons.httpclient.URI postURI = mock(org.apache.commons.httpclient.URI.class);
+        when(postURI.getPath()).thenReturn("/");
+        when(postURI.getHost()).thenReturn("targeturi");
+        when(postMethod.getURI()).thenReturn(postURI);
+        Person actor = mock(Person.class);
+        when(actor.getId()).thenReturn(URI.create("http://actoruri/"));
+        when(actor.getPublicKey()).thenReturn(new PublicKey().setId("http://actoruri/#advertised-key"));
+        when(actor.getPreferredUsername()).thenReturn("tmp");
+        DocumentReference documentReference = new DocumentReference("xwiki", "XWiki", "test");
+        when(this.actorHandler.getStoreDocument(actor)).thenReturn(documentReference);
+
+        CertifiedKeyPair certifiedKeyPair = mock(CertifiedKeyPair.class);
+        when(this.cryptoService.generateCertifiedKeyPair()).thenReturn(certifiedKeyPair);
+        PrivateKeyParameters privateKeyParameters = mock(PrivateKeyParameters.class);
+        when(certifiedKeyPair.getPrivateKey()).thenReturn(privateKeyParameters);
+        when(privateKeyParameters.getEncoded())
+            .thenReturn(KeyPairGenerator.getInstance("RSA").generateKeyPair().getPrivate().getEncoded());
+        when(this.dateProvider.getFormattedDate()).thenReturn("formatted date");
+
+        this.signatureService.generateSignature(postMethod, actor, "{}");
+        // The key id advertised by the actor takes precedence over the actor uri suffixed with the default fragment.
+        verify(postMethod).addRequestHeader(eq("Signature"), matches(
+            "keyId=\"http:\\/\\/actoruri\\/#advertised-key\",headers=\"\\(request-target\\) host date digest\","
+                + "signature=\"[^\"]*\""));
     }
 
     @Test
@@ -202,7 +234,7 @@ class DefaultSignatureServiceTest
         this.signatureService.generateSignature(postMethod, actor, "{}");
         InOrder inOrder = inOrder(postMethod, postMethod);
         inOrder.verify(postMethod).addRequestHeader(eq("Signature"),
-            eq("keyId=\"http://actoruri/\",headers=\"(request-target) host date digest\""
+            eq("keyId=\"http://actoruri/#main-key\",headers=\"(request-target) host date digest\""
                 + ",signature=\"gyFYtjF/9JX9moeR9yYHVYf7/B222obL1IIJDqDf5AK7ThyqIKoJHpARj1+eljAkEvXdQrUUg5y/Su7ljmhpCQ==\""));
         inOrder.verify(postMethod).addRequestHeader(eq("Date"), anyString());
         inOrder.verify(postMethod).addRequestHeader("Digest", "SHA-256=RBNvo1WzZ4oRRq0W9+hknpT7T8If536DEMBg9hyq/4o=");
