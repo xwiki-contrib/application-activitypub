@@ -1,0 +1,26 @@
+{
+  "subject": "acct:nutomic@lemmy.ml",
+  "links": [
+    {
+      "rel": "http://webfinger.net/rel/profile-page",
+      "type": "text/html",
+      "href": "https://lemmy.ml/u/nutomic",
+      "template": null
+    },
+    {
+      "rel": "self",
+      "type": "application/activity+json",
+      "href": "https://lemmy.ml/u/nutomic",
+      "template": null,
+      "properties": {
+        "https://www.w3.org/ns/activitystreams#type": "Person"
+      }
+    },
+    {
+      "rel": "http://ostatus.org/schema/1.0/subscribe",
+      "type": null,
+      "href": null,
+      "template": "https://lemmy.ml/activitypub/externalInteraction?uri={uri}"
+    }
+  ]
+}

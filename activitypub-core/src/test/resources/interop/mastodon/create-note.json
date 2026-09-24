@@ -1,0 +1,73 @@
+{
+  "id": "https://mastodon.social/users/Gargron/statuses/116974368613937876/activity",
+  "type": "Create",
+  "actor": "https://mastodon.social/users/Gargron",
+  "published": "2026-07-24T10:00:16Z",
+  "to": [
+    "https://www.w3.org/ns/activitystreams#Public"
+  ],
+  "cc": [
+    "https://mastodon.social/users/Gargron/followers",
+    "https://mastodon.social/users/anon_opin"
+  ],
+  "object": {
+    "id": "https://mastodon.social/users/Gargron/statuses/116974368613937876",
+    "type": "Note",
+    "summary": null,
+    "inReplyTo": "https://mastodon.social/users/anon_opin/statuses/116974348329839432",
+    "published": "2026-07-24T10:00:16Z",
+    "url": "https://mastodon.social/@Gargron/116974368613937876",
+    "attributedTo": "https://mastodon.social/users/Gargron",
+    "to": [
+      "https://www.w3.org/ns/activitystreams#Public"
+    ],
+    "cc": [
+      "https://mastodon.social/users/Gargron/followers",
+      "https://mastodon.social/users/anon_opin"
+    ],
+    "sensitive": false,
+    "atomUri": "https://mastodon.social/users/Gargron/statuses/116974368613937876",
+    "inReplyToAtomUri": "https://mastodon.social/users/anon_opin/statuses/116974348329839432",
+    "conversation": "https://mastodon.social/contexts/111698193706945333-116974348329839432",
+    "context": "https://mastodon.social/contexts/111698193706945333-116974348329839432",
+    "content": "<p><span class=\"h-card\" translate=\"no\"><a href=\"https://mastodon.social/@anon_opin\" class=\"u-url mention\">@<span>anon_opin</span></a></span> An e-bike is neither fast enough nor massive enough to cause the kind of damage a motorcycle or car can do. It&#39;s just a bike that&#39;s easier to ride uphill.</p>",
+    "contentMap": {
+      "en": "<p><span class=\"h-card\" translate=\"no\"><a href=\"https://mastodon.social/@anon_opin\" class=\"u-url mention\">@<span>anon_opin</span></a></span> An e-bike is neither fast enough nor massive enough to cause the kind of damage a motorcycle or car can do. It&#39;s just a bike that&#39;s easier to ride uphill.</p>"
+    },
+    "interactionPolicy": {
+      "canQuote": {
+        "automaticApproval": [
+          "https://www.w3.org/ns/activitystreams#Public"
+        ]
+      }
+    },
+    "attachment": [],
+    "tag": [
+      {
+        "type": "Mention",
+        "href": "https://mastodon.social/users/anon_opin",
+        "name": "@anon_opin"
+      }
+    ],
+    "replies": {
+      "id": "https://mastodon.social/users/Gargron/statuses/116974368613937876/replies",
+      "type": "Collection",
+      "first": {
+        "type": "CollectionPage",
+        "next": "https://mastodon.social/users/Gargron/statuses/116974368613937876/replies?only_other_accounts=true&page=true",
+        "partOf": "https://mastodon.social/users/Gargron/statuses/116974368613937876/replies",
+        "items": []
+      }
+    },
+    "likes": {
+      "id": "https://mastodon.social/users/Gargron/statuses/116974368613937876/likes",
+      "type": "Collection",
+      "totalItems": 9
+    },
+    "shares": {
+      "id": "https://mastodon.social/users/Gargron/statuses/116974368613937876/shares",
+      "type": "Collection",
+      "totalItems": 1
+    }
+  }
+}

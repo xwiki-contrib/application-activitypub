@@ -25,6 +25,17 @@
   // Skip Eclipse M2E special setup "dependency"
   "ignoreDeps": ["org.eclipse.m2e:lifecycle-mapping"],
 
+  // Track the GoToSocial container tag used by the federation integration test (webfinger-server pom), so a new
+  // partner release opens a PR that re-runs the test and surfaces interoperability drift.
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["(^|/)pom\\.xml$"],
+      "matchStrings": ["<gotosocial\\.image>(?<depName>[^:<]+):(?<currentValue>[^<]+)</gotosocial\\.image>"],
+      "datasourceTemplate": "docker"
+    }
+  ],
+
   "packageRules": [
     // Indicate the URL to the XWiki Nexus public proxy for non-Central Maven dependencies
     {

@@ -1,0 +1,19 @@
+{
+  "subject": "acct:dumpsterqueer@superseriousbusiness.org",
+  "aliases": [
+    "https://gts.superseriousbusiness.org/users/dumpsterqueer",
+    "https://gts.superseriousbusiness.org/@dumpsterqueer"
+  ],
+  "links": [
+    {
+      "rel": "http://webfinger.net/rel/profile-page",
+      "type": "text/html",
+      "href": "https://gts.superseriousbusiness.org/@dumpsterqueer"
+    },
+    {
+      "rel": "self",
+      "type": "application/activity+json",
+      "href": "https://gts.superseriousbusiness.org/users/dumpsterqueer"
+    }
+  ]
+}

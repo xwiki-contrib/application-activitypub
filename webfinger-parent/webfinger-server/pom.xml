@@ -34,6 +34,9 @@
   <properties>
     <xwiki.jacoco.instructionRatio>0.84</xwiki.jacoco.instructionRatio>
     <checkstyle.suppressions.location>${basedir}/src/checkstyle/checkstyle-suppressions.xml</checkstyle.suppressions.location>
+    <!-- Pinned federation partner used by GoToSocialWebfingerIT. Renovate keeps this tag up to date (see
+         .github/renovate.json5); a bump re-runs the integration test against the newer server, surfacing drift. -->
+    <gotosocial.image>superseriousbusiness/gotosocial:0.17.0</gotosocial.image>
   </properties>
   <dependencies>
     <dependency>
@@ -81,4 +84,37 @@
       <version>${project.version}</version>
     </dependency>
   </dependencies>
+  <build>
+    <plugins>
+      <!-- Run *IT tests (the GoToSocial federation integration test) with Failsafe. The test drives Docker through
+           the docker CLI (no Testcontainers dependency, which does not fit the XWiki 12.10 dependency set) and
+           self-skips when Docker is unavailable, so a Docker-less build still passes. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <executions>
+          <!-- Same id as the parent's execution so this configuration overrides it: the parent only runs the
+               XWiki AllITs suite, which this module does not use. -->
+          <execution>
+            <id>functional-tests</id>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+            <configuration>
+              <includes combine.self="override">
+                <include>**/*IT.java</include>
+              </includes>
+              <systemPropertyVariables>
+                <gotosocial.image>${gotosocial.image}</gotosocial.image>
+                <!-- The federation partner container logs are captured by the test, but the XWiki CaptureConsole
+                     listener is stricter than this integration test needs, so disable it for the IT run. -->
+                <xwiki.surefire.captureconsole.skip>true</xwiki.surefire.captureconsole.skip>
+              </systemPropertyVariables>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>
