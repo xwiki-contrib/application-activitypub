@@ -1,0 +1,5 @@
+.env
+certs/
+.info
+docker-compose.override.yml
+.env.mastodon

@@ -1,0 +1,123 @@
+name: mastodon-federation
+
+services:
+  caddy:
+    image: ${CADDY_IMAGE}
+    restart: unless-stopped
+    environment:
+      XWIKI_DOMAIN: ${XWIKI_DOMAIN}
+      MASTODON_DOMAIN: ${MASTODON_DOMAIN}
+    ports:
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTP_PORT:-80}:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    extra_hosts:
+      - "${XWIKI_DOMAIN}:127.0.0.1"
+      - "${MASTODON_DOMAIN}:127.0.0.1"
+    networks:
+      default:
+        aliases:
+          - ${XWIKI_DOMAIN}
+          - ${MASTODON_DOMAIN}
+
+  xwiki-db:
+    image: ${POSTGRES_IMAGE}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${XWIKI_DB_USER}
+      POSTGRES_PASSWORD: ${XWIKI_DB_PASSWORD}
+      POSTGRES_DB: ${XWIKI_DB_DATABASE}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    volumes:
+      - xwiki_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${XWIKI_DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  xwiki:
+    image: ${XWIKI_IMAGE}
+    restart: unless-stopped
+    depends_on:
+      xwiki-db:
+        condition: service_healthy
+    environment:
+      DB_USER: ${XWIKI_DB_USER}
+      DB_PASSWORD: ${XWIKI_DB_PASSWORD}
+      DB_DATABASE: ${XWIKI_DB_DATABASE}
+      DB_HOST: xwiki-db
+    volumes:
+      - xwiki_data:/usr/local/xwiki
+      # Read-only bind mount of the host's local Maven repository so the
+      # Extension Manager can resolve locally-built SNAPSHOT extensions
+      # (e.g. activitypub-ui) via a maven-file extension repository.
+      # See scripts/provision.sh (extension.repositories in xwiki.properties).
+      - ${HOME}/.m2/repository:/host-m2-repository:ro
+
+  mastodon-db:
+    image: ${POSTGRES_IMAGE}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${MASTODON_DB_USER}
+      POSTGRES_PASSWORD: ${MASTODON_DB_PASSWORD}
+      POSTGRES_DB: ${MASTODON_DB_DATABASE}
+    volumes:
+      - mastodon_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${MASTODON_DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: ${REDIS_IMAGE}
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mastodon-web:
+    image: ${MASTODON_IMAGE}
+    restart: unless-stopped
+    command: ["bash", "-c", "bin/rails db:migrate && bundle exec puma -C config/puma.rb"]
+    depends_on:
+      mastodon-db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    env_file: .env.mastodon
+    volumes:
+      - mastodon_system:/mastodon/public/system
+
+  mastodon-streaming:
+    image: ${MASTODON_STREAMING_IMAGE}
+    restart: unless-stopped
+    command: ["node", "./streaming/index.js"]
+    depends_on:
+      mastodon-web: { condition: service_started }
+    env_file: .env.mastodon
+
+  mastodon-sidekiq:
+    image: ${MASTODON_IMAGE}
+    restart: unless-stopped
+    command: ["bundle", "exec", "sidekiq"]
+    depends_on:
+      mastodon-web: { condition: service_started }
+    env_file: .env.mastodon
+    volumes:
+      - mastodon_system:/mastodon/public/system
+
+volumes:
+  caddy_data:
+  caddy_config:
+  xwiki_db_data:
+  xwiki_data:
+  mastodon_db_data:
+  redis_data:
+  mastodon_system:

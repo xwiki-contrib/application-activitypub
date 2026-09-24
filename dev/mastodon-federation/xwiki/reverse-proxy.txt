@@ -1,0 +1,7 @@
+# Applied by scripts/provision.sh after XWiki's first boot:
+# 1) xwiki.cfg:        xwiki.home=https://xwiki.local/
+# 2) Tomcat server.xml: add RemoteIpValve so X-Forwarded-Proto/Host are honored:
+#    <Valve className="org.apache.catalina.valves.RemoteIpValve"
+#           remoteIpHeader="X-Forwarded-For"
+#           protocolHeader="X-Forwarded-Proto" />
+# Caddy already forwards Host and sets X-Forwarded-Proto=https by default.

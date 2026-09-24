@@ -1,0 +1,41 @@
+{
+	# Use Caddy's internal CA for both sites (no ACME).
+	local_certs
+}
+
+# HTTPS site: normal XWiki, plus WebFinger discovery used by real federation. Clients
+# (Mastodon, etc.) query the standard /.well-known/webfinger path, but XWiki serves the
+# endpoint under its own context (here the root context, so /webfinger), so rewrite it.
+https://{$XWIKI_DOMAIN} {
+	tls internal
+
+	@webfinger path /.well-known/webfinger
+	rewrite @webfinger /webfinger
+
+	reverse_proxy xwiki:8080
+}
+
+# HTTP site: redirect everything to HTTPS, EXCEPT /.well-known/webfinger. The ActivityPub
+# dashboard's self-test probes http://<domain>/.well-known/webfinger (plaintext, port 80)
+# and expects XWiki's answer (400 "Missing resource parameter."), not a 308 redirect — so
+# serve that one path over HTTP instead of redirecting, or the dashboard warns that
+# WebFinger is unconfigured even though discovery works over HTTPS.
+http://{$XWIKI_DOMAIN} {
+	@webfinger path /.well-known/webfinger
+	handle @webfinger {
+		rewrite * /webfinger
+		reverse_proxy xwiki:8080
+	}
+	handle {
+		redir https://{$XWIKI_DOMAIN}{uri} permanent
+	}
+}
+
+{$MASTODON_DOMAIN} {
+	tls internal
+
+	@streaming path /api/v1/streaming /api/v1/streaming/*
+	reverse_proxy @streaming mastodon-streaming:4000
+
+	reverse_proxy mastodon-web:3000
+}
