@@ -61,9 +61,11 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * The test self-skips when Docker is not available, so a Docker-less build stays green.
  * <p>
  * GoToSocial requires the request {@code Host} header to equal its configured host and only serves on the bare host
- * (no port), while Docker maps the server to a random host port. We reconcile the two by registering an {@code http}
- * protocol whose socket factory always dials the mapped port, leaving the {@code Host: localhost} header (which the
- * client derives from the default port 80) untouched.
+ * (no port), while the server listens on another address. We reconcile the two by registering an {@code http}
+ * protocol whose socket factory always dials the server address, leaving the {@code Host: localhost} header (which
+ * the client derives from the default port 80) untouched. The server address is the container IP when it is reachable,
+ * which is the case on CI where the build itself runs in a container next to GoToSocial and the loopback interface is
+ * the build container's own. Otherwise (e.g. Docker Desktop), it is the loopback address with the mapped host port.
  *
  * @version $Id$
  */
@@ -80,6 +82,10 @@ class GoToSocialWebfingerIT
 
     private static final Pattern PORT_PATTERN = Pattern.compile(":(\\d+)\\s*$");
 
+    private static final int GTS_PORT = 8080;
+
+    private static final int CONNECT_TIMEOUT_MS = 2000;
+
     private static String containerId;
 
     private static Protocol originalHttpProtocol;
@@ -95,15 +101,20 @@ class GoToSocialWebfingerIT
     {
         assumeTrue(dockerAvailable(), "Docker is not available, skipping GoToSocial federation test.");
 
-        // Start GoToSocial in HTTP mode on an SQLite database, publishing its port to a random host port.
-        containerId = docker("run", "-d", "-p", "8080",
+        // Pull separately: when the image is missing, "docker run" prints the pull progress before the container id.
+        ProcessResult pull = run(600, "docker", "pull", "-q", IMAGE);
+        assertTrue(pull.exitCode == 0, "Failed to pull " + IMAGE + ": " + pull.output);
+
+        // Start GoToSocial in HTTP mode on an SQLite database, publishing its port to a random host port. The id is
+        // the last output line since Docker may print warnings before it.
+        containerId = lastLine(docker("run", "-d", "-p", String.valueOf(GTS_PORT),
             "-e", "GTS_HOST=" + HOST,
             "-e", "GTS_PROTOCOL=http",
-            "-e", "GTS_PORT=8080",
+            "-e", "GTS_PORT=" + GTS_PORT,
             "-e", "GTS_DB_TYPE=sqlite",
             "-e", "GTS_DB_ADDRESS=/gotosocial/sqlite.db",
             "-e", "GTS_ACCOUNTS_REGISTRATION_OPEN=false",
-            IMAGE).trim();
+            IMAGE));
         assertTrue(!containerId.isEmpty(), "Failed to start GoToSocial container");
 
         waitForLog("listening on", 120);
@@ -118,7 +129,7 @@ class GoToSocialWebfingerIT
         // Route http traffic to the mapped port while keeping Host: localhost, as explained in the class Javadoc.
         originalHttpProtocol = Protocol.getProtocol("http");
         Protocol.registerProtocol("http",
-            new Protocol("http", (ProtocolSocketFactory) new FixedPortSocketFactory(mappedPort()), 80));
+            new Protocol("http", (ProtocolSocketFactory) new FixedAddressSocketFactory(serverAddress()), 80));
     }
 
     @AfterAll
@@ -157,13 +168,35 @@ class GoToSocialWebfingerIT
         }
     }
 
+    private static InetSocketAddress serverAddress() throws Exception
+    {
+        String ip = lastLine(docker("inspect", "-f",
+            "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{\"\\n\"}}{{end}}", containerId));
+        if (!ip.isEmpty()) {
+            InetSocketAddress containerAddress = new InetSocketAddress(ip, GTS_PORT);
+            try (Socket socket = new Socket()) {
+                socket.connect(containerAddress, CONNECT_TIMEOUT_MS);
+                return containerAddress;
+            } catch (IOException e) {
+                // The container network is not routable from here (e.g. Docker Desktop): use the mapped port.
+            }
+        }
+        return new InetSocketAddress(InetAddress.getLoopbackAddress(), mappedPort());
+    }
+
     private static int mappedPort() throws Exception
     {
         // "docker port <id> 8080" prints e.g. "0.0.0.0:49153"; extract the host port.
-        String mapping = docker("port", containerId, "8080").trim();
+        String mapping = docker("port", containerId, String.valueOf(GTS_PORT)).trim();
         Matcher matcher = PORT_PATTERN.matcher(mapping.split("\\r?\\n")[0]);
         assertTrue(matcher.find(), "Could not parse mapped port from: " + mapping);
         return Integer.parseInt(matcher.group(1));
+    }
+
+    private static String lastLine(String output)
+    {
+        String[] lines = output.trim().split("\\r?\\n");
+        return lines[lines.length - 1].trim();
     }
 
     private static void waitForLog(String needle, int timeoutSeconds) throws Exception
@@ -238,28 +271,28 @@ class GoToSocialWebfingerIT
     }
 
     /**
-     * A commons-httpclient socket factory that ignores the requested host/port and always connects to a fixed local
-     * port (the Docker-mapped GoToSocial port).
+     * A commons-httpclient socket factory that ignores the requested host/port and always connects to the GoToSocial
+     * server address.
      */
-    private static final class FixedPortSocketFactory implements ProtocolSocketFactory
+    private static final class FixedAddressSocketFactory implements ProtocolSocketFactory
     {
-        private final int targetPort;
+        private final InetSocketAddress target;
 
-        FixedPortSocketFactory(int targetPort)
+        FixedAddressSocketFactory(InetSocketAddress target)
         {
-            this.targetPort = targetPort;
+            this.target = target;
         }
 
         @Override
         public Socket createSocket(String host, int port) throws IOException
         {
-            return new Socket(InetAddress.getLoopbackAddress(), this.targetPort);
+            return new Socket(this.target.getAddress(), this.target.getPort());
         }
 
         @Override
         public Socket createSocket(String host, int port, InetAddress localAddress, int localPort) throws IOException
         {
-            return new Socket(InetAddress.getLoopbackAddress(), this.targetPort, localAddress, localPort);
+            return new Socket(this.target.getAddress(), this.target.getPort(), localAddress, localPort);
         }
 
         @Override
@@ -268,7 +301,7 @@ class GoToSocialWebfingerIT
         {
             Socket socket = new Socket();
             int timeout = params == null ? 0 : params.getConnectionTimeout();
-            socket.connect(new InetSocketAddress(InetAddress.getLoopbackAddress(), this.targetPort), timeout);
+            socket.connect(this.target, timeout);
             return socket;
         }
     }
