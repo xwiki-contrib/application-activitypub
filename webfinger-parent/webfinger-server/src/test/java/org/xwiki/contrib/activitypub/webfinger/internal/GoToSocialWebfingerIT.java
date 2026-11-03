@@ -169,13 +169,22 @@ class GoToSocialWebfingerIT
     private static void waitForLog(String needle, int timeoutSeconds) throws Exception
     {
         long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(timeoutSeconds);
+        ProcessResult logs = null;
         while (System.currentTimeMillis() < deadline) {
-            if (run(20, "docker", "logs", containerId).output.contains(needle)) {
+            logs = run(20, "docker", "logs", containerId);
+            if (logs.output.contains(needle)) {
                 return;
             }
             Thread.sleep(1000);
         }
-        throw new IllegalStateException("Timed out waiting for GoToSocial log line [" + needle + "]");
+        // Include the container state and its logs so a CI failure shows where GoToSocial stopped during startup.
+        ProcessResult state = run(20, "docker", "inspect", "-f",
+            "status={{.State.Status}} exitCode={{.State.ExitCode}} oomKilled={{.State.OOMKilled}}", containerId);
+        ProcessResult stats = run(30, "docker", "stats", "--no-stream", containerId);
+        throw new IllegalStateException(String.format(
+            "Timed out after %ds waiting for GoToSocial log line [%s]%nContainer state: %s%nContainer stats:%n%s%n"
+                + "docker logs (exit code %d):%n%s",
+            timeoutSeconds, needle, state.output.trim(), stats.output.trim(), logs.exitCode, logs.output));
     }
 
     private static String docker(String... args) throws Exception
