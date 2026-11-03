@@ -103,7 +103,7 @@ class GoToSocialWebfingerIT
 
         // Pull separately: when the image is missing, "docker run" prints the pull progress before the container id.
         ProcessResult pull = run(600, "docker", "pull", "-q", IMAGE);
-        assertTrue(pull.exitCode == 0, "Failed to pull " + IMAGE + ": " + pull.output);
+        assertEquals(0, pull.exitCode, "Failed to pull " + IMAGE + ": " + pull.output);
 
         // Start GoToSocial in HTTP mode on an SQLite database, publishing its port to a random host port. The id is
         // the last output line since Docker may print warnings before it.
