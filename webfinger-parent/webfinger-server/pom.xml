@@ -36,7 +36,7 @@
     <checkstyle.suppressions.location>${basedir}/src/checkstyle/checkstyle-suppressions.xml</checkstyle.suppressions.location>
     <!-- Pinned federation partner used by GoToSocialWebfingerIT. Renovate keeps this tag up to date (see
          .github/renovate.json5); a bump re-runs the integration test against the newer server, surfacing drift. -->
-    <gotosocial.image>superseriousbusiness/gotosocial:0.17.0</gotosocial.image>
+    <gotosocial.image>superseriousbusiness/gotosocial:0.22.3</gotosocial.image>
   </properties>
   <dependencies>
     <dependency>
