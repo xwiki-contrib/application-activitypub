@@ -17,13 +17,9 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
- {
-  // We want all suggestions right away
-  "prHourlyLimit" : 0,
-  "prConcurrentLimit" : 0,
-
-  // Skip Eclipse M2E special setup "dependency"
-  "ignoreDeps": ["org.eclipse.m2e:lifecycle-mapping"],
+{
+  // The settings the xwiki-contrib repositories share. See https://github.com/xwiki-contrib/.github
+  "extends": ["github>xwiki-contrib/.github//renovate/default.json5"],
 
   // Track the GoToSocial container tag used by the federation integration test (webfinger-server pom), so a new
   // partner release opens a PR that re-runs the test and surfaces interoperability drift.
@@ -34,20 +30,5 @@
       "matchStrings": ["<gotosocial\\.image>(?<depName>[^:<]+):(?<currentValue>[^<]+)</gotosocial\\.image>"],
       "datasourceTemplate": "docker"
     }
-  ],
-
-  "packageRules": [
-    // Indicate the URL to the XWiki Nexus public proxy for non-Central Maven dependencies
-    {
-      "matchDatasources": ["maven"],
-      "registryUrls": ["https://nexus.xwiki.org/nexus/content/repositories/public/"]
-    },
-
-    // There is always a more recent version of contrib parent or commons/rendering/platform and we don't want to upgrade just for that
-    {
-      "matchPackagePrefixes": ["org.xwiki.commons:", "org.xwiki.rendering:", "org.xwiki.platform:", "org.xwiki.enterprise:", "org.xwiki.contrib:parent-"],
-      "enabled": false
-    }
   ]
 }
-
