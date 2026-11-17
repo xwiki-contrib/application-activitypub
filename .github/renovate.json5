@@ -18,9 +18,6 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 {
-  // The settings the xwiki-contrib repositories share. See https://github.com/xwiki-contrib/.github
-  "extends": ["github>xwiki-contrib/.github//renovate/default.json5"],
-
   // Track the GoToSocial container tag used by the federation integration test (webfinger-server pom), so a new
   // partner release opens a PR that re-runs the test and surfaces interoperability drift.
   "customManagers": [
