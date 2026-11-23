@@ -57,7 +57,7 @@
   #else
     ## The various interactions needs to send the actor id, so we put it in the document directly.
     {{html}}
-      &lt;input type="hidden" id="actorId" value="$actor.id" /&gt;
+      &lt;input type="hidden" id="actorId" value="$escapetool.xml($actor.id)" /&gt;
     {{/html}}
     #if ($services.webfinger.isWebfingerConfigured())
       #set ($userIdentifier = $services.webfinger.getWebfingerId($actor))
@@ -75,7 +75,7 @@
       &lt;h2&gt;$dashboardTitle&lt;/h2&gt;
       &lt;span class="noitems"&gt;$services.localization.render('activitypub.user.identifier.tip')&lt;/span&gt;
       &lt;div class="identifier-group"&gt;
-        &lt;span class="form-control" id="user-identifier"&gt;$userIdentifier&lt;/span&gt;
+        &lt;span class="form-control" id="user-identifier"&gt;$escapetool.xml($userIdentifier)&lt;/span&gt;
         &lt;div class="btn btn-default" id="ap-button-paste" title="$services.localization.render('activitypub.user.identifier.copyButton')"&gt;
           $services.icon.renderHTML('paste')
         &lt;/div&gt;
@@ -229,7 +229,7 @@
     #else
       &lt;ul&gt;
         #foreach ($factor in $following)
-          &lt;li&gt;#displayActor($factor)&lt;/li&gt;
+          &lt;li&gt;#displayActorInHtml($factor)&lt;/li&gt;
         #end
       &lt;/ul&gt;
     #end
@@ -247,7 +247,7 @@
       #else
       &lt;ul&gt;
         #foreach ($factor in $followers)
-          &lt;li&gt;#displayActor($factor)&lt;/li&gt;
+          &lt;li&gt;#displayActorInHtml($factor)&lt;/li&gt;
         #end
       &lt;/ul&gt;
     #end

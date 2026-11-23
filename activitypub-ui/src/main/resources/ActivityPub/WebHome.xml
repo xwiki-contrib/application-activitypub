@@ -59,7 +59,13 @@
     &lt;label for="actor_select"&gt;$services.localization.render('activitypub.dashboard.selectActor.label')&lt;/label&gt;
     &lt;select name="actor" id="actor_select"&gt;
       #foreach($availableActor in $availableActors)
-        &lt;option value="$availableActor.actor.id" #if ($availableActor.actor.equals($actor))selected="selected"#end&gt;$availableActor.label&lt;/option&gt;
+        #set ($availableActorId = $escapetool.xml($availableActor.actor.id))
+        #if ($availableActor.actor.equals($actor))
+          #set ($selected = ' selected="selected"')
+        #else
+          #set ($selected = '')
+        #end
+        &lt;option value="$availableActorId"$selected&gt;$availableActor.label&lt;/option&gt;
       #end
     &lt;/select&gt;
     &lt;span class="buttonwrapper"&gt;

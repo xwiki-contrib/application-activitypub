@@ -38,11 +38,28 @@
   <hidden>true</hidden>
   <content>{{velocity output="false"}}
 #macro (displayActor $actor)
+  #displayActorLink($actor false)
+#end
+
+#macro (displayActorInHtml $actor)
+  #displayActorLink($actor true)
+#end
+
+#macro (displayActorLink $actor $inHtml)
   #set ($username = $services.webfinger.getWebfingerId($actor))
   #if ($services.activitypub.belongsToCurrentInstance("$actor.id"))
-    {{html}}&lt;a href="$actor.id"&gt;$username&lt;/a&gt;{{/html}}
+    #set ($actorId = $services.activitypub.escapeXWikiSyntax($escapetool.xml("$actor.id")))
+    #set ($actorLabel = $services.activitypub.escapeXWikiSyntax($escapetool.xml($username)))
+    {{html}}&lt;a href="$actorId"&gt;$actorLabel&lt;/a&gt;{{/html}}
   #else
-    [[$username&gt;&gt;$actor.id]]
+    #set ($actorId = $services.rendering.escape("$actor.id", $doc.syntax))
+    #set ($actorLabel = $services.rendering.escape($username, $doc.syntax))
+    #set ($actorLabel = $services.rendering.escape($actorLabel, $doc.syntax))
+    #if ($inHtml)
+      #set ($actorId = $escapetool.xml($actorId))
+      #set ($actorLabel = $escapetool.xml($actorLabel))
+    #end
+    [[$actorLabel&gt;&gt;url:$actorId]]
   #end
 #end
 

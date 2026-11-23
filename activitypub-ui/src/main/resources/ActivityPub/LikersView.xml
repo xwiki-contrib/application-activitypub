@@ -44,20 +44,25 @@
 #set ($likedDoc = $xwiki.getDocument($request.get('reference')))
 #set ($apPage = $services.activitypub.resolveDocument($request.get('reference')))
 #set ($likesRef = $apPage.likes)
+#set ($noLikesMessage = $services.localization.render('activitypub.like.likers.nolikes', [$likedDoc.plainTitle]))
+#set ($noLikesMessage = $escapetool.xml($services.rendering.escape($noLikesMessage, $doc.syntax)))
 
 #if ("$!likesRef" == "")
-  $services.localization.render('activitypub.like.likers.nolikes', [$likedDoc.plainTitle])
+  $noLikesMessage
 #else
   #set ($likes = $services.activitypub.resolve($likesRef))
   #if ($likes.totalItems == 0)
-    $services.localization.render('activitypub.like.likers.nolikes', [$likedDoc.plainTitle])
+    $noLikesMessage
   #else
-    &lt;p&gt;$escapetool.xml($services.localization.render('activitypub.like.likers.subtitle', [$likes.totalItems, $likedDoc.plainTitle]))
+    #set ($subtitleParameters = [$likes.totalItems, $likedDoc.plainTitle])
+    #set ($subtitle = $services.localization.render('activitypub.like.likers.subtitle', $subtitleParameters))
+    #set ($subtitle = $escapetool.xml($services.rendering.escape($subtitle, $doc.syntax)))
+    &lt;p&gt;$subtitle
     &lt;ul&gt;
     #foreach ($likeRef in $likes)
       #set ($like = $services.activitypub.resolve($likeRef))
       #set ($actor = $services.activitypub.resolve($like.actor))
-      &lt;li&gt;#displayActor($actor)&lt;/li&gt;
+      &lt;li&gt;#displayActorInHtml($actor)&lt;/li&gt;
     #end
     &lt;/ul&gt;
     &lt;/p&gt;

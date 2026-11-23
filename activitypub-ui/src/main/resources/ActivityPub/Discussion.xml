@@ -37,9 +37,10 @@
   <syntaxId>xwiki/2.1</syntaxId>
   <hidden>true</hidden>
   <content>{{velocity}}
+#set ($escapedReference = $services.rendering.escape("$!request.reference", $doc.syntax))
 [[$services.localization.render('activitypub.discussions.discussion.back')&gt;&gt;ActivityPub.Discussions||class="btn btn-primary" queryString="actor=$escapetool.url($request.actor)"]]
 
-{{discussion reference="$request.reference" namespace='APDiscussion' type='activitypub'/}}
+{{discussion reference="$escapedReference" namespace='APDiscussion' type='activitypub'/}}
 
 {{/velocity}}
 </content>

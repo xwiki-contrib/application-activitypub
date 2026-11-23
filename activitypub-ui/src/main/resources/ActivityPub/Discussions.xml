@@ -49,9 +49,11 @@
 #if ($canSeeDashboard)
   #set ($discussionDoc = $xwiki.getDocument('ActivityPub.Discussion'))
   #set ($url = "$discussionDoc.getURL('view')?reference=__REFERENCE__&amp;actor=$escapetool.url($request.actor)")
+  #set ($escapedActorId = $services.rendering.escape("$!currentActor.id", $doc.syntax))
+  #set ($escapedUrl = $services.rendering.escape($url, $doc.syntax))
 
   {{listDiscussions listId="discussionsAPDashboard" type="activitypub-actor" 
-    reference="$currentActor.id" linkTemplate="$url"}}
+    reference="$escapedActorId" linkTemplate="$escapedUrl"}}
 
 #end
 {{/velocity}}</content>
