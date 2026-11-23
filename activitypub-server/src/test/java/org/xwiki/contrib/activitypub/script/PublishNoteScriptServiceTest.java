@@ -24,15 +24,19 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
 import org.xwiki.contrib.activitypub.ActivityHandler;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
@@ -46,9 +50,16 @@ import org.xwiki.contrib.activitypub.entities.Person;
 import org.xwiki.contrib.activitypub.entities.ProxyActor;
 import org.xwiki.contrib.activitypub.internal.DateProvider;
 import org.xwiki.contrib.activitypub.internal.script.ActivityPubScriptServiceActor;
+import org.xwiki.bridge.DocumentAccessBridge;
+import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.rendering.syntax.Syntax;
+import org.xwiki.security.authorization.AuthorExecutor;
+import org.xwiki.test.LogLevel;
+import org.xwiki.test.junit5.LogCaptureExtension;
 import org.xwiki.test.junit5.mockito.ComponentTest;
 import org.xwiki.test.junit5.mockito.InjectMockComponents;
 import org.xwiki.test.junit5.mockito.MockComponent;
+import org.xwiki.wysiwyg.converter.HTMLConverter;
 
 /**
  * Test of {@link PublishNoteScriptService}.
@@ -70,7 +81,18 @@ class PublishNoteScriptServiceTest
 
     @MockComponent
     private ActivityPubStorage activityPubStorage;
-    
+
+    @MockComponent
+    private AuthorExecutor authorExecutor;
+
+    @MockComponent
+    private DocumentAccessBridge documentAccessBridge;
+
+    @MockComponent
+    private HTMLConverter htmlConverter;
+
+    @RegisterExtension
+    LogCaptureExtension logCapture = new LogCaptureExtension(LogLevel.ERROR);
 
     @Test
     void publishNoteNoTarget() throws Exception
@@ -155,5 +177,68 @@ class PublishNoteScriptServiceTest
         assertEquals(note.getAttributedTo(), create.getAttributedTo());
         assertNotNull(create.getPublished());
         verify(activityHandler).handleOutboxRequest(new ActivityRequest<>(actor, create));
+    }
+
+    @Test
+    void publishNoteRendersTheContentWithTheRightsOfTheCurrentUser() throws Exception
+    {
+        DocumentReference sender = new DocumentReference("xwiki", "XWiki", "Sender");
+        DocumentReference currentDocument = new DocumentReference("xwiki", "ActivityPub", "MessageUser");
+        when(this.documentAccessBridge.getCurrentUserReference()).thenReturn(sender);
+        when(this.documentAccessBridge.getCurrentDocumentReference()).thenReturn(currentDocument);
+        // Run the callable like the real executor does, once the author has been switched to the sender.
+        when(this.authorExecutor.call(any(), eq(sender), eq(currentDocument))).thenAnswer(invocation -> {
+            Callable<?> callable = invocation.getArgument(0);
+            return callable.call();
+        });
+        String rawContent = "a \"}} {{/html}}{{info}}b";
+        when(this.htmlConverter.toHTML(rawContent, Syntax.XWIKI_2_1, null)).thenReturn("<p>rendered</p>");
+        mockSendingOfNote();
+
+        assertTrue(this.publishNoteScriptService.publishNote(null, rawContent, null, "xwiki/2.1"));
+
+        verify(this.authorExecutor).call(any(), eq(sender), eq(currentDocument));
+        assertEquals("<p>rendered</p>", storedNote().getContent());
+    }
+
+    @Test
+    void publishNoteRenderingFailure() throws Exception
+    {
+        DocumentReference sender = new DocumentReference("xwiki", "XWiki", "Sender");
+        when(this.documentAccessBridge.getCurrentUserReference()).thenReturn(sender);
+        when(this.authorExecutor.call(any(), eq(sender), any())).thenThrow(new RuntimeException("failure"));
+        mockSendingOfNote();
+
+        assertFalse(this.publishNoteScriptService.publishNote(null, "some content", null, "xwiki/2.1"));
+
+        verify(this.activityPubStorage, never()).storeEntity(any());
+        assertEquals("Error while posting a note.", this.logCapture.getMessage(0));
+    }
+
+    @Test
+    void publishNoteUnknownSyntax() throws Exception
+    {
+        mockSendingOfNote();
+
+        assertTrue(this.publishNoteScriptService.publishNote(null, "some content", null, "invalid"));
+
+        verify(this.authorExecutor, never()).call(any(), any(), any());
+        assertEquals("some content", storedNote().getContent());
+    }
+
+    private void mockSendingOfNote() throws Exception
+    {
+        Person actor = mock(Person.class);
+        when(actor.getReference()).thenReturn(mock(ActivityPubObjectReference.class));
+        when(this.activityPubScriptServiceActor.getSourceActor(null)).thenReturn(actor);
+        when(this.dateProvider.currentTime()).thenReturn(new Date());
+        when(this.activityPubScriptServiceActor.getActivityHandler(any())).thenReturn(mock(ActivityHandler.class));
+    }
+
+    private Note storedNote() throws Exception
+    {
+        ArgumentCaptor<ActivityPubObject> argumentCaptor = ArgumentCaptor.forClass(ActivityPubObject.class);
+        verify(this.activityPubStorage, times(2)).storeEntity(argumentCaptor.capture());
+        return (Note) argumentCaptor.getAllValues().get(0);
     }
 }

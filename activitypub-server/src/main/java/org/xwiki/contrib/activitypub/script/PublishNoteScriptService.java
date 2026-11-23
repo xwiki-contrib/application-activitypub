@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.slf4j.Logger;
+import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.contrib.activitypub.ActivityPubException;
 import org.xwiki.contrib.activitypub.ActivityPubStorage;
@@ -37,8 +38,10 @@ import org.xwiki.contrib.activitypub.entities.Note;
 import org.xwiki.contrib.activitypub.internal.ActivityPubDiscussionsService;
 import org.xwiki.contrib.activitypub.internal.DateProvider;
 import org.xwiki.contrib.activitypub.internal.script.ActivityPubScriptServiceActor;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.rendering.parser.ParseException;
 import org.xwiki.rendering.syntax.Syntax;
+import org.xwiki.security.authorization.AuthorExecutor;
 import org.xwiki.stability.Unstable;
 import org.xwiki.wysiwyg.converter.HTMLConverter;
 
@@ -73,6 +76,12 @@ public class PublishNoteScriptService
 
     @Inject
     private ActivityPubDiscussionsService activityPubDiscussionsService;
+
+    @Inject
+    private AuthorExecutor authorExecutor;
+
+    @Inject
+    private DocumentAccessBridge documentAccessBridge;
 
     /**
      * Publish the given content as a note to be send to the addressed target. The given targets can take different
@@ -166,19 +175,41 @@ public class PublishNoteScriptService
         }
     }
 
-    private String convertContentToHtml(String rawContent, String syntax)
+    private String convertContentToHtml(String rawContent, String syntax) throws ActivityPubException
     {
         String content;
         if (syntax == null) {
             content = rawContent;
         } else {
             try {
-                content = this.htmlConverter.toHTML(rawContent, Syntax.valueOf(syntax), null);
+                content = renderAsCurrentUser(rawContent, Syntax.valueOf(syntax));
             } catch (ParseException e) {
                 this.logger.debug("Unknwon syntax [{}]. Cause: [{}].", syntax, getRootCauseMessage(e));
                 content = rawContent;
             }
         }
         return content;
+    }
+
+    /**
+     * Render the content with the rights of the current user instead of the rights of the author of the page calling
+     * this service, so that the macros requiring script or programming rights are only executed when the sender has
+     * them.
+     *
+     * @param rawContent the content to render
+     * @param syntax the syntax of the content
+     * @return the content rendered as HTML
+     * @throws ActivityPubException if the rendering failed
+     */
+    private String renderAsCurrentUser(String rawContent, Syntax syntax) throws ActivityPubException
+    {
+        DocumentReference currentUser = this.documentAccessBridge.getCurrentUserReference();
+        DocumentReference currentDocument = this.documentAccessBridge.getCurrentDocumentReference();
+        try {
+            return this.authorExecutor.call(() -> this.htmlConverter.toHTML(rawContent, syntax, null), currentUser,
+                currentDocument);
+        } catch (Exception e) {
+            throw new ActivityPubException("Failed to render the content of the note.", e);
+        }
     }
 }
