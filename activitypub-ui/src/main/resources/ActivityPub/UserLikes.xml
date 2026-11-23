@@ -41,9 +41,15 @@
 #set ($username = $services.webfinger.getWebfingerId($actor))
 &lt;span class="activitypub-actor-link"&gt;
   #if ($services.activitypub.belongsToCurrentInstance("$actor.id"))
-      &lt;a href="$actor.id"&gt;$username&lt;/a&gt;
+    #set ($actorId = $escapetool.xml($actor.id))
+    #set ($actorLabel = $escapetool.xml($username))
+    &lt;a href="$actorId"&gt;$actorLabel&lt;/a&gt;
   #else
-    &lt;span class="wikiexternallink"&gt;&lt;a href="$actor.id"&gt;$username&lt;/a&gt;&lt;/span&gt;
+    #set ($actorId = $services.rendering.escape("$actor.id", $doc.syntax))
+    #set ($actorLabel = $services.rendering.escape($username, $doc.syntax))
+    #set ($actorLabel = $services.rendering.escape($actorLabel, $doc.syntax))
+    #set ($actorLink = $services.rendering.parse("[[$actorLabel&gt;&gt;url:$actorId]]", $doc.syntax.toIdString()))
+    $services.rendering.render($actorLink.children.get(0).children.get(0), 'xhtml/1.0')
   #end
 &lt;/span&gt;
 #end
@@ -544,9 +550,11 @@
  #template('menus_macros.vm')
  #set ($apLikersReference = $services.model.resolveDocument('ActivityPub.LikersView'))
  #set ($apLikers = $xwiki.getDocument($apLikersReference))
- #set ($queryString = "reference=$services.model.serialize($doc.documentReference, 'default')")
- #set ($menuURL = $apLikers.getURL('view', $queryString))
- #submenuitem($menuURL, $services.localization.render('activitypub.like.menu.likers'), 'activitypub-likers', '', 'heart')
+ #set ($serializedReference = $services.model.serialize($doc.documentReference, 'default'))
+ #set ($queryString = "reference=$escapetool.url($serializedReference)")
+ #set ($menuURL = $escapetool.xml($apLikers.getURL('view', $queryString)))
+ #set ($menuLabel = $escapetool.xml($services.localization.render('activitypub.like.menu.likers')))
+ #submenuitem($menuURL, $menuLabel, 'activitypub-likers', '', 'heart')
 {{/html}}
 {{/velocity}}</content>
     </property>
